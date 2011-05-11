@@ -16,8 +16,11 @@ internal class BackpackConnection : IBackpackConnection
     private readonly ConcurrentDictionary<BackpackCommands, List<TaskCompletionSource<BackpackCommand?>>> _responseQueue = new();
     private readonly IBackpackCommandSerializer _serializer;
 
+    private static readonly byte[] _clearedUId = [1];
+
     //Set it to something so that it doesn't match and empty or a valid Uid and gets set on the first command
-    private byte[] _currentUId = [1];
+    private byte[] _currentUId = _clearedUId;
+    private readonly ConcurrentDictionary<string, OSDScreen> _osdScreens = new();
 
     public BackpackConnection(string commPort, IBackpackCommandSerializer serializer)
     {
@@ -29,6 +32,7 @@ internal class BackpackConnection : IBackpackConnection
     {
         try
         {
+            _currentUId = _clearedUId;
             _serialPort = new SerialPort(portName: _commPort,
                 baudRate: _baudRate,
                 parity: Parity.None,
@@ -51,11 +55,11 @@ internal class BackpackConnection : IBackpackConnection
 
     public async Task Run(CancellationToken token)
     {
-        Task[] tasks = [RunCommandLoop(token), RunReceiveLoop(token)];
+        Task[] tasks = [RunCommandLoop(token), RunReceiveLoop(token), RunOSDLoop(token)];
 
         try
         {
-            await Task.WhenAll(tasks).ConfigureAwait(false);
+            await Task.WhenAny(tasks).ConfigureAwait(false);
         }
         finally
         {
@@ -70,49 +74,38 @@ internal class BackpackConnection : IBackpackConnection
     {
         while (!token.IsCancellationRequested)
         {
-            try
+            if (_serialPort == null)
             {
-                if (_serialPort == null)
-                {
-                    break;
-                }
-
-                (byte[]? UId, BackpackCommand command, TaskCompletionSource<BackpackCommand?> response) = await _commandQueue.WaitForDequeueAsync(token).ConfigureAwait(false);
-
-                if (command == null || token.IsCancellationRequested)
-                {
-                    continue;
-                }
-
-                byte[] commandUId = UId ?? Array.Empty<byte>();
-                if (!_currentUId.SequenceEqual(commandUId))
-                {
-                    BackpackCommand uidCommand = CreateUIdCommand(commandUId);
-                    await SendCommand(uidCommand).ConfigureAwait(false);
-                    _currentUId = commandUId;
-                }
-
-                if (command.ShouldAwaitResponse)
-                {
-                    List<TaskCompletionSource<BackpackCommand?>> responseSources = _responseQueue.GetOrAdd(command.Function, _ => new List<TaskCompletionSource<BackpackCommand?>>());
-                    responseSources.Add(response);
-                }
-
-                await SendCommand(command).ConfigureAwait(false);
-                if (!command.ShouldAwaitResponse)
-                {
-                    response.TrySetResult(null);
-                }
-                await Task.Delay(250);
-            }
-            catch (Exception)
-            {
-            }
-            finally
-            {
-
+                break;
             }
 
+            (byte[]? UId, BackpackCommand command, TaskCompletionSource<BackpackCommand?> response) = await _commandQueue.WaitForDequeueAsync(token).ConfigureAwait(false);
+
+            if (command == null || token.IsCancellationRequested)
+            {
+                continue;
+            }
+
+            byte[] commandUId = UId ?? Array.Empty<byte>();
+            if (!_currentUId.SequenceEqual(commandUId))
+            {
+                BackpackCommand uidCommand = CreateUIdCommand(commandUId);
+                await SendCommand(uidCommand).ConfigureAwait(false);
+                _currentUId = commandUId;
+            }
+
+            if (command.ShouldAwaitResponse)
+            {
+                List<TaskCompletionSource<BackpackCommand?>> responseSources = _responseQueue.GetOrAdd(command.Function, _ => new List<TaskCompletionSource<BackpackCommand?>>());
+                responseSources.Add(response);
+            }
+
+            await SendCommand(command).ConfigureAwait(false);
+            if (!command.ShouldAwaitResponse)
+            {
+                response.TrySetResult(null);
+            }
+            await Task.Delay(250);
         }
     }
     private async Task RunReceiveLoop(CancellationToken token)
@@ -142,60 +135,50 @@ internal class BackpackConnection : IBackpackConnection
 
         while (!token.IsCancellationRequested)
         {
-            try
+            byte[] data = await receivedQueue.WaitForDequeueAsync(BackpackCommand.HeaderSize, token).ConfigureAwait(false);
+
+            if (data[(int)BackpackCommand.HeaderLocation.Start] != BackpackCommand.StartingCharacter
+                || data[(int)BackpackCommand.HeaderLocation.Version] != BackpackCommand.Version
+                || data[(int)BackpackCommand.HeaderLocation.Type] != (byte)CommandType.Response)
             {
-                byte[] data = await receivedQueue.WaitForDequeueAsync(BackpackCommand.HeaderSize, token).ConfigureAwait(false);
-
-                if (data[(int)BackpackCommand.HeaderLocation.Start] != BackpackCommand.StartingCharacter
-                    || data[(int)BackpackCommand.HeaderLocation.Version] != BackpackCommand.Version
-                    || data[(int)BackpackCommand.HeaderLocation.Type] != (byte)CommandType.Response)
-                {
-                    continue;
-                }
-
-                if (token.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                byte flag = data[(int)BackpackCommand.HeaderLocation.Flag];
-                BackpackCommands command = (BackpackCommands)data[(int)BackpackCommand.HeaderLocation.Function];
-                byte[] payloadSizeBytes = data.AsSpan().Slice((int)BackpackCommand.HeaderLocation.PayloadSize, 2).ToArray();
-                ushort payloadSize = BitConverter.ToUInt16(payloadSizeBytes);
-
-                byte[] payloadData = await receivedQueue.WaitForDequeueAsync(payloadSize + BackpackCommand.CrcSize, token).ConfigureAwait(false);
-
-                if (token.IsCancellationRequested)
-                {
-                    break;
-                }
-                byte[] payload = payloadData.AsSpan().Slice(BackpackCommand.HeaderSize, payloadSize).ToArray();
-                byte crc = payloadData[BackpackCommand.HeaderSize + payloadSize];
-
-                //TODO Add CRC check
-
-                BackpackCommand backpackCommand = new()
-                {
-                    Function = command,
-                    Flag = flag,
-                    Type = CommandType.Response,
-                    Payload = payload,
-                };
-
-                if (_responseQueue.TryGetValue(command, out var tasksWaitingForResponse))
-                {
-                    foreach (TaskCompletionSource<BackpackCommand?> task in tasksWaitingForResponse)
-                    {
-                        task.TrySetResult(backpackCommand);
-                    }
-                }
+                continue;
             }
-            catch (Exception)
-            {
-            }
-            finally
-            {
 
+            if (token.IsCancellationRequested)
+            {
+                break;
+            }
+
+            byte flag = data[(int)BackpackCommand.HeaderLocation.Flag];
+            BackpackCommands command = (BackpackCommands)data[(int)BackpackCommand.HeaderLocation.Function];
+            byte[] payloadSizeBytes = data.AsSpan().Slice((int)BackpackCommand.HeaderLocation.PayloadSize, 2).ToArray();
+            ushort payloadSize = BitConverter.ToUInt16(payloadSizeBytes);
+
+            byte[] payloadData = await receivedQueue.WaitForDequeueAsync(payloadSize + BackpackCommand.CrcSize, token).ConfigureAwait(false);
+
+            if (token.IsCancellationRequested)
+            {
+                break;
+            }
+            byte[] payload = payloadData.AsSpan().Slice(BackpackCommand.HeaderSize, payloadSize).ToArray();
+            byte crc = payloadData[BackpackCommand.HeaderSize + payloadSize];
+
+            //TODO Add CRC check
+
+            BackpackCommand backpackCommand = new()
+            {
+                Function = command,
+                Flag = flag,
+                Type = CommandType.Response,
+                Payload = payload,
+            };
+
+            if (_responseQueue.TryGetValue(command, out var tasksWaitingForResponse))
+            {
+                foreach (TaskCompletionSource<BackpackCommand?> task in tasksWaitingForResponse)
+                {
+                    task.TrySetResult(backpackCommand);
+                }
             }
         }
     }
@@ -513,14 +496,47 @@ internal class BackpackConnection : IBackpackConnection
         };
         return Send(UId, backpackCommand);
     }
-    public async Task SetOSDElement(byte[] UId, string message, OSDPresentation presentation, byte row, byte column, TimeSpan duration)
+    public Task SetOSDElement(byte[] UId, string message, OSDPresentation presentation, byte row, byte column, TimeSpan? duration)
     {
-        await SendOSDCommand(UId, DisplayportCommand.ClearScreen, null, OSDPresentation.None, row, column);
-        await SendOSDCommand(UId, DisplayportCommand.WriteString, message.ToUpper(), presentation, row, column);
-        await SendOSDCommand(UId, DisplayportCommand.DrawScreen, null, OSDPresentation.None, row, column);
-        await Task.Delay(duration);
-        await SendOSDCommand(UId, DisplayportCommand.ClearScreen, null, OSDPresentation.None, row, column);
-        await SendOSDCommand(UId, DisplayportCommand.DrawScreen, null, OSDPresentation.None, row, column);
+        string uidKey = Convert.ToHexString(UId);
+        OSDScreen screen = _osdScreens.GetOrAdd(uidKey, _ => new OSDScreen());
+
+        screen.SetElement(message, presentation, row, column, duration);
+
+        return Task.CompletedTask;
+    }
+
+    private async Task RunOSDLoop(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
+        {
+            foreach (var kvp in _osdScreens)
+            {
+                OSDScreen screen = kvp.Value;
+                screen.RemoveExpiredElements();
+
+                if (!screen.IsDirty)
+                {
+                    continue;
+                }
+
+                byte[] uid = Convert.FromHexString(kvp.Key);
+                IReadOnlyCollection<OSDElement> elements = screen.GetActiveElements();
+
+                await SendOSDCommand(uid, DisplayportCommand.ClearScreen, null, OSDPresentation.None, 0, 0);
+
+                foreach (OSDElement element in elements)
+                {
+                    await SendOSDCommand(uid, DisplayportCommand.WriteString, element.Message.ToUpper(), element.Presentation, element.Row, element.Column);
+                }
+
+                await SendOSDCommand(uid, DisplayportCommand.DrawScreen, null, OSDPresentation.None, 0, 0);
+
+                screen.ClearDirty();
+            }
+
+            await Task.Delay(50, token);
+        }
     }
     public Task SetRecordingState(byte[] UId, bool recording)
     {

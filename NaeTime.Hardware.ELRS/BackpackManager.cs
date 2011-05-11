@@ -35,6 +35,8 @@ internal class BackpackManager : BackgroundService
 
             _connectorProvider.SetBackpackConnector(backpack.Id, connector);
             _backpackConnectors[backpack.Id] = connector;
+
+            await connector.Start();
         }
 
         await Task.WhenAll(
@@ -42,11 +44,11 @@ internal class BackpackManager : BackgroundService
             _reactionProviderFactory.On<Events.ELRSBackpackInterfaceComPortReconfigured>(HandleComPortReconfigured, stoppingToken));
     }
 
-    private Task HandleBackpackAdded(Events.ELRSBackpackInterfaceAdded e)
+    private async Task HandleBackpackAdded(Events.ELRSBackpackInterfaceAdded e)
     {
         if (_backpackConnectors.TryGetValue(e.Id, out IBackpackConnector? existingConnector))
         {
-            existingConnector.Stop();
+            await existingConnector.Stop();
             _backpackConnectors.TryRemove(e.Id, out _);
         }
 
@@ -56,14 +58,14 @@ internal class BackpackManager : BackgroundService
         _connectorProvider.SetBackpackConnector(e.Id, connector);
         _backpackConnectors[e.Id] = connector;
 
-        return Task.CompletedTask;
+        await connector.Start();
     }
 
-    private Task HandleComPortReconfigured(Events.ELRSBackpackInterfaceComPortReconfigured e)
+    private async Task HandleComPortReconfigured(Events.ELRSBackpackInterfaceComPortReconfigured e)
     {
         if (_backpackConnectors.TryGetValue(e.Id, out IBackpackConnector? existingConnector))
         {
-            existingConnector.Stop();
+            await existingConnector.Stop();
             _backpackConnectors.TryRemove(e.Id, out _);
         }
 
@@ -73,6 +75,6 @@ internal class BackpackManager : BackgroundService
         _connectorProvider.SetBackpackConnector(e.Id, connector);
         _backpackConnectors[e.Id] = connector;
 
-        return Task.CompletedTask;
+        await connector.Start();
     }
 }

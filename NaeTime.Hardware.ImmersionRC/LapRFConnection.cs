@@ -20,7 +20,7 @@ internal class LapRFConnection : ILapRFConnection
     private readonly IRssiChannel _rssiChannel;
     private readonly Guid _timerId;
 
-    private readonly CancellationTokenSource _cancellationTokenSource;
+    private CancellationTokenSource? _cancellationTokenSource;
     public bool IsConnected { get; private set; }
 
     private Task[] _runningTasks = [];
@@ -45,6 +45,9 @@ internal class LapRFConnection : ILapRFConnection
 
     public Task Start()
     {
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource = new CancellationTokenSource();
+
         CancellationToken token = _cancellationTokenSource.Token;
         _runningTasks = [MaintainConnectionAsync(token), WaitForDetectionsAsync(token), WaitForStatusAsync(token)];
         return Task.CompletedTask;
@@ -201,7 +204,7 @@ internal class LapRFConnection : ILapRFConnection
     }
     public Task Stop()
     {
-        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource?.Cancel();
 
         return Task.WhenAll(_runningTasks);
     }

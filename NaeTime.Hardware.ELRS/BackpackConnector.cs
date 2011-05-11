@@ -7,9 +7,9 @@ public class BackpackConnector : IBackpackConnector
 {
     private readonly IBackpackConnection _connection;
     private readonly Guid _connectorId;
-    private readonly CancellationTokenSource _cancellationTokenSource;
+    private CancellationTokenSource? _cancellationTokenSource;
 
-    private readonly Task _finishingTask;
+    private Task[] _runningTasks;
 
     public bool IsConnected { get; private set; }
 
@@ -18,16 +18,19 @@ public class BackpackConnector : IBackpackConnector
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         _connectorId = connectorId;
 
-        _cancellationTokenSource = new CancellationTokenSource();
-
-        _finishingTask = Run(_cancellationTokenSource.Token);
+        _runningTasks = Array.Empty<Task>();
     }
 
-    private Task Run(CancellationToken token)
+    public Task Start()
     {
-        Task[] tasks = [MaintainConnection(token)];
 
-        return Task.WhenAll(tasks);
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        CancellationToken token = _cancellationTokenSource.Token;
+        _runningTasks = [MaintainConnection(token)];
+
+        return Task.CompletedTask;
     }
 
     private async Task MaintainConnection(CancellationToken token)
@@ -50,12 +53,12 @@ public class BackpackConnector : IBackpackConnector
 
     public Task Stop()
     {
-        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource?.Cancel();
 
-        return _finishingTask;
+        return Task.WhenAll(_runningTasks);
     }
 
-    public async Task SetOSDElement(byte[] uid, string text, byte row, byte column, TimeSpan duration)
+    public async Task SetOSDElement(byte[] uid, string text, byte row, byte column, TimeSpan? duration = null)
     {
         if (!IsConnected)
         {

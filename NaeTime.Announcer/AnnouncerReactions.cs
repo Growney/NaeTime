@@ -121,7 +121,7 @@ public class AnnouncerReactions : IAnnouncementStream
     }
     private Task When(OpenPracticePilotDetectionTriggered triggered) => HandleDetection(triggered.PilotId, triggered.DetectionId, triggered.SessionId, triggered.TrackId);
 
-    private static string GetLapCallout(TimeSpan timeSpan, int roundedTo = 3) => Math.Round(timeSpan.TotalSeconds, roundedTo).ToString();
+    private static string GetLapCallout(TimeSpan timeSpan, int roundedTo = 3) => Math.Round(timeSpan.TotalSeconds, roundedTo).ToString("#.0" + String.Join("",Enumerable.Repeat("#", Math.Max(roundedTo-1,0))));
 
     private async Task AnnouncePilotFrequency(Guid sessionId, Guid? pilotId, byte laneId)
     {

@@ -18,7 +18,7 @@ public interface IBackpackConnection
     public Task<ushort> GetBatteryVoltage(byte[] UId);
     public Task<byte[]> GetVRxVersion(byte[] UId);
     public Task SetBuzzer(byte[] UId, ushort durationMs);
-    public Task SetOSDElement(byte[] UId, string message, OSDPresentation presentation, byte row, byte column, TimeSpan duration);
+    public Task SetOSDElement(byte[] UId, string message, OSDPresentation presentation, byte row, byte column, TimeSpan? duration);
     public Task SetHeadTrackingState(byte[] UId, bool state);
     public Task SetMode(BackpackMode mode);
     public Task<string> GetVersion();
