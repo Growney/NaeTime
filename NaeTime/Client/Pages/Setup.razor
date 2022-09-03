@@ -1,0 +1,101 @@
+﻿@page "/setup"
+
+@foreach(var resultKvp in _results)
+{
+    <div>
+        <h4>@resultKvp.Value.config.Identifier</h4>
+        <button @onclick="()=>GetTestResults(resultKvp.Value.config)" class="btn-primary">Refresh</button>
+        <button @onclick="()=>SetupNode(resultKvp.Value.config)" class="btn-primary">Setup</button>
+        @if(resultKvp.Value.result != null)
+        {
+            <p>Available: @resultKvp.Value.result.IsAvailable</p>
+            <p>Setup: @resultKvp.Value.result.IsSetup</p>
+        }
+        else
+        {
+            <p>Pending</p>
+        }
+
+    </div>
+}
+
+@code{
+
+    [Inject]
+    private HttpClient? HttpClient{ get; set; }
+    private SystemConfigurationDto? Configuration { get; set; }
+
+    private readonly Dictionary<Guid,(NodeDto config, NodeTestDto? result)> _results = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _results.Clear();
+        if(HttpClient != null)
+        {
+            Configuration = await HttpClient.GetFromJsonAsync<SystemConfigurationDto>("configuration");
+            if(Configuration?.Nodes != null)
+            {
+                foreach(var node in Configuration.Nodes)
+                {
+                    if(node.Id != null)
+                    {
+                        if (!_results.ContainsKey(node.Id.Value))
+                        {
+                            _results.Add(node.Id.Value, (node, null));
+                            _ = GetTestResults(node);
+                        }
+                    }
+                }
+            }
+        }
+        await base.OnInitializedAsync();
+    }
+
+    private async Task GetTestResults(NodeDto node)
+    {
+        if(HttpClient != null)
+        {
+            if (node.Id != null)
+            {
+                _results[node.Id.Value] = (node, null);
+                try
+                {
+                    var result = await HttpClient.GetFromJsonAsync<NodeTestDto>($"configuration/node/test/{node.Id.Value}");
+                    if(result != null)
+                    {
+                        _results[node.Id.Value] = (node, result);
+                        StateHasChanged();
+                    };
+                }
+                catch
+                {
+                    _results[node.Id.Value] = (node, new NodeTestDto());
+                }
+
+            }
+        }
+
+    }
+
+    private async Task SetupNode(NodeDto node)
+    {
+        if(HttpClient != null)
+        {
+            if (node.Id != null)
+            {
+                try
+                {
+                    var result = await HttpClient.PostAsync($"configuration/node/setup/{node.Id.Value}",null);
+                    if(result.IsSuccessStatusCode)
+                    {
+                        GetTestResults(node);
+                    };
+                }
+                catch
+                {
+                    
+                }
+            }
+        }
+    }
+}

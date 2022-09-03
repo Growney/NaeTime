@@ -1,0 +1,67 @@
+﻿@page "/track/{id:guid?}"
+@if(Dto != null)
+{
+    <div class="col-sm g-2">
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <div class="form-floating">
+                        <input class="form-control" type="text" @bind-value="Dto.Name" />
+                        <label>Name</label>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-floating">
+                        <input id="addressInput" class="form-control" type="number" @bind-value="Dto.MinimumLapTime" />
+                        <label>Minimum Lap Time</label>
+                    </div>
+                </div>
+            </div>
+            @if (GetAvailableNodes(null).Count > 0)
+            {
+                <div class="row mt-2">
+                    <div class="col">
+                        <button class="btn btn-secondary" @onclick="AddGate">Add Gate</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row mt-2">
+                    <div class="col">
+                        No Free Nodes
+                    </div>
+                </div>
+            }
+            <ol>
+                @for (int gateIndex = 0; gateIndex < Dto.Gates.Count(); gateIndex++)
+                {
+                    var localIndex = gateIndex;
+                    <li>
+                        Gate Node:
+                        <select @bind="Dto.Gates[localIndex].NodeId">
+                            <option value="@Guid.Empty">[Select A Node]</option>
+                            @foreach (var node in GetAvailableNodes(Dto.Gates[localIndex]))
+                            {
+                                <option value="@node.Id">@node.Identifier</option>
+                            }
+                        </select>
+                    </li>
+                }
+            </ol>
+            <div class="row mt-2">
+                <div class="col">
+                    @if (_error != null)
+                    {
+                        <label class="alert alert-danger">@_error</label>
+                    }
+                    <button class="col-md-12 btn btn-primary" @onclick="Save">Save Track</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <label class="alert alert-danger">@_error</label>
+}
