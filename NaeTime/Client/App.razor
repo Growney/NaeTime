@@ -1,4 +1,6 @@
-﻿<CascadingAuthenticationState>
+﻿@using NaeTime.Client.Abstractions.Services
+@implements IAsyncDisposable
+<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
@@ -23,3 +25,30 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
+
+@code{
+    [Inject]
+    public ICommunicationService? CommunicationService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CommunicationService != null)
+        {
+            await CommunicationService.StartAsync();
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        if (CommunicationService != null)
+        {
+            return new ValueTask(CommunicationService.StopAsync());
+        }
+        else
+        {
+            return ValueTask.CompletedTask;
+        }
+    }
+}

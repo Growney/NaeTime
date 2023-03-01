@@ -12,5 +12,10 @@ namespace NaeTime.Shared.Client
         public Guid FlightId { get; set; }
         public long StartTick { get; set; }
         public long? EndTick { get; set; }
+
+        public TrackDto? Track { get; set; }
+        public FlightDto? Flight { get; set; }
+        public FlyingSessionDto? FlyingSession { get; set; }
+        public PilotDto? Pilot { get; set; }
     }
 }

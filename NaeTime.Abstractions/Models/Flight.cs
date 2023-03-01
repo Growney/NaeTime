@@ -5,6 +5,7 @@
         public Guid Id { get; set; }
         public int Frequency { get; set; }
         public Guid TrackId { get; set; }
+        public Track? Track { get; set; }
         public Guid PilotId { get; set; }
         public DateTime Start { get; set; }
         public DateTime? End { get; set; }

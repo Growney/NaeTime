@@ -9,6 +9,8 @@ namespace NaeTime.Core
         public IFlightRepository Flights { get; }
         public INodeRepository Nodes { get; }
         public IFlyingSessionRepository FlyingSessions { get; }
+        public IPilotRepository Pilots { get; }
+        public IRssiStreamReadingBatchRepository RssiStreamReadingBatches { get; }
 
         private readonly ApplicationDbContext _context;
 
@@ -16,13 +18,17 @@ namespace NaeTime.Core
             INodeRepository nodeRepository,
             ITrackRepository tracks,
             IFlightRepository flights,
-            IFlyingSessionRepository flyingSessions)
+            IFlyingSessionRepository flyingSessions,
+            IPilotRepository pilots,
+            IRssiStreamReadingBatchRepository rssiStreamReadings)
         {
             _context = context;
             Nodes = nodeRepository;
             Tracks = tracks;
             Flights = flights;
             FlyingSessions = flyingSessions;
+            Pilots = pilots;
+            RssiStreamReadingBatches = rssiStreamReadings;
         }
 
         public Task SaveChangesAsync() => _context.SaveChangesAsync();

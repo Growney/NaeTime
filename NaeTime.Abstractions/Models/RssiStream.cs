@@ -12,7 +12,7 @@ namespace NaeTime.Abstractions.Models
         public long StartTick { get; }
         public int TunedFrequency { get; set; }
         public RssiBoundary? Boundary { get; set; }
-        public List<RssiStreamPass> Passes { get; set; } = new();
-        public List<RssiStreamReading> Readings { get; set; } = new();
+        public List<RssiStreamPass> RssiReadingPasses { get; set; } = new();
+        public List<RssiStreamReadingBatch> RssiReadingBatches { get; set; } = new();
     }
 }

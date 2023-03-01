@@ -8,6 +8,8 @@ namespace NaeTime.Abstractions
         IFlightRepository Flights { get; }
         ITrackRepository Tracks { get; }
         IFlyingSessionRepository FlyingSessions { get; }
+        IPilotRepository Pilots { get; }
+        IRssiStreamReadingBatchRepository RssiStreamReadingBatches { get; }
         Task SaveChangesAsync();
     }
 }

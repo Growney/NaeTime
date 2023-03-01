@@ -1,10 +1,14 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using NaeTime.Abstractions.Handlers;
 using NaeTime.Core;
 using NaeTime.Core.Extensions;
 using NaeTime.Core.Models;
+using NaeTime.Node.Client;
+using NaeTime.Node.Client.Abstractions;
 using NaeTime.Server.Hubs;
 using NaeTime.Server.Services;
 using System.Security.Claims;
@@ -30,6 +34,10 @@ namespace NaeTime.Server
             builder.Services.AddNaeTimeDtoMapper();
             builder.Services.AddNaeTimeHandlers();
 
+            builder.Services.AddTransient<INodeClientFactory, NodeClientFactory>();
+
+            builder.Services.AddScoped<IFlightLapHandler, FlightLapBroadcastHandler>();
+
             builder.Services.AddSingleton<RssiStreamBroadcastHandler>();
             builder.Services.AddHostedService(x => x.GetRequiredService<RssiStreamBroadcastHandler>());
             builder.Services.AddSingleton<IRssiStreamReadingHandler>(x => x.GetRequiredService<RssiStreamBroadcastHandler>());
@@ -46,6 +54,7 @@ namespace NaeTime.Server
             builder.Services.Configure<IdentityOptions>(options =>
                 options.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier);
 
+            builder.Services.AddSingleton<IPostConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
             builder.Services.AddSignalR();
 
             builder.Services.AddControllersWithViews();

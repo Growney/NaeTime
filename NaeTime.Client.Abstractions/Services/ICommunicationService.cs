@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace NaeTime.Client.Abstractions.Services
 {
-    public interface ICommunicationService : IDisposable
+    public interface ICommunicationService
     {
         event EventHandler<FlightLapDtoEventArgs> OnLapStarted;
         event EventHandler<FlightLapDtoEventArgs> OnLapCompleted;
@@ -16,5 +16,8 @@ namespace NaeTime.Client.Abstractions.Services
         event EventHandler<FlightSplitEventArgs> OnSplitCompleted;
 
         event EventHandler<RssiStreamReadingEventArgs> OnRssiStreamReading;
+
+        Task StartAsync();
+        Task StopAsync();
     }
 }

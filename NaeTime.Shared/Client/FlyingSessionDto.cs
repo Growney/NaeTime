@@ -17,6 +17,8 @@ namespace NaeTime.Shared.Client
         public List<FlightDto> Flights { get; set; } = new();
 
         public bool IsPublic { get; set; }
-        public List<Guid> AllowedPilots { get; set; } = new();
+        public List<PilotDto> AllowedPilots { get; set; } = new();
+
+        public List<LapDto> Laps { get; set; } = new();
     }
 }

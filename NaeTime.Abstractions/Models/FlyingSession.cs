@@ -17,6 +17,6 @@ namespace NaeTime.Abstractions.Models
         public List<Flight> Flights { get; set; } = new();
 
         public bool IsPublic { get; set; }
-        public List<AllowedPilot> AllowedPilots { get; set; } = new();
+        public List<Pilot> AllowedPilots { get; set; } = new();
     }
 }

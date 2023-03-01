@@ -16,11 +16,13 @@ namespace NaeTime.Server
                 mc.CreateBidirectionalMap<Abstractions.Models.Flight, Shared.Client.FlightDto>();
                 mc.CreateBidirectionalMap<Abstractions.Models.Lap, Shared.Client.LapDto>();
                 mc.CreateBidirectionalMap<Abstractions.Models.Split, Shared.Client.SplitDto>();
+                mc.CreateBidirectionalMap<Abstractions.Models.RssiStream, Shared.Node.RssiStreamDto>();
                 mc.CreateBidirectionalMap<Abstractions.Models.RssiStream, Shared.Client.RssiStreamDto>();
                 mc.CreateBidirectionalMap<Abstractions.Models.RssiStreamPass, Shared.Client.RssiStreamPassDto>();
                 mc.CreateBidirectionalMap<Abstractions.Models.RssiStreamReading, Shared.Client.RssiStreamReadingDto>();
                 mc.CreateBidirectionalMap<Abstractions.Models.Track, Shared.Client.TrackDto>();
                 mc.CreateBidirectionalMap<Abstractions.Models.TimedGate, Shared.Client.TimedGateDto>();
+                mc.CreateBidirectionalMap<Abstractions.Models.Pilot, Shared.Client.PilotDto>();
             });
             IMapper mapper = mapperConfig.CreateMapper();
             services.AddSingleton(mapper);

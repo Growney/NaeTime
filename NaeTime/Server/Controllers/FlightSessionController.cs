@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using NaeTime.Abstractions;
 using NaeTime.Abstractions.Models;
 using NaeTime.Core.Models;
+using NaeTime.Core.Processors;
+using NaeTime.Node.Client.Abstractions;
 using NaeTime.Shared.Client;
 using System;
 using System.Collections.Generic;
@@ -19,17 +21,19 @@ namespace NaeTime.Server.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
         private readonly INaeTimeUnitOfWork _unitOfWork;
+        private readonly INodeClientFactory _nodeClientFactory;
 
-        public FlightSessionController(UserManager<ApplicationUser> userManager, IMapper mapper, INaeTimeUnitOfWork unitOfWork)
+        public FlightSessionController(UserManager<ApplicationUser> userManager, IMapper mapper, INaeTimeUnitOfWork unitOfWork, INodeClientFactory nodeClientFactory)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+            _nodeClientFactory = nodeClientFactory ?? throw new ArgumentNullException(nameof(nodeClientFactory));
         }
 
         [Authorize]
         [HttpPost("session/start")]
-        public async Task<IActionResult> CreateSession(FlyingSessionDto dto)
+        public async Task<IActionResult> CreateSession([FromBody]FlyingSessionDto dto)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -44,10 +48,12 @@ namespace NaeTime.Server.Controllers
                 Name = dto.Name,
                 IsPublic = dto.IsPublic,
                 TrackId = dto.TrackId,
-                AllowedPilots = (from pilotId in dto.AllowedPilots select new AllowedPilot() { PilotId = pilotId }).ToList(),
+                AllowedPilots = new List<Pilot>(),
             };
 
             _unitOfWork.FlyingSessions.Insert(session);
+
+            await _unitOfWork.SaveChangesAsync();
 
             var sessionDto = _mapper.Map<FlyingSession, FlyingSessionDto>(session);
 
@@ -88,11 +94,24 @@ namespace NaeTime.Server.Controllers
                 if (flight.End == null)
                 {
                     flight.End = endDate;
+                    await StopFlightStreams(flight);
                 }
-                //TODO STOP FLIGHT STREAMS
             }
 
             return Ok();
+        }
+
+        private async Task StopFlightStreams(Flight flight)
+        {
+            foreach (var stream in flight.RssiStreams)
+            {
+                var streamNode = await _unitOfWork.Nodes.GetAsync(stream.NodeId);
+                if (streamNode != null)
+                {
+                    var nodeClient = _nodeClientFactory.CreateClient(streamNode.Address);
+                    await nodeClient.StopRssiStreamAsync(stream.Id);
+                }
+            }
         }
 
         [Authorize]
@@ -111,7 +130,7 @@ namespace NaeTime.Server.Controllers
                 return NoContent();
             }
 
-            if (session.HostPilotId != user.PilotId && !session.AllowedPilots.Any(x => x.PilotId == user.PilotId))
+            if (session.HostPilotId != user.PilotId && !session.AllowedPilots.Any(x => x.Id == user.PilotId))
             {
                 return Forbid();
             }
@@ -136,7 +155,7 @@ namespace NaeTime.Server.Controllers
 
         [Authorize]
         [HttpPost("session/{sessionId:Guid}/flight/start")]
-        public async Task<IActionResult> CreateFlight(Guid sessionId, [FromQuery] int frequency)
+        public async Task<ActionResult<FlightDto>> CreateFlight(Guid sessionId, [FromQuery] int frequency)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -148,21 +167,49 @@ namespace NaeTime.Server.Controllers
             {
                 return NoContent();
             }
-            if (session.HostPilotId != user.PilotId || !session.AllowedPilots.Any(x => x.PilotId == user.PilotId))
+            if (session.HostPilotId != user.PilotId && !session.AllowedPilots.Any(x => x.Id == user.PilotId))
             {
                 return Forbid();
             }
+            var track = await _unitOfWork.Tracks.GetAsync(session.TrackId);
+
+            if (track == null)
+            {
+                return NoContent();
+            }
+
             var flight = new Flight()
             {
                 Start = DateTime.UtcNow,
                 PilotId = user.PilotId,
                 Frequency = frequency,
+                TrackId = session.TrackId
             };
-            //TODO Start flight streams
+            foreach(var gate in track.Gates)
+            {
+                var rssiStream = new RssiStream()
+                {
+                    NodeId = gate.NodeId,
+                };
+                flight.RssiStreams.Add(rssiStream);
+            }
 
             session.Flights.Add(flight);
 
             _unitOfWork.FlyingSessions.Update(session);
+            await _unitOfWork.SaveChangesAsync();
+
+            foreach(var stream in flight.RssiStreams)
+            {
+                var node = await _unitOfWork.Nodes.GetAsync(stream.NodeId);
+                if(node != null)
+                {
+                    var nodeClient = _nodeClientFactory.CreateClient(node.Address);
+                    var streamDto = await nodeClient.StartRssiStreamAsync(stream.Id, flight.Frequency, null);
+
+                    _mapper.Map(streamDto, stream);
+                }
+            }
 
             await _unitOfWork.SaveChangesAsync();
 
@@ -195,11 +242,33 @@ namespace NaeTime.Server.Controllers
                 return Forbid();
             }
             flight.End = DateTime.UtcNow;
-
+            await StopFlightStreams(flight);
             _unitOfWork.FlyingSessions.Update(session);
 
             await _unitOfWork.SaveChangesAsync();
-            //TODO stop flight streams
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("session/flight/{flightId:Guid}/recalculate")]
+        public async Task<IActionResult> Recalculate(Guid flightId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            var flight = await _unitOfWork.Flights.GetWithReadings(flightId);
+            if (flight == null)
+            {
+                return NoContent();
+            }
+
+            if (flight.PilotId != user.PilotId)
+            {
+                return Forbid();
+            }
+
             return Ok();
         }
     }

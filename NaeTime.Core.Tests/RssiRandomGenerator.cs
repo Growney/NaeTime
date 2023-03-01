@@ -23,7 +23,6 @@ namespace NaeTime.Core.Tests
                 yield return new RssiStreamReading()
                 {
                     Id = Guid.NewGuid(),
-                    StreamId = streamId,
                     Tick = ++startingTick,
                     Value = noise
                 };
@@ -46,7 +45,6 @@ namespace NaeTime.Core.Tests
                 yield return new RssiStreamReading()
                 {
                     Id = Guid.NewGuid(),
-                    StreamId = streamId,
                     Tick = ++startingTick,
                     Value = noise
                 };

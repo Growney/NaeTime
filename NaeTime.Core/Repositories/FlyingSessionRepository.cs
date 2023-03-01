@@ -19,14 +19,21 @@ namespace NaeTime.Core.Repositories
         }
         public Task<List<FlyingSession>> GetAllowedAsync(Guid pilotId)
             => (from session in _context.FlyingSessions
-                from allowedPilot in session.AllowedPilots
-                where session.HostPilotId == pilotId || allowedPilot.PilotId == pilotId
-                select session).ToListAsync();
+                where session.HostPilotId == pilotId || session.AllowedPilots.Any(x => x.Id == pilotId)
+                select session)
+            .Include(x => x.Flights)
+            .Include(x => x.AllowedPilots)
+            .AsSplitQuery()
+            .ToListAsync();
 
         public Task<FlyingSession?> GetAsync(Guid id)
             => (from session in _context.FlyingSessions
                 where session.Id == id
-                select session).FirstOrDefaultAsync();
+                select session)
+            .Include(x => x.Flights)
+            .Include(x => x.AllowedPilots)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync();
 
         public Task<List<FlyingSession>> GetAttendedAsync(Guid pilotId)
             => (from session in _context.FlyingSessions
@@ -38,12 +45,17 @@ namespace NaeTime.Core.Repositories
             => (from session in _context.FlyingSessions
                 from flight in session.Flights
                 where flight.Id == flightId
-                select session).FirstOrDefaultAsync();
+                select session)
+            .Include(x=>x.Flights)
+                .ThenInclude(x=>x.RssiStreams)
+            .FirstOrDefaultAsync();
 
         public Task<List<FlyingSession>> GetForHostAsync(Guid hostPilotId)
             => (from session in _context.FlyingSessions
                 where session.HostPilotId == hostPilotId
-                select session).ToListAsync();
+                select session)
+            .Include(x => x.Flights)
+            .Include(x => x.AllowedPilots).ToListAsync();
 
         public void Insert(FlyingSession session) => _context.FlyingSessions.Add(session);
         public void Update(FlyingSession session) => _context.FlyingSessions.Update(session);

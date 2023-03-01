@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using NaeTime.Client;
+using NaeTime.Client.Abstractions.Services;
+using NaeTime.Client.Services;
 using Syncfusion.Blazor;
+using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 namespace NaeTime.Client
 {
@@ -19,11 +22,13 @@ namespace NaeTime.Client
 
             // Supply HttpClient instances that include access tokens when making requests to the server project
             builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("NaeTime.ServerAPI"));
-
+            builder.Services.AddScoped<ICommunicationService, CommunicationService>();
             builder.Services.AddSyncfusionBlazor();
             builder.Services.AddApiAuthorization();
+            builder.Services.AddSpeechSynthesis();
 
-            await builder.Build().RunAsync();
+            var host = builder.Build();
+            await host.RunAsync();
         }
     }
 }

@@ -2,11 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NaeTime.Abstractions;
-using NaeTime.Abstractions.Factories;
 using NaeTime.Abstractions.Models;
 using NaeTime.Abstractions.Processors;
 using NaeTime.Abstractions.Repositories;
-using NaeTime.Core.Factories;
 using NaeTime.Core.Processors;
 using NaeTime.Core.Repositories;
 using NaeTime.Core.Validation;
@@ -29,6 +27,8 @@ namespace NaeTime.Core.Extensions
             services.AddScoped<IFlightRepository, FlightRepository>();
             services.AddScoped<ITrackRepository, TrackRepository>();
             services.AddScoped<IFlyingSessionRepository, FlyingSessionRepository>();
+            services.AddScoped<IPilotRepository, PilotRepository>();
+            services.AddScoped<IRssiStreamReadingBatchRepository, RssiStreamReadingBatchRepository>();
 
             return services;
         }
@@ -42,7 +42,7 @@ namespace NaeTime.Core.Extensions
 
         public static IServiceCollection AddNaeTimeProcessors(this IServiceCollection services)
         {
-            services.AddScoped<IRssiStreamReadingProcessorFactory, RssiStreamReadingProcessorFactory>();
+            services.AddHostedService<FlightProcessor>();
             services.AddTransient<IHandlerProcessor, HandlerProcessor>();
             return services;
         }

@@ -12,8 +12,8 @@ using NaeTime.Core;
 namespace NaeTime.Core.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20220903182500_flyingsession-nullend")]
-    partial class flyingsessionnullend
+    [Migration("20220907160131_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -302,25 +302,6 @@ namespace NaeTime.Core.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("NaeTime.Abstractions.Models.AllowedPilot", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("FlyingSessionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PilotId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FlyingSessionId");
-
-                    b.ToTable("AllowedPilot");
-                });
-
             modelBuilder.Entity("NaeTime.Abstractions.Models.Flight", b =>
                 {
                     b.Property<Guid>("Id")
@@ -431,6 +412,28 @@ namespace NaeTime.Core.Migrations
                     b.ToTable("Nodes");
                 });
 
+            modelBuilder.Entity("NaeTime.Abstractions.Models.Pilot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("FlyingSessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneticName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FlyingSessionId");
+
+                    b.ToTable("Pilots");
+                });
+
             modelBuilder.Entity("NaeTime.Abstractions.Models.RssiBoundary", b =>
                 {
                     b.Property<int>("Id")
@@ -508,10 +511,7 @@ namespace NaeTime.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("RssiStreamId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("StreamId")
+                    b.Property<Guid>("RssiStreamReadingBatchId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("Tick")
@@ -522,9 +522,43 @@ namespace NaeTime.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RssiStreamId");
+                    b.HasIndex("RssiStreamReadingBatchId");
 
                     b.ToTable("RssiStreamReading");
+                });
+
+            modelBuilder.Entity("NaeTime.Abstractions.Models.RssiStreamReadingBatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("MaxRssiValue")
+                        .HasColumnType("int");
+
+                    b.Property<long>("MaxTick")
+                        .HasColumnType("bigint");
+
+                    b.Property<double>("MeanRssiValue")
+                        .HasColumnType("float");
+
+                    b.Property<int>("MinRssiValue")
+                        .HasColumnType("int");
+
+                    b.Property<long>("MinTick")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("Processed")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("RssiStreamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RssiStreamId");
+
+                    b.ToTable("RssiReadingBatches");
                 });
 
             modelBuilder.Entity("NaeTime.Abstractions.Models.RX5808", b =>
@@ -686,7 +720,8 @@ namespace NaeTime.Core.Migrations
 
                     b.Property<Guid>("PilotId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -762,13 +797,6 @@ namespace NaeTime.Core.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("NaeTime.Abstractions.Models.AllowedPilot", b =>
-                {
-                    b.HasOne("NaeTime.Abstractions.Models.FlyingSession", null)
-                        .WithMany("AllowedPilots")
-                        .HasForeignKey("FlyingSessionId");
-                });
-
             modelBuilder.Entity("NaeTime.Abstractions.Models.Flight", b =>
                 {
                     b.HasOne("NaeTime.Abstractions.Models.FlyingSession", null)
@@ -783,6 +811,13 @@ namespace NaeTime.Core.Migrations
                         .HasForeignKey("FlightId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("NaeTime.Abstractions.Models.Pilot", b =>
+                {
+                    b.HasOne("NaeTime.Abstractions.Models.FlyingSession", null)
+                        .WithMany("AllowedPilots")
+                        .HasForeignKey("FlyingSessionId");
                 });
 
             modelBuilder.Entity("NaeTime.Abstractions.Models.RssiStream", b =>
@@ -811,9 +846,20 @@ namespace NaeTime.Core.Migrations
 
             modelBuilder.Entity("NaeTime.Abstractions.Models.RssiStreamReading", b =>
                 {
-                    b.HasOne("NaeTime.Abstractions.Models.RssiStream", null)
+                    b.HasOne("NaeTime.Abstractions.Models.RssiStreamReadingBatch", null)
                         .WithMany("Readings")
-                        .HasForeignKey("RssiStreamId");
+                        .HasForeignKey("RssiStreamReadingBatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("NaeTime.Abstractions.Models.RssiStreamReadingBatch", b =>
+                {
+                    b.HasOne("NaeTime.Abstractions.Models.RssiStream", null)
+                        .WithMany("ProcessedBatches")
+                        .HasForeignKey("RssiStreamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("NaeTime.Abstractions.Models.RX5808", b =>
@@ -876,6 +922,11 @@ namespace NaeTime.Core.Migrations
                 {
                     b.Navigation("Passes");
 
+                    b.Navigation("ProcessedBatches");
+                });
+
+            modelBuilder.Entity("NaeTime.Abstractions.Models.RssiStreamReadingBatch", b =>
+                {
                     b.Navigation("Readings");
                 });
 

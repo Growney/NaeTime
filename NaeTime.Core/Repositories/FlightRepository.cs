@@ -17,19 +17,28 @@ namespace NaeTime.Core.Repositories
                 where flight.Id == id
                 select flight)
             .Include(x => x.RssiStreams)
-                .ThenInclude(s => s.Readings)
-            .Include(x => x.RssiStreams)
-                .ThenInclude(s => s.Passes)
+                .ThenInclude(s => s.RssiReadingPasses)
+            .AsSplitQuery()
             .FirstOrDefaultAsync();
 
+        public Task<Flight?> GetWithReadings(Guid id)
+            => (from flight in _context.Flights
+                where flight.Id == id
+                select flight)
+            .Include(x => x.RssiStreams)
+                .ThenInclude(s => s.RssiReadingPasses)
+            .Include(x=>x.RssiStreams)
+                .ThenInclude(s =>s.RssiReadingBatches)
+                .ThenInclude(b =>b.Readings)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync();
         public Task<List<Flight>> GetForPilotAsync(Guid pilotId)
             => (from flight in _context.Flights
                 where flight.PilotId == pilotId
                 select flight)
             .Include(x => x.RssiStreams)
-                .ThenInclude(s => s.Readings)
-            .Include(x => x.RssiStreams)
-                .ThenInclude(s => s.Passes)
+                .ThenInclude(s => s.RssiReadingPasses)
+            .AsSplitQuery()
             .ToListAsync();
 
         public Task<Flight?> GetForStreamAsync(Guid streamId)
@@ -38,7 +47,8 @@ namespace NaeTime.Core.Repositories
                 where stream.Id == streamId
                 select flight)
             .Include(x => x.RssiStreams)
-                .ThenInclude(s => s.Passes)
+                .ThenInclude(s => s.RssiReadingPasses)
+            .AsSplitQuery()
             .FirstOrDefaultAsync();
 
         public Task<List<Flight>> GetForTrackAsync(Guid trackId)
@@ -46,9 +56,21 @@ namespace NaeTime.Core.Repositories
                 where flight.TrackId == trackId
                 select flight)
             .Include(x => x.RssiStreams)
-                .ThenInclude(s => s.Readings)
+                .ThenInclude(s => s.RssiReadingPasses)
+            .AsSplitQuery()
+            .ToListAsync();
+
+        public Task<List<Flight>> GetActiveAsync()
+        => (from flight in _context.Flights
+            where flight.End == null
+            select flight)
             .Include(x => x.RssiStreams)
-                .ThenInclude(s => s.Passes)
+                .ThenInclude(s => s.RssiReadingPasses)
+            .Include(x => x.RssiStreams)
+                .ThenInclude(s => s.RssiReadingBatches)
+            .Include(x => x.Laps)
+            .Include(x => x.Splits)
+            .AsSplitQuery()
             .ToListAsync();
     }
 }

@@ -13,11 +13,20 @@ namespace NaeTime.Core
         public DbSet<Track> Tracks => base.Set<Track>();
         public DbSet<Flight> Flights => base.Set<Flight>();
         public DbSet<FlyingSession> FlyingSessions => base.Set<FlyingSession>();
+        public DbSet<Pilot> Pilots => base.Set<Pilot>();
+        public DbSet<RssiStreamReadingBatch> RssiReadingBatches => base.Set<RssiStreamReadingBatch>();
 
         public ApplicationDbContext(
             DbContextOptions options,
             IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
         {
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<ApplicationUser>().Property(x => x.PilotId).HasDefaultValueSql("NEWID()");
+
+            base.OnModelCreating(builder);
         }
     }
 }

@@ -58,7 +58,7 @@ namespace NaeTime.Server.Controllers
 
             var nodes = await _unitOfWork.Nodes.GetForPilotAsync(user.PilotId);
 
-            return _mapper.Map<List<Node>, List<NodeDto>>(nodes);
+            return _mapper.Map<List<Abstractions.Models.Node>, List<NodeDto>>(nodes);
         }
 
         [Authorize]
@@ -138,7 +138,7 @@ namespace NaeTime.Server.Controllers
             }
 
             _httpClient.BaseAddress = new Uri(node.Address);
-            var nodeConfiguration = _mapper.Map<Node, ConfigurationDto>(node);
+            var nodeConfiguration = _mapper.Map<Abstractions.Models.Node, ConfigurationDto>(node);
             nodeConfiguration.ServerUri = $"{Request.Scheme}://{Request.Host}";
             var configResponse = await _httpClient.PostAsJsonAsync("config", nodeConfiguration);
             var response = await configResponse.Content.ReadAsStringAsync();

@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using NaeTime.Abstractions.Factories;
+using NaeTime.Abstractions;
 using NaeTime.Abstractions.Models;
 using NaeTime.Abstractions.Processors;
 using NaeTime.Shared.Node;
@@ -8,13 +8,11 @@ namespace NaeTime.Server.Controllers
 {
     public class NodeController : Controller
     {
-        private readonly IRssiStreamReadingProcessorFactory _rssiStreamReadingProcessorFactory;
-        private readonly IHandlerProcessor _handlerProcessor;
+        private readonly INaeTimeUnitOfWork _unitOfWork;
 
-        public NodeController(IRssiStreamReadingProcessorFactory rssiStreamReadingProcessorFactory, IHandlerProcessor handlerProcessor)
+        public NodeController(INaeTimeUnitOfWork unitOfWork)
         {
-            _rssiStreamReadingProcessorFactory = rssiStreamReadingProcessorFactory ?? throw new ArgumentNullException(nameof(rssiStreamReadingProcessorFactory));
-            _handlerProcessor = handlerProcessor ?? throw new ArgumentNullException(nameof(handlerProcessor));
+            _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         }
 
         [HttpPost("node/values")]
@@ -27,40 +25,56 @@ namespace NaeTime.Server.Controllers
                     var readingProcessors = new List<IRssiStreamReadingProcessor>();
                     foreach (var stream in valuesDto.Values)
                     {
-                        if (stream.RssiValues != null)
+                        if (stream.RssiValues != null && stream.RssiValues.Count > 0)
                         {
-                            try
+                            var readings = new List<RssiStreamReading>();
+                            int maxRssi = int.MinValue;
+                            int minRssi = int.MaxValue;
+                            long maxTick = long.MinValue;
+                            long minTick = long.MaxValue; 
+
+                            foreach(var readingDto in stream.RssiValues)
                             {
-                                var readingProcessor = await _rssiStreamReadingProcessorFactory.CreateProcessorAsync(stream.StreamId);
-                                if (readingProcessor != null)
+                                if(readingDto.Tick > maxTick)
                                 {
-                                    readingProcessors.Add(readingProcessor);
-                                    foreach (var readingDto in stream.RssiValues)
-                                    {
-                                        var reading = new RssiStreamReading()
-                                        {
-                                            StreamId = stream.StreamId,
-                                            Tick = readingDto.Tick,
-                                            Value = readingDto.Value
-                                        };
-
-                                        readingProcessor.ProcessReading(reading);
-                                    }
+                                    maxTick = readingDto.Tick;
                                 }
-                            }
-                            catch (Exception)
-                            {
+                                if(readingDto.Tick < minTick)
+                                {
+                                    minTick = readingDto.Tick;
+                                }
+                                if(readingDto.Value > maxRssi)
+                                {
+                                    maxRssi = readingDto.Value;
+                                }
+                                if(readingDto.Value < minRssi)
+                                {
+                                    minRssi = readingDto.Value;
+                                }
 
+                                var reading = new RssiStreamReading()
+                                {
+                                    Tick = readingDto.Tick,
+                                    Value = readingDto.Value,
+                                };
+
+                                readings.Add(reading);
                             }
+
+                            var batch = new RssiStreamReadingBatch()
+                            {
+                                RssiStreamId = stream.StreamId,
+                                Readings = readings,
+                                MaxRssiValue = maxRssi,
+                                MinRssiValue = minRssi,
+                                MaxTick = maxTick,
+                                MinTick = minTick,
+                                ReadingCount = readings.Count
+                            };
+                            _unitOfWork.RssiStreamReadingBatches.Insert(batch);
                         }
                     }
-                    await _rssiStreamReadingProcessorFactory.SaveChangedAsync();
-
-                    foreach (var readingProcessor in readingProcessors)
-                    {
-                        _handlerProcessor.HandleProcessedStreams(readingProcessor);
-                        _handlerProcessor.HandleProcessedFlights(readingProcessor);
-                    }
+                    await _unitOfWork.SaveChangesAsync();
                 }
             }
             return Ok();

@@ -47,6 +47,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{C72463
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Shared", "NaeTime.Shared\NaeTime.Shared.csproj", "{5889BF4F-DAAB-4C4F-82D8-06D5C663BABB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Node.Client", "NaeTime.Node.Client\NaeTime.Node.Client.csproj", "{A8F571DF-08A8-4F03-A98F-1F5E1B8B9FCB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -113,6 +115,10 @@ Global
 		{5889BF4F-DAAB-4C4F-82D8-06D5C663BABB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5889BF4F-DAAB-4C4F-82D8-06D5C663BABB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5889BF4F-DAAB-4C4F-82D8-06D5C663BABB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8F571DF-08A8-4F03-A98F-1F5E1B8B9FCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8F571DF-08A8-4F03-A98F-1F5E1B8B9FCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8F571DF-08A8-4F03-A98F-1F5E1B8B9FCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8F571DF-08A8-4F03-A98F-1F5E1B8B9FCB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -138,6 +144,7 @@ Global
 		{F45216C1-26AF-449F-A933-280687A96084} = {00EA0326-46AF-4A5D-8F2D-874E7E0A2813}
 		{C72463A7-3BCF-4490-BA8E-B82CC725A536} = {5DDEFE5F-2260-401D-9F47-E035C156796C}
 		{5889BF4F-DAAB-4C4F-82D8-06D5C663BABB} = {C72463A7-3BCF-4490-BA8E-B82CC725A536}
+		{A8F571DF-08A8-4F03-A98F-1F5E1B8B9FCB} = {805B6A25-FC62-4D6A-B494-647EB09BCBE7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1A997979-3B06-4C74-83C2-FD4E2B5F707A}

@@ -56,12 +56,16 @@ public class For_RX5808Module_ConfirmFrequency
     private void SetupControllerMock(Mock<IGpioController> mockController, Queue<PinAction> commandQueue, params PinValue[] returns)
     {
         var stopwatch = Stopwatch.StartNew();
-        mockController.Setup(x => x.OpenPin(It.IsAny<int>(), It.IsAny<PinMode>(), It.IsAny<PinValue>())).Callback<int, PinMode, PinValue>((pinNumber, mode, value) => commandQueue.Enqueue(PinAction.OpenAndInitialise(stopwatch.ElapsedTicks, pinNumber, mode, value)));
-        mockController.Setup(x => x.OpenPin(It.IsAny<int>(), It.IsAny<PinMode>())).Callback<int, PinMode>((pinNumber, mode) => commandQueue.Enqueue(PinAction.Open(stopwatch.ElapsedTicks, pinNumber, mode)));
-        mockController.Setup(x => x.Write(It.IsAny<int>(), It.IsAny<PinValue>())).Callback<int, PinValue>((pinNumber, value) => commandQueue.Enqueue(PinAction.Write(stopwatch.ElapsedTicks, pinNumber, value)));
+        mockController.Setup(x => x.OpenPin(It.IsAny<int>(), It.IsAny<PinMode>(), It.IsAny<PinValue>()))
+            .Callback<int, PinMode, PinValue>((pinNumber, mode, value) => commandQueue.Enqueue(PinAction.OpenAndInitialise(stopwatch.ElapsedTicks, pinNumber, mode, value)));
+        mockController.Setup(x => x.OpenPin(It.IsAny<int>(), It.IsAny<PinMode>()))
+            .Callback<int, PinMode>((pinNumber, mode) => commandQueue.Enqueue(PinAction.Open(stopwatch.ElapsedTicks, pinNumber, mode)));
+        mockController.Setup(x => x.Write(It.IsAny<int>(), It.IsAny<PinValue>()))
+            .Callback<int, PinValue>((pinNumber, value) => commandQueue.Enqueue(PinAction.Write(stopwatch.ElapsedTicks, pinNumber, value)));
 
         int callNumber = -1;
-        mockController.Setup(x => x.Read(It.IsAny<int>())).Callback<int>(
+        mockController.Setup(x => x.Read(It.IsAny<int>()))
+            .Callback<int>(
             pinNumber =>
             {
                 commandQueue.Enqueue(PinAction.Read(stopwatch.ElapsedTicks, pinNumber));
@@ -79,7 +83,8 @@ public class For_RX5808Module_ConfirmFrequency
                }
            });
 
-        mockController.Setup(x => x.SetPinMode(It.IsAny<int>(), It.IsAny<PinMode>())).Callback<int, PinMode>((pinNumber, mode) => commandQueue.Enqueue(PinAction.ChangeMode(stopwatch.ElapsedTicks, pinNumber, mode)));
+        mockController.Setup(x => x.SetPinMode(It.IsAny<int>(), It.IsAny<PinMode>()))
+            .Callback<int, PinMode>((pinNumber, mode) => commandQueue.Enqueue(PinAction.ChangeMode(stopwatch.ElapsedTicks, pinNumber, mode)));
     }
 
     [Fact]

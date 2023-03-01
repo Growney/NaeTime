@@ -86,11 +86,11 @@ namespace NaeTime.Node.Core
                         for (int i = 0; i < receiverCount; i++)
                         {
                             var receiver = enabledReceivers[i];
-                            if (receiver.CurrentStream != null)
+                            var currentStreamId = receiver.CurrentStream?.Id;
+                            if (currentStreamId != null)
                             {
-
                                 var rssi = receiver.GetRssi();
-                                var rssiValue = new RssiStreamReading(receiver.CurrentStream.Id, _nodeTimeProvider.ElapsedMilliseconds, rssi);
+                                var rssiValue = new RssiStreamReading(currentStreamId.Value, _nodeTimeProvider.ElapsedMilliseconds, rssi);
                                 _queue.Enqueue(rssiValue);
                             }
 

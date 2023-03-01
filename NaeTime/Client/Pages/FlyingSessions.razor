@@ -1,0 +1,130 @@
+﻿@page "/flyingsessions"
+@using NaeTime.Client.Abstractions.Services
+
+@if(_tracks == null )
+{
+    <h3>Getting tracks</h3>
+}
+else if(_tracks.Count == 0)
+{
+    <h3>No Tracks Found</h3>
+}
+else
+{
+    <div>
+        New Session
+        <div>
+            Name: <input @bind="_newSessionName" />
+        </div>
+        <div>
+            Track: 
+            <select @bind="_newSessionTrack">
+            @foreach (var track in _tracks)
+            {
+                <option value="@track.Id">@track.Name</option>
+            }
+            </select>
+        </div>
+        <div>
+            <button @onclick="CreateSession">Create</button>
+        </div>
+    </div>
+}
+
+@if(_sessions == null)
+{
+    <h2>Getting sessions</h2>
+}
+else if(_sessions.Count > 0)
+{
+    <table>
+        <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                Start
+            </th>
+            <th>
+                End
+            </th>
+            <th>
+                Track
+            </th>
+            <th>
+                Host
+            </th>
+        </tr>
+    @foreach(var session in _sessions)
+    {
+        <tr>
+            <td>
+                <a href="@($"/flyingsession/{session.Id}")">@session.Name</a>
+            </td>
+            <td>
+                @session.Start
+            </td>
+            <td>
+                @session.End
+            </td>
+            <td>
+                @session.TrackId
+            </td>
+            <td>
+                @session.HostPilotId
+            </td>
+        </tr>
+    }
+
+    </table>
+}
+else{
+    <h2>No Sessions found</h2>
+}
+
+@code
+{
+    [Inject]
+    public HttpClient? Client{ get; set; }
+    [Inject]
+    public NavigationManager? Nav{ get; set; }
+
+    private List<TrackDto>? _tracks = null;
+    private List<FlyingSessionDto>? _sessions = null;
+    private string? _newSessionName;
+    private Guid _newSessionTrack;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if(Client != null)
+        {
+            _sessions = await Client.GetFromJsonAsync<List<FlyingSessionDto>>("session/my");
+            _tracks = await Client.GetFromJsonAsync<List<TrackDto>>("track/all");
+        }
+        await base.OnInitializedAsync();
+    }
+
+    private async Task CreateSession()
+    {
+        if(Client != null && Nav != null)
+        {
+            var newSessionDto = new FlyingSessionDto()
+                {
+                    Name = _newSessionName ?? string.Empty,
+                    IsPublic = true,
+                    TrackId = _newSessionTrack
+                };
+
+            var response = await Client.PostAsJsonAsync("/session/start", newSessionDto);
+
+            if(response.IsSuccessStatusCode)
+            {
+                var sessionDto = await response.Content.ReadFromJsonAsync<FlyingSessionDto>();
+                if(sessionDto != null)
+                {
+                    Nav.NavigateTo($"/flyingsession/{sessionDto.Id}");
+                }
+            }
+        }
+    }
+}
