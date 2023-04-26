@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>default</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Version>$(NuGet-EventSourcingCore-PackageVersion)</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EventStore.Client.Grpc" Version="22.0.0" />
+    <PackageReference Include="EventStore.Client.Grpc.Operations" Version="22.0.0" />
+    <PackageReference Include="EventStore.Client.Grpc.PersistentSubscriptions" Version="22.0.0" />
+    <PackageReference Include="EventStore.Client.Grpc.ProjectionManagement" Version="22.0.0" />
+    <PackageReference Include="EventStore.Client.Grpc.Streams" Version="22.0.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.51.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventSourcingCore.Readiness.Abstractions\EventSourcingCore.Readiness.Abstractions.csproj" />
+    <ProjectReference Include="..\EventSourcingCore.Store.Abstractions\EventSourcingCore.Store.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

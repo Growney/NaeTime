@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EventSourcingCore.Aggregate.Core\EventSourcingCore.Aggregate.Core.csproj" />
     <ProjectReference Include="..\NaeTime.Abstractions\NaeTime.Abstractions.csproj" />
   </ItemGroup>
 
@@ -23,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Factories\" />
+    <Folder Include="Validation\" />
   </ItemGroup>
 
 </Project>

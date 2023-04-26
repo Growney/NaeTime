@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Factories\" />
+    <ProjectReference Include="..\EventSourcingCore.Event.Abstractions\EventSourcingCore.Event.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

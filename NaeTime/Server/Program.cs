@@ -24,23 +24,13 @@ namespace NaeTime.Server
             // Add services to the container.
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-            builder.Services.AddNaeTimeDbContext(options =>
-            {
-                options.UseSqlServer(connectionString);
-            });
-            builder.Services.AddNaeTimeUnitOfWork();
-            builder.Services.AddNaeTimeValidators();
-            builder.Services.AddNaeTimeProcessors();
             builder.Services.AddNaeTimeDtoMapper();
-            builder.Services.AddNaeTimeHandlers();
 
             builder.Services.AddTransient<INodeClientFactory, NodeClientFactory>();
 
-            builder.Services.AddScoped<IFlightLapHandler, FlightLapBroadcastHandler>();
 
             builder.Services.AddSingleton<RssiStreamBroadcastHandler>();
             builder.Services.AddHostedService(x => x.GetRequiredService<RssiStreamBroadcastHandler>());
-            builder.Services.AddSingleton<IRssiStreamReadingHandler>(x => x.GetRequiredService<RssiStreamBroadcastHandler>());
 
             builder.Services.AddDefaultIdentity<ApplicationUser>(options => { })
                 .AddEntityFrameworkStores<ApplicationDbContext>();

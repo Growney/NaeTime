@@ -1,6 +1,7 @@
 using Gpio;
 using NaeTime.Node.Abstractions;
 using NaeTime.Node.Abstractions.Enumeration;
+using NaeTime.Node.Abstractions.Extensions;
 using NaeTime.Node.Abstractions.Models;
 using NaeTime.Node.Core;
 using NaeTime.Node.Services;

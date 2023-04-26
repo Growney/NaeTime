@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>default</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Version>$(NuGet-EventSourcingCore-PackageVersion)</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventSourcingCore.Event.Core\EventSourcingCore.Event.Core.csproj" />
+    <ProjectReference Include="..\EventSourcingCore.Store.Abstractions\EventSourcingCore.Store.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

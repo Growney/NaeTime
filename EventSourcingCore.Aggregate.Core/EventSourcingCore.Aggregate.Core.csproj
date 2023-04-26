@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Version>$(NuGet-EventSourcingCore-PackageVersion)</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core.Security.Abstractions\Core.Security.Abstractions.csproj" />
+    <ProjectReference Include="..\EventSourcingCore.Aggregate.Abstractions\EventSourcingCore.Aggregate.Abstractions.csproj" />
+    <ProjectReference Include="..\EventSourcingCore.CommandHandler.Abstractions\EventSourcingCore.CommandHandler.Abstractions.csproj" />
+    <ProjectReference Include="..\EventSourcingCore.Event.Abstractions\EventSourcingCore.Event.Abstractions.csproj" />
+    <ProjectReference Include="..\EventSourcingCore.Store.Abstractions\EventSourcingCore.Store.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

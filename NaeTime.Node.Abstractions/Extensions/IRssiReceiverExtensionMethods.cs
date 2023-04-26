@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NaeTime.Node.Abstractions
+namespace NaeTime.Node.Abstractions.Extensions
 {
     public static class IRssiReceiverExtensionMethods
     {
