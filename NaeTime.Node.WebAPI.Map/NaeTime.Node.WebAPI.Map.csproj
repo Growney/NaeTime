@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mapping.Abstractions\Mapping.Abstractions.csproj" />
+    <ProjectReference Include="..\NaeTime.Node.Abstractions\NaeTime.Node.Abstractions.csproj" />
+    <ProjectReference Include="..\NaeTime.Node.WebAPI.Shared\NaeTime.Node.WebAPI.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

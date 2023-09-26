@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "NaeTime.Server.Abstractions": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:58396;http://localhost:58398"
+    }
+  }
+}

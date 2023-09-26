@@ -1,0 +1,64 @@
+{
+  "NodeId": "ac13e1f0-a3c3-47a7-960a-05c4c763683b",
+  "ServerAddress": "http://192.168.68.62:5046",
+  "AnalogToDigitalConverters": [
+    {
+      "Id": 0,
+      "Mode": 0,
+      "BusId": 0,
+      "ChipSelectLine": 0,
+      "ClockFrequency": 3000000,
+      "SpiMode": 1,
+      "DataBitLength": 8
+    }
+  ],
+  "MultiplexerConfigurations": [
+    {
+      "Id": 1,
+      "AAddressPin": 17,
+      "BAddressPin": 27,
+      "CAddressPin": 22,
+      "DataPin": 26,
+      "SelectPin": 19,
+      "ClockPin": 13
+    }
+  ],
+  "MultiplexedRX5808Configurations": [
+    {
+      "Id": 2,
+      "MultiplexerId": 1,
+      "MultiplexerChannel": 0,
+      "ADCId": 0,
+      "ADCChannel": 0,
+      "Frequency": 5658,
+      "IsEnabled": true
+    },
+    {
+      "Id": 3,
+      "MultiplexerId": 1,
+      "MultiplexerChannel": 1,
+      "ADCId": 0,
+      "ADCChannel": 1,
+      "Frequency": 5658,
+      "IsEnabled": true
+    },
+    {
+      "Id": 4,
+      "MultiplexerId": 1,
+      "MultiplexerChannel": 2,
+      "ADCId": 0,
+      "ADCChannel": 2,
+      "Frequency": 5658,
+      "IsEnabled": true
+    },
+    {
+      "Id": 5,
+      "MultiplexerId": 1,
+      "MultiplexerChannel": 3,
+      "ADCId": 0,
+      "ADCChannel": 3,
+      "Frequency": 5658,
+      "IsEnabled": true
+    }
+  ]
+}

@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Gpio;
 
-namespace Gpio
+public interface IAnalogToDigitalConverter
 {
-    public interface IAnalogToDigitalConverter
-    {
-        int Read(int channel);
-    }
+    IAnalogPin GetPin(int channel);
 }

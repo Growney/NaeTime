@@ -6,4 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NaeTime.Node.WebAPI.Shared\NaeTime.Node.WebAPI.Shared.csproj" />
+    <ProjectReference Include="..\NaeTime.Server.Abstractions\NaeTime.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\NaeTime.Server.EventStore\NaeTime.Server.EventStore.csproj" />
+    <ProjectReference Include="..\NaeTIme.Server\NaeTime.Server.csproj" />
+  </ItemGroup>
+
 </Project>
