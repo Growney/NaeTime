@@ -39,7 +39,7 @@ internal class WebApiHardwareClient : IHardwareApiClient
         var dto = new CreateLapRF8ChannelTimer(name, ipAddress, port);
 
         var content = JsonContent.Create(dto);
-        var response = await client.PostAsync("laprf8channel/create", content);
+        var response = await client.PostAsync("hardware/laprf8channel/create", content);
 
         if (response.StatusCode != System.Net.HttpStatusCode.Created)
         {
@@ -60,7 +60,7 @@ internal class WebApiHardwareClient : IHardwareApiClient
     {
         var client = _httpClientProvider.GetHttpClient();
 
-        var response = await client.GetAsync("laprf8channel/all");
+        var response = await client.GetAsync("hardware/laprf8channel/all");
 
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
@@ -80,7 +80,7 @@ internal class WebApiHardwareClient : IHardwareApiClient
     {
         var client = _httpClientProvider.GetHttpClient();
 
-        var response = await client.GetAsync("timer/details/all");
+        var response = await client.GetAsync("hardware/timer/details/all");
 
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
@@ -101,7 +101,7 @@ internal class WebApiHardwareClient : IHardwareApiClient
     {
         var client = _httpClientProvider.GetHttpClient();
 
-        var response = await client.GetAsync($"laprf8channel/{id}");
+        var response = await client.GetAsync($"hardware/laprf8channel/{id}");
 
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
