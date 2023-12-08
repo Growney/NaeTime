@@ -1,0 +1,169 @@
+<mxfile host="app.diagrams.net" modified="2023-12-07T16:41:04.279Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" version="22.1.7" etag="ijUwyFksjNT7fiRiW-JB" type="device">
+  <diagram id="OmyI39oiVjGVT03ZplsR" name="Page-1">
+    <mxGraphModel dx="1638" dy="587" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-44" value="Local Client" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;align=left;horizontal=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="-95" y="870" width="1175" height="660" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-80" value="Authenticated Functions&lt;br&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;align=left;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="-60" y="900" width="240" height="321" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-33" target="jfmN4xhlIVVsXFPr_Bxv-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-34" target="jfmN4xhlIVVsXFPr_Bxv-6">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="400" y="170" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-4" value="Low Latency Announcements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-6" target="jfmN4xhlIVVsXFPr_Bxv-22">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-6" target="jfmN4xhlIVVsXFPr_Bxv-35">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-6" value="Hardware/Timing Controller&lt;br&gt;&lt;br&gt;Console" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-10" value="Timing Events" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-16" target="jfmN4xhlIVVsXFPr_Bxv-22">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="621.3" y="379.9999999999999" as="sourcePoint" />
+            <mxPoint x="690" y="215.65" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="580" y="340" />
+              <mxPoint x="680" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0;exitDx=0;exitDy=27.5;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-16" target="jfmN4xhlIVVsXFPr_Bxv-27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-12" value="Timing Events" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="jfmN4xhlIVVsXFPr_Bxv-11">
+          <mxGeometry x="-0.0708" y="4" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-16" value="Event Store" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" vertex="1" parent="1">
+          <mxGeometry x="550" y="380" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-18" target="jfmN4xhlIVVsXFPr_Bxv-38">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-18" value="Client Service&lt;br&gt;ASPNET WEB API + SIGNAL R&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="670" y="595" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-22" value="Real Time Announcer Service&lt;br&gt;&lt;br&gt;Console" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-23" value="Low Latency announcements should happen from the service itself and should not be transmitted to clients. This should be running on the device with the main loud speaker plugged into. Low latency events are things such as race start, detection and other immediately time critical things" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="720" y="130" width="160" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0;entryDx=0;entryDy=27.5;entryPerimeter=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-6" target="jfmN4xhlIVVsXFPr_Bxv-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-25" value="Timing Events" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="jfmN4xhlIVVsXFPr_Bxv-24">
+          <mxGeometry x="0.0392" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-27" target="jfmN4xhlIVVsXFPr_Bxv-29">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-27" value="Internet Relay&lt;br&gt;&lt;br&gt;Console" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="376" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-29" target="jfmN4xhlIVVsXFPr_Bxv-38">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-29" value="Offsite Service&lt;br&gt;ASP NET WEB API + SIGNAL R" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="960" y="560" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-31" value="Services" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="70" width="81" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-32" value="Service Clients" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="130" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-33" value="Lap RF" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="90" y="60" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-34" value="Rotor Hazard Hardware" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="60" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-35" value="Nae Time Hardware" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="60" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-36" value="Hardware Module" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="180" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-38" value="Local Client&lt;br&gt;Maui Hybrid/Wasm" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="670" y="750" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-18" target="jfmN4xhlIVVsXFPr_Bxv-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-45" value="Local Signal R" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="950" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-46" value="Announcer" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="1270" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-47" value="OffSite API" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="950" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-56" value="Score Board" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="1270" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-59" value="OffSite Signal R" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="950" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-61" value="Local API" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="950" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-85" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-64" target="jfmN4xhlIVVsXFPr_Bxv-46">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-88" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-64" target="jfmN4xhlIVVsXFPr_Bxv-56">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-64" value="Local / Offsite Abstraction Layer" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="210" y="1090" width="680" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-68" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;endArrow=classic;endFill=1;startArrow=none;startFill=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-45">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="369" y="1090" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-70" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.72;entryY=0.026;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-59" target="jfmN4xhlIVVsXFPr_Bxv-64">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-81" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-74" target="jfmN4xhlIVVsXFPr_Bxv-61">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-74" value="Hardware Configuration" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="950" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-82" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-75" target="jfmN4xhlIVVsXFPr_Bxv-61">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-75" value="Event Configuration" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="1040" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-83" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-78" target="jfmN4xhlIVVsXFPr_Bxv-61">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-78" value="Flight Session Management" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="1130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-90" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.088;entryY=0.033;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-61" target="jfmN4xhlIVVsXFPr_Bxv-64">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jfmN4xhlIVVsXFPr_Bxv-91" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.913;entryY=0.047;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="jfmN4xhlIVVsXFPr_Bxv-47" target="jfmN4xhlIVVsXFPr_Bxv-64">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

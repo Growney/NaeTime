@@ -9,23 +9,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "racecontrol", "racecontrol"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "server", "server", "{71264CD8-8D6E-4B10-A247-35C0CAEF47D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Server.WebAPI", "NaeTime.Server.WebAPI\NaeTime.Server.WebAPI.csproj", "{82041876-D109-4AC5-BD80-634777AE55D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Server.WebAPI", "NaeTime.Server.WebAPI\NaeTime.Server.WebAPI.csproj", "{82041876-D109-4AC5-BD80-634777AE55D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Server", "NaeTIme.Server\NaeTime.Server.csproj", "{CA1D344E-4430-4E64-8BDE-CFF52E7E57C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Server", "NaeTIme.Server\NaeTime.Server.csproj", "{CA1D344E-4430-4E64-8BDE-CFF52E7E57C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Server.Abstractions", "NaeTime.Server.Abstractions\NaeTime.Server.Abstractions.csproj", "{0E5D6581-2165-4102-BE1E-4FC17B2A82E5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Server.Abstractions", "NaeTime.Server.Abstractions\NaeTime.Server.Abstractions.csproj", "{0E5D6581-2165-4102-BE1E-4FC17B2A82E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.RaceControl.BlazorWasm", "NaeTime.RaceControl.BlazorWasm\NaeTime.RaceControl.BlazorWasm.csproj", "{76A21BA2-E881-40D3-B550-C4F76CDE7C8B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.RaceControl.BlazorWasm", "NaeTime.RaceControl.BlazorWasm\NaeTime.RaceControl.BlazorWasm.csproj", "{76A21BA2-E881-40D3-B550-C4F76CDE7C8B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.RaceControl", "NaeTime.RaceControl\NaeTime.RaceControl.csproj", "{AC6DD17E-C948-433B-A43D-8B0F3E3CFD62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.RaceControl", "NaeTime.RaceControl\NaeTime.RaceControl.csproj", "{AC6DD17E-C948-433B-A43D-8B0F3E3CFD62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.RaceControl.Abstractions", "NaeTime.RaceControl.Abstractions\NaeTime.RaceControl.Abstractions.csproj", "{E876A6C3-3EEB-461C-9343-0CB95F0ACE2E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.RaceControl.Abstractions", "NaeTime.RaceControl.Abstractions\NaeTime.RaceControl.Abstractions.csproj", "{E876A6C3-3EEB-461C-9343-0CB95F0ACE2E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Node.WebAPI", "NaeTime.Node.WebAPI\NaeTime.Node.WebAPI.csproj", "{42F8A1BD-2F4A-40BA-B182-0F4FC8E36016}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Node.WebAPI", "NaeTime.Node.WebAPI\NaeTime.Node.WebAPI.csproj", "{42F8A1BD-2F4A-40BA-B182-0F4FC8E36016}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Node", "NaeTime.Node\NaeTime.Node.csproj", "{BC9B45DF-B93C-4989-A91B-00A9C341EE29}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Node", "NaeTime.Node\NaeTime.Node.csproj", "{BC9B45DF-B93C-4989-A91B-00A9C341EE29}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Node.Abstractions", "NaeTime.Node.Abstractions\NaeTime.Node.Abstractions.csproj", "{EF745C05-E1E2-4020-A72C-4C48E605C6B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Node.Abstractions", "NaeTime.Node.Abstractions\NaeTime.Node.Abstractions.csproj", "{EF745C05-E1E2-4020-A72C-4C48E605C6B1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2067FCE6-4CDD-4BEA-ACE0-F0D745339224}"
 EndProject
@@ -38,6 +38,20 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gpio", "Gpio\Gpio.csproj", "{5F9F8C1E-62F7-46AD-B40D-B577CAD5369E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RX5808", "RX5808\RX5808.csproj", "{B5CB2646-E783-46F0-B923-85C39F33A6D0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "timing", "timing", "{89787FB6-AA9C-4F58-9DD6-F8C5AACF1324}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C907EA03-A60C-4F31-9323-31576332654D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "client", "client", "{153A6B7B-42A3-42F2-9CD6-E51960B95996}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{06729137-7D79-40BE-8D59-5707F53C7C55}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.MAUI", "NaeTime.Client.MAUI\NaeTime.Client.MAUI.csproj", "{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.WEBAPI", "NaeTime.Client.WEBAPI\NaeTime.Client.WEBAPI.csproj", "{3AE89310-812B-4E4A-B474-610B7E6A252C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.Shared", "NaeTime.Client.Shared\NaeTime.Client.Shared.csproj", "{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -89,6 +103,20 @@ Global
 		{B5CB2646-E783-46F0-B923-85C39F33A6D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5CB2646-E783-46F0-B923-85C39F33A6D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5CB2646-E783-46F0-B923-85C39F33A6D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{3AE89310-812B-4E4A-B474-610B7E6A252C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AE89310-812B-4E4A-B474-610B7E6A252C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AE89310-812B-4E4A-B474-610B7E6A252C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AE89310-812B-4E4A-B474-610B7E6A252C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -108,6 +136,11 @@ Global
 		{D0232052-7401-488F-B5D3-5B353B312A4B} = {E7366AB5-E085-4852-81B9-1FEF3683C249}
 		{5F9F8C1E-62F7-46AD-B40D-B577CAD5369E} = {56845687-8DDD-4A6C-AF65-E6AFC65A83FA}
 		{B5CB2646-E783-46F0-B923-85C39F33A6D0} = {56845687-8DDD-4A6C-AF65-E6AFC65A83FA}
+		{C907EA03-A60C-4F31-9323-31576332654D} = {89787FB6-AA9C-4F58-9DD6-F8C5AACF1324}
+		{06729137-7D79-40BE-8D59-5707F53C7C55} = {153A6B7B-42A3-42F2-9CD6-E51960B95996}
+		{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A} = {06729137-7D79-40BE-8D59-5707F53C7C55}
+		{3AE89310-812B-4E4A-B474-610B7E6A252C} = {06729137-7D79-40BE-8D59-5707F53C7C55}
+		{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F} = {06729137-7D79-40BE-8D59-5707F53C7C55}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5210F0AE-1F6C-44EA-AEB1-C0A71B6E326B}

@@ -1,0 +1,6 @@
+@NaeTime.Client.WEBAPI_HostAddress = http://localhost:5039
+
+GET {{NaeTime.Client.WEBAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
