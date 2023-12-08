@@ -53,6 +53,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.WEBAPI", "Na
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.Shared", "NaeTime.Client.Shared\NaeTime.Client.Shared.csproj", "{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.Razor", "NaeTime.Client.Razor\NaeTime.Client.Razor.csproj", "{5C973961-E5DB-48B8-9F5B-EDE6A1E02275}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.Razor.Lib", "NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj", "{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -117,6 +121,14 @@ Global
 		{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C973961-E5DB-48B8-9F5B-EDE6A1E02275}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C973961-E5DB-48B8-9F5B-EDE6A1E02275}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C973961-E5DB-48B8-9F5B-EDE6A1E02275}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C973961-E5DB-48B8-9F5B-EDE6A1E02275}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -141,6 +153,8 @@ Global
 		{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A} = {06729137-7D79-40BE-8D59-5707F53C7C55}
 		{3AE89310-812B-4E4A-B474-610B7E6A252C} = {06729137-7D79-40BE-8D59-5707F53C7C55}
 		{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F} = {06729137-7D79-40BE-8D59-5707F53C7C55}
+		{5C973961-E5DB-48B8-9F5B-EDE6A1E02275} = {06729137-7D79-40BE-8D59-5707F53C7C55}
+		{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB} = {06729137-7D79-40BE-8D59-5707F53C7C55}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5210F0AE-1F6C-44EA-AEB1-C0A71B6E326B}
