@@ -7,8 +7,6 @@ public partial class Configure : ComponentBase
 {
     private const string c_skipConfigurationPageKey = "Skip-Configuration-Page";
     [Inject]
-    public ILocalApiClientProvider LocalApiClientProvider { get; set; } = null!;
-    [Inject]
     public ILocalApiConfiguration LocalConfiguration { get; set; } = null!;
     [Inject]
     public IOffSiteApiConfiguration OffsiteConfiguration { get; set; } = null!;
@@ -60,7 +58,7 @@ public partial class Configure : ComponentBase
     private Task SetSkipConfigurationPage(bool value) => SimpleStorage.SetAsync(c_skipConfigurationPageKey, value.ToString());
     private void MoveToNextPage()
     {
-        NavigationManager.NavigateTo("/overview");
+        NavigationManager.NavigateTo("/connect");
     }
     protected override async Task OnParametersSetAsync()
     {

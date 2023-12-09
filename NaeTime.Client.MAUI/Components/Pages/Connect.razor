@@ -1,1 +1,56 @@
 ﻿@page "/connect"
+@layout Components.Layout.BlankLayout
+
+<div class="grid-parent">
+
+    <div class="content-center shadow-lg rounded p-4 form-check form-switch">
+
+        <div class="mb-3">
+            <h2>Nae Time</h2>
+            <p class="mb-1">The Scottish FPV Timing System</p>
+            <hr class="mt-0" />
+        </div>
+
+        <div class="mb-3">
+            <h5>
+                Local Connection @LocalConnectionState
+            </h5>
+            <h5>
+                Off Site Connection @OffSiteConnectionState 
+            </h5>
+
+        </div>
+
+        @if(LocalConnectionState != ConnectionState.Connecting 
+        && OffSiteConnectionState != ConnectionState.Connecting)
+        {
+            if (IsSuccessState)
+            {
+                <div>Connection Success!</div>
+            }
+            //They have both failed we only allow back and retry
+            else if (LocalConnectionState == ConnectionState.ConnectionFailed
+                && OffSiteConnectionState == ConnectionState.ConnectionFailed)
+            {
+                <div>Both connections have failed please retry or go back to configuration</div>
+                <button class="btn btn-primary">Retry</button>
+                <a href="/?force=true" class="btn btn-secondary">Back</a>
+            }
+            //The have both not failed if one neither of them is disabled we can offer a connect and disable
+            else if(LocalConnectionState != ConnectionState.Disabled
+                && LocalConnectionState != ConnectionState.Disabled)
+            {
+                <div>Both connections have failed please retry or go back to configuration, or disable the failed connection and continue</div>
+                <button class="btn btn-primary">Retry</button>
+                <button class="btn btn-secondary">Disable & Continue</button>
+                <a href="/?force=true" class="btn btn-secondary">Back</a>
+            }
+            else
+            {
+                <div>Connection failed please retry or go back to configuration</div>
+                <button class="btn btn-primary">Retry</button>
+                <a href="/?force=true" class="btn btn-secondary">Back</a>
+            }
+        }
+    </div>
+</div>

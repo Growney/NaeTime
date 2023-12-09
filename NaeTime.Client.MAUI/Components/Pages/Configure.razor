@@ -1,104 +1,104 @@
 ﻿@page "/"
 @layout Components.Layout.BlankLayout
 
-    <div class="grid-parent">
+<div class="grid-parent">
 
-        <div class="content-center shadow-lg rounded p-4 form-check form-switch">
+    <div class="content-center shadow-lg rounded p-4 form-check form-switch">
 
-            <div class="mb-3">
-                <h2>Nae Time</h2>
-                <p class="mb-1">The Scottish FPV Timing System</p>
-                <hr class="mt-0" />
-            </div>
+        <div class="mb-3">
+            <h2>Nae Time</h2>
+            <p class="mb-1">The Scottish FPV Timing System</p>
+            <hr class="mt-0" />
+        </div>
 
-            <div class="mb-3">
-                <h5>
-                    Local Configuration
-                    <InputCheckbox class="form-check-input float-end" @bind-Value=IsLocalEnabled />
-                </h5>
+        <div class="mb-3">
+            <h5>
+                Local Configuration
+                <InputCheckbox class="form-check-input float-end" @bind-Value=IsLocalEnabled />
+            </h5>
 
-                @if (_localValues.Any())
-                {
-                    <hr class="mt-0" />
-                    <fieldset disabled="@(!IsLocalEnabled)">
-                        @foreach (var propertyTuple in _localValues)
-                        {
-                            <div>
-                                @propertyTuple.property.DisplayName
-                            </div>
-                            <div>
-                                @if (propertyTuple.property.ValueType == typeof(string))
-                                {
-                                    <input type="text" class="w-100" value="@propertyTuple.value.Value" @onchange="@(x=> propertyTuple.value.Value = x.Value?.ToString())" />
-                                }
-                                else
-                                {
-                                    <div>Type not supported</div>
-                                }
-                            </div>
-                            @if (_localValidationErrors.TryGetValue(propertyTuple.property.Id, out var error))
-                            {
-                            <div class="text-danger">
-                                    @error
-                                </div>
-                            }
-
-                        }
-                    </fieldset>
-                }
-            </div>
-
-            <div>
-                <h5>
-                    Offsite Configuration
-                    <InputCheckbox class="form-check-input float-end" @bind-Value=IsOffSiteEnabled/>
-                </h5>
-                @if (_offsiteValues.Any())
-                {
-                    <hr class="mt-0" />
-                    <fieldset disabled="@(!IsOffSiteEnabled)">
-                        @foreach (var propertyTuple in _offsiteValues)
-                        {
-                            <label>
-                                @propertyTuple.property.DisplayName
-                            </label>
-                            <div>
-                                @if (propertyTuple.property.ValueType == typeof(string))
-                                {
-                                    <input type="text" class="w-100" value="@propertyTuple.value.Value" @onchange="@(x=> propertyTuple.value.Value = x.Value?.ToString())" />
-                                }
-                                else
-                                {
-                                    <div>Type not supported</div>
-                                }
-                            </div>
-                            @if (_offsiteValidationErrors.TryGetValue(propertyTuple.property.Id, out var error))
-                            {
-                            <div class="text-danger">
-                                    @error
-                                </div>
-                            }
-
-                        }
-                    </fieldset>
-                }
-            </div>
-
-
-            <div class="mt-4 text-center">
-                <label>Skip Configuration</label>
-                <InputCheckbox @bind-Value="IsSkipConfigurationPageSet" />
-            </div>
-            @if (!string.IsNullOrWhiteSpace(FormValidationErrors))
+            @if (_localValues.Any())
             {
-                <div class="text-danger text-center">
-                    @FormValidationErrors
-                </div>
-            }
-            <div class="w-100 text-center mt-1">
-                <button type="submit" class="btn btn-primary" @onclick=OnClickConnect>Connect</button>
-            </div>
+                <hr class="mt-0" />
+                <fieldset disabled="@(!IsLocalEnabled)">
+                    @foreach (var propertyTuple in _localValues)
+                    {
+                        <div>
+                            @propertyTuple.property.DisplayName
+                        </div>
+                        <div>
+                            @if (propertyTuple.property.ValueType == typeof(string))
+                            {
+                                <input type="text" class="w-100" value="@propertyTuple.value.Value" @onchange="@(x=> propertyTuple.value.Value = x.Value?.ToString())" />
+                            }
+                            else
+                            {
+                                <div>Type not supported</div>
+                            }
+                        </div>
+                        @if (_localValidationErrors.TryGetValue(propertyTuple.property.Id, out var error))
+                        {
+                        <div class="text-danger">
+                                @error
+                            </div>
+                        }
 
+                    }
+                </fieldset>
+            }
+        </div>
+
+        <div>
+            <h5>
+                Offsite Configuration
+                <InputCheckbox class="form-check-input float-end" @bind-Value=IsOffSiteEnabled/>
+            </h5>
+            @if (_offsiteValues.Any())
+            {
+                <hr class="mt-0" />
+                <fieldset disabled="@(!IsOffSiteEnabled)">
+                    @foreach (var propertyTuple in _offsiteValues)
+                    {
+                        <label>
+                            @propertyTuple.property.DisplayName
+                        </label>
+                        <div>
+                            @if (propertyTuple.property.ValueType == typeof(string))
+                            {
+                                <input type="text" class="w-100" value="@propertyTuple.value.Value" @onchange="@(x=> propertyTuple.value.Value = x.Value?.ToString())" />
+                            }
+                            else
+                            {
+                                <div>Type not supported</div>
+                            }
+                        </div>
+                        @if (_offsiteValidationErrors.TryGetValue(propertyTuple.property.Id, out var error))
+                        {
+                        <div class="text-danger">
+                                @error
+                            </div>
+                        }
+
+                    }
+                </fieldset>
+            }
+        </div>
+
+
+        <div class="mt-4 text-center">
+            <label>Skip Configuration</label>
+            <InputCheckbox @bind-Value="IsSkipConfigurationPageSet" />
+        </div>
+        @if (!string.IsNullOrWhiteSpace(FormValidationErrors))
+        {
+            <div class="text-danger text-center">
+                @FormValidationErrors
+            </div>
+        }
+        <div class="w-100 text-center mt-1">
+            <button type="submit" class="btn btn-primary" @onclick=OnClickConnect>Connect</button>
         </div>
 
     </div>
+
+</div>

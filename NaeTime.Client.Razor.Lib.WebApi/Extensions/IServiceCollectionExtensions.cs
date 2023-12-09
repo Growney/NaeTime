@@ -13,8 +13,8 @@ public static class IServiceColectionExtensionMethods
         services.AddSingleton<ILocalApiConfiguration>(x => x.GetRequiredService<LocalWebApiConfiguration>());
         services.AddScoped<ILocalApiClientProvider, LocalWebApiClientProvider>();
 
-        services.AddSingleton<OffsiteWebApiConfiguration>();
-        services.AddSingleton<IOffSiteApiConfiguration>(x => x.GetRequiredService<OffsiteWebApiConfiguration>());
+        services.AddSingleton<OffSiteWebApiConfiguration>();
+        services.AddSingleton<IOffSiteApiConfiguration>(x => x.GetRequiredService<OffSiteWebApiConfiguration>());
         services.AddScoped<IOffSiteApiClientProvider, OffSiteWebApiClientProvider>();
 
         return services;
