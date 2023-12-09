@@ -6,9 +6,9 @@ using System.Net.Http.Json;
 namespace NaeTime.Client.Razor.Lib.WebApi;
 internal class WebApiHardwareClient : IHardwareApiClient
 {
-    private readonly IHttpClientProvider _httpClientProvider;
+    private readonly HttpClientProvider _httpClientProvider;
 
-    public WebApiHardwareClient(IHttpClientProvider httpClientProvider)
+    public WebApiHardwareClient(HttpClientProvider httpClientProvider)
     {
         _httpClientProvider = httpClientProvider ?? throw new ArgumentNullException(nameof(httpClientProvider));
     }
@@ -35,7 +35,13 @@ internal class WebApiHardwareClient : IHardwareApiClient
         };
     public async Task<LapRF8Channel?> CreateLapRF8ChannelAsync(string name, int ipAddress, ushort port)
     {
-        var client = _httpClientProvider.GetHttpClient();
+        var client = await _httpClientProvider.GetHttpClientAsync();
+
+        if (client == null)
+        {
+            throw new InvalidOperationException("Client_not_configured");
+        }
+
         var dto = new CreateLapRF8ChannelTimer(name, ipAddress, port);
 
         var content = JsonContent.Create(dto);
@@ -58,7 +64,12 @@ internal class WebApiHardwareClient : IHardwareApiClient
 
     public async Task<IEnumerable<LapRF8Channel>> GetAllLapRF8ChannelAsync()
     {
-        var client = _httpClientProvider.GetHttpClient();
+        var client = await _httpClientProvider.GetHttpClientAsync();
+
+        if (client == null)
+        {
+            throw new InvalidOperationException("Client_not_configured");
+        }
 
         var response = await client.GetAsync("hardware/laprf8channel/all");
 
@@ -78,7 +89,12 @@ internal class WebApiHardwareClient : IHardwareApiClient
     }
     public async Task<IEnumerable<Models.TimerDetails>> GetAllTimerDetailsAsync()
     {
-        var client = _httpClientProvider.GetHttpClient();
+        var client = await _httpClientProvider.GetHttpClientAsync();
+
+        if (client == null)
+        {
+            throw new InvalidOperationException("Client_not_configured");
+        }
 
         var response = await client.GetAsync("hardware/timer/details/all");
 
@@ -99,7 +115,12 @@ internal class WebApiHardwareClient : IHardwareApiClient
 
     public async Task<LapRF8Channel?> GetLapRF8ChannelDetailsAsync(Guid id)
     {
-        var client = _httpClientProvider.GetHttpClient();
+        var client = await _httpClientProvider.GetHttpClientAsync();
+
+        if (client == null)
+        {
+            throw new InvalidOperationException("Client_not_configured");
+        }
 
         var response = await client.GetAsync($"hardware/laprf8channel/{id}");
 

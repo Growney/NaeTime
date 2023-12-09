@@ -49,13 +49,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{06729137-7D7
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.MAUI", "NaeTime.Client.MAUI\NaeTime.Client.MAUI.csproj", "{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.WEBAPI", "NaeTime.Client.WEBAPI\NaeTime.Client.WEBAPI.csproj", "{3AE89310-812B-4E4A-B474-610B7E6A252C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.WEBAPI", "NaeTime.Client.WEBAPI\NaeTime.Client.WEBAPI.csproj", "{3AE89310-812B-4E4A-B474-610B7E6A252C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.Shared", "NaeTime.Client.Shared\NaeTime.Client.Shared.csproj", "{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.Shared", "NaeTime.Client.Shared\NaeTime.Client.Shared.csproj", "{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.Razor", "NaeTime.Client.Razor\NaeTime.Client.Razor.csproj", "{5C973961-E5DB-48B8-9F5B-EDE6A1E02275}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.Razor", "NaeTime.Client.Razor\NaeTime.Client.Razor.csproj", "{5C973961-E5DB-48B8-9F5B-EDE6A1E02275}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.Razor.Lib", "NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj", "{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.Razor.Lib", "NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj", "{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.Razor.Lib.WebApi", "NaeTime.Client.Razor.Lib.WebApi\NaeTime.Client.Razor.Lib.WebApi.csproj", "{5EEABF70-8BEA-4890-A8EF-1796598582EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -129,6 +131,10 @@ Global
 		{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EEABF70-8BEA-4890-A8EF-1796598582EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EEABF70-8BEA-4890-A8EF-1796598582EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EEABF70-8BEA-4890-A8EF-1796598582EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EEABF70-8BEA-4890-A8EF-1796598582EA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -155,6 +161,7 @@ Global
 		{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F} = {06729137-7D79-40BE-8D59-5707F53C7C55}
 		{5C973961-E5DB-48B8-9F5B-EDE6A1E02275} = {06729137-7D79-40BE-8D59-5707F53C7C55}
 		{B1555C6F-AE91-438C-9DDF-6CAE4339DAEB} = {06729137-7D79-40BE-8D59-5707F53C7C55}
+		{5EEABF70-8BEA-4890-A8EF-1796598582EA} = {06729137-7D79-40BE-8D59-5707F53C7C55}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5210F0AE-1F6C-44EA-AEB1-C0A71B6E326B}

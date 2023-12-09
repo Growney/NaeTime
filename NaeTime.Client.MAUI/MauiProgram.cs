@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using NaeTime.Client.MAUI.Lib;
 
 namespace NaeTime.Client.MAUI;
 public static class MauiProgram
@@ -14,6 +15,7 @@ public static class MauiProgram
             });
 
         builder.Services.AddMauiBlazorWebView();
+        builder.Services.AddLocalWebApiClientProvider<LocalStorageProvider>();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

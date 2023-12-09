@@ -6,9 +6,9 @@ using System.Net.Http.Json;
 namespace NaeTime.Client.Razor.Lib.WebApi;
 internal class WebApiPilotClient : IPilotApiClient
 {
-    private IHttpClientProvider _httpClientProvider;
+    private HttpClientProvider _httpClientProvider;
 
-    public WebApiPilotClient(IHttpClientProvider httpClientProvider)
+    public WebApiPilotClient(HttpClientProvider httpClientProvider)
     {
         _httpClientProvider = httpClientProvider ?? throw new ArgumentNullException(nameof(httpClientProvider));
     }
@@ -22,7 +22,13 @@ internal class WebApiPilotClient : IPilotApiClient
         };
     public async Task<Pilot?> CreatePilotAsync(string? firstname, string? lastname, string? callsign)
     {
-        var client = _httpClientProvider.GetHttpClient();
+        var client = await _httpClientProvider.GetHttpClientAsync();
+
+        if (client == null)
+        {
+            throw new InvalidOperationException("Client_not_configured");
+        }
+
         var dto = new CreatePilot(firstname, lastname, callsign);
 
         var content = JsonContent.Create(dto);
@@ -45,8 +51,12 @@ internal class WebApiPilotClient : IPilotApiClient
 
     public async Task<IEnumerable<Pilot>> GetAllPilotsAsync()
     {
-        var client = _httpClientProvider.GetHttpClient();
+        var client = await _httpClientProvider.GetHttpClientAsync();
 
+        if (client == null)
+        {
+            throw new InvalidOperationException("Client_not_configured");
+        }
         var response = await client.GetAsync("pilot/all");
 
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -66,7 +76,12 @@ internal class WebApiPilotClient : IPilotApiClient
 
     public async Task<Pilot?> GetPilotDetailsAsync(Guid id)
     {
-        var client = _httpClientProvider.GetHttpClient();
+        var client = await _httpClientProvider.GetHttpClientAsync();
+
+        if (client == null)
+        {
+            throw new InvalidOperationException("Client_not_configured");
+        }
 
         var response = await client.GetAsync($"pilot/{id}");
 

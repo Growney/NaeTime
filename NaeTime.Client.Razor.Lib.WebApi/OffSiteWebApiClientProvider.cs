@@ -1,25 +1,18 @@
 ﻿using NaeTime.Client.Razor.Lib.Abstractions;
 
 namespace NaeTime.Client.Razor.Lib.WebApi;
-internal class LocalWebApiClientProvider : ILocalApiClientProvider
+internal class OffSiteWebApiClientProvider : IOffSiteApiClientProvider
 {
-
     public DateTime? LastCommunication => throw new NotImplementedException();
 
-    public IHardwareApiClient HardwareApiClient { get; }
-    public IPilotApiClient PilotApiClient { get; }
-
     private HttpClient? _httpClient;
-    private readonly LocalWebApiConfiguration _configuration;
+    private readonly OffsiteWebApiConfiguration _configuration;
     private readonly HttpClientProvider _httpClientProvider;
 
-    public LocalWebApiClientProvider(LocalWebApiConfiguration configuration)
+    public OffSiteWebApiClientProvider(OffsiteWebApiConfiguration configuration)
     {
         _configuration = configuration;
         _httpClientProvider = new HttpClientProvider(CreateHttpClient);
-
-        HardwareApiClient = new WebApiHardwareClient(_httpClientProvider);
-        PilotApiClient = new WebApiPilotClient(_httpClientProvider);
     }
 
     private async Task<HttpClient?> CreateHttpClient()
