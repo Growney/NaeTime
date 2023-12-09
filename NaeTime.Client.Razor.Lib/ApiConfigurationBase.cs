@@ -4,6 +4,7 @@ using NaeTime.Client.Razor.Lib.Models;
 namespace NaeTime.Client.Razor.Lib;
 public abstract class ApiConfigurationBase : IApiConfiguration
 {
+    private readonly string _enabledKey;
     private readonly Dictionary<int, (string displayName, Type valueType)> _configuration = new();
     public IEnumerable<ApiConfigurationProperty> Properties => _configuration.Select(x => new ApiConfigurationProperty(x.Key, x.Value.displayName, x.Value.valueType));
 
@@ -18,6 +19,8 @@ public abstract class ApiConfigurationBase : IApiConfiguration
         {
             _configuration.Add(property.key, (property.displayName, property.valueType));
         }
+
+        _enabledKey = $"{GetType()}-Enabledd";
     }
 
     public abstract IEnumerable<(int key, string displayName, Type valueType)> GetProperties();
@@ -121,7 +124,7 @@ public abstract class ApiConfigurationBase : IApiConfiguration
             _ => throw new NotImplementedException()
         };
 
-    public async Task<bool> IsCurrentConfigurationValid()
+    public async Task<bool> IsCurrentConfigurationValidAsync()
     {
         var valueList = new List<ApiConfigurationPropertyValue>();
         await foreach (var currentValue in GetPropertyValuesAsync(Properties.Select(x => x.Id)))
@@ -129,7 +132,20 @@ public abstract class ApiConfigurationBase : IApiConfiguration
             valueList.Add(currentValue);
         }
 
-        return ValidateProperties(valueList).Any();
+        return !ValidateProperties(valueList).Any();
 
     }
+
+    public async Task<bool> IsEnabledAsync()
+    {
+        var storedValue = await _storage.GetAsync(_enabledKey);
+        if (!bool.TryParse(storedValue, out var isEnabled))
+        {
+            return true;
+        }
+        return isEnabled;
+    }
+
+    public Task SetEnabledAsync(bool isEnabled) => _storage.SetAsync(_enabledKey, isEnabled.ToString());
+
 }

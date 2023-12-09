@@ -55,5 +55,5 @@ internal class OffSiteWebApiClientProvider : IOffSiteApiClientProvider
         }
     }
 
-    public Task<bool> IsConfiguredAsync(CancellationToken token) => _configuration.IsCurrentConfigurationValid();
+    public Task<bool> IsConfiguredAsync(CancellationToken token) => _configuration.IsCurrentConfigurationValidAsync();
 }

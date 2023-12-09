@@ -17,16 +17,24 @@ public partial class Configure : ComponentBase
     [Inject]
     public NavigationManager NavigationManager { get; set; } = null!;
 
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public bool Force { get; set; }
+
     private List<(ApiConfigurationProperty property, ApiConfigurationPropertyValue value)> _localValues = new();
     private Dictionary<int, string> _localValidationErrors = new();
 
     private List<(ApiConfigurationProperty property, ApiConfigurationPropertyValue value)> _offsiteValues = new();
     private Dictionary<int, string> _offsiteValidationErrors = new();
 
+    private string? FormValidationErrors { get; set; } = null;
     private bool IsSkipConfigurationPageSet { get; set; }
+    private bool IsLocalEnabled { get; set; }
+    private bool IsOffSiteEnabled { get; set; }
 
     private async Task PopulateConfigurationValues(List<(ApiConfigurationProperty property, ApiConfigurationPropertyValue value)> valuesList, IApiConfiguration configuration)
     {
+        valuesList.Clear();
         var properties = configuration.Properties;
 
         var values = configuration.GetPropertyValuesAsync(properties.Select(x => x.Id));
@@ -49,18 +57,24 @@ public partial class Configure : ComponentBase
         }
         return isStoredValueSet;
     }
+    private Task SetSkipConfigurationPage(bool value) => SimpleStorage.SetAsync(c_skipConfigurationPageKey, value.ToString());
     private void MoveToNextPage()
     {
         NavigationManager.NavigateTo("/overview");
     }
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        if (await CheckIfSkipConfigurationPageIsSetAsync())
-        {
-            bool isLocalValid = await LocalConfiguration.IsCurrentConfigurationValid();
-            bool isOffSiteValid = await OffsiteConfiguration.IsCurrentConfigurationValid();
+        IsSkipConfigurationPageSet = await CheckIfSkipConfigurationPageIsSetAsync();
+        IsLocalEnabled = await LocalConfiguration.IsEnabledAsync();
+        IsOffSiteEnabled = await OffsiteConfiguration.IsEnabledAsync();
 
-            if (isLocalValid && isOffSiteValid)
+        if (!Force && IsSkipConfigurationPageSet)
+        {
+            bool eitherIsEnabled = IsLocalEnabled || IsOffSiteEnabled;
+            bool isLocalValid = !IsLocalEnabled || await LocalConfiguration.IsCurrentConfigurationValidAsync();
+            bool isOffSiteValid = !IsOffSiteEnabled || await OffsiteConfiguration.IsCurrentConfigurationValidAsync();
+
+            if (eitherIsEnabled && isLocalValid && isOffSiteValid)
             {
                 MoveToNextPage();
             }
@@ -69,21 +83,29 @@ public partial class Configure : ComponentBase
         await PopulateConfigurationValues(_localValues, LocalConfiguration);
         await PopulateConfigurationValues(_offsiteValues, OffsiteConfiguration);
 
-        if (!_localValues.Any() && !_offsiteValues.Any())
-        {
-            MoveToNextPage();
-        }
-        await base.OnInitializedAsync();
+        await base.OnParametersSetAsync();
     }
 
     public async Task OnClickConnect()
     {
-        bool isLocalValid = IsValidConfiguration(LocalConfiguration, _localValues.Select(x => x.value), _localValidationErrors);
-        bool isOffSiteValid = IsValidConfiguration(OffsiteConfiguration, _offsiteValues.Select(x => x.value), _offsiteValidationErrors);
+        FormValidationErrors = null;
+
+        if (!IsLocalEnabled && !IsOffSiteEnabled)
+        {
+            FormValidationErrors = "Offsite and/or Local configuration required";
+            return;
+        }
+
+        bool isLocalValid = !IsLocalEnabled || IsValidConfiguration(LocalConfiguration, _localValues.Select(x => x.value), _localValidationErrors);
+        bool isOffSiteValid = !IsOffSiteEnabled || IsValidConfiguration(OffsiteConfiguration, _offsiteValues.Select(x => x.value), _offsiteValidationErrors);
         if (!isLocalValid || !isOffSiteValid)
         {
             return;
         }
+
+        await LocalConfiguration.SetEnabledAsync(IsLocalEnabled);
+        await OffsiteConfiguration.SetEnabledAsync(IsOffSiteEnabled);
+        await SetSkipConfigurationPage(IsSkipConfigurationPageSet);
 
         await LocalConfiguration.SetPropertyValuesAsync(_localValues.Select(x => x.value));
         await OffsiteConfiguration.SetPropertyValuesAsync(_offsiteValues.Select(x => x.value));
