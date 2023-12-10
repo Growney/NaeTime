@@ -16,6 +16,12 @@ public partial class Connect : ComponentBase
     public ILocalApiClientProvider LocalApiClientProvider { get; set; } = null!;
     [Inject]
     public IOffSiteApiClientProvider OffSiteApiClientProvider { get; set; } = null!;
+
+    [Inject]
+    public ILocalApiConfiguration LocalConfiguration { get; set; } = null!;
+    [Inject]
+    public IOffSiteApiConfiguration OffsiteConfiguration { get; set; } = null!;
+
     [Inject]
     public NavigationManager NavigationManager { get; set; } = null!;
 
@@ -32,6 +38,10 @@ public partial class Connect : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        _ = TestConnections();
+    }
+    private async Task TestConnections()
+    {
         LocalConnectionState = ConnectionState.Connecting;
         OffSiteConnectionState = ConnectionState.Connecting;
 
@@ -50,15 +60,42 @@ public partial class Connect : ComponentBase
     {
         var state = await TestConnection(LocalApiClientProvider);
         LocalConnectionState = state;
+        StateHasChanged();
     }
     private async Task TestOffSiteConnection()
     {
         var state = await TestConnection(OffSiteApiClientProvider);
         OffSiteConnectionState = state;
+        StateHasChanged();
+    }
+    private void Retry()
+    {
+        _ = TestConnections();
+    }
+    private async Task DisableAndContinue()
+    {
+        if (LocalConnectionState == ConnectionState.ConnectionFailed
+            && OffSiteConnectionState == ConnectionState.Success)
+        {
+            await LocalConfiguration.SetEnabledAsync(false);
+            MoveToNextPage();
+            return;
+        }
+        else if (LocalConnectionState == ConnectionState.Success
+            && OffSiteConnectionState == ConnectionState.ConnectionFailed)
+        {
+            await OffsiteConfiguration.SetEnabledAsync(false);
+            MoveToNextPage();
+            return;
+        }
+    }
+    private void BackToConfiguration()
+    {
+        NavigationManager.NavigateTo("/?force=true");
     }
     private async Task<ConnectionState> TestConnection(IApiClientProvider clientProvider)
     {
-        var isEnabled = await clientProvider.IsValidAsync(CancellationToken.None);
+        var isEnabled = await clientProvider.IsEnabledAsync(CancellationToken.None);
 
         if (!isEnabled)
         {

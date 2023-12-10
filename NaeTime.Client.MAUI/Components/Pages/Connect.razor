@@ -33,23 +33,24 @@
                 && OffSiteConnectionState == ConnectionState.ConnectionFailed)
             {
                 <div>Both connections have failed please retry or go back to configuration</div>
-                <button class="btn btn-primary">Retry</button>
-                <a href="/?force=true" class="btn btn-secondary">Back</a>
+                <button @onclick="Retry" class="btn btn-primary">Retry</button>
+                <button @onclick="BackToConfiguration" class="btn btn-secondary">Back</button>
             }
             //The have both not failed if one neither of them is disabled we can offer a connect and disable
             else if(LocalConnectionState != ConnectionState.Disabled
-                && LocalConnectionState != ConnectionState.Disabled)
+            && OffSiteConnectionState != ConnectionState.Disabled)
             {
                 <div>Both connections have failed please retry or go back to configuration, or disable the failed connection and continue</div>
-                <button class="btn btn-primary">Retry</button>
-                <button class="btn btn-secondary">Disable & Continue</button>
-                <a href="/?force=true" class="btn btn-secondary">Back</a>
+
+                <button @onclick="Retry" class="btn btn-primary">Retry</button>
+                <button @onclick="DisableAndContinue" class="btn btn-secondary">Disable & Continue</button>
+                <button @onclick="BackToConfiguration" class="btn btn-secondary">Back</button>
             }
             else
             {
                 <div>Connection failed please retry or go back to configuration</div>
-                <button class="btn btn-primary">Retry</button>
-                <a href="/?force=true" class="btn btn-secondary">Back</a>
+                <button @onclick="Retry" class="btn btn-primary">Retry</button>
+                <button @onclick="BackToConfiguration" class="btn btn-secondary">Back</button>
             }
         }
     </div>
