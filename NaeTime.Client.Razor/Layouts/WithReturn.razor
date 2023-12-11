@@ -1,16 +1,20 @@
 ﻿@inherits LayoutComponentBase
 @layout MainLayout
 
-@if (!string.IsNullOrWhiteSpace(ReturnUrl))
-{
-    <a href="@ReturnUrl">
-        <i class="fa-solid fa-arrow-left"></i>
-    </a>
-}
-
-<div>
-    @Body
+<div class="content-grid">
+    @if (!string.IsNullOrWhiteSpace(ReturnUrl))
+    {
+        <div class="back-button">
+            <a href="@ReturnUrl">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+        </div>
+    }
+    <div class="backed-content">
+        @Body
+    </div>
 </div>
+
 
 @code{
     [Parameter]

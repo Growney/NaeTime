@@ -1,0 +1,16 @@
+﻿.content-grid{
+    display:grid;
+    grid-template-columns: 1em 1fr auto 1fr 2em;
+    grid-template-rows: 1em 1fr;
+    grid-template-areas: 
+        "back . content . ."
+        ". . content . .";
+}
+
+.backed-content{
+    grid-area: content;
+}
+
+.back-button{
+    grid-area: back;
+}
