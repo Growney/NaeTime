@@ -14,3 +14,17 @@
 .back-button{
     grid-area: back;
 }
+
+@media screen and (max-width: 500px) {
+    .grid-parent {
+        grid-template-areas:
+            "."
+            "content"
+            ".";
+    }
+
+    .content-center {
+        box-shadow: none !important;
+        width: 100vw;
+    }
+}
