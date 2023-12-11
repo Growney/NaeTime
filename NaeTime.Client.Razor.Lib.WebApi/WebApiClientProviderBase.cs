@@ -32,11 +32,8 @@ internal abstract class WebApiClientProviderBase : IApiClientProvider
         return _httpClient;
     }
     public DateTime? LastCommunication => throw new NotImplementedException();
-
     public Task<bool> IsEnabledAsync(CancellationToken token) => _configuration.IsEnabledAsync();
-
     public Task<bool> IsValidAsync(CancellationToken token) => _configuration.IsCurrentConfigurationValidAsync();
-
     public async Task<bool> TryConnectionAsync(CancellationToken token)
     {
         var client = await HttpClientProvider.GetHttpClientAsync();
@@ -56,6 +53,5 @@ internal abstract class WebApiClientProviderBase : IApiClientProvider
             return false;
         }
     }
-
     protected virtual string GetTestPath() => "configuration/available";
 }

@@ -1,17 +1,11 @@
 ﻿using Microsoft.AspNetCore.Components;
+using NaeTime.Client.MAUI.Lib;
 using NaeTime.Client.Razor.Lib.Abstractions;
 
 namespace NaeTime.Client.MAUI.Components.Pages;
 public partial class Connect : ComponentBase
 {
-    private enum ConnectionState
-    {
-        Connecting,
-        Disabled,
-        Invalid,
-        ConnectionFailed,
-        Success
-    }
+
     [Inject]
     public ILocalApiClientProvider LocalApiClientProvider { get; set; } = null!;
     [Inject]
