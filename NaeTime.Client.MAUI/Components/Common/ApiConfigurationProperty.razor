@@ -1,0 +1,53 @@
+﻿@if(Property != null && Value != null)
+{
+    <label>
+        @Property.DisplayName
+    </label>
+    <div>
+        @if (Property.ValueType == typeof(string))
+        {
+            <input type="text" class="w-100" value="@Value.Value" @onchange="@(x=> Value.Value = x.Value?.ToString())" />
+        }
+        else
+        {
+            <div>Type not supported</div>
+        }
+    </div>
+    @if (ValidationError != null)
+    {
+        <div class="text-danger">
+            @ValidationError
+        </div>
+    }
+}
+
+
+
+@code {
+    [Parameter]
+    public Client.Razor.Lib.Models.ApiConfigurationProperty? Property { get; set; }
+    [Parameter]
+    public Client.Razor.Lib.Models.ApiConfigurationPropertyValue? Value { get; set; }
+    [Parameter]
+    public Dictionary<int,string>? AllFieldsValidationErrors { get; set; }
+
+    private string? ValidationError
+    {
+        get
+        {
+            if(Property == null)
+            {
+                return null;
+            }
+            if(AllFieldsValidationErrors == null)
+            {
+                return null;
+            }
+            if(!AllFieldsValidationErrors.TryGetValue(Property.Id,out var error))
+            {
+                return null;
+            }
+            return error;
+        }
+    }
+}

@@ -22,25 +22,7 @@
                 <fieldset disabled="@(!IsLocalEnabled)">
                     @foreach (var propertyTuple in _localValues)
                     {
-                        <div>
-                            @propertyTuple.property.DisplayName
-                        </div>
-                        <div>
-                            @if (propertyTuple.property.ValueType == typeof(string))
-                            {
-                                <input type="text" class="w-100" value="@propertyTuple.value.Value" @onchange="@(x=> propertyTuple.value.Value = x.Value?.ToString())" />
-                            }
-                            else
-                            {
-                                <div>Type not supported</div>
-                            }
-                        </div>
-                        @if (_localValidationErrors.TryGetValue(propertyTuple.property.Id, out var error))
-                        {
-                        <div class="text-danger">
-                                @error
-                            </div>
-                        }
+                        <ApiConfigurationProperty Property="propertyTuple.property" Value="propertyTuple.value" AllFieldsValidationErrors="_localValidationErrors"></ApiConfigurationProperty>
 
                     }
                 </fieldset>
@@ -58,26 +40,7 @@
                 <fieldset disabled="@(!IsOffSiteEnabled)">
                     @foreach (var propertyTuple in _offsiteValues)
                     {
-                        <label>
-                            @propertyTuple.property.DisplayName
-                        </label>
-                        <div>
-                            @if (propertyTuple.property.ValueType == typeof(string))
-                            {
-                                <input type="text" class="w-100" value="@propertyTuple.value.Value" @onchange="@(x=> propertyTuple.value.Value = x.Value?.ToString())" />
-                            }
-                            else
-                            {
-                                <div>Type not supported</div>
-                            }
-                        </div>
-                        @if (_offsiteValidationErrors.TryGetValue(propertyTuple.property.Id, out var error))
-                        {
-                        <div class="text-danger">
-                                @error
-                            </div>
-                        }
-
+                        <ApiConfigurationProperty Property="propertyTuple.property" Value="propertyTuple.value" AllFieldsValidationErrors="_offsiteValidationErrors"></ApiConfigurationProperty>
                     }
                 </fieldset>
             }
