@@ -1,11 +1,11 @@
 ﻿<Router AppAssembly="@typeof(MauiProgram).Assembly" 
-    AdditionalAssemblies="new [] {typeof(NaeTime.Client.Razor.Pages.Pilots).Assembly }"> 
+    AdditionalAssemblies="new [] {typeof(NaeTime.Client.Razor.Pages.Pilot.PilotsList).Assembly }"> 
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Components.Layout.MainLayout)" />
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(NaeTime.Client.Razor.Layouts.MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
     <NotFound>
-        <LayoutView Layout="@typeof(Components.Layout.MainLayout)">
+        <LayoutView Layout="@typeof(NaeTime.Client.Razor.Layouts.MainLayout)">
             <p>404 its fucked</p>
         </LayoutView>
     </NotFound>

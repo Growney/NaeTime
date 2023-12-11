@@ -1,0 +1,19 @@
+﻿@inherits LayoutComponentBase
+@layout MainLayout
+
+@if (!string.IsNullOrWhiteSpace(ReturnUrl))
+{
+    <a href="@ReturnUrl">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+}
+
+<div>
+    @Body
+</div>
+
+@code{
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+}

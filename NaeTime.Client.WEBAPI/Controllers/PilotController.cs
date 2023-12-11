@@ -7,6 +7,13 @@ namespace NaeTime.Client.WEBAPI.Controllers;
 public class PilotController : Controller
 {
     private static ConcurrentDictionary<Guid, PilotDetails> _pilotDetails = new();
+
+    public PilotController()
+    {
+        var testPilot1 = new PilotDetails(new Guid("20a1745f-6ea8-40a0-afc0-bdf0aa2afd67"), "Graeme", null, "Just G");
+        _pilotDetails.TryAdd(testPilot1.Id, testPilot1);
+    }
+
     [HttpPost("pilot/create")]
     public IActionResult CreatePilot(CreatePilot dto)
     {
