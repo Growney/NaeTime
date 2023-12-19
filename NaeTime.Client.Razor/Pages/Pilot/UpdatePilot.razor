@@ -1,5 +1,7 @@
-﻿<h3>UpdatePilot</h3>
+﻿@page "/pilot/update/{pilotId:guid}"
+@layout WithReturn
 
-@code {
-
+@if (_model != null)
+{
+    <EditablePilotDetails Details="_model" OnValidSubmit="HandleValidSubmit"></EditablePilotDetails>
 }

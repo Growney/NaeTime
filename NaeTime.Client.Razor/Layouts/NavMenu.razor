@@ -12,12 +12,16 @@
 
             @if (IsLocalEnabled)
             {
-                <NavLink class="nav-link" href="/pilot/list">
-                    <i class="fa-solid fa-people-group"></i> <div class="mx-2">Pilots</div> <a class="float-end"><i class=" fas fa-user-plus"></i></a>
-                </NavLink>
-                <NavLink class="nav-link" href="/hardware">
+                <TrackedLink class="nav-link" Path="/pilot/list">
+                    <i class="fa-solid fa-people-group"></i> 
+                    <div class="mx-2">Pilots</div>
+                    <div class="float-end">
+                        <TrackedLink Path="/pilot/create" @onclick:stopPropagation="true"><i class=" fas fa-user-plus"></i></TrackedLink>
+                    </div>
+                </TrackedLink>
+                <TrackedLink class="nav-link" Path="/hardware">
                     <i class="fa-solid fa-microchip"></i> <div class="mx-2">Hardware</div>
-                </NavLink>
+                </TrackedLink>
             }
             
             @if (IsOffSiteEnabled)
@@ -27,3 +31,7 @@
         </div>
     </nav>
 </div>
+
+@code{
+
+}

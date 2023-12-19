@@ -1,0 +1,22 @@
+<a @onclick="Navigate" @attributes="AdditionalAttributes">
+    @ChildContent
+</a>
+@code{
+    [Parameter,EditorRequired]
+    public string Path { get; set; } = null!;
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = null!;
+    [Parameter]
+    public string CssClass { get; set; } = null!;
+
+    [Inject]
+    public INavigationManager NavigationManager { get; set; } = null!;
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private void Navigate()
+    {
+        NavigationManager.NavigateTo(Path);
+    }
+}

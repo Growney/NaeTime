@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using NaeTime.Client.Razor.Abstractions;
 using NaeTime.Client.Razor.Lib.Abstractions;
 using NaeTime.Client.Razor.Lib.Models;
 
@@ -13,7 +14,7 @@ public partial class Configure : ComponentBase
     [Inject]
     public ISimpleStorageProvider SimpleStorage { get; set; } = null!;
     [Inject]
-    public NavigationManager NavigationManager { get; set; } = null!;
+    public INavigationManager NavigationManager { get; set; } = null!;
 
     [Parameter]
     [SupplyParameterFromQuery]

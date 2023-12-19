@@ -13,18 +13,24 @@ public class PilotController : Controller
         var testPilot1 = new PilotDetails(new Guid("20a1745f-6ea8-40a0-afc0-bdf0aa2afd67"), "Graeme", null, "Just G");
         _pilotDetails.TryAdd(testPilot1.Id, testPilot1);
     }
-
-    [HttpPost("pilot/create")]
-    public IActionResult CreatePilot(CreatePilot dto)
+    [HttpPut("update")]
+    public IActionResult UpdatePilot([FromBody] UpdatePilot dto)
+    {
+        var details = new PilotDetails(dto.Id, dto.FirstName, dto.LastName, dto.CallSign);
+        _pilotDetails.AddOrUpdate(details.Id, details, (id, old) => details);
+        return Created($"pilot/{details.Id}", details);
+    }
+    [HttpPost("create")]
+    public IActionResult CreatePilot([FromBody] CreatePilot dto)
     {
         var details = new PilotDetails(Guid.NewGuid(), dto.FirstName, dto.LastName, dto.CallSign);
         _pilotDetails.TryAdd(details.Id, details);
         return Created($"pilot/{details.Id}", details);
     }
-    [HttpGet("{pilotId:guid}")]
-    public ActionResult<PilotDetails> GetPilot(Guid pilot)
+    [HttpGet("{pilotId:Guid}")]
+    public ActionResult<PilotDetails> GetPilot(Guid pilotId)
     {
-        if (!_pilotDetails.TryGetValue(pilot, out var details))
+        if (!_pilotDetails.TryGetValue(pilotId, out var details))
         {
             return NotFound();
         }

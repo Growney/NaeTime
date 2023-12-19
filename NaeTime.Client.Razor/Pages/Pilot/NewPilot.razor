@@ -1,6 +1,6 @@
 ﻿@page "/pilot/create"
 @layout WithReturn
-
-<div>
-    Here is come content
-</div>
+@if(_model != null)
+{
+    <EditablePilotDetails Details="_model" OnValidSubmit="HandleValidSubmit"></EditablePilotDetails>
+}

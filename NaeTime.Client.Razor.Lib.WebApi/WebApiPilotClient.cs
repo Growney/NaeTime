@@ -20,7 +20,7 @@ internal class WebApiPilotClient : IPilotApiClient
             LastName = dto.LastName,
             CallSign = dto.CallSign,
         };
-    public async Task<Pilot?> CreatePilotAsync(string? firstname, string? lastname, string? callsign)
+    public async Task<Pilot?> CreateAsync(string? firstname, string? lastname, string? callsign)
     {
         var client = await _httpClientProvider.GetHttpClientAsync();
 
@@ -49,7 +49,7 @@ internal class WebApiPilotClient : IPilotApiClient
         return GetDomainFromDto(responseDto);
     }
 
-    public async Task<IEnumerable<Pilot>> GetAllPilotsAsync()
+    public async Task<IEnumerable<Pilot>> GetAllAsync()
     {
         var client = await _httpClientProvider.GetHttpClientAsync();
 
@@ -74,7 +74,7 @@ internal class WebApiPilotClient : IPilotApiClient
         return responseDtos.Select(GetDomainFromDto);
     }
 
-    public async Task<Pilot?> GetPilotDetailsAsync(Guid id)
+    public async Task<Pilot?> GetAsync(Guid id)
     {
         var client = await _httpClientProvider.GetHttpClientAsync();
 
@@ -86,6 +86,35 @@ internal class WebApiPilotClient : IPilotApiClient
         var response = await client.GetAsync($"pilot/{id}");
 
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        {
+            return null;
+        }
+
+        var responseDto = await response.Content.ReadFromJsonAsync<PilotDetails>();
+
+        if (responseDto == null)
+        {
+            return null;
+        }
+
+        return GetDomainFromDto(responseDto);
+    }
+
+    public async Task<Pilot?> UpdateAsync(Pilot update)
+    {
+        var client = await _httpClientProvider.GetHttpClientAsync();
+
+        if (client == null)
+        {
+            throw new InvalidOperationException("Client_not_configured");
+        }
+
+        var dto = new UpdatePilot(update.Id, update.FirstName, update.LastName, update.CallSign);
+
+        var content = JsonContent.Create(dto);
+        var response = await client.PutAsync("pilot/update", content);
+
+        if (response.StatusCode != System.Net.HttpStatusCode.Created)
         {
             return null;
         }

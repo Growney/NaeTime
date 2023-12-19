@@ -2,14 +2,11 @@
 @layout MainLayout
 
 <div class="content-grid">
-    @if (!string.IsNullOrWhiteSpace(ReturnUrl))
-    {
-        <div class="back-button">
-            <a href="@ReturnUrl">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
-        </div>
-    }
+    <div class="back-button">
+        <a @onclick="NavigationManager.GoBack">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+    </div>
     <div class="backed-content">
         @Body
     </div>
@@ -20,4 +17,7 @@
     [Parameter]
     [SupplyParameterFromQuery]
     public string? ReturnUrl { get; set; }
+
+    [Inject]
+    public INavigationManager NavigationManager { get; set; } = null!;
 }

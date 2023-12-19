@@ -16,6 +16,7 @@ public static class MauiProgram
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddLocalWebApiClientProvider<LocalStorageProvider>();
+        builder.Services.AddNaeTimeComponents();
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

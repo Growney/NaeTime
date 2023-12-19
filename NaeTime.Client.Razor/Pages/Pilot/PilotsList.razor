@@ -4,5 +4,8 @@
 
 @foreach(var pilot in _pilots)
 {
-    <NaeTime.Client.Razor.Components.PilotDetails Details="pilot"></NaeTime.Client.Razor.Components.PilotDetails>
+    <div @onclick="() => NavigateToPilot(pilot)">
+        <NaeTime.Client.Razor.Components.PilotDetails Details="pilot"></NaeTime.Client.Razor.Components.PilotDetails>
+    </div>
+    
 }
