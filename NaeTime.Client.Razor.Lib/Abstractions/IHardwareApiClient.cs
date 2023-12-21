@@ -4,8 +4,7 @@ namespace NaeTime.Client.Razor.Lib.Abstractions;
 public interface IHardwareApiClient
 {
     Task<IEnumerable<TimerDetails>> GetAllTimerDetailsAsync();
-
-    Task<IEnumerable<LapRF8Channel>> GetAllLapRF8ChannelAsync();
-    Task<LapRF8Channel?> CreateLapRF8ChannelAsync(string name, int ipAddress, ushort port);
-    Task<LapRF8Channel?> GetLapRF8ChannelDetailsAsync(Guid id);
+    Task<EthernetLapRF8Channel?> CreateEthernetLapRF8ChannelAsync(string name, string ipAddress, int port);
+    Task<EthernetLapRF8Channel?> GetEthernetLapRF8ChannelDetailsAsync(Guid id);
+    Task UpdateEthernetLapRF8ChannelAsync(EthernetLapRF8Channel timer);
 }

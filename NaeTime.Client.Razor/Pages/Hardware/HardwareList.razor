@@ -1,0 +1,25 @@
+@page "/hardware/list"
+
+@foreach(var timer in _timers)
+{
+    <div class="shadow p-2 w-25" @onclick="()=>NavigateToTimerDetails(timer)">
+        <table>
+            <tr>
+                <td>
+                    Name
+                </td>
+                <td>
+                    @timer.Name
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Type
+                </td>
+                <td>
+                    @timer.Type
+                </td>
+            </tr>
+        </table>
+    </div>
+}

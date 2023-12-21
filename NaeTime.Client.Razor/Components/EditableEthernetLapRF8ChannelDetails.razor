@@ -4,25 +4,25 @@
     <DataAnnotationsValidator />
     <div>
 
-        <label>Firstname</label>
+        <label>Name</label>
         <div>
 
-            <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.FirstName" />
-            <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.FirstName)" />
+            <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.Name" />
+            <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.Name)" />
         </div>
     </div>
     <div class="mt-2">
-        <label>Lastname</label>
+        <label>Ip Address</label>
         <div>
-            <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.LastName" />
-            <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.LastName)" />
+            <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.IpAddress" />
+            <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.IpAddress)" />
         </div>
     </div>
     <div class="mt-2">
-        <label>Callsign</label>
+        <label>Port</label>
         <div>
-            <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.CallSign" />
-            <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.CallSign)" />
+            <Microsoft.AspNetCore.Components.Forms.InputNumber @bind-Value="Details.Port" />
+            <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.Port)" />
         </div>
     </div>
 
@@ -32,14 +32,14 @@
 
 </Microsoft.AspNetCore.Components.Forms.EditForm>
 
-@code{
+@code {
     [Parameter]
     [EditorRequired]
-    public Func<Pilot,Task> OnValidSubmit { get; set; } = null!;
+    public Func<EthernetLapRF8Channel, Task> OnValidSubmit { get; set; } = null!;
 
     [Parameter]
     [EditorRequired]
-    public Pilot Details { get; set; } = null!;
+    public EthernetLapRF8Channel Details { get; set; } = null!;
 
     private EditContext? _editContext;
 

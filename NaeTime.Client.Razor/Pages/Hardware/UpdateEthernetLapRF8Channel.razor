@@ -1,0 +1,6 @@
+@page "/hardware/ethernetlaprf8channel/update/{timerId:guid}"
+@layout WithReturn
+@if (_model != null)
+{
+    <EditableEthernetLapRF8ChannelDetails Details="_model" OnValidSubmit="HandleValidSubmit"></EditableEthernetLapRF8ChannelDetails>
+}
