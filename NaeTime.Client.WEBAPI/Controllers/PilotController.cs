@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using NaeTime.Client.Shared.DataTransferObjects;
+using NaeTime.Client.Shared.DataTransferObjects.Pilot;
 using System.Collections.Concurrent;
 
-namespace NaeTime.Client.WEBAPI.Controllers;
+namespace NaeTime.Client.WebApi.Controllers;
 [Route("[controller]")]
 public class PilotController : Controller
 {
@@ -18,7 +18,7 @@ public class PilotController : Controller
     {
         var details = new PilotDetails(dto.Id, dto.FirstName, dto.LastName, dto.CallSign);
         _pilotDetails.AddOrUpdate(details.Id, details, (id, old) => details);
-        return Created($"pilot/{details.Id}", details);
+        return Ok(details);
     }
     [HttpPost("create")]
     public IActionResult CreatePilot([FromBody] CreatePilot dto)

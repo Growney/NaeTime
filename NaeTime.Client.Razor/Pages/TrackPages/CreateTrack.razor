@@ -1,0 +1,9 @@
+@using NaeTime.Client.Razor.Lib.Abstractions
+@page "/track/create"
+@layout WithReturn
+@if (_model != null)
+{
+    <EditableTrackDetails Details=_model Timers=_timers OnValidSubmit="HandleValidSubmit"></EditableTrackDetails>
+}
+
+

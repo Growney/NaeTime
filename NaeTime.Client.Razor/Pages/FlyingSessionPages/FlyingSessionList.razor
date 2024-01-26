@@ -1,0 +1,13 @@
+@page "/flyingsession/list"
+@using NaeTime.Client.Razor.Lib.Abstractions
+@layout WithReturn
+<button @onclick="NavigateToCreateFlyingSession" class="btn btn-primary"><i class="fa-solid fa-plus"></i></button>
+
+@foreach (var sessions in _flyingSessions)
+{
+    <div @onclick="() => NavigateToFlyingSession(sessions)">
+        <FlyingSessionDetails Details="sessions" Tracks="_tracks"></FlyingSessionDetails>
+    </div>
+
+}
+

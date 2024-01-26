@@ -1,6 +1,6 @@
 ﻿using NaeTime.Client.Razor.Lib.Abstractions;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Client.Shared.DataTransferObjects;
+using NaeTime.Client.Shared.DataTransferObjects.Pilot;
 using System.Net.Http.Json;
 
 namespace NaeTime.Client.Razor.Lib.WebApi;
@@ -13,13 +13,7 @@ internal class WebApiPilotClient : IPilotApiClient
         _httpClientProvider = httpClientProvider ?? throw new ArgumentNullException(nameof(httpClientProvider));
     }
     private Pilot GetDomainFromDto(PilotDetails dto)
-        => new Pilot()
-        {
-            Id = dto.Id,
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            CallSign = dto.CallSign,
-        };
+        => new Pilot(dto.Id, dto.FirstName, dto.LastName, dto.CallSign);
     public async Task<Pilot?> CreateAsync(string? firstname, string? lastname, string? callsign)
     {
         var client = await _httpClientProvider.GetHttpClientAsync();

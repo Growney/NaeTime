@@ -1,0 +1,7 @@
+@page "/track/update/{trackid:guid}"
+@layout WithReturn
+
+@if (_model != null)
+{
+    <EditableTrackDetails Details=_model Timers=_timers OnValidSubmit=HandleValidSubmit></EditableTrackDetails>
+}

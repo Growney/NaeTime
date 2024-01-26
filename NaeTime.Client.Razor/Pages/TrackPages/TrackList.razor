@@ -1,0 +1,11 @@
+@page "/track/list"
+@layout WithReturn
+<button @onclick="NavigateToCreateTrack" class="btn btn-primary"><i class="fa-solid fa-plus"></i></button>
+
+@foreach (var track in _tracks)
+{
+    <div @onclick="() => NavigateToTrack(track)">
+        <TrackDetails Details="track"></TrackDetails>
+    </div>
+
+}

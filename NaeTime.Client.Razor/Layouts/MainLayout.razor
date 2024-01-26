@@ -1,4 +1,7 @@
-﻿@inherits LayoutComponentBase
+﻿@using NaeTime.Client.Razor.Lib.Abstractions
+@inherits LayoutComponentBase
+
+<EnsureConfigured></EnsureConfigured>
 
 <div class="page">
     <div class="sidebar">
@@ -7,7 +10,14 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            @if (IsLocalEnabled)
+            {
+                <ApiStatus ClientProvider="LocalApiClientProvider"><i class="fa-solid fa-wifi"></i></ApiStatus>
+            }
+            @if (IsOffSiteEnabled)
+            {
+                <ApiStatus ClientProvider="OffSiteApiClientProvider"><i class="fa-solid fa-satellite-dish"></i></ApiStatus>
+            }
         </div>
 
         <article class="content px-4">
@@ -15,3 +25,4 @@
         </article>
     </main>
 </div>
+

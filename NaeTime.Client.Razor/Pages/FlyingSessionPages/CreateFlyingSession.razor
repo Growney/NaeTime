@@ -1,0 +1,49 @@
+@using NaeTime.Client.Razor.Lib.Abstractions
+@page "/flyingsession/create"
+@layout WithReturn
+@if (_model != null)
+{
+    <EditableFlyingSessionDetails Details=_model Tracks=_tracks OnValidSubmit="HandleValidSubmit"></EditableFlyingSessionDetails>
+}
+
+
+@code{
+    [Inject]
+    private IFlyingSessionApiClient FlyingSession { get; set; } = null!;
+    [Inject]
+    private ITrackApiClient TrackApiClient { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Parameter]
+    public string? ReturnUrl{ get; set; }
+
+    private readonly FlyingSession _model = new(Guid.NewGuid(),string.Empty,DateTime.Now,DateTime.Now.AddDays(1),Guid.Empty);
+    private readonly List<Track> _tracks = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tracks = await TrackApiClient.GetAllAsync();
+
+        _tracks.AddRange(tracks);
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task HandleValidSubmit(FlyingSession flyingSession)
+    {
+        if(string.IsNullOrWhiteSpace(flyingSession.Description))
+        {
+            return;
+        }
+
+        if(flyingSession.TrackId == null)
+        {
+            return;
+        }
+
+        await FlyingSession.CreateAsync(flyingSession.Description,flyingSession.Start,flyingSession.ExpectedEnd,flyingSession.TrackId.Value);
+
+        NavigationManager.NavigateTo(ReturnUrl ?? "/flyingsession/list");
+    }
+}

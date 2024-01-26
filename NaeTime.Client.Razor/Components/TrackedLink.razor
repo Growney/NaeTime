@@ -8,9 +8,8 @@
     public RenderFragment ChildContent { get; set; } = null!;
     [Parameter]
     public string CssClass { get; set; } = null!;
-
     [Inject]
-    public INavigationManager NavigationManager { get; set; } = null!;
+    public NavigationManager NavigationManager { get; set; } = null!;
 
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object>? AdditionalAttributes { get; set; }

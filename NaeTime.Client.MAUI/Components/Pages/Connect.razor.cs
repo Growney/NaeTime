@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.MAUI.Lib;
-using NaeTime.Client.Razor.Abstractions;
 using NaeTime.Client.Razor.Lib.Abstractions;
 
 namespace NaeTime.Client.MAUI.Components.Pages;
@@ -18,7 +17,7 @@ public partial class Connect : ComponentBase
     public IOffSiteApiConfiguration OffsiteConfiguration { get; set; } = null!;
 
     [Inject]
-    public INavigationManager NavigationManager { get; set; } = null!;
+    public NavigationManager NavigationManager { get; set; } = null!;
 
     private ConnectionState LocalConnectionState { get; set; } = ConnectionState.Connecting;
     private ConnectionState OffSiteConnectionState { get; set; } = ConnectionState.Connecting;

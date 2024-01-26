@@ -1,0 +1,15 @@
+@page "/configuration"
+@layout WithReturn
+
+<button class="btn btn-primary" @onclick="NavigateToServiceConfiguration">Configure Services</button>
+
+@code
+{
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private void NavigateToServiceConfiguration()
+    {
+        NavigationManager.NavigateTo("/configure?force=true");
+    }
+}

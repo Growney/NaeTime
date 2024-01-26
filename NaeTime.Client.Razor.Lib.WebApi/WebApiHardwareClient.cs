@@ -1,6 +1,6 @@
 ﻿using NaeTime.Client.Razor.Lib.Abstractions;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Client.Shared.DataTransferObjects;
+using NaeTime.Client.Shared.DataTransferObjects.Hardware;
 using System.Net.Http.Json;
 
 namespace NaeTime.Client.Razor.Lib.WebApi;
@@ -13,24 +13,13 @@ internal class WebApiHardwareClient : IHardwareApiClient
         _httpClientProvider = httpClientProvider ?? throw new ArgumentNullException(nameof(httpClientProvider));
     }
     private EthernetLapRF8Channel GetDomainFromDto(EthernetLapRF8ChannelTimerDetails details)
-        => new EthernetLapRF8Channel()
-        {
-            Id = details.Id,
-            IpAddress = details.IpAddress,
-            Name = details.Name,
-            Port = details.Port,
-        };
-    private Models.TimerDetails GetDomainFromDto(Shared.DataTransferObjects.TimerDetails details)
-        => new Models.TimerDetails()
-        {
-            Id = details.Id,
-            Name = details.Name,
-            Type = GetDomainFromDto(details.Type)
-        };
-    private Models.TimerType GetDomainFromDto(Shared.DataTransferObjects.TimerType type)
+        => new EthernetLapRF8Channel(details.Id, details.Name, details.IpAddress, details.Port);
+    private Models.TimerDetails GetDomainFromDto(Shared.DataTransferObjects.Hardware.TimerDetails details)
+        => new Models.TimerDetails(details.Id, details.Name, GetDomainFromDto(details.Type));
+    private Models.TimerType GetDomainFromDto(Shared.DataTransferObjects.Hardware.TimerType type)
         => type switch
         {
-            Shared.DataTransferObjects.TimerType.EthernetLapRF8Channel => Models.TimerType.EthernetLapRF8Channel,
+            Shared.DataTransferObjects.Hardware.TimerType.EthernetLapRF8Channel => Models.TimerType.EthernetLapRF8Channel,
             _ => throw new NotImplementedException()
         };
     public async Task<IEnumerable<Models.TimerDetails>> GetAllTimerDetailsAsync()
@@ -49,7 +38,7 @@ internal class WebApiHardwareClient : IHardwareApiClient
             return Enumerable.Empty<Models.TimerDetails>();
         }
 
-        var responseDtos = await response.Content.ReadFromJsonAsync<IEnumerable<Shared.DataTransferObjects.TimerDetails>>();
+        var responseDtos = await response.Content.ReadFromJsonAsync<IEnumerable<Shared.DataTransferObjects.Hardware.TimerDetails>>();
 
         if (responseDtos == null)
         {
@@ -97,7 +86,7 @@ internal class WebApiHardwareClient : IHardwareApiClient
 
         return GetDomainFromDto(responseDto);
     }
-    public async Task UpdateEthernetLapRF8ChannelAsync(EthernetLapRF8Channel timer)
+    public async Task<EthernetLapRF8Channel?> UpdateEthernetLapRF8ChannelAsync(EthernetLapRF8Channel timer)
     {
         var client = await _httpClientProvider.GetHttpClientAsync();
 
@@ -116,7 +105,7 @@ internal class WebApiHardwareClient : IHardwareApiClient
             throw new InvalidOperationException("Port_is_invalid");
         }
 
-        var dto = new EthernetLapRF8ChannelTimerDetails(timer.Id, timer.Name, timer.IpAddress, (ushort)timer.Port);
+        var dto = new UpdateEthernetLapRF8ChannelTimer(timer.Id, timer.Name, timer.IpAddress, (ushort)timer.Port);
 
         var content = JsonContent.Create(dto);
         var response = await client.PutAsync("hardware/ethernetlaprf8channel/update", content);
@@ -125,6 +114,8 @@ internal class WebApiHardwareClient : IHardwareApiClient
         {
             throw new InvalidOperationException("Failed_to_update");
         }
+
+        return timer;
     }
     public async Task<EthernetLapRF8Channel?> GetEthernetLapRF8ChannelDetailsAsync(Guid id)
     {

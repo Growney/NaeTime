@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace NaeTime.Client.WEBAPI.Controllers;
+namespace NaeTime.Client.WebApi.Controllers;
 
 [Route("[controller]")]
 public class ConfigurationController : Controller

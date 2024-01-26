@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="Pages\Hardware\HardwareList.razor" />
+    <None Include="Pages\HardwarePages\HardwareList.razor" />
   </ItemGroup>
 
 
@@ -21,6 +21,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Abstractions\" />
+    <Folder Include="Components\TrackComponents\" />
+    <Folder Include="Lib\" />
+    <Folder Include="Pages\FlyingSessionPages\" />
   </ItemGroup>
 
 </Project>

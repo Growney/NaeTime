@@ -20,7 +20,7 @@ public abstract class ApiConfigurationBase : IApiConfiguration
             _configuration.Add(property.key, (property.displayName, property.valueType));
         }
 
-        _enabledKey = $"{GetType()}-Enabledd";
+        _enabledKey = $"{GetType()}-Enabled";
     }
 
     public abstract IEnumerable<(int key, string displayName, Type valueType)> GetProperties();
@@ -141,7 +141,7 @@ public abstract class ApiConfigurationBase : IApiConfiguration
         var storedValue = await _storage.GetAsync(_enabledKey);
         if (!bool.TryParse(storedValue, out var isEnabled))
         {
-            return true;
+            return false;
         }
         return isEnabled;
     }

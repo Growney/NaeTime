@@ -1,0 +1,11 @@
+@page "/pilot/list"
+@layout WithReturn
+<button @onclick="NavigateToCreatePilot" class="btn btn-primary"><i class=" fas fa-user-plus"></i></button>
+
+@foreach(var pilot in _pilots)
+{
+    <div @onclick="() => NavigateToPilot(pilot)">
+        <PilotDetails Details="pilot"></PilotDetails>
+    </div>
+    
+}

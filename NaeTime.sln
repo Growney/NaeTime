@@ -73,7 +73,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{06729137-7D7
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.MAUI", "NaeTime.Client.MAUI\NaeTime.Client.MAUI.csproj", "{C8200E1C-809F-4B00-BF43-CFED1D9FEA2A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.WEBAPI", "NaeTime.Client.WEBAPI\NaeTime.Client.WEBAPI.csproj", "{3AE89310-812B-4E4A-B474-610B7E6A252C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.WebApi", "NaeTime.Client.WEBAPI\NaeTime.Client.WebApi.csproj", "{3AE89310-812B-4E4A-B474-610B7E6A252C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.Shared", "NaeTime.Client.Shared\NaeTime.Client.Shared.csproj", "{C4CDA593-86DD-4CC6-A2B4-CB1E9E866B9F}"
 EndProject
@@ -90,6 +90,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImmersionRC.LapRF.Tests", "ImmersionRC.LapRF.Tests\ImmersionRC.LapRF.Tests.csproj", "{73DFA10B-7B15-435B-9D16-FC81B3661E3C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImmersionRC.LapRF", "ImmersionRC.LapRF\ImmersionRC.LapRF.csproj", "{1129A2C7-4A2F-44EB-BB32-CE4BF42CAD72}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.File", "NaeTime.Client.File\NaeTime.Client.File.csproj", "{92D9DBF5-14C5-4835-BC82-68F1A97EDA66}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client.Razor.Lib.SQlite", "NaeTime.Client.Razor.Lib.SQlite\NaeTime.Client.Razor.Lib.SQlite.csproj", "{3E1A26CC-4475-461A-AEBC-F73EDC1D0503}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -223,6 +227,14 @@ Global
 		{1129A2C7-4A2F-44EB-BB32-CE4BF42CAD72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1129A2C7-4A2F-44EB-BB32-CE4BF42CAD72}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1129A2C7-4A2F-44EB-BB32-CE4BF42CAD72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92D9DBF5-14C5-4835-BC82-68F1A97EDA66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92D9DBF5-14C5-4835-BC82-68F1A97EDA66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92D9DBF5-14C5-4835-BC82-68F1A97EDA66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92D9DBF5-14C5-4835-BC82-68F1A97EDA66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E1A26CC-4475-461A-AEBC-F73EDC1D0503}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E1A26CC-4475-461A-AEBC-F73EDC1D0503}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E1A26CC-4475-461A-AEBC-F73EDC1D0503}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E1A26CC-4475-461A-AEBC-F73EDC1D0503}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -266,6 +278,8 @@ Global
 		{CDAC7451-579A-460C-9DA2-6E6BCBC3C461} = {BF9E2BB8-97EE-40E5-8BDF-65D46620D64E}
 		{73DFA10B-7B15-435B-9D16-FC81B3661E3C} = {BF9E2BB8-97EE-40E5-8BDF-65D46620D64E}
 		{1129A2C7-4A2F-44EB-BB32-CE4BF42CAD72} = {BF9E2BB8-97EE-40E5-8BDF-65D46620D64E}
+		{92D9DBF5-14C5-4835-BC82-68F1A97EDA66} = {06729137-7D79-40BE-8D59-5707F53C7C55}
+		{3E1A26CC-4475-461A-AEBC-F73EDC1D0503} = {06729137-7D79-40BE-8D59-5707F53C7C55}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5210F0AE-1F6C-44EA-AEB1-C0A71B6E326B}

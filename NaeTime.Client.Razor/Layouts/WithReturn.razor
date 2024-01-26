@@ -2,11 +2,14 @@
 @layout MainLayout
 
 <div class="content-grid">
-    <div class="back-button">
-        <a @onclick="NavigationManager.GoBack">
-            <i class="fa-solid fa-arrow-left"></i>
-        </a>
-    </div>
+    @if (!string.IsNullOrEmpty(ReturnUrl))
+    {
+        <div class="back-button">
+            <a @onclick="GoBack">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+        </div>
+    }
     <div class="backed-content">
         @Body
     </div>
@@ -19,5 +22,13 @@
     public string? ReturnUrl { get; set; }
 
     [Inject]
-    public INavigationManager NavigationManager { get; set; } = null!;
+    public NavigationManager NavigationManager { get; set; } = null!;
+
+    public void GoBack()
+    {
+        if(!string.IsNullOrWhiteSpace(ReturnUrl))
+        {
+            NavigationManager.NavigateTo(ReturnUrl);
+        }
+    }
 }

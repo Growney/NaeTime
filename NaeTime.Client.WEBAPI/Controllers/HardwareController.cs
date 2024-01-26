@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using NaeTime.Client.Shared.DataTransferObjects;
+using NaeTime.Client.Shared.DataTransferObjects.Hardware;
 using System.Collections.Concurrent;
 
-namespace NaeTime.Client.WEBAPI.Controllers;
+namespace NaeTime.Client.WebApi.Controllers;
 
 [Route("[controller]")]
 public class HardwareController : Controller
@@ -43,14 +43,16 @@ public class HardwareController : Controller
         return Ok(details);
     }
     [HttpPut("ethernetlaprf8channel/update")]
-    public IActionResult UpdateEthernetLapRF8ChannelTimer([FromBody] EthernetLapRF8ChannelTimerDetails dto)
+    public IActionResult UpdateEthernetLapRF8ChannelTimer([FromBody] UpdateEthernetLapRF8ChannelTimer dto)
     {
         if (!_ethernetLapRF8ChannelTimers.TryGetValue(dto.Id, out var details))
         {
             return NotFound();
         }
 
-        _ethernetLapRF8ChannelTimers.AddOrUpdate(dto.Id, dto, (id, old) => dto);
+        var detailsDto = new EthernetLapRF8ChannelTimerDetails(dto.Id, dto.Name, dto.IpAddress, dto.Port);
+
+        _ethernetLapRF8ChannelTimers.AddOrUpdate(dto.Id, detailsDto, (id, old) => detailsDto);
 
         return Ok(details);
     }

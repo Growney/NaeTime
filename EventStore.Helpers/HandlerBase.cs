@@ -57,7 +57,7 @@ internal abstract class HandlerBase : IHandler
                 return;
             }
 
-            var eventObj = EventHelper.CreateEvent(eventType, eventData);
+            var eventObj = EventHelper.CreateEvent(eventTypeName, eventData);
 
             if (eventObj == null)
             {

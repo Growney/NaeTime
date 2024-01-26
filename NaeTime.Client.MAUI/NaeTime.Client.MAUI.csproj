@@ -25,7 +25,7 @@
         <ApplicationTitle>NaeTime.Client.MAUI</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.naetime.client.maui</ApplicationId>
+        <ApplicationId>naetime.client.maui</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -58,6 +58,15 @@
     </ItemGroup>
 
     <ItemGroup>
+      <AndroidResource Remove="Components\Layout\**" />
+      <Compile Remove="Components\Layout\**" />
+      <Content Remove="Components\Layout\**" />
+      <EmbeddedResource Remove="Components\Layout\**" />
+      <MauiXaml Remove="Components\Layout\**" />
+      <None Remove="Components\Layout\**" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
@@ -65,13 +74,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\NaeTime.Client.Razor.Lib.SQlite\NaeTime.Client.Razor.Lib.SQlite.csproj" />
       <ProjectReference Include="..\NaeTime.Client.Razor.Lib.WebApi\NaeTime.Client.Razor.Lib.WebApi.csproj" />
       <ProjectReference Include="..\NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj" />
       <ProjectReference Include="..\NaeTime.Client.Razor\NaeTime.Client.Razor.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Components\Layout\" />
     </ItemGroup>
 
 </Project>

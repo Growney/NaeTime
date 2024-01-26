@@ -6,5 +6,5 @@ public interface IHardwareApiClient
     Task<IEnumerable<TimerDetails>> GetAllTimerDetailsAsync();
     Task<EthernetLapRF8Channel?> CreateEthernetLapRF8ChannelAsync(string name, string ipAddress, int port);
     Task<EthernetLapRF8Channel?> GetEthernetLapRF8ChannelDetailsAsync(Guid id);
-    Task UpdateEthernetLapRF8ChannelAsync(EthernetLapRF8Channel timer);
+    Task<EthernetLapRF8Channel?> UpdateEthernetLapRF8ChannelAsync(EthernetLapRF8Channel timer);
 }

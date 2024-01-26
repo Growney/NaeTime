@@ -1,0 +1,25 @@
+<div class="shadow p-2 w-25">
+    <table>
+        <tr>
+            <td>
+                Name
+            </td>
+            <td>
+                @Details.Name
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Timed Gates
+            </td>
+            <td>
+                @Details.TimedGates.Count()
+            </td>
+        </tr>
+    </table>
+</div>
+@code {
+    [Parameter]
+    [EditorRequired]
+    public Track Details { get; set; } = null!;
+}
