@@ -1,5 +1,12 @@
 ﻿namespace NaeTime.Timing.Abstractions.Models;
 public class Flight
 {
-    public IEnumerable<Flight> Flights { get; set; }
+    public Flight(IEnumerable<Flight> flights)
+    {
+
+        Flights = flights ?? throw new ArgumentNullException(nameof(flights));
+    }
+
+    public IEnumerable<Flight> Flights { get; }
+
 }
