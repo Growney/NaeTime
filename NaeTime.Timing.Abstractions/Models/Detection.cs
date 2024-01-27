@@ -1,7 +1,7 @@
 ﻿namespace NaeTime.Timing.Abstractions.Models;
 public class Detection
 {
-    public Detection(Guid id, long hardwareTime, long softwareTime, DateTime detectionTime, Guid timerId, int channel)
+    public Detection(Guid id, ulong hardwareTime, long softwareTime, DateTime detectionTime, Guid timerId, byte channel)
     {
         Id = id;
         HardwareTime = hardwareTime;
@@ -12,9 +12,9 @@ public class Detection
     }
 
     public Guid Id { get; }
-    public long HardwareTime { get; }
+    public ulong HardwareTime { get; }
     public long SoftwareTime { get; }
     public DateTime DetectionTime { get; }
     public Guid TimerId { get; }
-    public int Channel { get; }
+    public byte Channel { get; }
 }
