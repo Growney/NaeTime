@@ -1,4 +1,4 @@
-﻿namespace ImmersionRC.LapRF.Protocol;
+﻿namespace ImmersionRC.LapRF.Abstractions;
 public interface IPassingRecordProtocol
 {
     Task<Pass?> WaitForNextPassAsync(CancellationToken cancellationToken);

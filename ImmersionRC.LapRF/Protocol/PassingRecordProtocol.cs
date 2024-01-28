@@ -1,5 +1,7 @@
 ﻿
 
+using ImmersionRC.LapRF.Abstractions;
+
 namespace ImmersionRC.LapRF.Protocol;
 internal class PassingRecordProtocol : IPassingRecordProtocol
 {

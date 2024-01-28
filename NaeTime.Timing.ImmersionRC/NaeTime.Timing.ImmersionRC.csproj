@@ -6,4 +6,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ImmersionRC.LapRF\ImmersionRC.LapRF.csproj" />
+    <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
+    <ProjectReference Include="..\NaeTime.Timing.Abstractions\NaeTime.Timing.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

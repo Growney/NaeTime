@@ -6,7 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-	  <InternalsVisibleTo Include="ImmersionRC.LapRF.Tests.Console"/>
-	  <InternalsVisibleTo Include="ImmersionRC.LapRF.Tests"/>
+	  <InternalsVisibleTo Include="ImmersionRC.LapRF.Tests.Console" />
+	  <InternalsVisibleTo Include="ImmersionRC.LapRF.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
   </ItemGroup>
 </Project>

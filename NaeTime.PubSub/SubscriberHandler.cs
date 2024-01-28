@@ -22,7 +22,7 @@ public class SubscriberHandler : ISubscriptionHandler
         _messageType = messageType;
         _whenMethodInfo = method;
     }
-    public Task Handle(object message)
+    public async Task Handle(object message)
     {
         if (message.GetType() != _messageType)
         {
@@ -32,12 +32,14 @@ public class SubscriberHandler : ISubscriptionHandler
         var subscriber = _subscriber();
         var result = _whenMethodInfo.Invoke(subscriber, new[] { message });
 
-        if (result is not Task task)
+        if (result is Task task)
         {
-            throw new InvalidOperationException("When method must return a Task");
+            await task;
         }
-
-        return task;
+        else if (result is ValueTask valueTask)
+        {
+            await valueTask;
+        }
     }
 
     private MethodInfo? FindMessageTypeWhenMethod(Type subscriberType, Type messageType)

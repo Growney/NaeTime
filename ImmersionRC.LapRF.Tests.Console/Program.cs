@@ -1,19 +1,14 @@
-﻿using ImmersionRC.LapRF;
-using ImmersionRC.LapRF.Communication;
+﻿using ImmersionRC.LapRF.Communication;
 using ImmersionRC.LapRF.Protocol;
 using System.Net;
 
 Console.WriteLine("Starting...");
 
-var configuration = new LapRFDeviceConfiguration
-{
-    IPAddress = IPAddress.Parse("192.168.28.5"),
-    Port = 5403
-};
 
-var communication = new LapRFEthernetCommunication();
 
-await communication.ConnectAsync(configuration);
+var communication = new LapRFEthernetCommunication(IPAddress.Parse("192.168.28.5"), 5403);
+
+await communication.ConnectAsync();
 
 Console.WriteLine("Connected!");
 

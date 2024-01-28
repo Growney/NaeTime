@@ -1,8 +1,16 @@
-﻿namespace ImmersionRC.LapRF.Protocol;
-internal class LapRFProtocolFactory : ILapRFProtocolFactory
+﻿using ImmersionRC.LapRF.Abstractions;
+
+namespace ImmersionRC.LapRF.Protocol;
+public class LapRFProtocolFactory : ILapRFProtocolFactory
 {
-    public Task<ILapRFProtocol> Create(LapRFDeviceConfiguration configuration)
+    public ILapRFProtocol Create(ILapRFCommunication communication)
     {
-        throw new NotImplementedException();
+        var statusProtocol = new StatusProtocol();
+        var passingRecordProtocol = new PassingRecordProtocol();
+        var radioFrequencySetupProtocol = new RadioFrequencySetupProtocol(communication);
+
+        var protocol = new LapRFProtocol(communication, statusProtocol, passingRecordProtocol, radioFrequencySetupProtocol);
+
+        return protocol;
     }
 }

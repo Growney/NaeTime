@@ -1,10 +1,8 @@
 ﻿using ImmersionRC.LapRF.Abstractions;
+using System.Net;
 
 namespace ImmersionRC.LapRF.Communication;
 internal class LapRFCommunicationFactory : ILapRFCommunicationFactory
 {
-    public Task<ILapRFCommunication> CreateCommunication(LapRFDeviceConfiguration configuration)
-    {
-        throw new NotImplementedException();
-    }
+    public ILapRFCommunication CreateEthernetCommunication(IPAddress address, int port) => new LapRFEthernetCommunication(address, port);
 }

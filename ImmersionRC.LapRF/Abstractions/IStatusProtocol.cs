@@ -1,4 +1,4 @@
-﻿namespace ImmersionRC.LapRF.Protocol;
+﻿namespace ImmersionRC.LapRF.Abstractions;
 public interface IStatusProtocol
 {
     Status? CurrentStatus { get; }

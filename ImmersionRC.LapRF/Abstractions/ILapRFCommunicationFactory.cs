@@ -1,5 +1,7 @@
-﻿namespace ImmersionRC.LapRF.Abstractions;
-internal interface ILapRFCommunicationFactory
+﻿using System.Net;
+
+namespace ImmersionRC.LapRF.Abstractions;
+public interface ILapRFCommunicationFactory
 {
-    Task<ILapRFCommunication> CreateCommunication(LapRFDeviceConfiguration configuration);
+    ILapRFCommunication CreateEthernetCommunication(IPAddress address, int port);
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using ImmersionRC.LapRF.Abstractions;
 
 namespace ImmersionRC.LapRF.Protocol;
 internal class StatusProtocol : IStatusProtocol, IDisposable

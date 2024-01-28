@@ -1,4 +1,4 @@
-﻿namespace ImmersionRC.LapRF.Protocol;
+﻿namespace ImmersionRC.LapRF.Abstractions;
 public interface IRadioFrequencySetupProtocol
 {
     ValueTask<IEnumerable<RFSetup>> GetSetupAsync(IEnumerable<byte> transponderIds, CancellationToken cancellationToken);

@@ -1,4 +1,5 @@
 ﻿using ImmersionRC.LapRF.Abstractions;
+using System.Net;
 using System.Net.Sockets;
 
 namespace ImmersionRC.LapRF.Communication;
@@ -7,14 +8,21 @@ internal class LapRFEthernetCommunication : ILapRFCommunication
     private readonly TcpClient _client;
     private readonly byte[] _rxBuffer;
 
-    public LapRFEthernetCommunication()
+    private readonly IPAddress _address;
+    private readonly int _port;
+
+    public LapRFEthernetCommunication(IPAddress address, int port)
     {
+        _address = address;
+        _port = port;
+
         _client = new TcpClient();
         _rxBuffer = new byte[1024];
+
     }
 
-    public Task ConnectAsync(LapRFDeviceConfiguration configuration)
-        => _client.ConnectAsync(configuration.IPAddress, configuration.Port);
+    public Task ConnectAsync()
+        => _client.ConnectAsync(_address, _port);
 
 
     public async Task<ReadOnlyMemory<byte>> ReceiveAsync(CancellationToken token)
