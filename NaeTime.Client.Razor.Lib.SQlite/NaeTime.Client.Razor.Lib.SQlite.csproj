@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj" />
+    <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
   </ItemGroup>
 
 </Project>

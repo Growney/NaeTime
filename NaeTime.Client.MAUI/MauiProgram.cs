@@ -24,6 +24,9 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
+        builder.Services.AddNaeTimePublishSubscribe();
+        builder.Services.AddSubscriberAssembly(typeof(Test).Assembly);
+
         return builder.Build();
     }
 }

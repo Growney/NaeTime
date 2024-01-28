@@ -13,9 +13,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.MAUI", "NaeT
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.Razor.Lib.WebApi", "NaeTime.Client.Razor.Lib.WebApi\NaeTime.Client.Razor.Lib.WebApi.csproj", "{508F0460-069B-4C43-9C26-CDBFD1D45310}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Timing.Abstractions", "NaeTime.Timing.Abstractions\NaeTime.Timing.Abstractions.csproj", "{3801B406-5DAB-48C2-8F4F-E8080503114F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Timing.Abstractions", "NaeTime.Timing.Abstractions\NaeTime.Timing.Abstractions.csproj", "{3801B406-5DAB-48C2-8F4F-E8080503114F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Timing", "NaeTime.Timing\NaeTime.Timing.csproj", "{64DA0037-F42B-409D-8DE8-E09288D1837E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Timing", "NaeTime.Timing\NaeTime.Timing.csproj", "{64DA0037-F42B-409D-8DE8-E09288D1837E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.PubSub", "NaeTime.PubSub\NaeTime.PubSub.csproj", "{E949CCDC-B744-47A7-879B-6C54FEAA990C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +55,10 @@ Global
 		{64DA0037-F42B-409D-8DE8-E09288D1837E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64DA0037-F42B-409D-8DE8-E09288D1837E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64DA0037-F42B-409D-8DE8-E09288D1837E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E949CCDC-B744-47A7-879B-6C54FEAA990C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E949CCDC-B744-47A7-879B-6C54FEAA990C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E949CCDC-B744-47A7-879B-6C54FEAA990C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E949CCDC-B744-47A7-879B-6C54FEAA990C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

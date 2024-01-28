@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NaeTime.Client.Razor.Lib.Abstractions;
+using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Lib.SQlite;
 public class LocalSqliteApiClientProvider : ILocalApiClientProvider
@@ -16,7 +18,7 @@ public class LocalSqliteApiClientProvider : ILocalApiClientProvider
 
     private readonly NaeTimeDbContext _context;
 
-    public LocalSqliteApiClientProvider()
+    public LocalSqliteApiClientProvider(IDispatcher dispatch)
     {
         var optionsBuilder = new DbContextOptionsBuilder<NaeTimeDbContext>();
         optionsBuilder.UseSqlite($"Data Source=naetime.db");
@@ -27,8 +29,19 @@ public class LocalSqliteApiClientProvider : ILocalApiClientProvider
         PilotApiClient = new PilotApiClient(_context);
         FlyingSessionApiClient = new FlyingSessionApiClient(_context);
         TrackApiClient = new TrackApiClient(_context);
-    }
 
+        _ = Test(dispatch);
+
+    }
+    private async Task Test(IDispatcher dispatch)
+    {
+        while (true)
+        {
+            await dispatch.Dispatch(new Pilot(Guid.NewGuid(), "", "", ""));
+
+            await Task.Delay(1000);
+        }
+    }
 
     public Task<bool> IsEnabledAsync(CancellationToken token) => Task.FromResult(true);
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Abstractions;
 using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
 public partial class TrackList
@@ -12,8 +13,16 @@ public partial class TrackList
 
     private readonly List<Track> _tracks = new();
 
+    [Inject]
+    private IPublisher Publisher { get; set; } = null!;
+
     protected override async Task OnInitializedAsync()
     {
+        Publisher.Subscribe<Pilot>(this, x =>
+        {
+            return Task.CompletedTask;
+        });
+
         var existingPilots = await TrackApiClient.GetAllAsync();
 
         _tracks.AddRange(existingPilots);
