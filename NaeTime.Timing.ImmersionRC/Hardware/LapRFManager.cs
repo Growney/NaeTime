@@ -1,27 +1,29 @@
-﻿using ImmersionRC.LapRF.Abstractions;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Abstractions.Notifications;
 using NaeTime.Timing.Abstractions.Repositories;
+using NaeTime.Timing.ImmersionRC.Abstractions;
 using System.Collections.Concurrent;
-using System.Net;
 
 namespace NaeTime.Timing.ImmersionRC.Hardware;
-internal class LapRFManager : ISingletonSubscriber, IHostedService
+internal class LapRFManager : IHostedService
 {
     private readonly IHardwareRepository _hardwareRepository;
-    private readonly ILapRFCommunicationFactory _communicationFactory;
-    private readonly ILapRFProtocolFactory _protocolFactory;
+    private readonly IPublisher _publisher;
+    private readonly ILapRFConnectionFactory _connectionFactory;
     private readonly IDispatcher _dispatcher;
 
     private readonly ConcurrentDictionary<Guid, LapRFConnection> _hardwareProcesses = new();
 
-    public LapRFManager(IHardwareRepository hardwareRepository, IDispatcher dispatcher, ILapRFCommunicationFactory communicationFactory, ILapRFProtocolFactory protocolFactory)
+    public LapRFManager(IHardwareRepository hardwareRepository, IPublisher publisher, ILapRFConnectionFactory connectionFactory, IDispatcher dispatcher)
     {
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
-        _hardwareRepository = hardwareRepository;
-        _communicationFactory = communicationFactory;
-        _protocolFactory = protocolFactory;
+        _hardwareRepository = hardwareRepository ?? throw new ArgumentNullException(nameof(hardwareRepository));
+        _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+        _dispatcher = dispatcher;
+
+        _publisher.Subscribe<EthernetLapRF8ChannelTimerConnectionConfigured>(this, When);
+        _publisher.Subscribe<TimerRadioFrequenciesRequested>(this, When);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -30,36 +32,46 @@ internal class LapRFManager : ISingletonSubscriber, IHostedService
 
         foreach (var device in devices)
         {
-            var connection = CreateEthernetCommunication(device.TimerId, device.Address, device.Port);
+            var connection = _connectionFactory.CreateEthernetConnection(device.TimerId, device.Address, device.Port);
             _hardwareProcesses.TryAdd(device.TimerId, connection);
         }
     }
-
-    private LapRFConnection CreateEthernetCommunication(Guid timerId, IPAddress address, int port)
-    {
-        var communication = _communicationFactory.CreateEthernetCommunication(address, port);
-        var protocol = _protocolFactory.Create(communication);
-        return new LapRFConnection(timerId, _dispatcher, communication, protocol);
-    }
-
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         foreach (var device in _hardwareProcesses)
         {
             await device.Value.Stop();
         }
+
+        _publisher.Unsubscribe(this);
     }
 
-    public async Task When(EthernetLapRF8ChannelTimerConfigured configured)
+    private async Task When(EthernetLapRF8ChannelTimerConnectionConfigured configured)
     {
         if (_hardwareProcesses.TryGetValue(configured.TimerId, out var connection))
         {
             await connection.Stop();
         }
 
-        var newConnection = CreateEthernetCommunication(configured.TimerId, configured.IpAddress, configured.Port);
+        var newConnection = _connectionFactory.CreateEthernetConnection(configured.TimerId, configured.IpAddress, configured.Port);
 
         _hardwareProcesses.AddOrUpdate(configured.TimerId, newConnection,
             (id, existing) => newConnection);
+    }
+    private async Task When(TimerRadioFrequenciesRequested requested)
+    {
+        if (!_hardwareProcesses.TryGetValue(requested.TimerId, out var connection))
+        {
+            return;
+        }
+
+        if (!connection.IsConnected)
+        {
+            return;
+        }
+
+        var frequencies = await connection.GetRadioFrequencyChannelsAsync();
+
+        await _dispatcher.Dispatch(new TimerRadioFrequenciesAquired(requested.TimerId, frequencies)).ConfigureAwait(false);
     }
 }

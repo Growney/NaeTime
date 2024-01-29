@@ -7,6 +7,7 @@ internal class Dispatcher : IDispatcher
 {
     private readonly IUniversalPublisher _publisher;
     private readonly IServiceProvider _serviceProvider;
+    public IPublisher Publisher => _serviceProvider.GetRequiredService<IPublisher>();
 
     private ConcurrentDictionary<Type, IEnumerable<SubscriberHandler>> _subscribers = new();
 
