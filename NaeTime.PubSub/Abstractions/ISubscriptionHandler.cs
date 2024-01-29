@@ -1,5 +1,5 @@
 ﻿namespace NaeTime.PubSub.Abstractions;
-public interface ISubscriptionHandler
+internal interface ISubscriptionHandler
 {
     Task Handle(object message);
 }

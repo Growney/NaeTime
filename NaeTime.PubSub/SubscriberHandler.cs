@@ -2,7 +2,7 @@
 using System.Reflection;
 
 namespace NaeTime.PubSub;
-public class SubscriberHandler : ISubscriptionHandler
+internal class SubscriberHandler : ISubscriptionHandler
 {
     private readonly Type _messageType;
     private readonly Func<object> _subscriber;
@@ -10,17 +10,16 @@ public class SubscriberHandler : ISubscriptionHandler
 
     public SubscriberHandler(Type subscriberType, Type messageType, Func<object> subscriber)
     {
-
-        var method = FindMessageTypeWhenMethod(subscriberType, messageType);
+        var method = FindMethodInfo(subscriberType, messageType);
 
         if (method == null || method.ReturnType != typeof(Task))
         {
             throw new ArgumentException($"Subscriber type does not have a When method for {messageType}");
         }
 
+        _whenMethodInfo = method;
         _subscriber = subscriber;
         _messageType = messageType;
-        _whenMethodInfo = method;
     }
     public async Task Handle(object message)
     {
@@ -30,7 +29,7 @@ public class SubscriberHandler : ISubscriptionHandler
         }
 
         var subscriber = _subscriber();
-        var result = _whenMethodInfo.Invoke(subscriber, new[] { message });
+        var result = _whenMethodInfo.Invoke(subscriber, [message]);
 
         if (result is Task task)
         {
@@ -42,7 +41,7 @@ public class SubscriberHandler : ISubscriptionHandler
         }
     }
 
-    private MethodInfo? FindMessageTypeWhenMethod(Type subscriberType, Type messageType)
+    private MethodInfo? FindMethodInfo(Type subscriberType, Type messageType)
     {
         var methods = subscriberType.GetMethods();
 

@@ -1,6 +1,17 @@
 ﻿namespace NaeTime.Timing.Abstractions.Models;
 public class RssiLevel
 {
+    public RssiLevel(Guid id, ulong? hardwareTime, long softwareTime, DateTime detectionTime, Guid timerId, byte channel, float level)
+    {
+        Id = id;
+        HardwareTime = hardwareTime;
+        SoftwareTime = softwareTime;
+        DetectionTime = detectionTime;
+        TimerId = timerId;
+        Channel = channel;
+        Level = level;
+    }
+
     public Guid Id { get; }
     public ulong? HardwareTime { get; }
     public long SoftwareTime { get; }

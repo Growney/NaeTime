@@ -1,7 +1,6 @@
 ﻿namespace NaeTime.PubSub.Abstractions;
 public interface IDispatcher
 {
-    internal IPublisher Publisher { get; }
-
-    Task Dispatch(object message);
+    Task Dispatch<T>(T message) where T : class;
+    Task<TResponse?> Request<TRequest, TResponse>(TRequest request) where TRequest : class;
 }

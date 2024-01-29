@@ -8,10 +8,10 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddNaeTimePublishSubscribe(this IServiceCollection services)
     {
-        services.TryAddSingleton<UniversalPublisher>();
-        services.TryAddSingleton<IUniversalPublisher>(x => x.GetRequiredService<UniversalPublisher>());
-        services.TryAddSingleton<IPublisher>(x => x.GetRequiredService<UniversalPublisher>());
-        services.TryAddSingleton<IDispatcher, Dispatcher>();
+        services.TryAddSingleton<PublishSubscribe>();
+        services.TryAddSingleton<IPublishSubscribe>(x => x.GetRequiredService<PublishSubscribe>());
+        services.TryAddSingleton<IDispatcher>(x => x.GetRequiredService<PublishSubscribe>());
+        services.TryAddSingleton<IPublisher>(x => x.GetRequiredService<PublishSubscribe>());
 
         return services;
     }
@@ -20,6 +20,12 @@ public static class IServiceCollectionExtensions
         where TSubscriber : ISubscriber
     {
         services.AddSingleton<ISubscriberRegistration>(new SubscriberRegistration(typeof(TSubscriber), typeof(TMessage), lifeTime));
+        return services;
+    }
+    public static IServiceCollection AddSubscriber<TSubscriber, TRequest, TResponse>(this IServiceCollection services, ServiceLifetime lifeTime = ServiceLifetime.Transient)
+        where TSubscriber : ISubscriber
+    {
+        services.AddSingleton<IHandlerRegistration>(new HandlerRegistration(typeof(TSubscriber), typeof(TRequest), typeof(TResponse), lifeTime));
         return services;
     }
     public static IServiceCollection AddSubscriber(this IServiceCollection services, Type subscriberType)
@@ -37,24 +43,59 @@ public static class IServiceCollectionExtensions
         {
             return services;
         }
-        ServiceLifetime lifetime;
-        if (subscriberType.IsAssignableTo(typeof(ISingletonSubscriber)))
-        {
-            lifetime = ServiceLifetime.Singleton;
-        }
-        else
-        {
-            lifetime = ServiceLifetime.Transient;
-        }
         var messageTypes = GetMessageTypes(subscriberType);
         foreach (var messageType in messageTypes)
         {
-            services.AddSingleton<ISubscriberRegistration>(new SubscriberRegistration(subscriberType, messageType, lifetime));
+            services.AddSingleton<ISubscriberRegistration>(new SubscriberRegistration(subscriberType, messageType, ServiceLifetime.Transient));
+        }
+        var handlerTypes = GetHandlerTypes(subscriberType);
+        foreach (var handlerType in handlerTypes)
+        {
+            services.AddSingleton<IHandlerRegistration>(new HandlerRegistration(subscriberType, handlerType.requestType, handlerType.responseType, ServiceLifetime.Transient));
         }
 
         return services;
     }
 
+    private static IEnumerable<(Type requestType, Type responseType)> GetHandlerTypes(Type handlerType)
+    {
+        var methods = handlerType.GetMethods();
+
+        foreach (var method in methods)
+        {
+            if (method.Name != "On")
+            {
+                continue;
+            }
+            var parameters = method.GetParameters();
+
+            if (parameters.Length != 1)
+            {
+                continue;
+            }
+
+            var requestType = parameters[0].ParameterType;
+
+            var returnType = method.ReturnType;
+
+            Type responseType;
+            if (returnType.IsGenericType)
+            {
+                if (returnType.GetGenericTypeDefinition() != typeof(Task<>))
+                {
+                    continue;
+                }
+                responseType = returnType.GetGenericArguments().First();
+            }
+            else
+            {
+                responseType = returnType;
+            }
+
+            yield return (requestType, responseType);
+
+        }
+    }
     private static IEnumerable<Type> GetMessageTypes(Type subscriberType)
     {
         var methods = subscriberType.GetMethods();
