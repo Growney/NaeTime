@@ -75,7 +75,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\NaeTime.Client.Razor.Lib.SQlite\NaeTime.Client.Razor.Lib.SQlite.csproj" />
-      <ProjectReference Include="..\NaeTime.Client.Razor.Lib.WebApi\NaeTime.Client.Razor.Lib.WebApi.csproj" />
       <ProjectReference Include="..\NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj" />
       <ProjectReference Include="..\NaeTime.Client.Razor\NaeTime.Client.Razor.csproj" />
       <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />

@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj" />
-    <ProjectReference Include="..\NaeTime.Client.Shared\NaeTime.Client.Shared.csproj" />
   </ItemGroup>
 
 </Project>

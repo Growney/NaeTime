@@ -5,7 +5,7 @@ using NaeTime.Timing.ImmersionRC.Abstractions;
 using System.Net;
 
 namespace NaeTime.Timing.ImmersionRC;
-public class LapRFConnectionFactory : ILapRFConnectionFactory
+internal class LapRFConnectionFactory : ILapRFConnectionFactory
 {
     private readonly ILapRFCommunicationFactory _communicationFactory;
     private readonly ILapRFProtocolFactory _protocolFactory;

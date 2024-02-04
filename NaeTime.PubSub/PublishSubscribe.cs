@@ -22,7 +22,7 @@ internal class PublishSubscribe : IPublishSubscribe
 
 
     public async Task<TResponse?> Request<TRequest, TResponse>(TRequest request)
-        where TRequest : class
+        where TRequest : notnull
     {
         var responseType = typeof(TResponse);
         var requestType = typeof(TRequest);
@@ -266,4 +266,5 @@ internal class PublishSubscribe : IPublishSubscribe
         }
         _instanceTypes.TryRemove(subscriber, out _);
     }
+
 }

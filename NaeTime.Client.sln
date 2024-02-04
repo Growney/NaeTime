@@ -11,10 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.Razor", "Nae
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.MAUI", "NaeTime.Client.MAUI\NaeTime.Client.MAUI.csproj", "{617A2D1E-2AE9-4B8C-9EA5-29C84A45A2C9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.Razor.Lib.WebApi", "NaeTime.Client.Razor.Lib.WebApi\NaeTime.Client.Razor.Lib.WebApi.csproj", "{508F0460-069B-4C43-9C26-CDBFD1D45310}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Timing.Abstractions", "NaeTime.Timing.Abstractions\NaeTime.Timing.Abstractions.csproj", "{3801B406-5DAB-48C2-8F4F-E8080503114F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Timing", "NaeTime.Timing\NaeTime.Timing.csproj", "{64DA0037-F42B-409D-8DE8-E09288D1837E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.PubSub", "NaeTime.PubSub\NaeTime.PubSub.csproj", "{E949CCDC-B744-47A7-879B-6C54FEAA990C}"
@@ -23,7 +19,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Timing.ImmersionRC"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImmersionRC.LapRF", "ImmersionRC.LapRF\ImmersionRC.LapRF.csproj", "{11C550B1-F049-4F55-9AF1-B85086918549}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Client.Shared", "NaeTime.Client.Shared\NaeTime.Client.Shared.csproj", "{4F2D8EDA-7A8A-488C-AA2C-741882A63D1E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Messages", "NaeTIme.Messages\NaeTime.Messages.csproj", "{AE42CE30-3E46-489E-A8B8-502CBD5455CD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{11CB6C81-1F2C-48C9-8ADE-9A1E68E71141}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Persistence", "NaeTime.Persistence\NaeTime.Persistence.csproj", "{624A4473-EBA3-485A-809E-4326FA8FEE05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Persistence.SQLite", "NaeTime.Persistence.SQLite\NaeTime.Persistence.SQLite.csproj", "{40C1C124-A882-48C1-819A-5D4B823F333D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Persistence.Client", "NaeTime.Persistence.Client\NaeTime.Persistence.Client.csproj", "{0A693974-B292-4B4E-8F9D-8D5261461692}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,14 +53,6 @@ Global
 		{617A2D1E-2AE9-4B8C-9EA5-29C84A45A2C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{617A2D1E-2AE9-4B8C-9EA5-29C84A45A2C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{617A2D1E-2AE9-4B8C-9EA5-29C84A45A2C9}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{508F0460-069B-4C43-9C26-CDBFD1D45310}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{508F0460-069B-4C43-9C26-CDBFD1D45310}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{508F0460-069B-4C43-9C26-CDBFD1D45310}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{508F0460-069B-4C43-9C26-CDBFD1D45310}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3801B406-5DAB-48C2-8F4F-E8080503114F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3801B406-5DAB-48C2-8F4F-E8080503114F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3801B406-5DAB-48C2-8F4F-E8080503114F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3801B406-5DAB-48C2-8F4F-E8080503114F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{64DA0037-F42B-409D-8DE8-E09288D1837E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{64DA0037-F42B-409D-8DE8-E09288D1837E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64DA0037-F42B-409D-8DE8-E09288D1837E}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -73,10 +69,22 @@ Global
 		{11C550B1-F049-4F55-9AF1-B85086918549}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11C550B1-F049-4F55-9AF1-B85086918549}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11C550B1-F049-4F55-9AF1-B85086918549}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4F2D8EDA-7A8A-488C-AA2C-741882A63D1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4F2D8EDA-7A8A-488C-AA2C-741882A63D1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4F2D8EDA-7A8A-488C-AA2C-741882A63D1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4F2D8EDA-7A8A-488C-AA2C-741882A63D1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE42CE30-3E46-489E-A8B8-502CBD5455CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE42CE30-3E46-489E-A8B8-502CBD5455CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE42CE30-3E46-489E-A8B8-502CBD5455CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE42CE30-3E46-489E-A8B8-502CBD5455CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{624A4473-EBA3-485A-809E-4326FA8FEE05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{624A4473-EBA3-485A-809E-4326FA8FEE05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{624A4473-EBA3-485A-809E-4326FA8FEE05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{624A4473-EBA3-485A-809E-4326FA8FEE05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40C1C124-A882-48C1-819A-5D4B823F333D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40C1C124-A882-48C1-819A-5D4B823F333D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40C1C124-A882-48C1-819A-5D4B823F333D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40C1C124-A882-48C1-819A-5D4B823F333D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A693974-B292-4B4E-8F9D-8D5261461692}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A693974-B292-4B4E-8F9D-8D5261461692}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A693974-B292-4B4E-8F9D-8D5261461692}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A693974-B292-4B4E-8F9D-8D5261461692}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

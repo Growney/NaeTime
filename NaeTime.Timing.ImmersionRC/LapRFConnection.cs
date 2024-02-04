@@ -1,8 +1,9 @@
 ﻿using ImmersionRC.LapRF.Abstractions;
+using NaeTime.Messages.Events.Hardware;
+using NaeTime.Messages.Events.Timing;
+using NaeTime.Messages.Models;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Abstractions;
-using NaeTime.Timing.Abstractions.Models;
-using NaeTime.Timing.Abstractions.Notifications;
 
 namespace NaeTime.Timing.ImmersionRC;
 internal class LapRFConnection
@@ -41,7 +42,7 @@ internal class LapRFConnection
             {
                 await _communication.ConnectAsync();
                 IsConnected = true;
-                await _dispatcher.Dispatch(new TimerConnected(_timerId));
+                await _dispatcher.Dispatch(new TimerConnectionEstablished(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow));
 
                 await _protocol.RunAsync(token);
             }
@@ -52,7 +53,7 @@ internal class LapRFConnection
             if (IsConnected)
             {
                 IsConnected = false;
-                await _dispatcher.Dispatch(new TimerConnectionLost(_timerId));
+                await _dispatcher.Dispatch(new TimerDisconnected(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow));
             }
         }
 
@@ -72,9 +73,9 @@ internal class LapRFConnection
 
                 var passingRecord = nullablePassingRecord.Value;
 
-                var detection = new Detection(Guid.NewGuid(), passingRecord.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow, _timerId, passingRecord.PilotId);
+                var detection = new TimerDetectionOccured(_timerId, passingRecord.PilotId, passingRecord.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
 
-                await _dispatcher.Dispatch(new DetectionOccured(detection)).ConfigureAwait(false);
+                await _dispatcher.Dispatch(detection).ConfigureAwait(false);
             }
             catch
             {
@@ -97,9 +98,9 @@ internal class LapRFConnection
 
                 var status = nullableStatus.Value;
 
-                var level = new RssiLevel(Guid.NewGuid(), status.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow, _timerId, status.TransponderId, status.Level);
+                var level = new RssiLevelRecorded(_timerId, status.TransponderId, status.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow, status.Level);
 
-                await _dispatcher.Dispatch(new RssiLevelRecorded(level)).ConfigureAwait(false);
+                await _dispatcher.Dispatch(level).ConfigureAwait(false);
             }
             catch
             {
@@ -108,18 +109,18 @@ internal class LapRFConnection
         }
     }
 
-    public async Task<IEnumerable<TimerRadioFrequencyChannel>> GetRadioFrequencyChannelsAsync()
+    public async Task<IEnumerable<LaneRadioFrequency>> GetRadioFrequencyChannelsAsync()
     {
         if (!IsConnected)
         {
-            return Enumerable.Empty<TimerRadioFrequencyChannel>();
+            return Enumerable.Empty<LaneRadioFrequency>();
         }
 
         byte[] transponderIds = [1, 2, 3, 4, 5, 6, 7, 8];
 
         var rfSetups = await _protocol.RadioFrequencySetupProtocol.GetSetupAsync(transponderIds, CancellationToken.None).ConfigureAwait(false);
 
-        var channels = new List<TimerRadioFrequencyChannel>();
+        var channels = new List<LaneRadioFrequency>();
 
         foreach (var setup in rfSetups)
         {
@@ -127,7 +128,7 @@ internal class LapRFConnection
             {
                 continue;
             }
-            channels.Add(new TimerRadioFrequencyChannel(setup.TransponderId, (int)setup.Frequency.Value, setup.IsEnabled));
+            channels.Add(new LaneRadioFrequency(setup.TransponderId, (int)setup.Frequency.Value, setup.IsEnabled));
         }
 
         return channels;

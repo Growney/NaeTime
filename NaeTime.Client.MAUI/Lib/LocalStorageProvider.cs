@@ -1,6 +1,4 @@
-﻿using NaeTime.Client.Razor.Lib.Abstractions;
-
-namespace NaeTime.Client.MAUI.Lib;
+﻿namespace NaeTime.Client.MAUI.Lib;
 public class LocalStorageProvider : ISimpleStorageProvider
 {
     public Task<string?> GetAsync(string key)

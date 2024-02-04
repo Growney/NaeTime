@@ -1,4 +1,4 @@
-﻿namespace NaeTime.Client.Razor.Lib.Abstractions;
+﻿namespace NaeTime.Persistence.Client.Abstractions;
 public interface ISimpleStorageProvider
 {
     Task SetAsync(string key, string? value);

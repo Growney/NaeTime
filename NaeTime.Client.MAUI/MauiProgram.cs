@@ -15,8 +15,7 @@ public static class MauiProgram
             });
 
         builder.Services.AddMauiBlazorWebView();
-        builder.Services.AddLocalDbLocalClientProvider<LocalStorageProvider>();
-        builder.Services.AddOffSiteAPIClientProvider<LocalStorageProvider>();
+        builder.Services.AddClientPersistence<LocalStorageProvider>();
         builder.Services.AddNaeTimeComponents();
 
 #if DEBUG
@@ -25,7 +24,6 @@ public static class MauiProgram
 #endif
 
         builder.Services.AddNaeTimePublishSubscribe();
-        builder.Services.AddSubscriberAssembly(typeof(Test).Assembly);
 
         return builder.Build();
     }

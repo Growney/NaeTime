@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
-using NaeTime.Client.Razor.Lib.Abstractions;
 using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class HardwareList : ComponentBase
 {
     [Inject]
-    private IHardwareApiClient HardwareApiClient { get; set; } = null!;
+    private IPublisher Publisher { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 

@@ -12,8 +12,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ImmersionRC.LapRF\ImmersionRC.LapRF.csproj" />
+    <ProjectReference Include="..\NaeTIme.Messages\NaeTime.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
-    <ProjectReference Include="..\NaeTime.Timing.Abstractions\NaeTime.Timing.Abstractions.csproj" />
+    <ProjectReference Include="..\NaeTime.Timing\NaeTime.Timing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Abstractions\" />
   </ItemGroup>
 
 </Project>
