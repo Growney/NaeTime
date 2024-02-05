@@ -1,4 +1,5 @@
-﻿using NaeTime.Messages.Models;
-
-namespace NaeTime.Messages.Responses;
-public record ActiveLaneConfigurationResponse(IEnumerable<LaneConfiguration> Configurations);
+﻿namespace NaeTime.Messages.Responses;
+public record ActiveLaneConfigurationResponse(IEnumerable<ActiveLaneConfigurationResponse.LaneConfiguration> Configurations)
+{
+    public record LaneConfiguration(byte Lane, Guid? PilotId, int FrequencyInMhz);
+}

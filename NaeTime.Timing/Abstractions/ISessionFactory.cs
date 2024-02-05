@@ -1,4 +1,4 @@
-﻿using NaeTime.Timing.Messages.Models;
+﻿using NaeTime.Timing.Models;
 
 namespace NaeTime.Timing.Abstractions;
 public interface ISessionFactory

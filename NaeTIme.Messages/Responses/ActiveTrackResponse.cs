@@ -1,6 +1,2 @@
-﻿
-using NaeTime.Timing.Messages.Models;
-
-namespace NaeTime.Messages.Responses;
-public record ActiveTrackResponse(Track? Track);
-
+﻿namespace NaeTime.Messages.Responses;
+public record ActiveTrackResponse(Guid TrackId, long MinimumLapMilliseconds, long MaximumLapMilliseconds, IEnumerable<Guid> Timers);

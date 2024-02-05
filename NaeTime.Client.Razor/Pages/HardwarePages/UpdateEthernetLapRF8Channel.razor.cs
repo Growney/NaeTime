@@ -1,12 +1,16 @@
 ﻿using Microsoft.AspNetCore.Components;
-using NaeTime.Client.Razor.Lib.Abstractions;
 using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.Messages.Events.Hardware;
+using NaeTime.Messages.Requests;
+using NaeTime.Messages.Responses;
+using NaeTime.PubSub.Abstractions;
+using System.Net;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class UpdateEthernetLapRF8Channel : ComponentBase
 {
     [Inject]
-    private IHardwareApiClient HardwareApiClient { get; set; } = null!;
+    private IDispatcher Dispatcher { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -20,8 +24,22 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        _model = await HardwareApiClient.GetEthernetLapRF8ChannelDetailsAsync(TimerId);
         await base.OnInitializedAsync();
+
+        var response = await Dispatcher.Request<EthernetLapRF8ChannelRequest, EthernetLapRF8ChannelResponse>(new(TimerId));
+
+        if (response == null)
+        {
+            return;
+        }
+
+        _model = new EthernetLapRF8Channel
+        {
+            Id = response.Id,
+            Name = response.Name,
+            IpAddress = response.IpAddress.ToString(),
+            Port = response.Port
+        };
     }
 
     private async Task HandleValidSubmit(EthernetLapRF8Channel timer)
@@ -31,7 +49,18 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
             return;
         }
 
-        await HardwareApiClient.UpdateEthernetLapRF8ChannelAsync(timer);
+        if (string.IsNullOrWhiteSpace(timer.Name))
+        {
+            return;
+        }
+
+        if (!IPAddress.TryParse(timer.IpAddress, out var validIP))
+        {
+            return;
+        }
+
+
+        await Dispatcher.Dispatch(new EthernetLapRF8ChannelConfigured(timer.Id, timer.Name, validIP, timer.Port));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/hardware/list");
     }

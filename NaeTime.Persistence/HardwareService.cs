@@ -1,4 +1,6 @@
 ﻿using NaeTime.Messages.Events.Hardware;
+using NaeTime.Messages.Requests;
+using NaeTime.Messages.Responses;
 using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub;
 
@@ -29,6 +31,20 @@ public class HardwareService : ISubscriber
     {
         var hardwareRepository = await _repositoryFactory.CreateHardwareRepository();
         await hardwareRepository.SetTimerConnectionStatus(disconnectedEvent.TimerId, false, disconnectedEvent.UtcTime);
+    }
+
+    public async Task<TimerDetailsResponse> On(TimerDetailsRequest request)
+    {
+        var hardwareRepository = await _repositoryFactory.CreateHardwareRepository();
+
+        var timerDetails = await hardwareRepository.GetAllTimerDetails();
+
+        return new TimerDetailsResponse(timerDetails.Select(x => new TimerDetailsResponse.TimerDetails(x.Id, x.Name, x.Type switch
+        {
+            Models.TimerType.EthernetLapRF8Channel => TimerDetailsResponse.TimerType.EthernetLapRF8Channel,
+            _ => throw new NotImplementedException()
+        })));
+
     }
 
 

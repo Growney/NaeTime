@@ -1,21 +1,34 @@
 ﻿using Microsoft.AspNetCore.Components;
-using NaeTime.Client.Razor.Lib.Abstractions;
+using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.Messages.Requests;
+using NaeTime.Messages.Responses;
+using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.PilotPages;
 public partial class PilotsList : ComponentBase
 {
     [Inject]
-    private IPilotApiClient PilotApiClient { get; set; } = null!;
+    private IDispatcher Dispatcher { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
-    private readonly List<Lib.Models.Pilot> _pilots = new();
+    private readonly List<Pilot> _pilots = new();
 
     protected override async Task OnInitializedAsync()
     {
-        var existingPilots = await PilotApiClient.GetAllAsync();
+        var pilotsResponse = await Dispatcher.Request<PilotsRequest, PilotsResponse>();
 
-        _pilots.AddRange(existingPilots);
+        if (pilotsResponse == null)
+        {
+            return;
+        }
+        _pilots.AddRange(pilotsResponse.Pilots.Select(x => new Pilot()
+        {
+            Id = x.Id,
+            FirstName = x.FirstName,
+            LastName = x.LastName,
+            CallSign = x.CallSign,
+        }));
 
         await base.OnInitializedAsync();
     }

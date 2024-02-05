@@ -4,11 +4,11 @@ using NaeTime.Persistence.SQLite.Context;
 using NaeTime.Persistence.SQLite.Models;
 
 namespace NaeTime.Persistence.SQLite;
-public class TrackRepository : ITrackRepository
+public class SQLiteTrackRepository : ITrackRepository
 {
     private readonly NaeTimeDbContext _dbContext;
 
-    public TrackRepository(NaeTimeDbContext dbContext)
+    public SQLiteTrackRepository(NaeTimeDbContext dbContext)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }

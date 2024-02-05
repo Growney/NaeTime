@@ -1,76 +1,61 @@
 ﻿namespace NaeTime.Client.Razor.Lib.Models;
 public class Track
 {
-    public Track(Guid id, string name, IEnumerable<Guid> timedGates)
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
+    private readonly List<Guid> _timers = new();
+    public IEnumerable<Guid> Timers => _timers;
+    public long MinimumLapTimeMilliseconds { get; set; }
+    public long MaximumLapTimeMilliseconds { get; set; }
+
+    public void AddTimer(Guid timerId)
     {
-        Id = id;
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-        _gates.AddRange(timedGates.Select(x => new TimedGate(x)));
+        _timers.Add(timerId);
     }
-
-    public Guid Id { get; }
-    public string Name { get; set; } = string.Empty;
-
-    private readonly List<TimedGate> _gates = new();
-
-    public IEnumerable<TimedGate> TimedGates => _gates;
-
-    public void AddTimedGate(Guid timerId)
+    public void AddTimers(IEnumerable<Guid> timerIds)
     {
-        if (_gates.Any(x => x.TimerId == timerId))
+        _timers.AddRange(timerIds);
+    }
+    public bool CanTimerMoveUp(Guid timerId)
+    {
+        var index = _timers.IndexOf(timerId);
+        if (index == -1 || index == 0)
         {
-            throw new ArgumentException("Gate with same timer already exists", nameof(timerId));
+            return false;
         }
-
-        _gates.Add(new TimedGate(timerId));
+        return true;
     }
-    public void MoveTimedGateUp(Guid timerId)
+    public void MoveTimerUp(Guid timerId)
     {
-        var existingGateIndex = _gates.FindIndex(x => x.TimerId == timerId);
-
-        if (existingGateIndex <= 0)
-        {
-            return;
-        }
-
-        var existingGate = _gates[existingGateIndex];
-        _gates[existingGateIndex] = _gates[existingGateIndex - 1];
-        _gates[existingGateIndex - 1] = existingGate;
-    }
-    public bool CanTimedGateMoveUp(Guid timerId)
-    {
-        var existingGateIndex = _gates.FindIndex(x => x.TimerId == timerId);
-
-        return existingGateIndex > 0;
-    }
-
-    public void MoveTimedGateDown(Guid timerId)
-    {
-        var existingGateIndex = _gates.FindIndex(x => x.TimerId == timerId);
-
-        if (existingGateIndex < 0 || existingGateIndex == _gates.Count - 1)
+        var index = _timers.IndexOf(timerId);
+        if (index == -1 || index == 0)
         {
             return;
         }
-
-        var existingGate = _gates[existingGateIndex];
-        _gates[existingGateIndex] = _gates[existingGateIndex + 1];
-        _gates[existingGateIndex + 1] = existingGate;
+        _timers.RemoveAt(index);
+        _timers.Insert(index - 1, timerId);
     }
-
-    public bool CanTimedGateMoveDown(Guid timerId)
+    public bool CanTimerMoveDown(Guid timerId)
     {
-        var existingGateIndex = _gates.FindIndex(x => x.TimerId == timerId);
-
-        return existingGateIndex >= 0 && existingGateIndex < _gates.Count - 1;
-    }
-
-    public void RemoveTimedGate(Guid timerId)
-    {
-        var gate = _gates.FirstOrDefault(x => x.TimerId == timerId);
-        if (gate != null)
+        var index = _timers.IndexOf(timerId);
+        if (index == -1 || index == _timers.Count - 1)
         {
-            _gates.Remove(gate);
+            return false;
         }
+        return true;
+    }
+    public void MoveTimerDown(Guid timerId)
+    {
+        var index = _timers.IndexOf(timerId);
+        if (index == -1 || index == _timers.Count - 1)
+        {
+            return;
+        }
+        _timers.RemoveAt(index);
+        _timers.Insert(index + 1, timerId);
+    }
+    public void RemoveTimer(Guid timerId)
+    {
+        _timers.Remove(timerId);
     }
 }

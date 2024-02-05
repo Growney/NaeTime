@@ -1,14 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components;
-using NaeTime.Client.Razor.Lib.Abstractions;
 using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.Messages.Events.Entities;
+using NaeTime.Messages.Requests;
+using NaeTime.Messages.Responses;
+using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
 public partial class UpdateTrack
 {
     [Inject]
-    private ITrackApiClient TrackApiClient { get; set; } = null!;
-    [Inject]
-    private IHardwareApiClient HardwareApiClient { get; set; } = null!;
+    private IDispatcher Dispatcher { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -23,17 +24,27 @@ public partial class UpdateTrack
 
     protected override async Task OnInitializedAsync()
     {
-        var timers = await HardwareApiClient.GetAllTimerDetailsAsync();
-        _timers.AddRange(timers);
+        var trackResponse = await Dispatcher.Request<TrackRequest, TrackResponse>(new(TrackId));
 
-        _model = await TrackApiClient.GetAsync(TrackId);
+        if (trackResponse == null)
+        {
+            return;
+        }
+        _model = new Track()
+        {
+            Id = trackResponse.Id,
+            Name = trackResponse.Name,
+            MaximumLapTimeMilliseconds = trackResponse.MaximumLapTimeMilliseconds,
+            MinimumLapTimeMilliseconds = trackResponse.MinimumLapTimeMilliseconds,
+        };
+        _model.AddTimers(trackResponse.Timers);
 
         await base.OnInitializedAsync();
     }
 
     private async Task HandleValidSubmit(Track track)
     {
-        await TrackApiClient.UpdateAsync(track);
+        await Dispatcher.Dispatch(new TrackDetailsChanged(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers));
 
         var returnUrl = ReturnUrl ?? "/track/list";
 

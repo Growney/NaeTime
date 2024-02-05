@@ -3,11 +3,11 @@ using NaeTime.Persistence.Abstractions;
 using NaeTime.Persistence.SQLite.Context;
 
 namespace NaeTime.Persistence.SQLite;
-public class PilotRepository : IPilotRepository
+public class SQLitePilotRepository : IPilotRepository
 {
     private readonly NaeTimeDbContext _dbContext;
 
-    public PilotRepository(NaeTimeDbContext dbContext)
+    public SQLitePilotRepository(NaeTimeDbContext dbContext)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }

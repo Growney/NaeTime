@@ -1,4 +1,6 @@
-﻿namespace NaeTime.Client.MAUI.Lib;
+﻿using NaeTime.Persistence.Client.Abstractions;
+
+namespace NaeTime.Client.MAUI.Lib;
 public class LocalStorageProvider : ISimpleStorageProvider
 {
     public Task<string?> GetAsync(string key)

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using NaeTime.Client.Razor.Lib.Models;
 
 namespace NaeTime.Client.Razor.Components.TrackComponents;
-public partial class EditableTrackDetails
+public partial class EditableTrackDetails : ComponentBase
 {
     [Parameter]
     [EditorRequired]
@@ -33,7 +33,7 @@ public partial class EditableTrackDetails
     }
 
     private IEnumerable<TimerDetails> GetAvailableTimers() =>
-        Timers.Where(t => !Details.TimedGates.Any(g => g.TimerId == t.Id));
+        Timers.Where(t => !Details.Timers.Any(g => g == t.Id));
 
     private void AddGate()
     {
@@ -42,15 +42,15 @@ public partial class EditableTrackDetails
             return;
         }
 
-        Details.AddTimedGate(_selectedTimer);
+        Details.AddTimer(_selectedTimer);
     }
 
     private string? GetTimerName(Guid timerId) => Timers.FirstOrDefault(t => t.Id == timerId)?.Name;
 
-    private bool CanMoveUp(TimedGate gate) => Details.CanTimedGateMoveUp(gate.TimerId);
-    private bool CanMoveDown(TimedGate gate) => Details.CanTimedGateMoveDown(gate.TimerId);
+    private bool CanMoveUp(Guid timerId) => Details.CanTimerMoveUp(timerId);
+    private bool CanMoveDown(Guid timerId) => Details.CanTimerMoveDown(timerId);
 
-    private void MoveUp(TimedGate gate) => Details.MoveTimedGateUp(gate.TimerId);
-    private void MoveDown(TimedGate gate) => Details.MoveTimedGateDown(gate.TimerId);
-    private void RemoveGate(TimedGate gate) => Details.RemoveTimedGate(gate.TimerId);
+    private void MoveUp(Guid timerId) => Details.MoveTimerUp(timerId);
+    private void MoveDown(Guid timerId) => Details.MoveTimerDown(timerId);
+    private void RemoveGate(Guid timerId) => Details.RemoveTimer(timerId);
 }

@@ -74,6 +74,6 @@ internal class LapRFManager : IHostedService
 
         var frequencies = await connection.GetRadioFrequencyChannelsAsync();
 
-        return new TimerRadioFrequencyResponse(requested.TimerId, frequencies);
+        return new TimerRadioFrequencyResponse(requested.TimerId, frequencies.Select(x => new TimerRadioFrequencyResponse.LaneRadioFrequency(x.Lane, x.FrequencyInMhz, x.IsEnabled)));
     }
 }

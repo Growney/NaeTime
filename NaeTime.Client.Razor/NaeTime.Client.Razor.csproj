@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj" />
+    <ProjectReference Include="..\NaeTIme.Messages\NaeTime.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
   </ItemGroup>
 
@@ -28,7 +29,6 @@
     <Folder Include="Abstractions\" />
     <Folder Include="Components\TrackComponents\" />
     <Folder Include="Lib\" />
-    <Folder Include="Pages\FlyingSessionPages\" />
   </ItemGroup>
 
 </Project>

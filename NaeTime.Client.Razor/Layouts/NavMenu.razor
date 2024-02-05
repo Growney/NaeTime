@@ -9,38 +9,22 @@
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
         <div class="nav-item px-3">
-
-            @if (IsLocalEnabled)
-            {
-                <TrackedLink class="nav-link" Path="/pilot/list">
-                    <i class="fa-solid fa-people-group"></i> 
-                    <div class="mx-2">Pilots</div>
-                    <div class="float-end">
-                        <TrackedLink Path="/pilot/create" @onclick:stopPropagation="true"><i class=" fas fa-user-plus"></i></TrackedLink>
-                    </div>
-                </TrackedLink>
-                <TrackedLink class="nav-link" Path="/hardware/list">
-                    <i class="fa-solid fa-microchip"></i> <div class="mx-2">Hardware</div>
-                </TrackedLink>
-                <TrackedLink class="nav-link" Path="/track/list">
-                    <i class="fa-solid fa-flag-checkered"></i> <div class="mx-2">Tracks</div>
-                </TrackedLink>
-                <TrackedLink class="nav-link" Path="/flyingsession/list">
-                    <i class="fa-regular fa-clock"></i><div class="mx-2">Sessions</div>
-                </TrackedLink>
-            } 
-            @if (IsOffSiteEnabled)
-            {
-                
-            }
-
+            <TrackedLink class="nav-link" Path="/pilot/list">
+                <i class="fa-solid fa-people-group"></i> 
+                <div class="mx-2">Pilots</div>
+                <div class="float-end">
+                    <TrackedLink Path="/pilot/create" @onclick:stopPropagation="true"><i class=" fas fa-user-plus"></i></TrackedLink>
+                </div>
+            </TrackedLink>
+            <TrackedLink class="nav-link" Path="/hardware/list">
+                <i class="fa-solid fa-microchip"></i> <div class="mx-2">Hardware</div>
+            </TrackedLink>
+            <TrackedLink class="nav-link" Path="/track/list">
+                <i class="fa-solid fa-flag-checkered"></i> <div class="mx-2">Tracks</div>
+            </TrackedLink>
             <TrackedLink class="nav-link" Path="/configuration">
                 <i class="fa-solid fa-gears"></i><div class="mx-2">Configuration</div>
             </TrackedLink>
         </div>
     </nav>
 </div>
-
-@code{
-
-}

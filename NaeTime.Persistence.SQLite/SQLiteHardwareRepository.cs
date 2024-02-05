@@ -1,13 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NaeTime.Persistence.Abstractions;
+using NaeTime.Persistence.Models;
 using NaeTime.Persistence.SQLite.Context;
 
 namespace NaeTime.Persistence.SQLite;
-public class HardwareRepository : IHardwareRepository
+public class SQLiteHardwareRepository : IHardwareRepository
 {
     private readonly NaeTimeDbContext _dbContext;
 
-    public HardwareRepository(NaeTimeDbContext dbContext)
+    public SQLiteHardwareRepository(NaeTimeDbContext dbContext)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
@@ -36,6 +37,22 @@ public class HardwareRepository : IHardwareRepository
         }
 
         await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<TimerDetails>> GetAllTimerDetails()
+    {
+        var timers = new List<TimerDetails>();
+
+        var ethernetLapRF8Channels = await _dbContext.EthernetLapRF8Channels.ToListAsync();
+
+        timers.AddRange(ethernetLapRF8Channels.Select(x => new TimerDetails
+        {
+            Id = x.Id,
+            Name = x.Name,
+            Type = TimerType.EthernetLapRF8Channel
+        }));
+
+        return timers;
     }
 
     public async Task SetTimerConnectionStatus(Guid id, bool isConnected, DateTime utcTime)

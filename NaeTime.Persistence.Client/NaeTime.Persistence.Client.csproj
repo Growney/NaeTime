@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NaeTime.Persistence.SQLite\NaeTime.Persistence.SQLite.csproj" />
+    <ProjectReference Include="..\NaeTime.Persistence\NaeTime.Persistence.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,9 +1,9 @@
 ﻿using ImmersionRC.LapRF.Abstractions;
 using NaeTime.Messages.Events.Hardware;
 using NaeTime.Messages.Events.Timing;
-using NaeTime.Messages.Models;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Abstractions;
+using NaeTime.Timing.Models;
 
 namespace NaeTime.Timing.ImmersionRC;
 internal class LapRFConnection

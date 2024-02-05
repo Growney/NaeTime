@@ -4,11 +4,11 @@ using NaeTime.Persistence.SQLite.Context;
 using NaeTime.Persistence.SQLite.Models;
 
 namespace NaeTime.Persistence.SQLite;
-public class TimingRepository : ITimingRepository
+public class SQLiteTimingRepository : ITimingRepository
 {
     private readonly NaeTimeDbContext _dbContext;
 
-    public TimingRepository(NaeTimeDbContext dbContext)
+    public SQLiteTimingRepository(NaeTimeDbContext dbContext)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }

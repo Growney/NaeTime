@@ -1,5 +1,5 @@
 ﻿namespace NaeTime.Client.Razor.Lib.Models;
 public enum TimerType
 {
-    EthernetLapRF8Channel
+    EthernetLapRF8Channel,
 }

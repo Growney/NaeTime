@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components;
-using NaeTime.Client.Razor.Lib.Abstractions;
+using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.Messages.Events.Entities;
+using NaeTime.Messages.Requests;
+using NaeTime.Messages.Responses;
+using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.PilotPages;
 public partial class UpdatePilot : ComponentBase
 {
     [Inject]
-    private IPilotApiClient PilotApiClient { get; set; } = null!;
+    private IDispatcher Dispatcher { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -15,22 +19,36 @@ public partial class UpdatePilot : ComponentBase
     [Parameter]
     public string? ReturnUrl { get; set; }
 
-    private Lib.Models.Pilot? _model = null;
+    private Pilot? _model = null;
 
     protected override async Task OnParametersSetAsync()
     {
-        _model = await PilotApiClient.GetAsync(PilotId);
+        var response = await Dispatcher.Request<PilotRequest, PilotResponse>(new(PilotId));
+
+        if (response == null)
+        {
+            return;
+        }
+
+        _model = new()
+        {
+            Id = response.Id,
+            FirstName = response.FirstName,
+            LastName = response.LastName,
+            CallSign = response.CallSign,
+        };
+
         await base.OnInitializedAsync();
     }
 
-    private async Task HandleValidSubmit(Lib.Models.Pilot pilot)
+    private async Task HandleValidSubmit(Pilot pilot)
     {
         if (_model is null)
         {
             return;
         }
 
-        await PilotApiClient.UpdateAsync(pilot);
+        await Dispatcher.Dispatch(new PilotDetailsChanged(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/pilot/list");
     }

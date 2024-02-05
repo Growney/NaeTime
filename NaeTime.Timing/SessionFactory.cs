@@ -1,6 +1,6 @@
 ﻿using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Abstractions;
-using NaeTime.Timing.Messages.Models;
+using NaeTime.Timing.Models;
 
 namespace NaeTime.Timing;
 public class SessionFactory : ISessionFactory

@@ -1,31 +1,39 @@
 using Microsoft.AspNetCore.Components;
-using NaeTime.Client.Razor.Lib.Abstractions;
 using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.Messages.Requests;
+using NaeTime.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
 public partial class TrackList
 {
     [Inject]
-    private ITrackApiClient TrackApiClient { get; set; } = null!;
+    private IDispatcher Dispatcher { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
     private readonly List<Track> _tracks = new();
 
-    [Inject]
-    private IPublisher Publisher { get; set; } = null!;
-
     protected override async Task OnInitializedAsync()
     {
-        Publisher.Subscribe<Pilot>(this, x =>
+        var tracksResponse = await Dispatcher.Request<TracksRequest, TracksResponse>();
+
+        if (tracksResponse == null)
         {
-            return Task.CompletedTask;
-        });
+            return;
+        }
 
-        var existingPilots = await TrackApiClient.GetAllAsync();
-
-        _tracks.AddRange(existingPilots);
+        foreach (var track in tracksResponse.Tracks)
+        {
+            var domainTrack = new Track()
+            {
+                Id = track.Id,
+                Name = track.Name,
+                MaximumLapTimeMilliseconds = track.MaximumLapTimeMilliseconds,
+                MinimumLapTimeMilliseconds = track.MinimumLapTimeMilliseconds,
+            };
+            domainTrack.AddTimers(track.Timers);
+        }
 
         await base.OnInitializedAsync();
     }

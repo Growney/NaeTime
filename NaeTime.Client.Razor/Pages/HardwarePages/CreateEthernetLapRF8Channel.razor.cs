@@ -1,27 +1,48 @@
 ﻿using Microsoft.AspNetCore.Components;
-using NaeTime.Client.Razor.Lib.Abstractions;
+using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.Messages.Events.Hardware;
+using NaeTime.PubSub.Abstractions;
+using System.Net;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class CreateEthernetLapRF8Channel : ComponentBase
 {
     [Inject]
-    private IHardwareApiClient HardwareApiClient { get; set; } = null!;
+    private IDispatcher Dispatcher { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
     [Parameter]
     public string? ReturnUrl { get; set; }
 
-    private Lib.Models.EthernetLapRF8Channel? _model = new(Guid.NewGuid(), string.Empty, string.Empty, 5403);
+    private EthernetLapRF8Channel? _model = new()
+    {
+        Id = Guid.NewGuid(),
+        Name = null,
+        IpAddress = "192.168.28.5",
+        Port = 5403,
 
-    private async Task HandleValidSubmit(Lib.Models.EthernetLapRF8Channel timer)
+    };
+
+    private async Task HandleValidSubmit(EthernetLapRF8Channel timer)
     {
         if (_model is null)
         {
             return;
         }
 
-        await HardwareApiClient.CreateEthernetLapRF8ChannelAsync(timer.Name, timer.IpAddress, timer.Port);
+        if (string.IsNullOrWhiteSpace(timer.Name))
+        {
+            return;
+        }
+
+        if (!IPAddress.TryParse(timer.IpAddress, out var validIP))
+        {
+            return;
+        }
+
+
+        await Dispatcher.Dispatch(new EthernetLapRF8ChannelConfigured(timer.Id, timer.Name, validIP, timer.Port));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/hardware/list");
     }
