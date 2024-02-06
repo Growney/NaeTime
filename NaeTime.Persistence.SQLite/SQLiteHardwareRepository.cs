@@ -39,6 +39,11 @@ public class SQLiteHardwareRepository : IHardwareRepository
         await _dbContext.SaveChangesAsync();
     }
 
+    public async Task<IEnumerable<EthernetLapRF8Channel>> GetAllEthernetLapRF8ChannelTimers()
+    {
+        return await _dbContext.EthernetLapRF8Channels.Select(x => new EthernetLapRF8Channel(x.Id, x.Name, x.IpAddress, x.Port)).ToListAsync();
+    }
+
     public async Task<IEnumerable<TimerDetails>> GetAllTimerDetails()
     {
         var timers = new List<TimerDetails>();
@@ -53,6 +58,18 @@ public class SQLiteHardwareRepository : IHardwareRepository
         }));
 
         return timers;
+    }
+
+    public async Task<EthernetLapRF8Channel?> GetEthernetLapRF8Channel(Guid id)
+    {
+        var timer = await _dbContext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == id);
+
+        if (timer == null)
+        {
+            return null;
+        }
+
+        return new EthernetLapRF8Channel(timer.Id, timer.Name, timer.IpAddress, timer.Port);
     }
 
     public async Task SetTimerConnectionStatus(Guid id, bool isConnected, DateTime utcTime)

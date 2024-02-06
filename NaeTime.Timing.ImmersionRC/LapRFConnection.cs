@@ -40,7 +40,7 @@ internal class LapRFConnection
         {
             try
             {
-                await _communication.ConnectAsync();
+                await _communication.ConnectAsync(token);
                 IsConnected = true;
                 await _dispatcher.Dispatch(new TimerConnectionEstablished(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow));
 
@@ -48,7 +48,7 @@ internal class LapRFConnection
             }
             catch
             {
-                await Task.Delay(500);
+                await Task.Delay(1000);
             }
             if (IsConnected)
             {

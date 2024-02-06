@@ -21,8 +21,8 @@ internal class LapRFEthernetCommunication : ILapRFCommunication
 
     }
 
-    public Task ConnectAsync()
-        => _client.ConnectAsync(_address, _port);
+    public async Task ConnectAsync(CancellationToken token)
+        => await _client.ConnectAsync(_address, _port, token);
 
 
     public async Task<ReadOnlyMemory<byte>> ReceiveAsync(CancellationToken token)

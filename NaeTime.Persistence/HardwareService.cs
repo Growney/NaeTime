@@ -3,6 +3,7 @@ using NaeTime.Messages.Requests;
 using NaeTime.Messages.Responses;
 using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub;
+using System.Net;
 
 namespace NaeTime.Persistence;
 public class HardwareService : ISubscriber
@@ -47,5 +48,28 @@ public class HardwareService : ISubscriber
 
     }
 
+    public async Task<EthernetLapRF8ChannelTimersResponse> On(EthernetLapRF8ChannelTimersRequest request)
+    {
+        var hardwareRepository = await _repositoryFactory.CreateHardwareRepository();
+
+        var timerDetails = await hardwareRepository.GetAllEthernetLapRF8ChannelTimers();
+
+        return new EthernetLapRF8ChannelTimersResponse(
+            timerDetails.Select(x => new EthernetLapRF8ChannelTimersResponse.EthernetLapRF8Channel(x.Id, new IPAddress(x.IpAddress), x.Port)));
+    }
+
+    public async Task<EthernetLapRF8ChannelResponse> On(EthernetLapRF8ChannelRequest request)
+    {
+        var hardwareRepository = await _repositoryFactory.CreateHardwareRepository();
+
+        var timer = await hardwareRepository.GetEthernetLapRF8Channel(request.TimerId);
+
+        if (timer == null)
+        {
+            return new EthernetLapRF8ChannelResponse(Guid.Empty, string.Empty, IPAddress.None, 0);
+        }
+
+        return new EthernetLapRF8ChannelResponse(timer.Id, timer.Name, new IPAddress(timer.IpAddress), timer.Port);
+    }
 
 }
