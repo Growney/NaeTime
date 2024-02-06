@@ -20,6 +20,6 @@ public class NaeTimeDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         var tracks = modelBuilder.Entity<Track>();
-        tracks.HasMany(t => t.Timers);
+        tracks.OwnsMany(t => t.Timers);
     }
 }

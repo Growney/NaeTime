@@ -9,6 +9,7 @@ public static class IServiceCollectionExtensions
         where TRepositoryFactory : class, IRepositoryFactory
     {
         services.TryAddTransient<IRepositoryFactory, TRepositoryFactory>();
+        services.AddSubscriberAssembly(typeof(HardwareService).Assembly);
 
         return services;
     }

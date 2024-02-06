@@ -12,6 +12,7 @@ public static class IServiceCollectionExtensions
         services.TryAddTransient<ISimpleStorageProvider, TSimpleStorage>();
         services.AddSubscriberAssembly(typeof(ClientMode).Assembly);
         services.AddPersistence<ClientRepositoryFactory>();
+        services.AddSQLitePersistence();
         return services;
     }
 }

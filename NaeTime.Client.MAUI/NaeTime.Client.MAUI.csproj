@@ -78,6 +78,7 @@
       <ProjectReference Include="..\NaeTime.Client.Razor\NaeTime.Client.Razor.csproj" />
       <ProjectReference Include="..\NaeTime.Persistence.Client\NaeTime.Persistence.Client.csproj" />
       <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
+      <ProjectReference Include="..\NaeTime.Timing.ImmersionRC\NaeTime.Timing.ImmersionRC.csproj" />
     </ItemGroup>
 
     <ItemGroup>

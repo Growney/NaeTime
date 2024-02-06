@@ -47,8 +47,11 @@ internal class PublishSubscribe : IPublishSubscribe
         {
             return await classHandler.Handle<TResponse>(request);
         }
-
+#if DEBUG
+        throw new NotImplementedException("Missing Handler");
+#else
         return default;
+#endif
     }
     private RequestHandler? TryGetHandler(Type requestType, Type responseType)
     {
@@ -70,7 +73,18 @@ internal class PublishSubscribe : IPublishSubscribe
                 return handler;
             }
         }
-        return null;
+        else
+        {
+            var handler = CreateResponseTypeHandler(requestType, responseType);
+
+            if (handler != null)
+            {
+                _classHandlers.TryAdd(requestType, new ConcurrentDictionary<Type, RequestHandler>());
+                _classHandlers[requestType].TryAdd(responseType, handler);
+            }
+
+            return handler;
+        }
     }
 
     public async Task Dispatch<T>(T message)

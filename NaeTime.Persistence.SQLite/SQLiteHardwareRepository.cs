@@ -57,7 +57,7 @@ public class SQLiteHardwareRepository : IHardwareRepository
 
     public async Task SetTimerConnectionStatus(Guid id, bool isConnected, DateTime utcTime)
     {
-        var existing = await _dbContext.TimerStatuses.FirstOrDefaultAsync(x => x.TimerId == id);
+        var existing = await _dbContext.TimerStatuses.FirstOrDefaultAsync(x => x.Id == id);
 
         if (existing == null)
         {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NaeTime.Persistence.Abstractions;
+using NaeTime.Persistence.Models;
 using NaeTime.Persistence.SQLite.Context;
 
 namespace NaeTime.Persistence.SQLite;
@@ -13,7 +14,7 @@ public class SQLitePilotRepository : IPilotRepository
     }
     public async Task AddOrUpdatePilot(Guid id, string firstName, string lastName, string callSign)
     {
-        var existing = await _dbContext.Pilots.FirstOrDefaultAsync();
+        var existing = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == id);
 
         if (existing == null)
         {
@@ -35,5 +36,10 @@ public class SQLitePilotRepository : IPilotRepository
         }
 
         await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Pilot>> GetPilots()
+    {
+        return await _dbContext.Pilots.Select(x => new Persistence.Models.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign)).ToListAsync();
     }
 }
