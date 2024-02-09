@@ -11,7 +11,7 @@ using NaeTime.Persistence.SQLite.Context;
 namespace NaeTime.Persistence.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
-    [Migration("20240209165356_Initial")]
+    [Migration("20240209220817_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -117,6 +117,9 @@ namespace NaeTime.Persistence.SQLite.Migrations
             modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.Lane", b =>
                 {
                     b.Property<byte>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte?>("BandId")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsEnabled")

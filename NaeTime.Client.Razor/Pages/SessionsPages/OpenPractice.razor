@@ -7,12 +7,11 @@
             <DropdownMenu>
                 @foreach(var track in _tracks)
                 {
-                <DropdownItem Type="ButtonType.Button" @onclick="() => StartSessionOnTrack(track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)">@track.Name</DropdownItem>
+                    <DropdownItem Type="ButtonType.Button" @onclick="() => StartSessionOnTrack(track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)">@track.Name</DropdownItem>
                 }
                 <DropdownItem Type="ButtonType.Button" @onclick="() => StartSessionOnNewTrack()">New Track</DropdownItem>
             </DropdownMenu>
         </Dropdown>
-
     <Button Color="ButtonColor.Primary">Start Session</Button>
 </div>
 

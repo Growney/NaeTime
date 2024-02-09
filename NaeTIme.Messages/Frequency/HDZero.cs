@@ -1,4 +1,4 @@
-﻿namespace NaeTime.Timing.Frequency;
+﻿namespace NaeTime.Messages.Frequency;
 public enum HDZero
 {
     R1 = 5658,

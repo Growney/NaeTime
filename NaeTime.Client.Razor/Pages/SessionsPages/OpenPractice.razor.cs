@@ -41,14 +41,25 @@ public partial class OpenPractice : ComponentBase
             _laneConfigurations.AddRange(activeLaneConfigurations.Configurations.Select(x => new LaneConfiguration()
             {
                 LaneNumber = x.Lane,
+                BandId = x.BandId,
                 FrequencyInMhz = x.FrequencyInMhz,
                 PilotId = x.PilotId,
                 IsEnabled = x.IsEnabled
             }));
         }
-        else
+
+        if (_laneConfigurations.Count != _activeSessionLanes)
         {
+            for (byte i = 1; i <= _activeSessionLanes; i++)
+            {
+                if (_laneConfigurations.Any(x => x.LaneNumber == i))
+                {
+                    continue;
+                }
+                _laneConfigurations.Add(new LaneConfiguration() { LaneNumber = i });
+            }
         }
+
     }
 
     public Task StartSessionOnTrack(Guid trackId, long minimumLapMilliseconds, long? maximumLapMilliseconds)

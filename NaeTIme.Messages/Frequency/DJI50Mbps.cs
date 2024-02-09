@@ -1,4 +1,4 @@
-﻿namespace NaeTime.Timing.Frequency;
+﻿namespace NaeTime.Messages.Frequency;
 public enum DJI50Mbps
 {
     CH1 = 5695,

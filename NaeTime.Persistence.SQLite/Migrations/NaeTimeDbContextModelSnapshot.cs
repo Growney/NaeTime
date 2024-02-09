@@ -116,6 +116,9 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Property<byte>("Id")
                         .HasColumnType("INTEGER");
 
+                    b.Property<byte?>("BandId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("INTEGER");
 

@@ -99,30 +99,54 @@ public partial class PracticeLane : ComponentBase, IDisposable
             return PublishSubscribe.Dispatch(new LaneDisabled(Configuration.LaneNumber));
         }
     }
-
-    public Task GoToFrequency(int frequencyInMhz)
+    public Task GoToBand(byte? bandId)
     {
-        Configuration.FrequencyInMhz = frequencyInMhz;
-        return PublishSubscribe.Dispatch(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, frequencyInMhz));
+        if (Configuration.BandId != bandId)
+        {
+            if (bandId != null && Messages.Frequency.Band.Bands.Any(x => x.Id == bandId))
+            {
+                Configuration.FrequencyInMhz = Messages.Frequency.Band.Bands.First(x => x.Id == bandId).Frequencies.First().FrequencyInMhz;
+            }
+        }
+        Configuration.BandId = bandId;
+        return PublishSubscribe.Dispatch(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, Configuration.BandId, Configuration.FrequencyInMhz));
+
+    }
+    public Task GoToFrequency(int value)
+    {
+        Configuration.FrequencyInMhz = value;
+        return PublishSubscribe.Dispatch(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, Configuration.BandId, Configuration.FrequencyInMhz));
     }
     public void Dispose()
     {
         PublishSubscribe.Unsubscribe(this);
     }
-
-    private string GetFrequencyString(int frequencyInMhz)
-    => frequencyInMhz switch
+    private string GetBandString()
     {
-        5658 => "Raceband 1",
-        5695 => "Raceband 2",
-        5732 => "Raceband 3",
-        5769 => "Raceband 4",
-        5806 => "Raceband 5",
-        5843 => "Raceband 6",
-        5880 => "Raceband 7",
-        5917 => "Raceband 8",
-        _ => $"{frequencyInMhz} Mhz"
-    };
+        if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
+        {
+            var band = Messages.Frequency.Band.Bands.First(x => x.Id == Configuration.BandId);
+
+            return band.Name;
+        }
+
+        return $"Custom";
+    }
+    private string GetFrequencyString()
+    {
+        if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
+        {
+            var band = Messages.Frequency.Band.Bands.First(x => x.Id == Configuration.BandId);
+
+            if (band.Frequencies.Any(x => x.FrequencyInMhz == Configuration.FrequencyInMhz))
+            {
+                var frequency = band.Frequencies.First(x => x.FrequencyInMhz == Configuration.FrequencyInMhz);
+                return frequency.Name;
+            }
+        }
+
+        return $"{Configuration.FrequencyInMhz} Mhz";
+    }
 
     private Task TriggerDetection(byte split)
     {

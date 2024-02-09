@@ -87,6 +87,7 @@ namespace NaeTime.Persistence.SQLite.Migrations
                 {
                     Id = table.Column<byte>(type: "INTEGER", nullable: false),
                     PilotId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    BandId = table.Column<byte>(type: "INTEGER", nullable: true),
                     RadioFrequencyInMhz = table.Column<int>(type: "INTEGER", nullable: false),
                     IsEnabled = table.Column<bool>(type: "INTEGER", nullable: false)
                 },

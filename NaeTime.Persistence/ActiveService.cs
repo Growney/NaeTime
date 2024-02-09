@@ -136,7 +136,7 @@ public class ActiveService : ISubscriber
 
         var lanes = await activeRepository.GetLanes();
 
-        return new ActiveLaneConfigurationResponse(lanes.Select(x => new ActiveLaneConfigurationResponse.LaneConfiguration(x.LaneNumber, x.Pilot, x.FrequencyInMhz, x.IsEnabled)));
+        return new ActiveLaneConfigurationResponse(lanes.Select(x => new ActiveLaneConfigurationResponse.LaneConfiguration(x.LaneNumber, x.Pilot, x.BandId, x.FrequencyInMhz, x.IsEnabled)));
     }
 
 }

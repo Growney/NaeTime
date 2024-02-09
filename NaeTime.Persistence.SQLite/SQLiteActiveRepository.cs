@@ -167,7 +167,7 @@ public class SQLiteActiveRepository : IActiveRepository
 
     public async Task<IEnumerable<Lane>> GetLanes()
     {
-        return await _dbContext.Lanes.Select(x => new Lane(x.Id, x.PilotId, x.RadioFrequencyInMhz, x.IsEnabled)).ToListAsync();
+        return await _dbContext.Lanes.Select(x => new Lane(x.Id, x.PilotId, x.BandId, x.RadioFrequencyInMhz, x.IsEnabled)).ToListAsync();
     }
 
     public async Task<ActiveTimings> GetTimings(Guid trackId, byte lane)

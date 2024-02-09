@@ -132,7 +132,7 @@ internal class LapRFConnection
             {
                 continue;
             }
-            channels.Add(new LaneRadioFrequency(setup.TransponderId, (int)setup.Frequency.Value, setup.IsEnabled));
+            channels.Add(new LaneRadioFrequency(setup.TransponderId, null, (int)setup.Frequency.Value, setup.IsEnabled));
         }
 
         return channels;

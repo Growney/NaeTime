@@ -1,13 +1,12 @@
-﻿
-namespace NaeTime.Timing.Frequency;
+﻿namespace NaeTime.Messages.Frequency;
 public struct BandFrequency
 {
     public BandFrequency(string name, int frequency)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
-        Frequency = frequency;
+        FrequencyInMhz = frequency;
     }
 
     public string Name { get; }
-    public int Frequency { get; }
+    public int FrequencyInMhz { get; }
 }

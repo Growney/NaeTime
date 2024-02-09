@@ -6,11 +6,6 @@
     <div>
         RSSI: @_laneRSSIValue
     </div>
-
-    <div>
-        Frequency: @Configuration.FrequencyInMhz
-    </div>
-
     <div>
         PilotId: @Configuration.PilotId
     </div>
@@ -19,18 +14,39 @@
     </div>
     <div>
         <Dropdown>
-            <DropdownToggleButton Color="ButtonColor.Secondary">@GetFrequencyString(Configuration.FrequencyInMhz)</DropdownToggleButton>
+            <DropdownToggleButton Color="ButtonColor.Secondary">@GetBandString()</DropdownToggleButton>
             <DropdownMenu>
-                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5658)">R1</DropdownItem>
-                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5695)">R2</DropdownItem>
-                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5732)">R3</DropdownItem>
-                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5769)">R4</DropdownItem>
-                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5806)">R5</DropdownItem>
-                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5843)">R6</DropdownItem>
-                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5880)">R7</DropdownItem>
-                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5917)">R8</DropdownItem>
+                @foreach(var band in Messages.Frequency.Band.Bands)
+                {
+                    <DropdownItem Type="ButtonType.Button" @onclick="() => GoToBand(band.Id)">@band.Name</DropdownItem>
+                }
             </DropdownMenu>
         </Dropdown>
+       
+    </div>
+    <div>
+        @if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
+        {
+            <Dropdown>
+                <DropdownToggleButton Color="ButtonColor.Secondary">@GetFrequencyString()</DropdownToggleButton>
+                    <DropdownMenu>
+                        @{
+                        var band = Messages.Frequency.Band.Bands.First(b => b.Id == Configuration.BandId);
+                        foreach (var frequency in band.Frequencies)
+                        {
+                            <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(frequency.FrequencyInMhz)">@frequency.Name</DropdownItem>
+                        }
+                    }
+                </DropdownMenu>
+            </Dropdown>
+        }
+        else
+        {
+            <NumberInput TValue=int ValueChanged="GoToFrequency" Value="Configuration.FrequencyInMhz" ValueExpression="() => Configuration.FrequencyInMhz"></NumberInput>
+        }
+    </div>
+    <div>
+        Frequency: @Configuration.FrequencyInMhz
     </div>
     <div>
         <Button Type="ButtonType.Button" Color="ButtonColor.Primary" @onclick="() => TriggerDetection(0)">Trigger</Button>

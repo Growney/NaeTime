@@ -14,7 +14,7 @@ public class LaneTimerManager : ISubscriber
     {
         _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
     }
-
+    //TODO CHANGE THIS TO INITIALISE MISSING LANE CONFIGURATIONS INSTEAD OF ALL OF THEM
     public async Task When(TimerConnectionEstablished connectionEstablished)
     {
         var laneConfigurations = await _publisher.Request<ActiveLaneConfigurationRequest, ActiveLaneConfigurationResponse>();
@@ -58,7 +58,7 @@ public class LaneTimerManager : ISubscriber
 
         if (configuration.FrequencyInMhz != null)
         {
-            await _publisher.Dispatch(new LaneRadioFrequencyConfigured(configuration.Lane, configuration.FrequencyInMhz.Value));
+            await _publisher.Dispatch(new LaneRadioFrequencyConfigured(configuration.Lane, null, configuration.FrequencyInMhz.Value));
         }
     }
 }

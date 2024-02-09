@@ -1,5 +1,4 @@
-﻿
-namespace NaeTime.Timing.Frequency;
+﻿namespace NaeTime.Messages.Frequency;
 public struct Band
 {
     internal Band(byte id, string name, IEnumerable<BandFrequency> frequencies)

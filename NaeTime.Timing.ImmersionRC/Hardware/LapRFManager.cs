@@ -66,7 +66,7 @@ internal class LapRFManager : IHostedService
 
         var frequencies = await connection.GetRadioFrequencyChannelsAsync();
 
-        return new TimerLaneConfigurationResponse(requested.TimerId, frequencies.Select(x => new TimerLaneConfigurationResponse.TimerLaneConfiguration(x.Lane, x.FrequencyInMhz, null, x.IsEnabled)));
+        return new TimerLaneConfigurationResponse(requested.TimerId, frequencies.Select(x => new TimerLaneConfigurationResponse.TimerLaneConfiguration(x.Lane, x.BandId, x.FrequencyInMhz, null, x.IsEnabled)));
     }
 
     private async Task When(EthernetLapRF8ChannelConfigured configured)
