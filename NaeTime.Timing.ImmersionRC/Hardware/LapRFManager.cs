@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using NaeTime.Messages.Events.Hardware;
+using NaeTime.Messages.Events.Timing;
 using NaeTime.Messages.Requests;
 using NaeTime.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
@@ -20,7 +21,10 @@ internal class LapRFManager : IHostedService
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _publisher.Subscribe<EthernetLapRF8ChannelConfigured>(this, When);
-        _publisher.RespondTo<TimerRadioFrequencyRequest, TimerRadioFrequencyResponse>(this, On);
+        _publisher.Subscribe<LaneEnabled>(this, When);
+        _publisher.Subscribe<LaneDisabled>(this, When);
+        _publisher.Subscribe<LaneRadioFrequencyConfigured>(this, When);
+        _publisher.RespondTo<TimerLaneConfigurationRequest, TimerLaneConfigurationResponse>(this, On);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -48,19 +52,7 @@ internal class LapRFManager : IHostedService
         _publisher.Unsubscribe(this);
     }
 
-    private async Task When(EthernetLapRF8ChannelConfigured configured)
-    {
-        if (_hardwareProcesses.TryGetValue(configured.TimerId, out var connection))
-        {
-            await connection.Stop();
-        }
-
-        var newConnection = _connectionFactory.CreateEthernetConnection(configured.TimerId, configured.IpAddress, configured.Port);
-
-        _hardwareProcesses.AddOrUpdate(configured.TimerId, newConnection,
-            (id, existing) => newConnection);
-    }
-    private async Task<TimerRadioFrequencyResponse?> On(TimerRadioFrequencyRequest requested)
+    private async Task<TimerLaneConfigurationResponse?> On(TimerLaneConfigurationRequest requested)
     {
         if (!_hardwareProcesses.TryGetValue(requested.TimerId, out var connection))
         {
@@ -74,6 +66,48 @@ internal class LapRFManager : IHostedService
 
         var frequencies = await connection.GetRadioFrequencyChannelsAsync();
 
-        return new TimerRadioFrequencyResponse(requested.TimerId, frequencies.Select(x => new TimerRadioFrequencyResponse.LaneRadioFrequency(x.Lane, x.FrequencyInMhz, x.IsEnabled)));
+        return new TimerLaneConfigurationResponse(requested.TimerId, frequencies.Select(x => new TimerLaneConfigurationResponse.TimerLaneConfiguration(x.Lane, x.FrequencyInMhz, null, x.IsEnabled)));
     }
+
+    private async Task When(EthernetLapRF8ChannelConfigured configured)
+    {
+        if (_hardwareProcesses.TryGetValue(configured.TimerId, out var connection))
+        {
+            await connection.Stop();
+        }
+
+        var newConnection = _connectionFactory.CreateEthernetConnection(configured.TimerId, configured.IpAddress, configured.Port);
+
+        _hardwareProcesses.AddOrUpdate(configured.TimerId, newConnection,
+            (id, existing) => newConnection);
+    }
+    public async Task When(LaneEnabled lane)
+    {
+        var timers = _hardwareProcesses.Values;
+
+        foreach (var timer in timers)
+        {
+            await timer.SetLaneStatus(lane.LaneNumber, true);
+        }
+
+    }
+    public async Task When(LaneDisabled lane)
+    {
+        var timers = _hardwareProcesses.Values;
+
+        foreach (var timer in timers)
+        {
+            await timer.SetLaneStatus(lane.LaneNumber, true);
+        }
+    }
+    public async Task When(LaneRadioFrequencyConfigured lane)
+    {
+        var timers = _hardwareProcesses.Values;
+
+        foreach (var timer in timers)
+        {
+            await timer.SetLaneRadioFrequency(lane.LaneNumber, lane.FrequencyInMhz);
+        }
+    }
+
 }

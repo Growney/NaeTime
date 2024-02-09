@@ -5,10 +5,10 @@ using NaeTime.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
-public partial class TrackList
+public partial class TrackList : IDisposable
 {
     [Inject]
-    private IDispatcher Dispatcher { get; set; } = null!;
+    private IPublishSubscribe PublishSubscribe { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -16,7 +16,9 @@ public partial class TrackList
 
     protected override async Task OnInitializedAsync()
     {
-        var tracksResponse = await Dispatcher.Request<TracksRequest, TracksResponse>();
+
+
+        var tracksResponse = await PublishSubscribe.Request<TracksRequest, TracksResponse>();
 
         if (tracksResponse == null)
         {
@@ -33,6 +35,8 @@ public partial class TrackList
                 MinimumLapTimeMilliseconds = track.MinimumLapTimeMilliseconds,
             };
             domainTrack.AddTimers(track.Timers);
+
+            _tracks.Add(domainTrack);
         }
 
         await base.OnInitializedAsync();
@@ -45,5 +49,10 @@ public partial class TrackList
     private void NavigateToCreateTrack()
     {
         NavigationManager.NavigateTo($"/track/create");
+    }
+
+    public void Dispose()
+    {
+        PublishSubscribe.Unsubscribe(this);
     }
 }

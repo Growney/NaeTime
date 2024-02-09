@@ -42,9 +42,13 @@ internal class LapRFConnection
             {
                 await _communication.ConnectAsync(token);
                 IsConnected = true;
+
+                //We must start the run task before we dispatch the connection established as data may be requested when the connection is established
+                var runTask = _protocol.RunAsync(token);
+
                 await _dispatcher.Dispatch(new TimerConnectionEstablished(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow));
 
-                await _protocol.RunAsync(token);
+                await runTask;
             }
             catch
             {
@@ -134,6 +138,22 @@ internal class LapRFConnection
         return channels;
     }
 
+    public async Task SetLaneStatus(byte Lane, bool isEnabled)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, isEnabled: isEnabled);
+    }
+    public async Task SetLaneRadioFrequency(byte Lane, int frequencyInMhz)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, frequencyInMHz: (ushort)frequencyInMhz);
+    }
     public Task Stop()
     {
         _cancellationTokenSource.Cancel();

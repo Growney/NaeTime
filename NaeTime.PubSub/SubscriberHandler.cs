@@ -8,6 +8,8 @@ internal class SubscriberHandler : ISubscriptionHandler
     private readonly Func<object> _subscriber;
     private readonly MethodInfo _whenMethodInfo;
 
+    public Type SubscriberType { get; }
+
     public SubscriberHandler(Type subscriberType, Type messageType, Func<object> subscriber)
     {
         var method = FindMethodInfo(subscriberType, messageType);
@@ -20,6 +22,7 @@ internal class SubscriberHandler : ISubscriptionHandler
         _whenMethodInfo = method;
         _subscriber = subscriber;
         _messageType = messageType;
+        SubscriberType = subscriberType;
     }
     public async Task Handle(object message)
     {

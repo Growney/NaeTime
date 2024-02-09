@@ -1,0 +1,53 @@
+<div>
+    <div>
+        Lane: @Configuration.LaneNumber
+    </div>
+
+    <div>
+        RSSI: @_laneRSSIValue
+    </div>
+
+    <div>
+        Frequency: @Configuration.FrequencyInMhz
+    </div>
+
+    <div>
+        PilotId: @Configuration.PilotId
+    </div>
+    <div>
+        <Switch ValueChanged="EnabledChanged" Value=Configuration.IsEnabled ValueExpression="()=>Configuration.IsEnabled" Label="Enabled"></Switch>
+    </div>
+    <div>
+        <Dropdown>
+            <DropdownToggleButton Color="ButtonColor.Secondary">@GetFrequencyString(Configuration.FrequencyInMhz)</DropdownToggleButton>
+            <DropdownMenu>
+                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5658)">R1</DropdownItem>
+                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5695)">R2</DropdownItem>
+                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5732)">R3</DropdownItem>
+                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5769)">R4</DropdownItem>
+                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5806)">R5</DropdownItem>
+                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5843)">R6</DropdownItem>
+                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5880)">R7</DropdownItem>
+                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(5917)">R8</DropdownItem>
+            </DropdownMenu>
+        </Dropdown>
+    </div>
+    <div>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" @onclick="() => TriggerDetection(0)">Trigger</Button>
+    </div>
+    <div>
+        @foreach(var lap in _laneLaps)
+        {
+            string textClass = lap.Status switch
+            {
+                LapStatus.Started => "text-secondary",
+                LapStatus.Finished => "text-success",
+                LapStatus.Invalid => "text-danger",
+                _ => "text-secondary"
+            };
+            <div class="@textClass">
+                @lap.LapNumber - @lap.Started - @lap.Ended : @lap.TotalTime
+            </div>
+        }
+    </div>
+</div>

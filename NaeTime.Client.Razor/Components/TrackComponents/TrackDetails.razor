@@ -1,3 +1,6 @@
+@using NaeTime.Messages.Events.Activation
+@using NaeTime.Messages.Events.Timing
+@using NaeTime.PubSub.Abstractions
 <div class="shadow p-2 w-25">
     <table>
         <tr>
@@ -22,4 +25,5 @@
     [Parameter]
     [EditorRequired]
     public Track Details { get; set; } = null!;
+
 }

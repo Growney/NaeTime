@@ -1,0 +1,132 @@
+﻿using Microsoft.AspNetCore.Components;
+using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.Messages.Events.Hardware;
+using NaeTime.Messages.Events.Timing;
+using NaeTime.PubSub.Abstractions;
+
+namespace NaeTime.Client.Razor.Components.Timing;
+public partial class PracticeLane : ComponentBase, IDisposable
+{
+    [Parameter]
+    [EditorRequired]
+    public LaneConfiguration Configuration { get; set; } = null!;
+    [Inject]
+    public IPublishSubscribe PublishSubscribe { get; set; } = null!;
+
+    private float _laneRSSIValue;
+
+    private readonly List<Lap> _laneLaps = new List<Lap>();
+
+    protected override Task OnInitializedAsync()
+    {
+        PublishSubscribe.Subscribe<RssiLevelRecorded>(this, x =>
+        {
+            if (x.Lane == Configuration.LaneNumber)
+            {
+                _laneRSSIValue = x.Level;
+                InvokeAsync(StateHasChanged);
+            }
+            return Task.CompletedTask;
+        });
+
+        PublishSubscribe.Subscribe<LapStarted>(this, x =>
+        {
+            if (x.Lane != Configuration.LaneNumber)
+            {
+                return Task.CompletedTask;
+            }
+
+            _laneLaps.Add(new Lap()
+            {
+                LapNumber = x.LapNumber,
+                Lane = x.Lane,
+                Started = x.StartedUtcTime,
+                Status = LapStatus.Started
+            });
+            return Task.CompletedTask;
+        });
+
+        PublishSubscribe.Subscribe<LapCompleted>(this, x =>
+        {
+            if (x.Lane != Configuration.LaneNumber)
+            {
+                return Task.CompletedTask;
+            }
+
+            var lap = _laneLaps.FirstOrDefault(y => y.LapNumber == x.LapNumber);
+
+            if (lap != null)
+            {
+                lap.Ended = x.UtcTime;
+                lap.Status = LapStatus.Finished;
+                lap.TotalTime = x.TotalTime;
+            }
+            return Task.CompletedTask;
+        });
+
+        PublishSubscribe.Subscribe<LapInvalidated>(this, x =>
+        {
+            if (x.Lane != Configuration.LaneNumber)
+            {
+                return Task.CompletedTask;
+            }
+
+            var lap = _laneLaps.FirstOrDefault(y => y.LapNumber == x.LapNumber);
+
+            if (lap != null)
+            {
+                lap.Ended = x.UtcTime;
+                lap.Status = LapStatus.Invalid;
+                lap.TotalTime = x.TotalTime;
+            }
+            return Task.CompletedTask;
+        });
+
+        return base.OnInitializedAsync();
+    }
+
+
+    public Task EnabledChanged(bool value)
+    {
+        Configuration.IsEnabled = value;
+
+        if (Configuration.IsEnabled)
+        {
+            return PublishSubscribe.Dispatch(new LaneEnabled(Configuration.LaneNumber));
+        }
+        else
+        {
+            return PublishSubscribe.Dispatch(new LaneDisabled(Configuration.LaneNumber));
+        }
+    }
+
+    public Task GoToFrequency(int frequencyInMhz)
+    {
+        Configuration.FrequencyInMhz = frequencyInMhz;
+        return PublishSubscribe.Dispatch(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, frequencyInMhz));
+    }
+    public void Dispose()
+    {
+        PublishSubscribe.Unsubscribe(this);
+    }
+
+    private string GetFrequencyString(int frequencyInMhz)
+    => frequencyInMhz switch
+    {
+        5658 => "Raceband 1",
+        5695 => "Raceband 2",
+        5732 => "Raceband 3",
+        5769 => "Raceband 4",
+        5806 => "Raceband 5",
+        5843 => "Raceband 6",
+        5880 => "Raceband 7",
+        5917 => "Raceband 8",
+        _ => $"{frequencyInMhz} Mhz"
+    };
+
+    private Task TriggerDetection(byte split)
+    {
+        return PublishSubscribe.Dispatch(new ActiveTrackSplitLaneDetectionTriggered(Configuration.LaneNumber, split));
+    }
+
+}

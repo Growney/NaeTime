@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Messages.Requests;
-public record PilotRequest(Guid pilotId);
+public record PilotRequest(Guid PilotId);

@@ -1,5 +1,5 @@
 ﻿namespace NaeTime.Timing.Models;
-public record ActiveTrack(Guid Id, long MinimumLapMilliseconds, long MaximumLapMilliseconds, IEnumerable<Guid> Timers)
+public record ActiveTrack(IEnumerable<Guid> Timers)
 {
     public int GetTimerPosition(Guid timerId)
     {

@@ -9,7 +9,6 @@ public static class IServiceCollectionExtensions
     {
         services.TryAddSingleton<ISoftwareTimer, SoftwareTimer>();
         services.AddSubscriberAssembly(typeof(SoftwareTimer).Assembly);
-        services.AddTransient<ISessionFactory, SessionFactory>();
         return services;
     }
 }

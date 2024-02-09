@@ -38,6 +38,18 @@ public class SQLitePilotRepository : IPilotRepository
         await _dbContext.SaveChangesAsync();
     }
 
+    public async Task<Pilot?> GetPilot(Guid id)
+    {
+        var existing = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == id);
+
+        if (existing == null)
+        {
+            return null;
+        }
+
+        return new Pilot(existing.Id, existing.FirstName, existing.LastName, existing.CallSign);
+    }
+
     public async Task<IEnumerable<Pilot>> GetPilots()
     {
         return await _dbContext.Pilots.Select(x => new Persistence.Models.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign)).ToListAsync();

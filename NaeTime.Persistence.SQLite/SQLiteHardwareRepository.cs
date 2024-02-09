@@ -12,6 +12,14 @@ public class SQLiteHardwareRepository : IHardwareRepository
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
+    private TimerDetails GetTimerDetails(Models.EthernetLapRF8Channel timer)
+        => new TimerDetails
+        {
+            Id = timer.Id,
+            Name = timer.Name,
+            Type = TimerType.EthernetLapRF8Channel,
+            AllowedLanes = 8,
+        };
 
     public async Task AddOrUpdateEthernetLapRF8Channel(Guid id, string name, byte[] ipAddress, int port)
     {
@@ -50,12 +58,7 @@ public class SQLiteHardwareRepository : IHardwareRepository
 
         var ethernetLapRF8Channels = await _dbContext.EthernetLapRF8Channels.ToListAsync();
 
-        timers.AddRange(ethernetLapRF8Channels.Select(x => new TimerDetails
-        {
-            Id = x.Id,
-            Name = x.Name,
-            Type = TimerType.EthernetLapRF8Channel
-        }));
+        timers.AddRange(ethernetLapRF8Channels.Select(x => GetTimerDetails(x)));
 
         return timers;
     }
@@ -70,6 +73,17 @@ public class SQLiteHardwareRepository : IHardwareRepository
         }
 
         return new EthernetLapRF8Channel(timer.Id, timer.Name, timer.IpAddress, timer.Port);
+    }
+
+    public async Task<IEnumerable<TimerDetails>> GetTimerDetails(IEnumerable<Guid> ids)
+    {
+        var timers = new List<TimerDetails>();
+
+        var ethernetLapRF8Channels = await _dbContext.EthernetLapRF8Channels.Where(x => ids.Contains(x.Id)).ToListAsync();
+
+        timers.AddRange(ethernetLapRF8Channels.Select(x => GetTimerDetails(x)));
+
+        return timers;
     }
 
     public async Task SetTimerConnectionStatus(Guid id, bool isConnected, DateTime utcTime)

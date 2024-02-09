@@ -80,7 +80,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
             responders.Clear();
         }
     }
-    public ValueTask SetupTransponderSlot(byte transponderId, bool isEnabled, ushort? channel = null, ushort? band = null, ushort? attenuation = null, ushort? frequencyInMHz = null, CancellationToken token = default)
+    public ValueTask SetupTransponderSlot(byte transponderId, bool? isEnabled, ushort? channel = null, ushort? band = null, ushort? attenuation = null, ushort? frequencyInMHz = null, CancellationToken token = default)
     {
         using var memoryStream = new MemoryStream();
         using var writer = new BinaryWriter(memoryStream);
@@ -88,8 +88,11 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
         writer.Write(LapRFProtocol.START_OF_RECORD);
         writer.WriteRecordType(RecordType.LAPRF_TOR_RFSETUP);
         writer.WriteField((byte)RadioFrequencySetupField.TransponderId, transponderId);
-        ushort enabledFlag = (ushort)(isEnabled ? 1 : 0);
-        writer.WriteField((byte)RadioFrequencySetupField.IsEnabled, enabledFlag);
+        if (isEnabled.HasValue)
+        {
+            ushort enabledFlag = (ushort)(isEnabled.Value ? 1 : 0);
+            writer.WriteField((byte)RadioFrequencySetupField.IsEnabled, enabledFlag);
+        }
         if (channel.HasValue)
         {
             writer.WriteField((byte)RadioFrequencySetupField.Channel, channel.Value);

@@ -33,4 +33,19 @@ public class PilotService : ISubscriber
 
         return new PilotsResponse(pilots.Select(x => new PilotsResponse.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign)));
     }
+
+    public async Task<PilotResponse?> On(PilotRequest request)
+    {
+        var pilotRepository = await _repositoryFactory.CreatePilotRepository();
+
+        var pilot = await pilotRepository.GetPilot(request.PilotId);
+
+        if (pilot == null)
+        {
+            return null;
+        }
+
+        return new PilotResponse(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign);
+
+    }
 }

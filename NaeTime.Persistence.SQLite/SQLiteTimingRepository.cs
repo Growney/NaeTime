@@ -29,7 +29,6 @@ public class SQLiteTimingRepository : ITimingRepository
 
         return _dbContext.SaveChangesAsync();
     }
-
     public Task AddTimerDetection(Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
         var detection = new Detection
@@ -47,7 +46,6 @@ public class SQLiteTimingRepository : ITimingRepository
 
         return _dbContext.SaveChangesAsync();
     }
-
     public async Task SetLanePilot(byte lane, Guid? pilotId)
     {
         var existingStatus = await _dbContext.Lanes.FirstOrDefaultAsync(x => x.Id == lane);
@@ -70,7 +68,6 @@ public class SQLiteTimingRepository : ITimingRepository
 
         await _dbContext.SaveChangesAsync();
     }
-
     public async Task SetLaneRadioFrequency(byte lane, int frequencyInMhz)
     {
         var existingStatus = await _dbContext.Lanes.FirstOrDefaultAsync(x => x.Id == lane);
@@ -93,7 +90,6 @@ public class SQLiteTimingRepository : ITimingRepository
 
         await _dbContext.SaveChangesAsync();
     }
-
     public Task SetLaneStatus(byte lane, bool isEnabled)
     {
         var existingStatus = _dbContext.Lanes.FirstOrDefault(x => x.Id == lane);

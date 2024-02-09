@@ -6,7 +6,7 @@ public class Track
     private readonly List<Guid> _timers = new();
     public IEnumerable<Guid> Timers => _timers;
     public long MinimumLapTimeMilliseconds { get; set; }
-    public long MaximumLapTimeMilliseconds { get; set; }
+    public long? MaximumLapTimeMilliseconds { get; set; }
 
     public void AddTimer(Guid timerId)
     {

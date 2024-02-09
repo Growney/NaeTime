@@ -58,7 +58,7 @@ public class HardwareService : ISubscriber
             timerDetails.Select(x => new EthernetLapRF8ChannelTimersResponse.EthernetLapRF8Channel(x.Id, new IPAddress(x.IpAddress), x.Port)));
     }
 
-    public async Task<EthernetLapRF8ChannelResponse> On(EthernetLapRF8ChannelRequest request)
+    public async Task<EthernetLapRF8ChannelResponse?> On(EthernetLapRF8ChannelRequest request)
     {
         var hardwareRepository = await _repositoryFactory.CreateHardwareRepository();
 
@@ -66,7 +66,7 @@ public class HardwareService : ISubscriber
 
         if (timer == null)
         {
-            return new EthernetLapRF8ChannelResponse(Guid.Empty, string.Empty, IPAddress.None, 0);
+            return null;
         }
 
         return new EthernetLapRF8ChannelResponse(timer.Id, timer.Name, new IPAddress(timer.IpAddress), timer.Port);

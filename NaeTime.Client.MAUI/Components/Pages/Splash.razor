@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using NaeTime.Client.MAUI.Lib
+@using NaeTime.Messages.Events.System
 
 @layout NaeTime.Client.Razor.Layouts.BlankLayout
 
@@ -9,11 +10,15 @@
     public NavigationManager NavigationManager { get; set; } = null!;
     [Inject]
     public ServiceRunner Runner { get; set; } = null!;
+    [Inject]
+    public PubSub.Abstractions.IDispatcher Dispatcher { get; set; } = null!;
 
 
     protected override async Task OnInitializedAsync()
     {
         await Runner.Start();
+
+        await Dispatcher.Dispatch(new SystemStarted());
 
         await Task.Delay(1000);
 

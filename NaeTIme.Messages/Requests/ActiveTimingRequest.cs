@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Messages.Requests;
-public record ActiveTimingRequest(byte Lane);
+public record ActiveTimingRequest(Guid SessionId, byte Lane);

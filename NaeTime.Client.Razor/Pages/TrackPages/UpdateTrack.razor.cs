@@ -39,6 +39,21 @@ public partial class UpdateTrack
         };
         _model.AddTimers(trackResponse.Timers);
 
+        var timersResponse = await Dispatcher.Request<TimerDetailsRequest, TimerDetailsResponse>();
+
+        if (timersResponse == null)
+        {
+            return;
+        }
+
+
+        _timers.AddRange(timersResponse.Timers.Select(x => new TimerDetails(x.Id, x.Name,
+            x.Type switch
+            {
+                TimerDetailsResponse.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
+                _ => throw new NotImplementedException()
+            })));
+
         await base.OnInitializedAsync();
     }
 

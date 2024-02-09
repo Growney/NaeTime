@@ -17,6 +17,49 @@ namespace NaeTime.Persistence.SQLite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.1");
 
+            modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.ActiveSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("MaximumLapMilliseconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("MinimumLapMilliseconds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SessionType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("TrackId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ActiveSession");
+                });
+
+            modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.ActiveTimings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte>("Lane")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ActiveTimings");
+                });
+
             modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.Detection", b =>
                 {
                     b.Property<Guid>("Id")
@@ -130,7 +173,10 @@ namespace NaeTime.Persistence.SQLite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("MaximumLapMilliseconds")
+                    b.Property<byte>("AllowedLanes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("MaximumLapMilliseconds")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("MinimumLapMilliseconds")
@@ -145,6 +191,69 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.ToTable("Tracks");
                 });
 
+            modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.ActiveTimings", b =>
+                {
+                    b.OwnsOne("NaeTime.Persistence.SQLite.Models.ActiveLap", "ActiveLap", b1 =>
+                        {
+                            b1.Property<Guid>("ActiveTimingsId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<uint>("LapNumber")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<ulong?>("StartedHardwareTime")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<long>("StartedSoftwareTime")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<DateTime>("StartedUtcTime")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("ActiveTimingsId");
+
+                            b1.ToTable("ActiveTimings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ActiveTimingsId");
+                        });
+
+                    b.OwnsOne("NaeTime.Persistence.SQLite.Models.ActiveSplit", "ActiveSplit", b1 =>
+                        {
+                            b1.Property<Guid>("ActiveTimingsId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<uint>("LapNumber")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<byte>("SplitNumber")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<long>("StartedSoftwareTime")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<DateTime>("StartedUtcTime")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("ActiveTimingsId");
+
+                            b1.ToTable("ActiveTimings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ActiveTimingsId");
+                        });
+
+                    b.Navigation("ActiveLap");
+
+                    b.Navigation("ActiveSplit");
+                });
+
             modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.Track", b =>
                 {
                     b.OwnsMany("NaeTime.Persistence.SQLite.Models.TrackTimer", "Timers", b1 =>
@@ -152,9 +261,9 @@ namespace NaeTime.Persistence.SQLite.Migrations
                             b1.Property<Guid>("TrackId")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<int>("Id")
+                            b1.Property<Guid>("Id")
                                 .ValueGeneratedOnAdd()
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("TEXT");
 
                             b1.Property<Guid>("TimerId")
                                 .HasColumnType("TEXT");

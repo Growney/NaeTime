@@ -1,0 +1,7 @@
+﻿.lane-container{
+    display:grid;
+    grid-auto-flow: column;
+}
+.lane{
+    width: 100px;
+}

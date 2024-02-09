@@ -1,0 +1,25 @@
+@page "/openpractice"
+@layout MainLayout
+<div>
+    <h1>Open Practice</h1>
+    <Dropdown>
+        <DropdownToggleButton Color="ButtonColor.Primary">Start Session On</DropdownToggleButton>
+            <DropdownMenu>
+                @foreach(var track in _tracks)
+                {
+                <DropdownItem Type="ButtonType.Button" @onclick="() => StartSessionOnTrack(track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)">@track.Name</DropdownItem>
+                }
+                <DropdownItem Type="ButtonType.Button" @onclick="() => StartSessionOnNewTrack()">New Track</DropdownItem>
+            </DropdownMenu>
+        </Dropdown>
+
+    <Button Color="ButtonColor.Primary">Start Session</Button>
+</div>
+
+<div class="lane-container">
+    @foreach (var laneConfiguration in _laneConfigurations.Take(_activeSessionLanes))
+    {
+        <NaeTime.Client.Razor.Components.Timing.PracticeLane Configuration="laneConfiguration"></NaeTime.Client.Razor.Components.Timing.PracticeLane>
+    }
+</div>
+    

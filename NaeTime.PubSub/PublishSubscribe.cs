@@ -7,6 +7,7 @@ internal class PublishSubscribe : IPublishSubscribe
 {
     private readonly IServiceProvider _serviceProvider;
 
+    private ConcurrentDictionary<Type, bool> _subscriberStatus = new();
     private ConcurrentDictionary<Type, IEnumerable<SubscriberHandler>> _subscribers = new();
     private ConcurrentDictionary<Type, ConcurrentDictionary<Type, RequestHandler>> _classHandlers = new();
 
@@ -29,7 +30,7 @@ internal class PublishSubscribe : IPublishSubscribe
 
         if (_dynamicHandlers.TryGetValue(requestType, out var dynamicReponseHandlers))
         {
-            if (dynamicReponseHandlers.TryGetValue(requestType, out var handler))
+            if (dynamicReponseHandlers.TryGetValue(responseType, out var handler))
             {
                 var response = await handler(request);
 
@@ -48,7 +49,7 @@ internal class PublishSubscribe : IPublishSubscribe
             return await classHandler.Handle<TResponse>(request);
         }
 #if DEBUG
-        throw new NotImplementedException("Missing Handler");
+        throw new NotImplementedException($"Missing Handler for Request: {requestType} Response: {responseType}");
 #else
         return default;
 #endif
@@ -88,7 +89,7 @@ internal class PublishSubscribe : IPublishSubscribe
     }
 
     public async Task Dispatch<T>(T message)
-        where T : class
+        where T : notnull
     {
         var publishTasks = new List<Task>
         {
@@ -102,6 +103,10 @@ internal class PublishSubscribe : IPublishSubscribe
 
         foreach (var subscriber in subscriberBag)
         {
+            if (!_subscriberStatus.TryGetValue(subscriber.SubscriberType, out var isEnabled) || !isEnabled)
+            {
+                continue;
+            }
             publishTasks.Add(subscriber.Handle(message));
         }
 
@@ -138,7 +143,7 @@ internal class PublishSubscribe : IPublishSubscribe
         return null;
 
     }
-    private IEnumerable<SubscriberHandler> CreateSubscribers<T>() where T : class
+    private IEnumerable<SubscriberHandler> CreateSubscribers<T>() where T : notnull
     {
         var subscribers = _serviceProvider.GetServices<ISubscriberRegistration>();
 
@@ -163,12 +168,21 @@ internal class PublishSubscribe : IPublishSubscribe
                 subscriber = () => ActivatorUtilities.CreateInstance(_serviceProvider, registration.SubscriberType);
             }
 
+            _subscriberStatus.TryAdd(registration.SubscriberType, IsTypeInitiallyEnabled(registration.SubscriberType));
+
             var handler = new SubscriberHandler(registration.SubscriberType, registration.MessageType, subscriber);
 
             bag.Add(handler);
         }
 
         return bag;
+    }
+
+    private bool IsTypeInitiallyEnabled(Type subscriberType)
+    {
+        var subscriberAttributes = subscriberType.GetCustomAttributes(typeof(DisabledInitiallyAttribute), true);
+
+        return !subscriberAttributes.Any();
     }
 
     private Task DispatchToDynamicSubscribers(object message)
@@ -281,4 +295,13 @@ internal class PublishSubscribe : IPublishSubscribe
         _instanceTypes.TryRemove(subscriber, out _);
     }
 
+    public void DisableSubscriber(Type subscriberType)
+    {
+        _subscriberStatus.TryUpdate(subscriberType, false, true);
+    }
+
+    public void EnableSubscriber(Type subscriberType)
+    {
+        _subscriberStatus.TryUpdate(subscriberType, true, false);
+    }
 }

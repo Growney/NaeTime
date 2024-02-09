@@ -5,4 +5,5 @@ public interface IRepositoryFactory
     Task<IPilotRepository> CreatePilotRepository();
     Task<ITimingRepository> CreateTimingRepository();
     Task<ITrackRepository> CreateTrackRepository();
+    Task<IActiveRepository> CreateActiveRepository();
 }
