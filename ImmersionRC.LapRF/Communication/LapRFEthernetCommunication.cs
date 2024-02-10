@@ -5,7 +5,7 @@ using System.Net.Sockets;
 namespace ImmersionRC.LapRF.Communication;
 internal class LapRFEthernetCommunication : ILapRFCommunication
 {
-    private readonly TcpClient _client;
+    private TcpClient? _client;
     private readonly byte[] _rxBuffer;
 
     private readonly IPAddress _address;
@@ -22,11 +22,33 @@ internal class LapRFEthernetCommunication : ILapRFCommunication
     }
 
     public async Task ConnectAsync(CancellationToken token)
-        => await _client.ConnectAsync(_address, _port, token);
+    {
+        if (_client != null)
+        {
+            _client.Dispose();
+        }
 
+        _client = new TcpClient();
+        await _client.ConnectAsync(_address, _port, token);
+    }
+    public Task DisconnectAsync(CancellationToken token)
+    {
+        if (_client != null)
+        {
+            _client.Dispose();
+            _client = null;
+        }
+
+        return Task.CompletedTask;
+    }
 
     public async Task<ReadOnlyMemory<byte>> ReceiveAsync(CancellationToken token)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("Not connected");
+        }
+
         var stream = _client.GetStream();
 
         int readBytes = await stream.ReadAsync(_rxBuffer, 0, _rxBuffer.Length);
@@ -36,6 +58,11 @@ internal class LapRFEthernetCommunication : ILapRFCommunication
 
     public ValueTask SendAsync(ReadOnlyMemory<byte> data, CancellationToken token)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("Not connected");
+        }
+
         var stream = _client.GetStream();
 
         return stream.WriteAsync(data, token);

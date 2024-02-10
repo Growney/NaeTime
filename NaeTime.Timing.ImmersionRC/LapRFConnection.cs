@@ -59,6 +59,7 @@ internal class LapRFConnection
                 IsConnected = false;
                 await _dispatcher.Dispatch(new TimerDisconnected(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow));
             }
+            await _communication.DisconnectAsync(token);
         }
 
     }
