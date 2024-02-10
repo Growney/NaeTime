@@ -18,8 +18,21 @@ public class LaneTimerManager : ISubscriber
     public async Task When(TimerConnectionEstablished connectionEstablished)
     {
         var laneConfigurations = await _publisher.Request<ActiveLaneConfigurationRequest, ActiveLaneConfigurationResponse>();
+        var timerLaneConfigurationReponse = await _publisher.Request<TimerLaneConfigurationRequest, TimerLaneConfigurationResponse>(new TimerLaneConfigurationRequest(connectionEstablished.TimerId));
 
-        if (laneConfigurations == null || !laneConfigurations.Configurations.Any())
+        //We have no lane configurations update the configurations with those from the timer
+        if (laneConfigurations == null || !laneConfigurations.Lanes.Any())
+        {
+            if (timerLaneConfigurationReponse != null && timerLaneConfigurationReponse.Lanes.Any())
+            {
+                foreach (var configuration in timerLaneConfigurationReponse.Lanes)
+                {
+                    await GenerateConfigurationEvents(configuration);
+                }
+            }
+        }
+
+        if (laneConfigurations == null || !laneConfigurations.Lanes.Any())
         {
             var timerLaneConfigurations = await _publisher.Request<TimerLaneConfigurationRequest, TimerLaneConfigurationResponse>(new TimerLaneConfigurationRequest(connectionEstablished.TimerId));
 
@@ -35,7 +48,7 @@ public class LaneTimerManager : ISubscriber
         {
             await _publisher.Dispatch(
                 new TimersLaneConfigured(connectionEstablished.TimerId,
-                laneConfigurations.Configurations.Select(x => new TimersLaneConfigured.LaneConfiguration(x.Lane, x.PilotId, x.FrequencyInMhz, x.IsEnabled))));
+                laneConfigurations.Lanes.Select(x => new TimersLaneConfigured.LaneConfiguration(x.Lane, x.PilotId, x.FrequencyInMhz, x.IsEnabled))));
         }
     }
 

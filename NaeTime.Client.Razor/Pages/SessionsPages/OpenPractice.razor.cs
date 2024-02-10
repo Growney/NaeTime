@@ -38,7 +38,7 @@ public partial class OpenPractice : ComponentBase
 
         if (activeLaneConfigurations != null)
         {
-            _laneConfigurations.AddRange(activeLaneConfigurations.Configurations.Select(x => new LaneConfiguration()
+            _laneConfigurations.AddRange(activeLaneConfigurations.Lanes.Select(x => new LaneConfiguration()
             {
                 LaneNumber = x.Lane,
                 BandId = x.BandId,
