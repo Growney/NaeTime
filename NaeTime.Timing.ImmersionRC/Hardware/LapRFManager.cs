@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
 using NaeTime.Messages.Events.Hardware;
-using NaeTime.Messages.Events.Timing;
 using NaeTime.Messages.Requests;
 using NaeTime.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
@@ -21,9 +20,10 @@ internal class LapRFManager : IHostedService
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _publisher.Subscribe<EthernetLapRF8ChannelConfigured>(this, When);
-        _publisher.Subscribe<LaneEnabled>(this, When);
-        _publisher.Subscribe<LaneDisabled>(this, When);
-        _publisher.Subscribe<LaneRadioFrequencyConfigured>(this, When);
+        _publisher.Subscribe<TimerLaneEnabled>(this, When);
+        _publisher.Subscribe<TimerLaneDisabled>(this, When);
+        _publisher.Subscribe<TimerLaneRadioFrequencyConfigured>(this, When);
+        _publisher.RespondTo<TimerLanesConfigurationRequest, TimerLanesConfigurationResponse>(this, On);
         _publisher.RespondTo<TimerLaneConfigurationRequest, TimerLaneConfigurationResponse>(this, On);
     }
 
@@ -52,6 +52,22 @@ internal class LapRFManager : IHostedService
         _publisher.Unsubscribe(this);
     }
 
+    private async Task<TimerLanesConfigurationResponse?> On(TimerLanesConfigurationRequest requested)
+    {
+        if (!_hardwareProcesses.TryGetValue(requested.TimerId, out var connection))
+        {
+            return null;
+        }
+
+        if (!connection.IsConnected)
+        {
+            return null;
+        }
+
+        var frequencies = await connection.GetAllLaneConfigurations();
+
+        return new TimerLanesConfigurationResponse(requested.TimerId, frequencies.Select(x => new TimerLanesConfigurationResponse.TimerLaneConfiguration(x.Lane, x.BandId, x.FrequencyInMhz, x.IsEnabled)));
+    }
     private async Task<TimerLaneConfigurationResponse?> On(TimerLaneConfigurationRequest requested)
     {
         if (!_hardwareProcesses.TryGetValue(requested.TimerId, out var connection))
@@ -64,11 +80,17 @@ internal class LapRFManager : IHostedService
             return null;
         }
 
-        var frequencies = await connection.GetRadioFrequencyChannelsAsync();
+        var frequencies = await connection.GetLaneConfigurations(requested.Lane);
 
-        return new TimerLaneConfigurationResponse(requested.TimerId, frequencies.Select(x => new TimerLaneConfigurationResponse.TimerLaneConfiguration(x.Lane, x.BandId, x.FrequencyInMhz, x.IsEnabled)));
+        if (!frequencies.Any())
+        {
+            return null;
+        }
+
+        var configuration = frequencies.First();
+
+        return new TimerLaneConfigurationResponse(null, configuration.FrequencyInMhz, configuration.IsEnabled);
     }
-
     private async Task When(EthernetLapRF8ChannelConfigured configured)
     {
         if (_hardwareProcesses.TryGetValue(configured.TimerId, out var connection))
@@ -81,33 +103,48 @@ internal class LapRFManager : IHostedService
         _hardwareProcesses.AddOrUpdate(configured.TimerId, newConnection,
             (id, existing) => newConnection);
     }
-    public async Task When(LaneEnabled lane)
+    public async Task When(TimerLaneEnabled lane)
     {
-        var timers = _hardwareProcesses.Values;
-
-        foreach (var timer in timers)
+        if (!_hardwareProcesses.TryGetValue(lane.TimerId, out var connection))
         {
-            await timer.SetLaneStatus(lane.LaneNumber, true);
+            return;
         }
 
+        if (!connection.IsConnected)
+        {
+            return;
+        }
+
+        await connection.SetLaneStatus(lane.Lane, true);
     }
-    public async Task When(LaneDisabled lane)
+    public async Task When(TimerLaneDisabled lane)
     {
-        var timers = _hardwareProcesses.Values;
-
-        foreach (var timer in timers)
+        if (!_hardwareProcesses.TryGetValue(lane.TimerId, out var connection))
         {
-            await timer.SetLaneStatus(lane.LaneNumber, true);
+            return;
         }
+
+        if (!connection.IsConnected)
+        {
+            return;
+        }
+
+        await connection.SetLaneStatus(lane.Lane, false);
     }
-    public async Task When(LaneRadioFrequencyConfigured lane)
+    public async Task When(TimerLaneRadioFrequencyConfigured lane)
     {
-        var timers = _hardwareProcesses.Values;
-
-        foreach (var timer in timers)
+        if (!_hardwareProcesses.TryGetValue(lane.TimerId, out var connection))
         {
-            await timer.SetLaneRadioFrequency(lane.LaneNumber, lane.FrequencyInMhz);
+            return;
         }
+
+        if (!connection.IsConnected)
+        {
+            return;
+        }
+
+        await connection.SetLaneRadioFrequency(lane.Lane, lane.FrequencyInMhz);
+
     }
 
 }

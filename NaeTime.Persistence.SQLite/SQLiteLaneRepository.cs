@@ -36,6 +36,7 @@ public class SQLiteLaneRepository : ILaneRepository
         else
         {
             existingStatus.RadioFrequencyInMhz = frequencyInMhz;
+            existingStatus.BandId = bandId;
         }
 
         await _dbContext.SaveChangesAsync();

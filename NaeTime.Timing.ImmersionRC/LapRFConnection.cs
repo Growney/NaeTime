@@ -113,19 +113,16 @@ internal class LapRFConnection
             }
         }
     }
-
-    public async Task<IEnumerable<LaneRadioFrequency>> GetRadioFrequencyChannelsAsync()
+    public async Task<IEnumerable<LaneConfiguration>> GetLaneConfigurations(IEnumerable<byte> lanes)
     {
         if (!IsConnected)
         {
-            return Enumerable.Empty<LaneRadioFrequency>();
+            return Enumerable.Empty<LaneConfiguration>();
         }
 
-        byte[] transponderIds = [1, 2, 3, 4, 5, 6, 7, 8];
+        var rfSetups = await _protocol.RadioFrequencySetupProtocol.GetSetupAsync(lanes, CancellationToken.None).ConfigureAwait(false);
 
-        var rfSetups = await _protocol.RadioFrequencySetupProtocol.GetSetupAsync(transponderIds, CancellationToken.None).ConfigureAwait(false);
-
-        var channels = new List<LaneRadioFrequency>();
+        var channels = new List<LaneConfiguration>();
 
         foreach (var setup in rfSetups)
         {
@@ -133,12 +130,13 @@ internal class LapRFConnection
             {
                 continue;
             }
-            channels.Add(new LaneRadioFrequency(setup.TransponderId, null, (int)setup.Frequency.Value, setup.IsEnabled));
+            channels.Add(new LaneConfiguration(setup.TransponderId, null, (int)setup.Frequency.Value, setup.IsEnabled));
         }
 
         return channels;
     }
-
+    public Task<IEnumerable<LaneConfiguration>> GetLaneConfigurations(params byte[] lanes) => GetLaneConfigurations(lanes.AsEnumerable<byte>());
+    public Task<IEnumerable<LaneConfiguration>> GetAllLaneConfigurations() => GetLaneConfigurations([1, 2, 3, 4, 5, 6, 7, 8]);
     public async Task SetLaneStatus(byte Lane, bool isEnabled)
     {
         if (!IsConnected)
