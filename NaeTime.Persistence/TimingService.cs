@@ -12,22 +12,7 @@ public class TimingService : ISubscriber
         _repositoryFactory = repositoryFactory;
     }
 
-    public async Task When(LaneRadioFrequencyConfigured laneRadioFrequencyConfigured)
-    {
-        var timingRepository = await _repositoryFactory.CreateTimingRepository();
 
-        await timingRepository.SetLaneRadioFrequency(laneRadioFrequencyConfigured.LaneNumber, laneRadioFrequencyConfigured.FrequencyInMhz);
-    }
-    public async Task When(LaneEnabled laneEnabled)
-    {
-        var timingRepository = await _repositoryFactory.CreateTimingRepository();
-        await timingRepository.SetLaneStatus(laneEnabled.LaneNumber, true);
-    }
-    public async Task When(LaneDisabled laneDisabled)
-    {
-        var timingRepository = await _repositoryFactory.CreateTimingRepository();
-        await timingRepository.SetLaneStatus(laneDisabled.LaneNumber, false);
-    }
     public async Task When(TimerDetectionOccured timerDetection)
     {
         var timingRepository = await _repositoryFactory.CreateTimingRepository();

@@ -84,4 +84,14 @@ public class ClientRepositoryFactory : IRepositoryFactory
             _ => throw new InvalidOperationException($"Unknown client mode: {clientMode}")
         };
     }
+    public async Task<ILaneRepository> CreateLaneRepository()
+    {
+        var clientMode = await GetClientMode();
+
+        return clientMode switch
+        {
+            ClientMode.Local => ActivatorUtilities.CreateInstance<SQLiteLaneRepository>(_serviceProvider),
+            _ => throw new InvalidOperationException($"Unknown client mode: {clientMode}")
+        };
+    }
 }

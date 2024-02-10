@@ -88,8 +88,12 @@ public partial class PracticeLane : ComponentBase, IDisposable
 
     public Task EnabledChanged(bool value)
     {
-        Configuration.IsEnabled = value;
+        if (Configuration.IsEnabled == value)
+        {
+            return Task.CompletedTask;
+        }
 
+        Configuration.IsEnabled = value;
         if (Configuration.IsEnabled)
         {
             return PublishSubscribe.Dispatch(new LaneEnabled(Configuration.LaneNumber));
@@ -101,6 +105,11 @@ public partial class PracticeLane : ComponentBase, IDisposable
     }
     public Task GoToBand(byte? bandId)
     {
+        if (Configuration.BandId == bandId)
+        {
+            return Task.CompletedTask;
+        }
+
         if (Configuration.BandId != bandId)
         {
             if (bandId != null && Messages.Frequency.Band.Bands.Any(x => x.Id == bandId))
@@ -114,6 +123,10 @@ public partial class PracticeLane : ComponentBase, IDisposable
     }
     public Task GoToFrequency(int value)
     {
+        if (Configuration.FrequencyInMhz == value)
+        {
+            return Task.CompletedTask;
+        }
         Configuration.FrequencyInMhz = value;
         return PublishSubscribe.Dispatch(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, Configuration.BandId, Configuration.FrequencyInMhz));
     }

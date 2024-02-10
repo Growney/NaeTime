@@ -6,4 +6,5 @@ public interface IRepositoryFactory
     Task<ITimingRepository> CreateTimingRepository();
     Task<ITrackRepository> CreateTrackRepository();
     Task<IActiveRepository> CreateActiveRepository();
+    Task<ILaneRepository> CreateLaneRepository();
 }

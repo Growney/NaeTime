@@ -14,7 +14,6 @@ public class LaneTimerManager : ISubscriber
     {
         _publisher = publisher ?? throw new ArgumentNullException(nameof(publisher));
     }
-    //TODO CHANGE THIS TO INITIALISE MISSING LANE CONFIGURATIONS INSTEAD OF ALL OF THEM
     public async Task When(TimerConnectionEstablished connectionEstablished)
     {
         var laneConfigurations = await _publisher.Request<ActiveLaneConfigurationRequest, ActiveLaneConfigurationResponse>();
@@ -25,30 +24,55 @@ public class LaneTimerManager : ISubscriber
         {
             if (timerLaneConfigurationReponse != null && timerLaneConfigurationReponse.Lanes.Any())
             {
-                foreach (var configuration in timerLaneConfigurationReponse.Lanes)
+                foreach (var timerLane in timerLaneConfigurationReponse.Lanes)
                 {
-                    await GenerateConfigurationEvents(configuration);
+                    await GenerateConfigurationEvents(timerLane);
                 }
             }
         }
-
-        if (laneConfigurations == null || !laneConfigurations.Lanes.Any())
-        {
-            var timerLaneConfigurations = await _publisher.Request<TimerLaneConfigurationRequest, TimerLaneConfigurationResponse>(new TimerLaneConfigurationRequest(connectionEstablished.TimerId));
-
-            if (timerLaneConfigurations != null)
-            {
-                foreach (var configuration in timerLaneConfigurations.Lanes)
-                {
-                    await GenerateConfigurationEvents(configuration);
-                }
-            }
-        }
+        //We have some configuration configuration
         else
         {
+            if (timerLaneConfigurationReponse != null)
+            {
+                //Loop through the lane configuration and update the timer configuration
+                await ReconfigureTimerLanes(connectionEstablished, laneConfigurations, timerLaneConfigurationReponse);
+
+                await ReconfigurationLocalFromTimer(laneConfigurations, timerLaneConfigurationReponse);
+            }
+        }
+    }
+
+    private async Task ReconfigurationLocalFromTimer(ActiveLaneConfigurationResponse laneConfigurations, TimerLaneConfigurationResponse timerLaneConfigurationReponse)
+    {
+        foreach (var timerLane in timerLaneConfigurationReponse.Lanes)
+        {
+            //The lane is not configured locally
+            if (!laneConfigurations.Lanes.Any(x => x.Lane == timerLane.Lane))
+            {
+                await GenerateConfigurationEvents(timerLane);
+            }
+        }
+    }
+
+    private async Task ReconfigureTimerLanes(TimerConnectionEstablished connectionEstablished, ActiveLaneConfigurationResponse laneConfigurations, TimerLaneConfigurationResponse timerLaneConfigurationReponse)
+    {
+        var timerReconfigurations = new List<TimersLaneConfigured.LaneConfiguration>();
+        foreach (var lane in laneConfigurations.Lanes)
+        {
+            var timerLane = timerLaneConfigurationReponse.Lanes.FirstOrDefault(x => x.Lane == lane.Lane);
+            if (timerLane != null)
+            {
+                bool shouldChange =
+                    timerLane.IsEnabled != lane.IsEnabled || timerLane.FrequencyInMhz != lane.FrequencyInMhz;
+
+                timerReconfigurations.Add(new TimersLaneConfigured.LaneConfiguration(lane.Lane, timerLane.FrequencyInMhz, timerLane.IsEnabled));
+            }
+        }
+        if (timerReconfigurations.Any())
+        {
             await _publisher.Dispatch(
-                new TimersLaneConfigured(connectionEstablished.TimerId,
-                laneConfigurations.Lanes.Select(x => new TimersLaneConfigured.LaneConfiguration(x.Lane, x.FrequencyInMhz, x.IsEnabled))));
+                 new TimersLaneConfigured(connectionEstablished.TimerId, timerReconfigurations));
         }
     }
 

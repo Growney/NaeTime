@@ -5,7 +5,6 @@ public interface IActiveRepository
 {
     public Task<ActiveTimings> GetTimings(Guid sessionId, byte lane);
     public Task<ActiveSession?> GetSession();
-    public Task<IEnumerable<Lane>> GetLanes();
     public Task ActivateSession(Guid sessionId, SessionType sessionType, Guid trackId, long minimumLapMilliseconds, long? maximumLapMilliseconds);
     public Task DeactivateSession();
     public Task ActivateLap(Guid sessionId, byte lane, uint lapNumber, long startedSoftwareTime, DateTime startedUtcTime, ulong? startedHardwareTime);

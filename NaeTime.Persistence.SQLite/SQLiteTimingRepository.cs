@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using NaeTime.Persistence.Abstractions;
+﻿using NaeTime.Persistence.Abstractions;
 using NaeTime.Persistence.SQLite.Context;
 using NaeTime.Persistence.SQLite.Models;
 
@@ -46,47 +45,5 @@ public class SQLiteTimingRepository : ITimingRepository
 
         return _dbContext.SaveChangesAsync();
     }
-    public async Task SetLaneRadioFrequency(byte lane, int frequencyInMhz)
-    {
-        var existingStatus = await _dbContext.Lanes.FirstOrDefaultAsync(x => x.Id == lane);
 
-        if (existingStatus == null)
-        {
-            existingStatus = new Lane
-            {
-                Id = lane,
-                RadioFrequencyInMhz = frequencyInMhz,
-                IsEnabled = true,
-            };
-
-            _dbContext.Lanes.Add(existingStatus);
-        }
-        else
-        {
-            existingStatus.RadioFrequencyInMhz = frequencyInMhz;
-        }
-
-        await _dbContext.SaveChangesAsync();
-    }
-    public Task SetLaneStatus(byte lane, bool isEnabled)
-    {
-        var existingStatus = _dbContext.Lanes.FirstOrDefault(x => x.Id == lane);
-
-        if (existingStatus == null)
-        {
-            existingStatus = new Lane
-            {
-                Id = lane,
-                IsEnabled = isEnabled
-            };
-
-            _dbContext.Lanes.Add(existingStatus);
-        }
-        else
-        {
-            existingStatus.IsEnabled = isEnabled;
-        }
-
-        return _dbContext.SaveChangesAsync();
-    }
 }

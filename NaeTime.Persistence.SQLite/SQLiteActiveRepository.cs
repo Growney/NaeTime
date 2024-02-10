@@ -165,10 +165,6 @@ public class SQLiteActiveRepository : IActiveRepository
             existingSession.MaximumLapMilliseconds);
     }
 
-    public async Task<IEnumerable<Lane>> GetLanes()
-    {
-        return await _dbContext.Lanes.Select(x => new Lane(x.Id, x.BandId, x.RadioFrequencyInMhz, x.IsEnabled)).ToListAsync();
-    }
 
     public async Task<ActiveTimings> GetTimings(Guid trackId, byte lane)
     {

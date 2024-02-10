@@ -130,13 +130,5 @@ public class ActiveService : ISubscriber
 
         return new ActiveTimingsResponse(request.SessionId, request.Lane, activeLap, activeSplit);
     }
-    public async Task<ActiveLaneConfigurationResponse?> On(ActiveLaneConfigurationRequest request)
-    {
-        var activeRepository = await _repositoryFactory.CreateActiveRepository();
-
-        var lanes = await activeRepository.GetLanes();
-
-        return new ActiveLaneConfigurationResponse(lanes.Select(x => new ActiveLaneConfigurationResponse.LaneConfiguration(x.LaneNumber, x.BandId, x.FrequencyInMhz, x.IsEnabled)));
-    }
 
 }
