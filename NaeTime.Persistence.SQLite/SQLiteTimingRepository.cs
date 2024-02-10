@@ -46,28 +46,6 @@ public class SQLiteTimingRepository : ITimingRepository
 
         return _dbContext.SaveChangesAsync();
     }
-    public async Task SetLanePilot(byte lane, Guid? pilotId)
-    {
-        var existingStatus = await _dbContext.Lanes.FirstOrDefaultAsync(x => x.Id == lane);
-
-        if (existingStatus == null)
-        {
-            existingStatus = new Lane
-            {
-                Id = lane,
-                PilotId = pilotId,
-                IsEnabled = true,
-            };
-
-            _dbContext.Lanes.Add(existingStatus);
-        }
-        else
-        {
-            existingStatus.PilotId = pilotId;
-        }
-
-        await _dbContext.SaveChangesAsync();
-    }
     public async Task SetLaneRadioFrequency(byte lane, int frequencyInMhz)
     {
         var existingStatus = await _dbContext.Lanes.FirstOrDefaultAsync(x => x.Id == lane);

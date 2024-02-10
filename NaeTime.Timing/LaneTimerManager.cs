@@ -48,7 +48,7 @@ public class LaneTimerManager : ISubscriber
         {
             await _publisher.Dispatch(
                 new TimersLaneConfigured(connectionEstablished.TimerId,
-                laneConfigurations.Lanes.Select(x => new TimersLaneConfigured.LaneConfiguration(x.Lane, x.PilotId, x.FrequencyInMhz, x.IsEnabled))));
+                laneConfigurations.Lanes.Select(x => new TimersLaneConfigured.LaneConfiguration(x.Lane, x.FrequencyInMhz, x.IsEnabled))));
         }
     }
 
@@ -61,12 +61,6 @@ public class LaneTimerManager : ISubscriber
         else
         {
             await _publisher.Dispatch(new LaneDisabled(configuration.Lane));
-        }
-
-        //Only configure the lane do not clear pilots
-        if (configuration.PilotId != null)
-        {
-            await _publisher.Dispatch(new LanePilotConfigured(configuration.Lane, configuration.PilotId.Value));
         }
 
         if (configuration.FrequencyInMhz != null)

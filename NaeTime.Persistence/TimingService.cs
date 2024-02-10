@@ -28,11 +28,6 @@ public class TimingService : ISubscriber
         var timingRepository = await _repositoryFactory.CreateTimingRepository();
         await timingRepository.SetLaneStatus(laneDisabled.LaneNumber, false);
     }
-    public async Task When(LanePilotCleared lanePilotCleared)
-    {
-        var timingRepository = await _repositoryFactory.CreateTimingRepository();
-        await timingRepository.SetLanePilot(lanePilotCleared.LaneNumber, null);
-    }
     public async Task When(TimerDetectionOccured timerDetection)
     {
         var timingRepository = await _repositoryFactory.CreateTimingRepository();

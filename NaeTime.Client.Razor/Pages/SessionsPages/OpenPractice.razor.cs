@@ -43,7 +43,6 @@ public partial class OpenPractice : ComponentBase
                 LaneNumber = x.Lane,
                 BandId = x.BandId,
                 FrequencyInMhz = x.FrequencyInMhz,
-                PilotId = x.PilotId,
                 IsEnabled = x.IsEnabled
             }));
         }

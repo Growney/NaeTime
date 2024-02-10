@@ -11,7 +11,7 @@ using NaeTime.Persistence.SQLite.Context;
 namespace NaeTime.Persistence.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
-    [Migration("20240209220817_Initial")]
+    [Migration("20240210120217_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -124,9 +124,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
 
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("INTEGER");
-
-                    b.Property<Guid?>("PilotId")
-                        .HasColumnType("TEXT");
 
                     b.Property<int>("RadioFrequencyInMhz")
                         .HasColumnType("INTEGER");

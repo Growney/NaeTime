@@ -122,9 +122,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid?>("PilotId")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("RadioFrequencyInMhz")
                         .HasColumnType("INTEGER");
 
