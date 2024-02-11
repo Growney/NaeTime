@@ -11,8 +11,8 @@ public record OpenPracticeSessionResponse(Guid SessionId, Guid TrackId, IEnumera
         Completed
     }
     public record PilotLane(Guid PilotId, byte Lane);
-    public record ConsecutiveLapLeaderboard(Guid LeaderboardId, uint? ConsecutiveLaps, IEnumerable<ConsecutiveLapLeaderboardPosition> Positions);
-    public record ConsecutiveLapLeaderboardPosition(uint Position, Guid PilotId, uint StartLapNumber, uint EndLapNumber, uint TotalLaps, long TotalMilliseconds);
+    public record ConsecutiveLapLeaderboard(Guid LeaderboardId, uint ConsecutiveLaps, IEnumerable<ConsecutiveLapLeaderboardPosition> Positions);
+    public record ConsecutiveLapLeaderboardPosition(uint Position, Guid PilotId, uint StartLapNumber, uint EndLapNumber, uint TotalLaps, long TotalMilliseconds, DateTime LastLapCompletionUtc);
     public record SingleLapLeaderboard(Guid LeaderboardId, IEnumerable<SingleLapLeaderboardPosition> Positions);
-    public record SingleLapLeaderboardPosition(uint Position, Guid PilotId, uint LapNumber, long TotalMilliseconds);
+    public record SingleLapLeaderboardPosition(uint Position, Guid PilotId, uint LapNumber, long TotalMilliseconds, DateTime CompletionUtc);
 }

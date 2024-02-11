@@ -4,28 +4,38 @@ namespace NaeTime.Timing.OpenPractice.Leaderboards;
 public class ConsecutiveLapLeaderboard
 {
     private readonly Dictionary<Guid, FastestConsecutiveLaps> _pilotLaps = new();
-
-    public void AddFastestConsecutiveLap(Guid pilotId, uint startLapNumber, uint endLapNumber, uint totalLaps, long totalMilliseconds, DateTime uastLapCompletionUtc)
+    public Guid LeaderboardId { get; }
+    public uint LapCount { get; }
+    public ConsecutiveLapLeaderboard(Guid leaderboardId, uint lapCount)
+    {
+        LeaderboardId = leaderboardId;
+        LapCount = lapCount;
+    }
+    public bool AddFastestConsecutiveLap(Guid pilotId, uint startLapNumber, uint endLapNumber, uint totalLaps, long totalMilliseconds, DateTime lastLapCompletionUtc)
     {
         if (!_pilotLaps.ContainsKey(pilotId))
         {
-            _pilotLaps.Add(pilotId, new FastestConsecutiveLaps(startLapNumber, endLapNumber, totalLaps, totalMilliseconds, uastLapCompletionUtc));
+            _pilotLaps.Add(pilotId, new FastestConsecutiveLaps(startLapNumber, endLapNumber, totalLaps, totalMilliseconds, lastLapCompletionUtc));
+            return true;
         }
         else
         {
             var existingFastest = _pilotLaps[pilotId];
             if (existingFastest.TotalLaps > totalLaps)
             {
-                _pilotLaps[pilotId] = new FastestConsecutiveLaps(startLapNumber, endLapNumber, totalLaps, totalMilliseconds, uastLapCompletionUtc);
+                _pilotLaps[pilotId] = new FastestConsecutiveLaps(startLapNumber, endLapNumber, totalLaps, totalMilliseconds, lastLapCompletionUtc);
+                return true;
             }
             else if (existingFastest.TotalLaps == totalLaps)
             {
                 if (existingFastest.TotalMilliseconds > totalMilliseconds)
                 {
-                    _pilotLaps[pilotId] = new FastestConsecutiveLaps(startLapNumber, endLapNumber, totalLaps, totalMilliseconds, uastLapCompletionUtc);
+                    _pilotLaps[pilotId] = new FastestConsecutiveLaps(startLapNumber, endLapNumber, totalLaps, totalMilliseconds, lastLapCompletionUtc);
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     public IEnumerable<ConsecutiveLapLeaderboardPosition> GetPositions()

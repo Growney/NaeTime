@@ -4,20 +4,29 @@ namespace NaeTime.Timing.OpenPractice.Leaderboards;
 public class SingleLapLeaderboard
 {
     private readonly Dictionary<Guid, FastestSingleLap> _pilotLaps = new();
+    public Guid LeaderboardId { get; }
 
-    public void AddFastestSingleLap(Guid pilotId, uint lapNumber, long totalMilliseconds, DateTime completionUtc)
+    public SingleLapLeaderboard(Guid leaderboardId)
+    {
+        LeaderboardId = leaderboardId;
+    }
+
+    public bool AddFastestSingleLap(Guid pilotId, uint lapNumber, long totalMilliseconds, DateTime completionUtc)
     {
         if (!_pilotLaps.ContainsKey(pilotId))
         {
             _pilotLaps.Add(pilotId, new FastestSingleLap(lapNumber, totalMilliseconds, completionUtc));
+            return true;
         }
         else
         {
             if (_pilotLaps[pilotId].LapMilliseconds > totalMilliseconds)
             {
                 _pilotLaps[pilotId] = new FastestSingleLap(lapNumber, totalMilliseconds, completionUtc);
+                return true;
             }
         }
+        return false;
     }
 
     public IEnumerable<SingleLapLeaderboardPosition> GetPositions()
