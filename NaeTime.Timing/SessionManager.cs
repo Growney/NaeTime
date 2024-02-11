@@ -5,6 +5,7 @@ using NaeTime.Messages.Responses;
 using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Models;
+using NaeTime.Timing.Practice;
 
 namespace NaeTime.Timing;
 public class SessionManager : ISubscriber

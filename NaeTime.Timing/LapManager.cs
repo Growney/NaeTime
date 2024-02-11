@@ -56,7 +56,7 @@ public class LapManager : ISubscriber
             }
             else
             {
-                lapNumber = await HandleLapDetection(sessionId, lane, hardwareTime, softwareTime, utcTime, activeLap, minimumLapMilliseconds, maximumLapMilliseconds);
+                lapNumber = await HandleLapDetection(sessionId, lane, hardwareTime, softwareTime, utcTime, split, activeLap, minimumLapMilliseconds, maximumLapMilliseconds);
             }
             if (timerCount > 0)
             {
@@ -64,14 +64,22 @@ public class LapManager : ISubscriber
             }
         }
     }
-    private async Task<uint> HandleLapDetection(Guid sessionId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime, ActiveLap activeLap, long minimumLapMilliseconds, long? maximumLapMilliseconds)
+    private async Task<uint> HandleLapDetection(Guid sessionId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime, byte split, ActiveLap activeLap, long minimumLapMilliseconds, long? maximumLapMilliseconds)
     {
+        if (split != 0)
+        {
+            return activeLap.LapNumber;
+        }
+
         var totalTime = CalculateTotalTime(activeLap.StartedHardwareTime, activeLap.StartedSoftwareTime, activeLap.StartedUtcTime, hardwareTime, softwareTime, utcTime);
+        //Discard the detection as the lap is too short
         if (totalTime < minimumLapMilliseconds)
         {
-            await InvalidateLap(sessionId, lane, hardwareTime, softwareTime, utcTime, activeLap, totalTime, LapInvalidReason.TooShort);
+            return activeLap.LapNumber;
         }
-        else if (maximumLapMilliseconds.HasValue && totalTime > maximumLapMilliseconds)
+
+        //Laps that are two long get invalidated instead of the detection being discarded
+        if (maximumLapMilliseconds.HasValue && totalTime > maximumLapMilliseconds)
         {
             await InvalidateLap(sessionId, lane, hardwareTime, softwareTime, utcTime, activeLap, totalTime, LapInvalidReason.TooLong);
         }
