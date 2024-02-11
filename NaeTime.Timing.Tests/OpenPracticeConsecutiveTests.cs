@@ -30,7 +30,7 @@ public class OpenPracticeConsecutiveTests
         var started = start;
         var lapNumber = startLapNumber;
         var finishTime = started.AddMilliseconds(spacing);
-        session.AddTooLongLap(pilotId, lapNumber, started, finishTime, spacing);
+        session.AddInvalidLap(pilotId, lapNumber, started, finishTime, spacing);
         return (finishTime, lapNumber + 1);
     }
     [Fact]

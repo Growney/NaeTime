@@ -14,13 +14,13 @@ public class LaneService : ISubscriber
     {
         _repositoryFactory = repositoryFactory;
     }
-    public async Task<ActiveLaneConfigurationResponse?> On(ActiveLaneConfigurationRequest request)
+    public async Task<ActiveLanesConfigurationResponse?> On(ActiveLanesConfigurationRequest request)
     {
         var laneRepository = await _repositoryFactory.CreateLaneRepository();
 
         var lanes = await laneRepository.GetLanes();
 
-        return new ActiveLaneConfigurationResponse(lanes.Select(x => new ActiveLaneConfigurationResponse.LaneConfiguration(x.LaneNumber, x.BandId, x.FrequencyInMhz, x.IsEnabled)));
+        return new ActiveLanesConfigurationResponse(lanes.Select(x => new ActiveLanesConfigurationResponse.LaneConfiguration(x.LaneNumber, x.BandId, x.FrequencyInMhz, x.IsEnabled)));
     }
     public async Task When(LaneRadioFrequencyConfigured laneRadioFrequencyConfigured)
     {

@@ -57,7 +57,7 @@ public partial class PracticeLane : ComponentBase, IDisposable
 
             if (lap != null)
             {
-                lap.Ended = x.UtcTime;
+                lap.Ended = x.FinishedUtcTime;
                 lap.Status = LapStatus.Finished;
                 lap.TotalTime = x.TotalTime;
             }

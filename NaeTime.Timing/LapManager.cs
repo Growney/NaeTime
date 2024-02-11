@@ -85,7 +85,7 @@ public class LapManager : ISubscriber
         }
         else
         {
-            await CompleteLap(sessionId, lane, hardwareTime, softwareTime, utcTime, activeLap, totalTime);
+            await CompleteLap(sessionId, lane, activeLap.StartedHardwareTime, activeLap.StartedSoftwareTime, activeLap.StartedUtcTime, hardwareTime, softwareTime, utcTime, activeLap, totalTime);
         }
 
         var nextLapNumber = activeLap.LapNumber + 1;
@@ -105,9 +105,9 @@ public class LapManager : ISubscriber
 
         await _publishSubscribe.Dispatch(completedLap);
     }
-    private async Task CompleteLap(Guid sessionId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime, ActiveLap activeLap, long totalTime)
+    private async Task CompleteLap(Guid sessionId, byte lane, ulong? startedHardwareTime, long startedSoftwareTime, DateTime startedUtcTime, ulong? finishedHardwareTime, long finishedSoftwareTime, DateTime finishedUtcTime, ActiveLap activeLap, long totalTime)
     {
-        var completedLap = new LapCompleted(sessionId, lane, activeLap.LapNumber, softwareTime, utcTime, hardwareTime, totalTime);
+        var completedLap = new LapCompleted(sessionId, lane, activeLap.LapNumber, startedSoftwareTime, startedUtcTime, startedHardwareTime, finishedSoftwareTime, finishedUtcTime, finishedHardwareTime, totalTime);
 
         await _publishSubscribe.Dispatch(completedLap);
     }

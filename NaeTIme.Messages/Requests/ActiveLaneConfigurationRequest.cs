@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Messages.Requests;
-public struct ActiveLaneConfigurationRequest;
+public record ActiveLaneConfigurationRequest(byte Lane);

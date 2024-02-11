@@ -16,7 +16,7 @@ public class LaneTimerManager : ISubscriber
     }
     public async Task When(TimerConnectionEstablished connectionEstablished)
     {
-        var laneConfigurations = await _publisher.Request<ActiveLaneConfigurationRequest, ActiveLaneConfigurationResponse>();
+        var laneConfigurations = await _publisher.Request<ActiveLanesConfigurationRequest, ActiveLanesConfigurationResponse>();
         var timerLaneConfigurationReponse = await _publisher.Request<TimerLanesConfigurationRequest, TimerLanesConfigurationResponse>(new TimerLanesConfigurationRequest(connectionEstablished.TimerId));
 
         //We have no lane configurations update the configurations with those from the timer
@@ -43,7 +43,7 @@ public class LaneTimerManager : ISubscriber
         }
     }
 
-    private async Task ReconfigurationLocalFromTimer(ActiveLaneConfigurationResponse laneConfigurations, TimerLanesConfigurationResponse timerLaneConfigurationReponse)
+    private async Task ReconfigurationLocalFromTimer(ActiveLanesConfigurationResponse laneConfigurations, TimerLanesConfigurationResponse timerLaneConfigurationReponse)
     {
         foreach (var timerLane in timerLaneConfigurationReponse.Lanes)
         {
@@ -54,7 +54,7 @@ public class LaneTimerManager : ISubscriber
             }
         }
     }
-    private async Task ReconfigureTimerLanes(TimerConnectionEstablished connectionEstablished, ActiveLaneConfigurationResponse laneConfigurations, TimerLanesConfigurationResponse timerLaneConfigurationReponse)
+    private async Task ReconfigureTimerLanes(TimerConnectionEstablished connectionEstablished, ActiveLanesConfigurationResponse laneConfigurations, TimerLanesConfigurationResponse timerLaneConfigurationReponse)
     {
         var timerReconfigurations = new List<TimersLaneConfigured.LaneConfiguration>();
         foreach (var lane in laneConfigurations.Lanes)

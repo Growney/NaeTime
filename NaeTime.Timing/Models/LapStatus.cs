@@ -2,6 +2,5 @@
 public enum LapStatus
 {
     Completed,
-    TooLong,
-    TooShort,
+    Invalid
 }

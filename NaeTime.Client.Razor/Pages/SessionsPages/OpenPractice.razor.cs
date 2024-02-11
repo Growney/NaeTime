@@ -34,7 +34,7 @@ public partial class OpenPractice : ComponentBase
             _activeSession = activeSessionReponse.SessionId;
         }
 
-        var activeLaneConfigurations = await Dispatcher.Request<ActiveLaneConfigurationRequest, ActiveLaneConfigurationResponse>();
+        var activeLaneConfigurations = await Dispatcher.Request<ActiveLanesConfigurationRequest, ActiveLanesConfigurationResponse>();
 
         if (activeLaneConfigurations != null)
         {
