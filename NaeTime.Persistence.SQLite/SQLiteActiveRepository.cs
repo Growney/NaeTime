@@ -14,29 +14,24 @@ public class SQLiteActiveRepository : IActiveRepository
     }
 
 
-    public async Task ActivateSession(Guid sessionId, SessionType sessionType, Guid trackId, long minimumLapMilliseconds, long? maximumLapMilliseconds)
+    public async Task ActivateSession(Guid sessionId, SessionType type)
     {
         var existingEntities = await _dbContext.ActiveSession.FirstOrDefaultAsync();
 
         if (existingEntities != null)
         {
-            throw new InvalidOperationException("Session already active");
+            _dbContext.ActiveSession.Remove(existingEntities);
         }
 
         var newActiveSession = new Models.ActiveSession
         {
             Id = Guid.NewGuid(),
             SessionId = sessionId,
-            SessionType =
-                sessionType switch
-                {
-                    SessionType.OpenPractice => Models.SessionType.OpenPractice,
-                    _ => throw new NotImplementedException()
-                },
-            TrackId = trackId,
-            MinimumLapMilliseconds = minimumLapMilliseconds,
-            MaximumLapMilliseconds = maximumLapMilliseconds
-
+            SessionType = type switch
+            {
+                SessionType.OpenPractice => Models.SessionType.OpenPractice,
+                _ => throw new NotImplementedException()
+            },
         };
 
         _dbContext.ActiveSession.Add(newActiveSession);
@@ -155,14 +150,11 @@ public class SQLiteActiveRepository : IActiveRepository
             return null;
         }
 
-        return new ActiveSession(existingSession.SessionId,
-            existingSession.SessionType switch
-            {
-                Models.SessionType.OpenPractice => SessionType.OpenPractice,
-                _ => throw new NotImplementedException()
-            }, existingSession.TrackId,
-            existingSession.MinimumLapMilliseconds,
-            existingSession.MaximumLapMilliseconds);
+        return new ActiveSession(existingSession.SessionId, existingSession.SessionType switch
+        {
+            Models.SessionType.OpenPractice => SessionType.OpenPractice,
+            _ => throw new NotImplementedException()
+        });
     }
 
 

@@ -78,7 +78,7 @@ internal class LapRFConnection
 
                 var passingRecord = nullablePassingRecord.Value;
 
-                var detection = new TimerDetectionOccured(_timerId, passingRecord.PilotId, passingRecord.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
+                var detection = new TimerDetectionOccured(_timerId, passingRecord.PilotId, passingRecord.RealTimeClockTime / 1000, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
 
                 await _dispatcher.Dispatch(detection).ConfigureAwait(false);
             }

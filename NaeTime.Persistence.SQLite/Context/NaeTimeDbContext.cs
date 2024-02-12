@@ -12,7 +12,7 @@ public class NaeTimeDbContext : DbContext
     public DbSet<Detection> Detections { get; set; }
     public DbSet<ActiveTimings> ActiveTimings { get; set; }
     public DbSet<ActiveSession> ActiveSession { get; set; }
-
+    public DbSet<OpenPracticeSession> OpenPracticeSessions { get; set; }
     public NaeTimeDbContext(DbContextOptions<NaeTimeDbContext> options) : base(options)
     {
     }
@@ -28,5 +28,14 @@ public class NaeTimeDbContext : DbContext
 
         timings.OwnsOne(t => t.ActiveLap).WithOwner().HasForeignKey(x => x.ActiveTimingsId);
         timings.OwnsOne(t => t.ActiveSplit).WithOwner().HasForeignKey(x => x.ActiveTimingsId);
+
+        var sessions = modelBuilder.Entity<OpenPracticeSession>();
+        sessions.OwnsMany(s => s.ActiveLanes);
+        sessions.OwnsMany(s => s.Laps);
+        sessions.OwnsMany(s => s.SingleLapLeaderboards);
+        sessions.OwnsMany(s => s.SingleLapLeaderboards).OwnsMany(x => x.Positions);
+        sessions.OwnsMany(s => s.ConsecutiveLapLeaderboards);
+        sessions.OwnsMany(s => s.ConsecutiveLapLeaderboards).OwnsMany(x => x.Positions);
+
     }
 }

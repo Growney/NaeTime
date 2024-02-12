@@ -1,87 +1,30 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Messages.Events.Hardware;
+using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.Messages.Events.Timing;
 using NaeTime.PubSub.Abstractions;
 
-namespace NaeTime.Client.Razor.Components.Timing;
-public partial class PracticeLane : ComponentBase, IDisposable
+namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
+public partial class SessionLaneConfiguration : ComponentBase, IDisposable
 {
     [Parameter]
     [EditorRequired]
-    public LaneConfiguration Configuration { get; set; } = null!;
+    public OpenPracticeLaneConfiguration Configuration { get; set; } = null!;
+    [Parameter]
+    [EditorRequired]
+    public IEnumerable<Pilot> Pilots { get; set; } = Enumerable.Empty<Pilot>();
+    [Parameter]
+    [EditorRequired]
+    public Guid SessionId { get; set; }
+
     [Inject]
     public IPublishSubscribe PublishSubscribe { get; set; } = null!;
 
     private float _laneRSSIValue;
-
     private readonly List<Lap> _laneLaps = new List<Lap>();
 
     protected override Task OnInitializedAsync()
     {
-        PublishSubscribe.Subscribe<RssiLevelRecorded>(this, x =>
-        {
-            if (x.Lane == Configuration.LaneNumber)
-            {
-                _laneRSSIValue = x.Level;
-                InvokeAsync(StateHasChanged);
-            }
-            return Task.CompletedTask;
-        });
-
-        PublishSubscribe.Subscribe<LapStarted>(this, x =>
-        {
-            if (x.Lane != Configuration.LaneNumber)
-            {
-                return Task.CompletedTask;
-            }
-
-            _laneLaps.Add(new Lap()
-            {
-                LapNumber = x.LapNumber,
-                Lane = x.Lane,
-                Started = x.StartedUtcTime,
-                Status = LapStatus.Started
-            });
-            return Task.CompletedTask;
-        });
-
-        PublishSubscribe.Subscribe<LapCompleted>(this, x =>
-        {
-            if (x.Lane != Configuration.LaneNumber)
-            {
-                return Task.CompletedTask;
-            }
-
-            var lap = _laneLaps.FirstOrDefault(y => y.LapNumber == x.LapNumber);
-
-            if (lap != null)
-            {
-                lap.Ended = x.FinishedUtcTime;
-                lap.Status = LapStatus.Finished;
-                lap.TotalTime = x.TotalTime;
-            }
-            return Task.CompletedTask;
-        });
-
-        PublishSubscribe.Subscribe<LapInvalidated>(this, x =>
-        {
-            if (x.Lane != Configuration.LaneNumber)
-            {
-                return Task.CompletedTask;
-            }
-
-            var lap = _laneLaps.FirstOrDefault(y => y.LapNumber == x.LapNumber);
-
-            if (lap != null)
-            {
-                lap.Ended = x.UtcTime;
-                lap.Status = LapStatus.Invalid;
-                lap.TotalTime = x.TotalTime;
-            }
-            return Task.CompletedTask;
-        });
-
         return base.OnInitializedAsync();
     }
 
@@ -159,6 +102,23 @@ public partial class PracticeLane : ComponentBase, IDisposable
         }
 
         return $"{Configuration.FrequencyInMhz} Mhz";
+    }
+    private async Task SetPilot(Guid pilotId)
+    {
+        Configuration.PilotId = pilotId;
+
+        await PublishSubscribe.Dispatch(new OpenPracticeLanePilotSet(SessionId, pilotId, Configuration.LaneNumber));
+    }
+    private string GetPilotString(Guid? pilotId)
+    {
+        var pilot = Pilots.FirstOrDefault(x => x.Id == pilotId);
+
+        if (pilot == null)
+        {
+            return "Not selected";
+        }
+
+        return pilot.CallSign ?? $"{pilot.FirstName} {pilot.LastName}";
     }
 
     private Task TriggerDetection(byte split)

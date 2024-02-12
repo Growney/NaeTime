@@ -81,7 +81,7 @@ public class LapManager : ISubscriber
         //Laps that are two long get invalidated instead of the detection being discarded
         if (maximumLapMilliseconds.HasValue && totalTime > maximumLapMilliseconds)
         {
-            await InvalidateLap(sessionId, lane, hardwareTime, softwareTime, utcTime, activeLap, totalTime, LapInvalidReason.TooLong);
+            await InvalidateLap(sessionId, lane, activeLap.StartedHardwareTime, activeLap.StartedSoftwareTime, activeLap.StartedUtcTime, hardwareTime, softwareTime, utcTime, activeLap, totalTime, LapInvalidReason.TooLong);
         }
         else
         {
@@ -94,9 +94,9 @@ public class LapManager : ISubscriber
 
         return nextLapNumber;
     }
-    private async Task InvalidateLap(Guid sessionId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime, ActiveLap activeLap, long totalTime, LapInvalidReason reason)
+    private async Task InvalidateLap(Guid sessionId, byte lane, ulong? startedHardwareTime, long startedSoftwareTime, DateTime startedUtcTime, ulong? finishedHardwareTime, long finishedSoftwareTime, DateTime finishedUtcTime, ActiveLap activeLap, long totalTime, LapInvalidReason reason)
     {
-        var completedLap = new LapInvalidated(sessionId, lane, activeLap.LapNumber, softwareTime, utcTime, hardwareTime, totalTime, reason switch
+        var completedLap = new LapInvalidated(sessionId, lane, activeLap.LapNumber, startedSoftwareTime, startedUtcTime, startedHardwareTime, finishedSoftwareTime, finishedUtcTime, finishedHardwareTime, totalTime, reason switch
         {
             LapInvalidReason.TooShort => LapInvalidated.LapInvalidReason.TooShort,
             LapInvalidReason.TooLong => LapInvalidated.LapInvalidReason.TooLong,

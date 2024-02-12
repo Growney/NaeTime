@@ -1,0 +1,29 @@
+﻿<table class="table table-striped">
+    <tr class="px-2">
+        <th>
+            #
+        </th>
+        <th>
+            Pilot
+        </th>
+        <th>
+            Lap Time
+        </th>
+    </tr>
+    <tbody>
+        @foreach (var position in Positions.OrderBy(x => x.Position))
+        {
+            <tr>
+                <td>
+                    @position.Position
+                </td>
+                <td class="px-3">
+                    @position.PilotName
+                </td>
+                <td class="px-3">
+                    @($"{TimeSpan.FromMilliseconds(position.LapMilliseconds):m\\:ss\\:ffff}")
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

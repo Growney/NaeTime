@@ -32,7 +32,7 @@ public class SingleLapLeaderboard
     public IEnumerable<SingleLapLeaderboardPosition> GetPositions()
     {
         var laps = _pilotLaps.ToList();
-        laps.Sort((x, y) => CompareLaps(x.Value, x.Value));
+        laps.Sort((x, y) => CompareLaps(x.Value, y.Value));
         var positions = new List<SingleLapLeaderboardPosition>();
         for (int i = 0; i < laps.Count; i++)
         {

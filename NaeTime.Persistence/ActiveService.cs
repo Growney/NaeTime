@@ -3,6 +3,7 @@ using NaeTime.Messages.Events.Timing;
 using NaeTime.Messages.Requests;
 using NaeTime.Messages.Responses;
 using NaeTime.Persistence.Abstractions;
+using NaeTime.Persistence.Models;
 using NaeTime.PubSub;
 
 namespace NaeTime.Persistence;
@@ -18,11 +19,12 @@ public class ActiveService : ISubscriber
     {
         var repository = await _repositoryFactory.CreateActiveRepository();
 
-        await repository.ActivateSession(activated.SessionId, activated.Type switch
-        {
-            SessionActivated.SessionType.OpenPractice => Models.SessionType.OpenPractice,
-            _ => throw new NotImplementedException()
-        }, activated.TrackId, activated.MinimumLapMilliseconds, activated.MaximumLapMilliseconds);
+        await repository.ActivateSession(activated.SessionId,
+            activated.Type switch
+            {
+                SessionActivated.SessionType.OpenPractice => SessionType.OpenPractice,
+                _ => throw new NotImplementedException()
+            });
     }
     public async Task When(SessionDeactivated deactivated)
     {
@@ -78,6 +80,29 @@ public class ActiveService : ISubscriber
             return null;
         }
 
+        switch (session.Type)
+        {
+            case Models.SessionType.OpenPractice:
+                return await CreateOpenPracticeActiveSession(session.SessionId);
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
+    private async Task<ActiveSessionResponse?> CreateOpenPracticeActiveSession(Guid sessionId)
+    {
+        var sessionRepository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        if (sessionRepository == null)
+        {
+            return null;
+        }
+        var session = await sessionRepository.Get(sessionId);
+
+        if (session == null)
+        {
+            return null;
+        }
+
         var trackRepository = await _repositoryFactory.CreateTrackRepository();
 
         var track = await trackRepository.Get(session.TrackId);
@@ -86,7 +111,6 @@ public class ActiveService : ISubscriber
         {
             return null;
         }
-
         var hardwareRepository = await _repositoryFactory.CreateHardwareRepository();
 
         var timers = await hardwareRepository.GetTimerDetails(track.Timers);
@@ -95,13 +119,7 @@ public class ActiveService : ISubscriber
 
         var activeTrack = new ActiveSessionResponse.Track(track.Id, maxLanes, track.Timers);
 
-        var sessionType = session.Type switch
-        {
-            Models.SessionType.OpenPractice => ActiveSessionResponse.SessionType.OpenPractice,
-            _ => throw new NotImplementedException()
-        };
-
-        return new ActiveSessionResponse(session.SessionId, sessionType, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, activeTrack);
+        return new ActiveSessionResponse(session.SessionId, ActiveSessionResponse.SessionType.OpenPractice, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, activeTrack);
     }
     public async Task<ActiveTimingsResponse?> On(ActiveTimingRequest request)
     {

@@ -94,4 +94,26 @@ public class ClientRepositoryFactory : IRepositoryFactory
             _ => throw new InvalidOperationException($"Unknown client mode: {clientMode}")
         };
     }
+
+    public async Task<IOpenPracticeSessionRepository> CreateOpenPracticeSessionRepository()
+    {
+        var clientMode = await GetClientMode();
+
+        return clientMode switch
+        {
+            ClientMode.Local => ActivatorUtilities.CreateInstance<SQLiteOpenPracticeSessionRepository>(_serviceProvider),
+            _ => throw new InvalidOperationException($"Unknown client mode: {clientMode}")
+        };
+    }
+
+    public async Task<ISessionRepository> CreateSessionRepository()
+    {
+        var clientMode = await GetClientMode();
+
+        return clientMode switch
+        {
+            ClientMode.Local => ActivatorUtilities.CreateInstance<SQLiteSessionRepository>(_serviceProvider),
+            _ => throw new InvalidOperationException($"Unknown client mode: {clientMode}")
+        };
+    }
 }

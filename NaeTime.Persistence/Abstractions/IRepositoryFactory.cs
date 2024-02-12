@@ -7,4 +7,6 @@ public interface IRepositoryFactory
     Task<ITrackRepository> CreateTrackRepository();
     Task<IActiveRepository> CreateActiveRepository();
     Task<ILaneRepository> CreateLaneRepository();
+    Task<IOpenPracticeSessionRepository> CreateOpenPracticeSessionRepository();
+    Task<ISessionRepository> CreateSessionRepository();
 }

@@ -1,12 +1,12 @@
 ﻿using NaeTime.Timing.Models;
 
 namespace NaeTime.Timing.OpenPractice.Leaderboards;
-public class ConsecutiveLapLeaderboard
+public class ConsecutiveLapsLeaderboard
 {
     private readonly Dictionary<Guid, FastestConsecutiveLaps> _pilotLaps = new();
     public Guid LeaderboardId { get; }
     public uint LapCount { get; }
-    public ConsecutiveLapLeaderboard(Guid leaderboardId, uint lapCount)
+    public ConsecutiveLapsLeaderboard(Guid leaderboardId, uint lapCount)
     {
         LeaderboardId = leaderboardId;
         LapCount = lapCount;
@@ -21,7 +21,7 @@ public class ConsecutiveLapLeaderboard
         else
         {
             var existingFastest = _pilotLaps[pilotId];
-            if (existingFastest.TotalLaps > totalLaps)
+            if (existingFastest.TotalLaps < totalLaps)
             {
                 _pilotLaps[pilotId] = new FastestConsecutiveLaps(startLapNumber, endLapNumber, totalLaps, totalMilliseconds, lastLapCompletionUtc);
                 return true;
@@ -38,22 +38,23 @@ public class ConsecutiveLapLeaderboard
         return false;
     }
 
-    public IEnumerable<ConsecutiveLapLeaderboardPosition> GetPositions()
+    public IEnumerable<ConsecutiveLapsLeaderboardPosition> GetPositions()
     {
         var laps = _pilotLaps.ToList();
-        laps.Sort((x, y) => CompareLaps(x.Value, x.Value));
-        var positions = new List<ConsecutiveLapLeaderboardPosition>();
+        laps.Sort((x, y) => CompareLaps(x.Value, y.Value));
+        var positions = new List<ConsecutiveLapsLeaderboardPosition>();
         for (int i = 0; i < laps.Count; i++)
         {
             var lap = laps[i];
-            positions.Add(new ConsecutiveLapLeaderboardPosition((uint)i, lap.Key, lap.Value.StartLapNumber, lap.Value.EndLapNumber, lap.Value.TotalLaps, lap.Value.TotalMilliseconds));
+            positions.Add(new ConsecutiveLapsLeaderboardPosition((uint)i, lap.Key, lap.Value.StartLapNumber, lap.Value.EndLapNumber, lap.Value.TotalLaps, lap.Value.TotalMilliseconds, lap.Value.LastLapCompletionUtc));
         }
         return positions;
     }
 
     private int CompareLaps(FastestConsecutiveLaps a, FastestConsecutiveLaps b)
     {
-        var lapCompare = a.TotalLaps.CompareTo(b.TotalLaps);
+        //B is compared to A here to provide a decending result where more laps is better
+        var lapCompare = b.TotalLaps.CompareTo(a.TotalLaps);
         if (lapCompare != 0)
         {
             return lapCompare;

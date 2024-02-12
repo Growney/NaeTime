@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <Folder Include="Abstractions\" />
+    <Folder Include="Components\Timing\" />
     <Folder Include="Components\TrackComponents\" />
     <Folder Include="Lib\" />
   </ItemGroup>

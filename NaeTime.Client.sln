@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Persistence.SQLite"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Persistence.Client", "NaeTime.Persistence.Client\NaeTime.Persistence.Client.csproj", "{0A693974-B292-4B4E-8F9D-8D5261461692}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Timing.Tests", "NaeTime.Timing.Tests\NaeTime.Timing.Tests.csproj", "{1280CAF9-ADD3-4083-8ED9-EC4064BFDC98}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Timing.Tests", "NaeTime.Timing.Tests\NaeTime.Timing.Tests.csproj", "{1280CAF9-ADD3-4083-8ED9-EC4064BFDC98}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

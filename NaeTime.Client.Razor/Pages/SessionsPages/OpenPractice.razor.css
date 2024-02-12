@@ -1,6 +1,7 @@
 ﻿.lane-container{
     display:grid;
     grid-auto-flow: column;
+    overflow:auto;
 }
 .lane{
     width: 100px;

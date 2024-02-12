@@ -1,0 +1,42 @@
+﻿<table class="table table-striped">
+    <tr>
+        <th>
+            #
+        </th>
+        @if (IncludePilot)
+        {
+            <th>
+                Pilot
+            </th>
+        }
+        <th>
+            Completed
+        </th>
+        <th>
+            Time
+        </th>
+    </tr>
+    <tbody>
+
+        @foreach (var lap in Laps.OrderByDescending(x=>x.FinishedUtc))
+        {
+            <tr>
+                <td>
+                    @lap.LapNumber
+                </td>
+                @if (IncludePilot)
+                {
+                    <td>
+                        @lap.PilotName
+                    </td>
+                }
+                <td>
+                    @lap.FinishedUtc
+                </td>
+                <td>
+                    @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):mm\\:ss\\:ffff}")
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

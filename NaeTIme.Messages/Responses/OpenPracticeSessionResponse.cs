@@ -1,10 +1,10 @@
 ﻿namespace NaeTime.Messages.Responses;
-public record OpenPracticeSessionResponse(Guid SessionId, Guid TrackId, IEnumerable<OpenPracticeSessionResponse.Lap> Laps,
+public record OpenPracticeSessionResponse(Guid SessionId, Guid TrackId, string? Name, IEnumerable<OpenPracticeSessionResponse.Lap> Laps,
     IEnumerable<OpenPracticeSessionResponse.PilotLane> ActiveLanes,
     IEnumerable<OpenPracticeSessionResponse.SingleLapLeaderboard> SingleLapLeaderboards,
     IEnumerable<OpenPracticeSessionResponse.ConsecutiveLapLeaderboard> ConsecutiveLapLeaderboards)
 {
-    public record Lap(Guid LapId, Guid PilotId, uint LapNumber, DateTime StartedUtc, DateTime FinishedUtc, LapStatus Status, long TotalMilliseconds);
+    public record Lap(Guid Id, Guid PilotId, uint LapNumber, DateTime StartedUtc, DateTime FinishedUtc, LapStatus Status, long TotalMilliseconds);
     public enum LapStatus
     {
         Invalid,

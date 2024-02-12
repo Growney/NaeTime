@@ -157,20 +157,9 @@ internal class PublishSubscribe : IPublishSubscribe
                 continue;
             }
 
-            Func<object> subscriber;
-            if (registration.Lifetime == ServiceLifetime.Singleton)
-            {
-                var instance = ActivatorUtilities.CreateInstance(_serviceProvider, registration.SubscriberType);
-                subscriber = () => instance;
-            }
-            else
-            {
-                subscriber = () => ActivatorUtilities.CreateInstance(_serviceProvider, registration.SubscriberType);
-            }
-
             _subscriberStatus.TryAdd(registration.SubscriberType, IsTypeInitiallyEnabled(registration.SubscriberType));
 
-            var handler = new SubscriberHandler(registration.SubscriberType, registration.MessageType, subscriber);
+            var handler = new SubscriberHandler(_serviceProvider, registration.Lifetime, registration.SubscriberType, registration.MessageType);
 
             bag.Add(handler);
         }
