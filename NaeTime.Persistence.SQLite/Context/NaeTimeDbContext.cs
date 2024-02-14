@@ -36,6 +36,7 @@ public class NaeTimeDbContext : DbContext
         sessions.OwnsMany(s => s.SingleLapLeaderboards).OwnsMany(x => x.Positions);
         sessions.OwnsMany(s => s.ConsecutiveLapLeaderboards);
         sessions.OwnsMany(s => s.ConsecutiveLapLeaderboards).OwnsMany(x => x.Positions);
+        sessions.OwnsMany(s => s.ConsecutiveLapLeaderboards).OwnsMany(x => x.Positions).OwnsMany(x => x.IncludedLaps);
 
     }
 }

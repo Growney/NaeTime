@@ -38,12 +38,20 @@ public class OpenPracticeSessionManager : ISubscriber
                                    _ => throw new NotImplementedException()
                                }, x.TotalMilliseconds)));
 
-            consecutiveLapLeaderboard.UpdateIfFaster(group.Key, fastestConsecutive.StartLapNumber, fastestConsecutive.EndLapNumber, fastestConsecutive.TotalLaps, fastestConsecutive.TotalMilliseconds, fastestConsecutive.LastLapCompletionUtc);
+            if (fastestConsecutive == null)
+            {
+                consecutiveLapLeaderboard.RemovePilot(group.Key);
+            }
+            else
+            {
+                consecutiveLapLeaderboard.UpdateIfFaster(group.Key, fastestConsecutive);
+            }
+
         }
         var positions = consecutiveLapLeaderboard.GetPositions();
         await _publishSubscribe.Dispatch(new OpenPracticeConsecutiveLapLeaderboardPositionsChanged(leaderboard.SessionId, leaderboard.LeaderboardId,
                                Enumerable.Empty<OpenPracticeConsecutiveLapLeaderboardPositionsChanged.OpenPracticeConsecutiveLapLeaderboardPosition>(),
-                               positions.Select(x => new OpenPracticeConsecutiveLapLeaderboardPositionsChanged.OpenPracticeConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.StartLapNumber, x.EndLapNumber, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion))));
+                               positions.Select(x => new OpenPracticeConsecutiveLapLeaderboardPositionsChanged.OpenPracticeConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion, x.IncludedLaps))));
     }
     public async Task When(OpenPracticeSingleLapLeaderboardConfigured leaderboard)
     {
@@ -198,7 +206,9 @@ public class OpenPracticeSessionManager : ISubscriber
             var leaderboard = new ConsecutiveLapsLeaderboard(consecutiveLapLeaderboard.LeaderboardId, consecutiveLapLeaderboard.ConsecutiveLaps);
             foreach (var position in consecutiveLapLeaderboard.Positions)
             {
-                leaderboard.UpdateIfFaster(position.PilotId, position.StartLapNumber, position.EndLapNumber, position.TotalLaps, position.TotalMilliseconds, position.LastLapCompletionUtc);
+                var consecutive = new FastestConsecutiveLaps(position.TotalLaps, position.TotalMilliseconds, position.LastLapCompletionUtc, position.IncludedLaps);
+
+                leaderboard.UpdateIfFaster(position.PilotId, consecutive);
             }
             consecutiveLapLeaderboards.Add(leaderboard);
         }
@@ -262,7 +272,7 @@ public class OpenPracticeSessionManager : ISubscriber
 
         var oldPositions = leaderboard.GetPositions();
 
-        if (leaderboard.UpdateIfFaster(pilotId, consecutive.StartLapNumber, consecutive.EndLapNumber, consecutive.TotalLaps, consecutive.TotalMilliseconds, consecutive.LastLapCompletionUtc))
+        if (leaderboard.UpdateIfFaster(pilotId, consecutive))
         {
             await DispatchUpdatedConsecutiveLeaderboardPositions(sessionId, leaderboard, oldPositions);
         }
@@ -271,8 +281,8 @@ public class OpenPracticeSessionManager : ISubscriber
     {
         var newPositions = leaderboard.GetPositions();
         await _publishSubscribe.Dispatch(new OpenPracticeConsecutiveLapLeaderboardPositionsChanged(sessionId, leaderboard.LeaderboardId,
-                           oldPositions.Select(x => new OpenPracticeConsecutiveLapLeaderboardPositionsChanged.OpenPracticeConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.StartLapNumber, x.EndLapNumber, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion)),
-                           newPositions.Select(x => new OpenPracticeConsecutiveLapLeaderboardPositionsChanged.OpenPracticeConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.StartLapNumber, x.EndLapNumber, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion))));
+                           oldPositions.Select(x => new OpenPracticeConsecutiveLapLeaderboardPositionsChanged.OpenPracticeConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion, x.IncludedLaps)),
+                           newPositions.Select(x => new OpenPracticeConsecutiveLapLeaderboardPositionsChanged.OpenPracticeConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion, x.IncludedLaps))));
     }
     private async Task UpdateConsecutiveLapLeaderboards(Guid sessionId, Guid pilotId, ConsecutiveLapsLeaderboard leaderboard, IEnumerable<Lap> laps)
     {
@@ -288,7 +298,7 @@ public class OpenPracticeSessionManager : ISubscriber
         }
         else
         {
-            if (leaderboard.SetFastest(pilotId, consecutive.StartLapNumber, consecutive.EndLapNumber, consecutive.TotalLaps, consecutive.TotalMilliseconds, consecutive.LastLapCompletionUtc))
+            if (leaderboard.SetFastest(pilotId, consecutive))
             {
                 await DispatchUpdatedConsecutiveLeaderboardPositions(sessionId, leaderboard, oldPositions);
             }

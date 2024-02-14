@@ -257,8 +257,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     ConsecutiveLapLeaderboardId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Position = table.Column<uint>(type: "INTEGER", nullable: false),
                     PilotId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    StartLapNumber = table.Column<uint>(type: "INTEGER", nullable: false),
-                    EndLapNumber = table.Column<uint>(type: "INTEGER", nullable: false),
                     TotalLaps = table.Column<uint>(type: "INTEGER", nullable: false),
                     TotalMilliseconds = table.Column<long>(type: "INTEGER", nullable: false),
                     LastLapCompletionUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -297,6 +295,27 @@ namespace NaeTime.Persistence.SQLite.Migrations
                         principalColumns: new[] { "OpenPracticeSessionId", "Id" },
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "ConsecutiveLapLeaderboardPositionLap",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ConsecutiveLapLeaderboardPositionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LapId = table.Column<Guid>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConsecutiveLapLeaderboardPositionLap", x => new { x.ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId, x.ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId, x.ConsecutiveLapLeaderboardPositionId, x.Id });
+                    table.ForeignKey(
+                        name: "FK_ConsecutiveLapLeaderboardPositionLap_ConsecutiveLapLeaderboardPosition_ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId_ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId_ConsecutiveLapLeaderboardPositionId",
+                        columns: x => new { x.ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId, x.ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId, x.ConsecutiveLapLeaderboardPositionId },
+                        principalTable: "ConsecutiveLapLeaderboardPosition",
+                        principalColumns: new[] { "ConsecutiveLapLeaderboardOpenPracticeSessionId", "ConsecutiveLapLeaderboardId", "Id" },
+                        onDelete: ReferentialAction.Cascade);
+                });
         }
 
         /// <inheritdoc />
@@ -309,7 +328,7 @@ namespace NaeTime.Persistence.SQLite.Migrations
                 name: "ActiveTimings");
 
             migrationBuilder.DropTable(
-                name: "ConsecutiveLapLeaderboardPosition");
+                name: "ConsecutiveLapLeaderboardPositionLap");
 
             migrationBuilder.DropTable(
                 name: "Detections");
@@ -339,13 +358,16 @@ namespace NaeTime.Persistence.SQLite.Migrations
                 name: "TrackTimer");
 
             migrationBuilder.DropTable(
-                name: "ConsecutiveLapLeaderboard");
+                name: "ConsecutiveLapLeaderboardPosition");
 
             migrationBuilder.DropTable(
                 name: "SingleLapLeaderboard");
 
             migrationBuilder.DropTable(
                 name: "Tracks");
+
+            migrationBuilder.DropTable(
+                name: "ConsecutiveLapLeaderboard");
 
             migrationBuilder.DropTable(
                 name: "OpenPracticeSessions");

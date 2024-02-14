@@ -9,6 +9,7 @@ public class ConsecutiveLapsLeaderboardPosition
     public uint EndLapNumber { get; set; }
     public uint TotalLaps { get; set; }
     public long TotalMilliseconds { get; set; }
+    public IEnumerable<Guid> IncludedLaps { get; set; } = Enumerable.Empty<Guid>();
     public DateTime LastLapCompletionUtc { get; set; }
 }
 

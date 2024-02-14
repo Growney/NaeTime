@@ -48,8 +48,6 @@ public class FastestConsecutiveLapCalculatorTests
         Assert.NotNull(position);
         Assert.Equal(9000 + 8500 + 8000, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
-        Assert.Equal((uint)3, position.StartLapNumber);
-        Assert.Equal((uint)5, position.EndLapNumber);
 
     }
     [Fact]
@@ -67,8 +65,6 @@ public class FastestConsecutiveLapCalculatorTests
         Assert.Equal(50 + 40 + 30 + 20 + 10, position.TotalMilliseconds);
         Assert.Equal((uint)5, position.TotalLaps);
 
-        Assert.Equal((uint)5, position.StartLapNumber);
-        Assert.Equal((uint)9, position.EndLapNumber);
 
     }
     [Fact]
@@ -91,8 +87,6 @@ public class FastestConsecutiveLapCalculatorTests
         Assert.Equal(10000 + 10000 + 10000, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
 
-        Assert.Equal((uint)0, position.StartLapNumber);
-        Assert.Equal((uint)2, position.EndLapNumber);
 
     }
     [Fact]
@@ -110,8 +104,6 @@ public class FastestConsecutiveLapCalculatorTests
         Assert.Equal(9000 + 8500 + 8000, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
 
-        Assert.Equal((uint)0, position.StartLapNumber);
-        Assert.Equal((uint)2, position.EndLapNumber);
 
     }
     [Fact]
@@ -129,8 +121,6 @@ public class FastestConsecutiveLapCalculatorTests
         Assert.Equal(9000 + 8500 + 8000, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
 
-        Assert.Equal((uint)3, position.StartLapNumber);
-        Assert.Equal((uint)5, position.EndLapNumber);
 
     }
     [Fact]
@@ -148,8 +138,6 @@ public class FastestConsecutiveLapCalculatorTests
         Assert.Equal(1000 + 1000 + 999, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
 
-        Assert.Equal((uint)3, position.StartLapNumber);
-        Assert.Equal((uint)5, position.EndLapNumber);
 
     }
 
@@ -169,8 +157,6 @@ public class FastestConsecutiveLapCalculatorTests
         Assert.Equal(1000, position.TotalMilliseconds);
         Assert.Equal((uint)1, position.TotalLaps);
 
-        Assert.Equal((uint)0, position.StartLapNumber);
-        Assert.Equal((uint)0, position.EndLapNumber);
 
     }
     [Fact]
@@ -190,8 +176,6 @@ public class FastestConsecutiveLapCalculatorTests
         Assert.Equal(500, position.TotalMilliseconds);
         Assert.Equal((uint)1, position.TotalLaps);
 
-        Assert.Equal((uint)2, position.StartLapNumber);
-        Assert.Equal((uint)2, position.EndLapNumber);
 
     }
 }

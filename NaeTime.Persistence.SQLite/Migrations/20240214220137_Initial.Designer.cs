@@ -11,7 +11,7 @@ using NaeTime.Persistence.SQLite.Context;
 namespace NaeTime.Persistence.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
-    [Migration("20240214161346_Initial")]
+    [Migration("20240214220137_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -301,9 +301,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                                         .ValueGeneratedOnAdd()
                                         .HasColumnType("TEXT");
 
-                                    b2.Property<uint>("EndLapNumber")
-                                        .HasColumnType("INTEGER");
-
                                     b2.Property<DateTime>("LastLapCompletionUtc")
                                         .HasColumnType("TEXT");
 
@@ -311,9 +308,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                                         .HasColumnType("TEXT");
 
                                     b2.Property<uint>("Position")
-                                        .HasColumnType("INTEGER");
-
-                                    b2.Property<uint>("StartLapNumber")
                                         .HasColumnType("INTEGER");
 
                                     b2.Property<uint>("TotalLaps")
@@ -328,6 +322,34 @@ namespace NaeTime.Persistence.SQLite.Migrations
 
                                     b2.WithOwner()
                                         .HasForeignKey("ConsecutiveLapLeaderboardOpenPracticeSessionId", "ConsecutiveLapLeaderboardId");
+
+                                    b2.OwnsMany("NaeTime.Persistence.SQLite.Models.ConsecutiveLapLeaderboardPositionLap", "IncludedLaps", b3 =>
+                                        {
+                                            b3.Property<Guid>("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId")
+                                                .HasColumnType("TEXT");
+
+                                            b3.Property<Guid>("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId")
+                                                .HasColumnType("TEXT");
+
+                                            b3.Property<Guid>("ConsecutiveLapLeaderboardPositionId")
+                                                .HasColumnType("TEXT");
+
+                                            b3.Property<Guid>("Id")
+                                                .ValueGeneratedOnAdd()
+                                                .HasColumnType("TEXT");
+
+                                            b3.Property<Guid>("LapId")
+                                                .HasColumnType("TEXT");
+
+                                            b3.HasKey("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId", "ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId", "ConsecutiveLapLeaderboardPositionId", "Id");
+
+                                            b3.ToTable("ConsecutiveLapLeaderboardPositionLap");
+
+                                            b3.WithOwner()
+                                                .HasForeignKey("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId", "ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId", "ConsecutiveLapLeaderboardPositionId");
+                                        });
+
+                                    b2.Navigation("IncludedLaps");
                                 });
 
                             b1.Navigation("Positions");

@@ -38,7 +38,7 @@ public class OpenPracticeSessionService : ISubscriber
         var singleLapLeaderboards = session.SingleLapLeaderboards.Select(x => new OpenPracticeSessionResponse.SingleLapLeaderboard(x.LeaderboardId,
             x.Positions.Select(y => new OpenPracticeSessionResponse.SingleLapLeaderboardPosition(y.Position, y.PilotId, y.LapNumber, y.LapMilliseconds, y.CompletionUtc))));
         var consecutiveLapLeaderboards = session.ConsecutiveLapLeaderboards.Select(x => new OpenPracticeSessionResponse.ConsecutiveLapLeaderboard(x.LeaderboardId, x.ConsecutiveLaps,
-            x.Positions.Select(y => new OpenPracticeSessionResponse.ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.StartLapNumber, y.EndLapNumber, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc))));
+            x.Positions.Select(y => new OpenPracticeSessionResponse.ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc, y.IncludedLaps))));
         var laps = session.Laps.Select(x => new OpenPracticeSessionResponse.Lap(x.LapId, x.PilotId, x.LapNumber, x.StartedUtc, x.FinishedUtc,
             x.Status switch
             {
@@ -105,7 +105,7 @@ public class OpenPracticeSessionService : ISubscriber
             return;
         }
 
-        var positions = newPositions.NewPositions.Select(x => new Models.ConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.StartLapNumber, x.EndLapNumber, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion));
+        var positions = newPositions.NewPositions.Select(x => new Models.ConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion, x.IncludedLaps));
 
         await repository.UpdateConsecutiveLapsLeaderboardPositions(newPositions.SessionId, newPositions.LeaderboardId, positions);
     }

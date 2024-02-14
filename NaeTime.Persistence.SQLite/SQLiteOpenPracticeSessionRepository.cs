@@ -64,11 +64,14 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
             Id = Guid.NewGuid(),
             Position = x.Position,
             PilotId = x.PilotId,
-            StartLapNumber = x.StartLapNumber,
-            EndLapNumber = x.EndLapNumber,
             TotalLaps = x.TotalLaps,
             TotalMilliseconds = x.TotalMilliseconds,
-            LastLapCompletionUtc = x.LastLapCompletionUtc
+            LastLapCompletionUtc = x.LastLapCompletionUtc,
+            IncludedLaps = x.IncludedLaps.Select(x => new Models.ConsecutiveLapLeaderboardPositionLap
+            {
+                Id = Guid.NewGuid(),
+                LapId = x
+            }).ToList()
         }));
 
         _dbContext.OpenPracticeSessions.Update(session);
@@ -135,7 +138,7 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
                 x.Positions.Select(y => new SingleLapLeaderboardPosition(y.Position, y.PilotId, y.LapNumber, y.LapMilliseconds, y.CompletionUtc)))).ToList();
         var consecutiveLapLeaderboards = session.ConsecutiveLapLeaderboards.Select(
             x => new ConsecutiveLapLeaderboard(x.Id, x.ConsecutiveLaps,
-                x.Positions.Select(y => new ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.StartLapNumber, y.EndLapNumber, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc)))).ToList();
+                x.Positions.Select(y => new ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc, y.IncludedLaps.Select(x => x.LapId))))).ToList();
 
         return new OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, laps, lanes, singleLapLeaderboards, consecutiveLapLeaderboards);
     }

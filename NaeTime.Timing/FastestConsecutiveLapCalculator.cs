@@ -13,15 +13,15 @@ public class FastestConsecutiveLapCalculator
         var lapsList = laps.ToList();
 
         long totalTime = 0;
-        uint startLapNumber = 0;
-        uint endLapNumber = 0;
+        int startLapNumber = 0;
+        int endLapNumber = 0;
 
         long minTotalTime = long.MaxValue;
-        uint maxConsecutiveLaps = 0;
-
+        int maxConsecutiveLaps = 0;
+        var lapQueue = new Queue<Guid>();
         DateTime lastLapCompletion = DateTime.MinValue;
 
-        for (uint currentLapIndex = 0; currentLapIndex < lapsList.Count; currentLapIndex++)
+        for (int currentLapIndex = 0; currentLapIndex < lapsList.Count; currentLapIndex++)
         {
             var startLap = lapsList[(int)currentLapIndex];
             totalTime = startLap.TotalMilliseconds;
@@ -37,7 +37,7 @@ public class FastestConsecutiveLapCalculator
             {
                 break;
             }
-            uint currentConsecutiveLaps = 1;
+            int currentConsecutiveLaps = 1;
 
             if (currentConsecutiveLaps >= maxConsecutiveLaps)
             {
@@ -45,14 +45,14 @@ public class FastestConsecutiveLapCalculator
                 {
                     maxConsecutiveLaps = currentConsecutiveLaps;
                     minTotalTime = totalTime;
-                    startLapNumber = startLap.LapNumber;
-                    endLapNumber = startLap.LapNumber;
+                    startLapNumber = currentLapIndex;
+                    endLapNumber = currentLapIndex;
                     lastLapCompletion = startLap.FinishedUtc;
                 }
             }
 
 
-            for (uint currentCheckingLapIndex = currentLapIndex + 1; currentCheckingLapIndex < lapsList.Count; currentCheckingLapIndex++)
+            for (int currentCheckingLapIndex = currentLapIndex + 1; currentCheckingLapIndex < lapsList.Count; currentCheckingLapIndex++)
             {
                 currentConsecutiveLaps = (currentCheckingLapIndex - currentLapIndex) + 1;
 
@@ -77,8 +77,8 @@ public class FastestConsecutiveLapCalculator
                         if (totalTime < minTotalTime)
                         {
                             minTotalTime = totalTime;
-                            startLapNumber = startLap.LapNumber;
-                            endLapNumber = currentCheckingLap.LapNumber;
+                            startLapNumber = currentLapIndex;
+                            endLapNumber = currentLapIndex;
                             lastLapCompletion = currentCheckingLap.FinishedUtc;
                         }
                     }
@@ -86,13 +86,14 @@ public class FastestConsecutiveLapCalculator
                     {
                         maxConsecutiveLaps = currentConsecutiveLaps;
                         minTotalTime = totalTime;
-                        startLapNumber = startLap.LapNumber;
-                        endLapNumber = currentCheckingLap.LapNumber;
+                        startLapNumber = currentLapIndex;
+                        endLapNumber = currentCheckingLapIndex;
                         lastLapCompletion = currentCheckingLap.FinishedUtc;
                     }
                 }
             }
         }
-        return new FastestConsecutiveLaps(startLapNumber, endLapNumber, maxConsecutiveLaps, minTotalTime, lastLapCompletion);
+
+        return new FastestConsecutiveLaps((uint)maxConsecutiveLaps, minTotalTime, lastLapCompletion, laps.Skip(startLapNumber).Take(maxConsecutiveLaps).Select(x => x.LapId));
     }
 }

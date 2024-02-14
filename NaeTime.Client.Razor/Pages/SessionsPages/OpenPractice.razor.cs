@@ -274,11 +274,10 @@ public partial class OpenPractice : ComponentBase, IDisposable
         {
             Position = x.Position,
             PilotId = x.PilotId,
-            StartLapNumber = x.StartLapNumber,
-            EndLapNumber = x.EndLapNumber,
             TotalLaps = x.TotalLaps,
             TotalMilliseconds = x.TotalMilliseconds,
             LastLapCompletionUtc = x.LastLapCompletion,
+            IncludedLaps = x.IncludedLaps,
             PilotName = _pilots.FirstOrDefault(p => p.Id == x.PilotId)?.CallSign
         }).ToList();
 
@@ -352,11 +351,10 @@ public partial class OpenPractice : ComponentBase, IDisposable
                 {
                     Position = y.Position,
                     PilotId = y.PilotId,
-                    StartLapNumber = y.StartLapNumber,
-                    EndLapNumber = y.EndLapNumber,
                     TotalLaps = y.TotalLaps,
                     TotalMilliseconds = y.TotalMilliseconds,
                     LastLapCompletionUtc = y.LastLapCompletionUtc,
+                    IncludedLaps = y.IncludedLaps,
                     PilotName = _pilots.FirstOrDefault(x => x.Id == y.PilotId)?.CallSign
                 }).ToList()
             }).ToList()
