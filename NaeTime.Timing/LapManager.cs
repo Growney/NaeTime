@@ -18,18 +18,18 @@ public class LapManager : ISubscriber
 
     private async Task HandleDetection(Guid sessionId, long minimumLapMilliseconds, long? maximumLapMilliseconds, byte lane, byte split, byte timerCount, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        var activeTimingsResponse = await _publishSubscribe.Request<ActiveTimingRequest, ActiveTimingsResponse>(new ActiveTimingRequest(sessionId, lane));
+        var activeTimingsResponse = await _publishSubscribe.Request<ActiveTimingRequest, ActiveTimingResponse>(new ActiveTimingRequest(sessionId, lane));
 
         ActiveLap? activeLap = null;
         if (activeTimingsResponse?.Lap != null)
         {
-            activeLap = new ActiveLap(activeTimingsResponse.Lap.LapNumber, activeTimingsResponse.Lap.StartedSoftwareTime, activeTimingsResponse.Lap.StartedUtcTime, activeTimingsResponse.Lap.StartedHardwareTime);
+            activeLap = new ActiveLap(activeTimingsResponse.LapNumber, activeTimingsResponse.Lap.StartedSoftwareTime, activeTimingsResponse.Lap.StartedUtcTime, activeTimingsResponse.Lap.StartedHardwareTime);
         }
 
         ActiveSplit? activeSplit = null;
         if (activeTimingsResponse?.Split != null)
         {
-            activeSplit = new ActiveSplit(activeTimingsResponse.Split.LapNumber, activeTimingsResponse.Split.SplitNumber, activeTimingsResponse.Split.StartedSoftwareTime, activeTimingsResponse.Split.StartedUtcTime);
+            activeSplit = new ActiveSplit(activeTimingsResponse.LapNumber, activeTimingsResponse.Split.SplitNumber, activeTimingsResponse.Split.StartedSoftwareTime, activeTimingsResponse.Split.StartedUtcTime);
         }
 
         //there is nothing active we should start things

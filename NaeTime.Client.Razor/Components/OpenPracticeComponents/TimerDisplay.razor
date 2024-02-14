@@ -1,0 +1,49 @@
+@implements IDisposable
+
+<table class="mx-auto" style="height:50px">
+    <tbody>
+        <tr>
+            @{
+                if (Start == null)
+                {
+                    <td class="h5">
+                        --:--
+                    </td>
+                }
+                else
+                {
+
+                    var timeSinceStart = DateTime.UtcNow - Start.Value;
+                    <td class="h2 align-bottom" style="font-variant-numeric: tabular-nums">
+                        @timeSinceStart.ToString("mm\\:ss\\:")
+                    </td>
+                    <td class="align-bottom h4" style="font-variant-numeric: tabular-nums">
+
+                        @timeSinceStart.Milliseconds.ToString("000")
+                    </td>
+                }
+            }
+        </tr>
+    </tbody>
+</table>
+
+@code {
+
+    [Parameter]
+    public DateTime? Start { get; set; }
+
+    private Timer? _timer;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _timer = new Timer(x =>
+                       this.InvokeAsync(StateHasChanged), null, 0, 10);
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}

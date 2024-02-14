@@ -1,7 +1,7 @@
 ﻿namespace NaeTime.Messages.Responses;
-public record ActiveTimingsResponse(Guid SessionId, byte Lane, ActiveTimingsResponse.ActiveLap? Lap, ActiveTimingsResponse.ActiveSplit? Split)
+public record ActiveTimingsResponse(Guid SessionId, IEnumerable<ActiveTimingsResponse.ActiveTimings> Timings)
 {
-    public record ActiveLap(uint LapNumber, long StartedSoftwareTime, DateTime StartedUtcTime, ulong? StartedHardwareTime);
-    public record ActiveSplit(uint LapNumber, byte SplitNumber, long StartedSoftwareTime, DateTime StartedUtcTime);
-
+    public record ActiveTimings(byte Lane, uint lapNumber, ActiveLap? Lap, ActiveSplit? Split);
+    public record ActiveSplit(byte SplitNumber, long StartedSoftwareTime, DateTime StartedUtcTime);
+    public record ActiveLap(long StartedSoftwareTime, DateTime StartedUtcTime, ulong? StartedHardwareTime);
 }

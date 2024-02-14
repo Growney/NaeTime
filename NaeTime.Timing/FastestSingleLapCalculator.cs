@@ -5,7 +5,7 @@ public class FastestSingleLapCalculator
 {
     public FastestSingleLap? Calculate(IEnumerable<Lap> laps)
     {
-        if (!laps.Any())
+        if (!laps.Any(x => x.Status == LapStatus.Completed))
         {
             return null;
         }
@@ -14,6 +14,11 @@ public class FastestSingleLapCalculator
         DateTime finishedUtc = DateTime.MinValue;
         foreach (var lap in laps)
         {
+            if (lap.Status != LapStatus.Completed)
+            {
+                continue;
+            }
+
             if (lap.TotalMilliseconds < lapMilliseconds)
             {
                 lapNumber = lap.LapNumber;

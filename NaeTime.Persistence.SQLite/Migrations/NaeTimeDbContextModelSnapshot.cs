@@ -43,6 +43,9 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Property<byte>("Lane")
                         .HasColumnType("INTEGER");
 
+                    b.Property<uint>("LapNumber")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("SessionId")
                         .HasColumnType("TEXT");
 
@@ -215,9 +218,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                             b1.Property<Guid>("Id")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<uint>("LapNumber")
-                                .HasColumnType("INTEGER");
-
                             b1.Property<ulong?>("StartedHardwareTime")
                                 .HasColumnType("INTEGER");
 
@@ -242,9 +242,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
 
                             b1.Property<Guid>("Id")
                                 .HasColumnType("TEXT");
-
-                            b1.Property<uint>("LapNumber")
-                                .HasColumnType("INTEGER");
 
                             b1.Property<byte>("SplitNumber")
                                 .HasColumnType("INTEGER");

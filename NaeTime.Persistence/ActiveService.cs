@@ -121,7 +121,7 @@ public class ActiveService : ISubscriber
 
         return new ActiveSessionResponse(session.SessionId, ActiveSessionResponse.SessionType.OpenPractice, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, activeTrack);
     }
-    public async Task<ActiveTimingsResponse?> On(ActiveTimingRequest request)
+    public async Task<ActiveTimingResponse?> On(ActiveTimingRequest request)
     {
         var activeRepository = await _repositoryFactory.CreateActiveRepository();
 
@@ -129,24 +129,58 @@ public class ActiveService : ISubscriber
 
         if (timings == null)
         {
-            return new ActiveTimingsResponse(request.SessionId, request.Lane, null, null);
+            return new ActiveTimingResponse(request.SessionId, request.Lane, 0, null, null);
         }
-        ActiveTimingsResponse.ActiveLap? activeLap = null;
+        ActiveTimingResponse.ActiveLap? activeLap = null;
         if (timings.Lap != null)
         {
             var lap = timings.Lap;
-            activeLap = new ActiveTimingsResponse.ActiveLap(lap.LapNumber, lap.StartedSoftwareTime, lap.StartedUtcTime, lap.StartedHardwareTime);
+            activeLap = new ActiveTimingResponse.ActiveLap(lap.StartedSoftwareTime, lap.StartedUtcTime, lap.StartedHardwareTime);
         }
 
-        ActiveTimingsResponse.ActiveSplit? activeSplit = null;
+        ActiveTimingResponse.ActiveSplit? activeSplit = null;
         if (timings.Split != null)
         {
             var split = timings.Split;
-            activeSplit = new ActiveTimingsResponse.ActiveSplit(split.LapNumber, split.SplitNumber, split.StartedSoftwareTime, split.StartedUtcTime);
+            activeSplit = new ActiveTimingResponse.ActiveSplit(split.SplitNumber, split.StartedSoftwareTime, split.StartedUtcTime);
         }
 
 
-        return new ActiveTimingsResponse(request.SessionId, request.Lane, activeLap, activeSplit);
+        return new ActiveTimingResponse(request.SessionId, request.Lane, timings.LapNumber, activeLap, activeSplit);
     }
+    public async Task<ActiveTimingsResponse?> On(ActiveTimingsRequest request)
+    {
+        var activeRepository = await _repositoryFactory.CreateActiveRepository();
 
+        var timings = await activeRepository.GetTimings(request.SessionId);
+
+        if (timings == null)
+        {
+            return new ActiveTimingsResponse(request.SessionId, Enumerable.Empty<ActiveTimingsResponse.ActiveTimings>());
+        }
+
+        var responseTimings = timings.Select(x =>
+        {
+            return new ActiveTimingsResponse.ActiveTimings(x.Lane, x.LapNumber,
+                CreateActiveLap(x.Lap), CreateActiveSplit(x.Split));
+        });
+
+        return new ActiveTimingsResponse(request.SessionId, responseTimings);
+    }
+    private ActiveTimingsResponse.ActiveLap? CreateActiveLap(ActiveLap? lap)
+    {
+        if (lap == null)
+        {
+            return null;
+        }
+        return new ActiveTimingsResponse.ActiveLap(lap.StartedSoftwareTime, lap.StartedUtcTime, lap.StartedHardwareTime);
+    }
+    private ActiveTimingsResponse.ActiveSplit? CreateActiveSplit(ActiveSplit? split)
+    {
+        if (split == null)
+        {
+            return null;
+        }
+        return new ActiveTimingsResponse.ActiveSplit(split.SplitNumber, split.StartedSoftwareTime, split.StartedUtcTime);
+    }
 }

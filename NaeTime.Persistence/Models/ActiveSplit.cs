@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Persistence.Models;
-public record ActiveSplit(uint LapNumber, byte SplitNumber, long StartedSoftwareTime, DateTime StartedUtcTime);
+public record ActiveSplit(byte SplitNumber, long StartedSoftwareTime, DateTime StartedUtcTime);

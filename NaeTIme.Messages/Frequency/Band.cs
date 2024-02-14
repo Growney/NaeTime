@@ -1,9 +1,10 @@
 ﻿namespace NaeTime.Messages.Frequency;
 public struct Band
 {
-    internal Band(byte id, string name, IEnumerable<BandFrequency> frequencies)
+    internal Band(byte id, string name, string shortName, IEnumerable<BandFrequency> frequencies)
     {
         Id = id;
+        ShortName = shortName;
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Frequencies = frequencies ?? throw new ArgumentNullException(nameof(frequencies));
     }
@@ -11,7 +12,7 @@ public struct Band
     public static readonly IEnumerable<Band> Bands
     = new List<Band>()
     {
-        new (0, "A", new List<BandFrequency>
+        new (0, "A", "A", new List<BandFrequency>
             {
                 new BandFrequency("A1",(int)RaceBandA.A1),
                 new BandFrequency("A2",(int)RaceBandA.A2),
@@ -22,7 +23,7 @@ public struct Band
                 new BandFrequency("A7",(int)RaceBandA.A7),
                 new BandFrequency("A8",(int)RaceBandA.A8)
             }),
-        new (1, "B", new List<BandFrequency>
+        new (1, "B", "B", new List<BandFrequency>
         {
                 new BandFrequency("B1",(int)RaceBandB.B1),
                 new BandFrequency("B2",(int)RaceBandB.B2),
@@ -33,7 +34,7 @@ public struct Band
                 new BandFrequency("B7",(int)RaceBandB.B7),
                 new BandFrequency("B8",(int)RaceBandB.B8)
             }),
-        new (2, "E", new List<BandFrequency>
+        new (2, "E", "E", new List<BandFrequency>
         {
                 new BandFrequency("E1",(int)RaceBandE.E1),
                 new BandFrequency("E2",(int)RaceBandE.E2),
@@ -44,7 +45,7 @@ public struct Band
                 new BandFrequency("E7",(int)RaceBandE.E7),
                 new BandFrequency("E8",(int)RaceBandE.E8)
             }),
-        new (3, "F", new List<BandFrequency>
+        new (3, "F", "F", new List<BandFrequency>
         {
                 new BandFrequency("F1",(int)RaceBandF.F1),
                 new BandFrequency("F2",(int)RaceBandF.F2),
@@ -55,7 +56,7 @@ public struct Band
                 new BandFrequency("F7",(int)RaceBandF.F7),
                 new BandFrequency("F8",(int)RaceBandF.F8)
             }),
-        new (4, "R", new List<BandFrequency>
+        new (4, "R", "R", new List<BandFrequency>
         {
                 new BandFrequency("R1",(int)RaceBandR.R1),
                 new BandFrequency("R2",(int)RaceBandR.R2),
@@ -66,7 +67,7 @@ public struct Band
                 new BandFrequency("R7",(int)RaceBandR.R7),
                 new BandFrequency("R8",(int)RaceBandR.R8)
             }),
-        new (5, "DJI 25Mbps", new List<BandFrequency>
+        new (5, "DJI 25Mbps", "DJI 25", new List<BandFrequency>
         {
                 new BandFrequency("CH1",(int)DJI25Mbps.CH1),
                 new BandFrequency("CH2",(int) DJI25Mbps.CH2),
@@ -77,20 +78,20 @@ public struct Band
                 new BandFrequency("CH7",(int) DJI25Mbps.CH7),
                 new BandFrequency("CH8",(int) DJI25Mbps.CH8)
             }),
-        new (6, "DJI 50Mbps", new List<BandFrequency>
+        new (6, "DJI 50Mbps","DJI 50", new List<BandFrequency>
         {
                 new BandFrequency("CH1",(int)DJI50Mbps.CH1),
                 new BandFrequency("CH2",(int) DJI50Mbps.CH2),
                 new BandFrequency("CH3",(int) DJI50Mbps.CH3),
                 new BandFrequency("CH8",(int) DJI50Mbps.CH8)
             }),
-        new (7, "DJI 03", new List<BandFrequency>
+        new (7, "DJI 03","DJI 03", new List<BandFrequency>
         {
                 new BandFrequency("CH1",(int)DJI0350Mbps.CH1),
                 new BandFrequency("CH2",(int)DJI0350Mbps.CH2),
                 new BandFrequency("CH3",(int)DJI0350Mbps.CH3),
             }),
-        new (8, "HDZero", new List<BandFrequency>
+        new (8, "HDZero","HDZ", new List<BandFrequency>
         {
                 new BandFrequency("R1",(int)HDZero.R1),
                 new BandFrequency("R2",(int)HDZero.R2),
@@ -101,7 +102,7 @@ public struct Band
                 new BandFrequency("R7",(int)HDZero.R7),
                 new BandFrequency("R8",(int)HDZero.R8)
             }),
-        new (9, "Walksnail Race", new List<BandFrequency>
+        new (9, "Walksnail Race","WS Race", new List<BandFrequency>
             {
                 new BandFrequency("R1",(int)WalksnailRace.R1),
                 new BandFrequency("R2",(int)WalksnailRace.R2),
@@ -112,7 +113,7 @@ public struct Band
                 new BandFrequency("R7",(int)WalksnailRace.R7),
                 new BandFrequency("R8",(int)WalksnailRace.R8)
             }),
-        new (10, "Walksnail 25Mbps", new List<BandFrequency>
+        new (10, "Walksnail 25Mbps","WS 25", new List<BandFrequency>
         {
                 new BandFrequency("CH1",(int)Walksnail25Mbps.CH1),
                 new BandFrequency("CH2",(int)Walksnail25Mbps.CH2),
@@ -123,7 +124,7 @@ public struct Band
                 new BandFrequency("CH7",(int)Walksnail25Mbps.CH7),
                 new BandFrequency("CH8",(int)Walksnail25Mbps.CH8)
             }),
-        new (11, "Walksnail 50Mbps", new List<BandFrequency>
+        new (11, "Walksnail 50Mbps","WS 50", new List<BandFrequency>
         {
                 new BandFrequency("CH1",(int)Walksnail50Mbps.CH1),
                 new BandFrequency("CH2",(int)Walksnail50Mbps.CH2),
@@ -134,5 +135,6 @@ public struct Band
 
     public byte Id { get; }
     public string Name { get; }
+    public string ShortName { get; }
     public IEnumerable<BandFrequency> Frequencies { get; }
 }

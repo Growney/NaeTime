@@ -1,35 +1,39 @@
-<div class="shadow rounded-3 m-2 p-2" style="width: 200px">
-    <div class="container">
-        <div class="row">
-            <div class="col">
-                <Switch ValueChanged="EnabledChanged" Value=Configuration.IsEnabled ValueExpression="()=>Configuration.IsEnabled"></Switch>
-            </div>
-            <div class="col text-end">
-                <h3>@Configuration.LaneNumber</h3>
-            </div>
-        </div>
+<div class="shadow rounded p-2" style="width: 200px">
+    <table class="w-100">
+        <tbody>
+            <tr>
+                <td class="align-start" style="width:10px">
+                    <Switch ValueChanged="EnabledChanged" Value=IsEnabled ValueExpression="()=>IsEnabled"></Switch>
+                </td>
+                <td >
+                    <div class="h4 text-start">
+                        @LaneNumber
+                    </div>
+                </td>
+                <td>
+                    <div class="h5 text-end">
+                            @FrequencyInMhz <sup style="font-size:0.5em">MHz</sup>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div>
+        <Dropdown Class="w-100">
+            <DropdownToggleButton Color="ButtonColor.Primary">@GetPilotString(PilotId)</DropdownToggleButton>
+                <DropdownMenu>
+                    @foreach (var pilot in Pilots)
+                {
+                    <DropdownItem Type="ButtonType.Button" @onclick="() => SetPilot(pilot.Id)">@GetPilotString(pilot.Id)</DropdownItem>
+                }
+            </DropdownMenu>
+        </Dropdown>
     </div>
-    <fieldset disable="@(Configuration.IsEnabled?"false":"true")">
-        <div>
-            <Dropdown Class="w-100">
-                <DropdownToggleButton Color="ButtonColor.Primary">@GetPilotString(Configuration.PilotId)</DropdownToggleButton>
-                    <DropdownMenu>
-                        @foreach (var pilot in Pilots)
-                    {
-                        <DropdownItem Type="ButtonType.Button" @onclick="() => SetPilot(pilot.Id)">@GetPilotString(pilot.Id)</DropdownItem>
-                    }
-                </DropdownMenu>
-            </Dropdown>
-        </div>
-        <div>
-            RSSI: @_laneRSSIValue
-        </div>
-        <div>
-        </div>
-        <div>
-            <div class="container">
-                <div class="row">
-                    <div class="col px-0">
+    <div>
+        <table class="w-100 mx-auto">
+            <tbody>
+                <tr>
+                    <td class="w-50">
                         <Dropdown Class="w-100">
                             <DropdownToggleButton Class="rounded-0 rounded-start" Color="ButtonColor.Secondary">@GetBandString()</DropdownToggleButton>
                                 <DropdownMenu>
@@ -39,15 +43,15 @@
                                 }
                             </DropdownMenu>
                         </Dropdown>
-                    </div>
-                    <div class="col px-0">
-                        @if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
+                    </td>
+                    <td class="w-50">
+                        @if (Messages.Frequency.Band.Bands.Any(x => x.Id == BandId))
                         {
                             <Dropdown Class="w-100">
                                 <DropdownToggleButton Class="rounded-0 rounded-end" Color="ButtonColor.Primary">@GetFrequencyString()</DropdownToggleButton>
                                     <DropdownMenu>
                                         @{
-                                        var band = Messages.Frequency.Band.Bands.First(b => b.Id == Configuration.BandId);
+                                        var band = Messages.Frequency.Band.Bands.First(b => b.Id == BandId);
                                         foreach (var frequency in band.Frequencies)
                                         {
                                             <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(frequency.FrequencyInMhz)">@frequency.Name</DropdownItem>
@@ -58,17 +62,35 @@
                         }
                         else
                         {
-                            <NumberInput Class="rounded-0 rounded-end" TValue=int ValueChanged="GoToFrequency" Value="Configuration.FrequencyInMhz" ValueExpression="() => Configuration.FrequencyInMhz"></NumberInput>
+                            <NumberInput Class="rounded-0 rounded-end" TValue=int ValueChanged="GoToFrequency" Value="FrequencyInMhz" ValueExpression="() => FrequencyInMhz"></NumberInput>
                         }
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div>
-            Frequency: @Configuration.FrequencyInMhz
-        </div>
-        <div>
-            <Button Type="ButtonType.Button" Color="ButtonColor.Primary" @onclick="() => TriggerDetection(0)">Trigger</Button>
-        </div>
-    </fieldset>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="progress mt-1" style="height: 10px">
+        @if(MaxRSSIValue > 0)
+        {
+            var percent = (int)((RssiValue / MaxRSSIValue) * 100);
+            <div class="progress-bar bg-success" role="progressbar" style="width: @percent%" aria-valuenow="@percent" aria-valuemin="0" aria-valuemax="100"></div>
+        }
+        else
+        {
+            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        }
+    </div>
+    <TimerDisplay Start="LapStart"></TimerDisplay>
+    <table class="w-100">
+        <tbody> 
+            <tr>
+                <td class="w-50">
+                    <Button Class="w-100 rounded-0 rounded-start" Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="() => TriggerDetection(0)"><i class="fa-solid fa-stopwatch"></i></Button>
+                </td>
+                <td class="w-50">
+                    <Button Class="w-100 rounded-0 rounded-end" Type="ButtonType.Button" Color="ButtonColor.Danger" @onclick="() => TriggerInvalidation(0)"><i class="fa-solid fa-stopwatch"></i></Button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>

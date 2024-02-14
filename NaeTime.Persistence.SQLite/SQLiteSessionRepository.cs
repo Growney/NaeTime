@@ -16,10 +16,21 @@ public class SQLiteSessionRepository : ISessionRepository
     {
         var details = new List<SessionDetails>();
 
-        var openPracticeSessions = await _dbContext.OpenPracticeSessions.Select(x => new SessionDetails(x.Id, x.Name, SessionType.OpenPractice)).ToListAsync();
+        var openPracticeSessions = await _dbContext.OpenPracticeSessions.Select(x => new SessionDetails(x.Id, x.Name, SessionType.OpenPractice, x.TrackId, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds)).ToListAsync();
 
         details.AddRange(openPracticeSessions);
 
         return details;
+    }
+    public async Task<SessionDetails?> GetDetails(Guid sessionId)
+    {
+        var openPracticeSession = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId);
+
+        if (openPracticeSession == null)
+        {
+            return null;
+        }
+
+        return new SessionDetails(openPracticeSession.Id, openPracticeSession.Name, SessionType.OpenPractice, openPracticeSession.TrackId, openPracticeSession.MinimumLapMilliseconds, openPracticeSession.MaximumLapMilliseconds);
     }
 }

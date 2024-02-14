@@ -3,8 +3,13 @@
 namespace NaeTime.Timing;
 public class FastestConsecutiveLapCalculator
 {
-    public FastestConsecutiveLaps CalculateFastestConsecutiveLaps(uint lapCount, IEnumerable<Lap> laps)
+    public FastestConsecutiveLaps? CalculateFastestConsecutiveLaps(uint lapCount, IEnumerable<Lap> laps)
     {
+        if (!laps.Any())
+        {
+            return null;
+        }
+
         var lapsList = laps.ToList();
 
         long totalTime = 0;

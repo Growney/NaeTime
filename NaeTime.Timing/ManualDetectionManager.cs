@@ -17,22 +17,71 @@ public class ManualDetectionManager : ISubscriber
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
     }
 
-    public async Task When(ActiveTrackSplitLaneDetectionTriggered triggered)
+    public async Task When(SessionDetectionTriggered triggered)
     {
-        var activeSession = await _dispatcher.Request<ActiveSessionRequest, ActiveSessionResponse>();
+        var session = await _dispatcher.Request<SessionRequest, SessionResponse>(new SessionRequest(triggered.SessionId));
 
-        if (activeSession == null)
+        if (session == null)
         {
             return;
         }
 
-        var timerCount = activeSession.ActiveTrack.Timers.Count();
+        var track = await _dispatcher.Request<TrackRequest, TrackResponse>(new TrackRequest(session.TrackId));
+
+        if (track == null)
+        {
+            return;
+        }
+
+        var timerCount = track.Timers.Count();
 
         if (timerCount > byte.MaxValue)
         {
             return;
         }
 
-        await _dispatcher.Dispatch(new SessionDetectionOccured(activeSession.SessionId, triggered.Lane, triggered.Split, activeSession.MinimumLapMilliseconds, activeSession.MaximumLapMilliseconds, (byte)timerCount, null, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow));
+
+        await _dispatcher.Dispatch(new SessionDetectionOccured(session.Id, triggered.Lane, triggered.Split, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, (byte)timerCount, null, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow));
+    }
+
+    public async Task When(SessionInvalidationTriggered triggered)
+    {
+        var session = await _dispatcher.Request<SessionRequest, SessionResponse>(new SessionRequest(triggered.SessionId));
+
+        if (session == null)
+        {
+            return;
+        }
+
+        var activeTimings = await _dispatcher.Request<ActiveTimingRequest, ActiveTimingResponse>(new ActiveTimingRequest(triggered.SessionId, triggered.Lane));
+
+        if (activeTimings == null)
+        {
+            return;
+        }
+
+        if (activeTimings.Lap == null)
+        {
+            return;
+        }
+
+        var finishedSoftwareTime = _softwareTimer.ElapsedMilliseconds;
+        var finishedUtcTime = DateTime.UtcNow;
+
+        var totalTime = CalculateTotalTime(activeTimings.Lap.StartedSoftwareTime, activeTimings.Lap.StartedUtcTime, finishedSoftwareTime, finishedUtcTime);
+
+        await _dispatcher.Dispatch(new LapInvalidated(session.Id, triggered.Lane, activeTimings.LapNumber, activeTimings.Lap.StartedSoftwareTime, activeTimings.Lap.StartedUtcTime, activeTimings.Lap.StartedHardwareTime, finishedSoftwareTime, finishedUtcTime, null, totalTime, LapInvalidated.LapInvalidReason.Cancelled));
+    }
+    private long CalculateTotalTime(long startSoftwareTime, DateTime startUtcTime, long endSoftwareTime, DateTime endUtcTime)
+    {
+        var softwareDifference = endSoftwareTime - startSoftwareTime;
+        if (softwareDifference < 0)
+        {
+            return (long)endUtcTime.Subtract(startUtcTime).TotalMilliseconds;
+        }
+        else
+        {
+            return softwareDifference;
+        }
     }
 }

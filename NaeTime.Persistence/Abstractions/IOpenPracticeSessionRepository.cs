@@ -12,4 +12,5 @@ public interface IOpenPracticeSessionRepository
     public Task AddOrUpdateConsecutiveLapsLeaderboard(Guid sessionId, Guid leaderboardId, uint consecutiveLaps);
     public Task AddOrUpdateSingleLapLeaderboard(Guid sessionId, Guid leaderboardId);
     public Task RemoveLeaderboard(Guid sessionId, Guid leaderboardId);
+    public Task RemoveLap(Guid sessionId, Guid lapId);
 }

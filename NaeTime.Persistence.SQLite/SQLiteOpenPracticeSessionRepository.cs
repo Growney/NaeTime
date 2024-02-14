@@ -266,4 +266,23 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
 
         await _dbContext.SaveChangesAsync();
     }
+
+    public async Task RemoveLap(Guid sessionId, Guid lapId)
+    {
+        var session = await _dbContext.OpenPracticeSessions.Include(x => x.Laps).FirstOrDefaultAsync(x => x.Id == sessionId);
+
+        if (session == null)
+        {
+            return;
+        }
+
+        var lapIndex = session.Laps.FindIndex(x => x.Id == lapId);
+        if (lapIndex == -1)
+        {
+            return;
+        }
+        session.Laps.RemoveAt(lapIndex);
+
+        await _dbContext.SaveChangesAsync();
+    }
 }

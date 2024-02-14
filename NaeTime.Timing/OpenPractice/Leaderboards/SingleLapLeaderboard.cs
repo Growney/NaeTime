@@ -11,7 +11,7 @@ public class SingleLapLeaderboard
         LeaderboardId = leaderboardId;
     }
 
-    public bool AddFastestSingleLap(Guid pilotId, uint lapNumber, long totalMilliseconds, DateTime completionUtc)
+    public bool UpdateIfFaster(Guid pilotId, uint lapNumber, long totalMilliseconds, DateTime completionUtc)
     {
         if (!_pilotLaps.ContainsKey(pilotId))
         {
@@ -21,6 +21,30 @@ public class SingleLapLeaderboard
         else
         {
             if (_pilotLaps[pilotId].LapMilliseconds > totalMilliseconds)
+            {
+                _pilotLaps[pilotId] = new FastestSingleLap(lapNumber, totalMilliseconds, completionUtc);
+                return true;
+            }
+        }
+        return false;
+    }
+    public void RemovePilot(Guid pilotId)
+    {
+        _pilotLaps.Remove(pilotId);
+    }
+    public bool SetFastest(Guid pilotId, uint lapNumber, long totalMilliseconds, DateTime completionUtc)
+    {
+        var newFastest = new FastestSingleLap(lapNumber, totalMilliseconds, completionUtc);
+
+        if (!_pilotLaps.ContainsKey(pilotId))
+        {
+            _pilotLaps.Add(pilotId, newFastest);
+            return true;
+        }
+        else
+        {
+            var existing = _pilotLaps[pilotId];
+            if (existing != newFastest)
             {
                 _pilotLaps[pilotId] = new FastestSingleLap(lapNumber, totalMilliseconds, completionUtc);
                 return true;

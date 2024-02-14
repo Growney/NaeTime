@@ -5,5 +5,6 @@ public record LapInvalidated(Guid SessionId, byte Lane, uint LapNumber, long Sta
     {
         TooShort,
         TooLong,
+        Cancelled,
     }
 }

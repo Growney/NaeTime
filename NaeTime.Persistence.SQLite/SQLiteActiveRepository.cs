@@ -67,11 +67,12 @@ public class SQLiteActiveRepository : IActiveRepository
             _dbContext.ActiveTimings.Add(existingTimings);
         }
 
+        existingTimings.LapNumber = lapNumber;
+
         var activeLap = new Models.ActiveLap
         {
             Id = Guid.NewGuid(),
             ActiveTimingsId = existingTimings.Id,
-            LapNumber = lapNumber,
             StartedSoftwareTime = startedSoftwareTime,
             StartedUtcTime = startedUtcTime,
             StartedHardwareTime = startedHardwareTime
@@ -112,11 +113,12 @@ public class SQLiteActiveRepository : IActiveRepository
             _dbContext.ActiveTimings.Add(existingTimings);
         }
 
+        existingTimings.LapNumber = lapNumber;
+
         var activeSplit = new Models.ActiveSplit
         {
             Id = Guid.NewGuid(),
             ActiveTimingsId = existingTimings.Id,
-            LapNumber = lapNumber,
             SplitNumber = splitNumber,
             StartedSoftwareTime = startedSoftwareTime,
             StartedUtcTime = startedUtcTime
@@ -176,7 +178,7 @@ public class SQLiteActiveRepository : IActiveRepository
         if (existingTimings.ActiveLap != null)
         {
             var lap = existingTimings.ActiveLap;
-            activeLap = new ActiveLap(lap.LapNumber, lap.StartedSoftwareTime, lap.StartedUtcTime, lap.StartedHardwareTime);
+            activeLap = new ActiveLap(lap.StartedSoftwareTime, lap.StartedUtcTime, lap.StartedHardwareTime);
         }
 
         ActiveSplit? activeSplit = null;
@@ -184,10 +186,18 @@ public class SQLiteActiveRepository : IActiveRepository
         if (existingTimings.ActiveSplit != null)
         {
             var split = existingTimings.ActiveSplit;
-            activeSplit = new ActiveSplit(split.LapNumber, split.SplitNumber, split.StartedSoftwareTime, split.StartedUtcTime);
+            activeSplit = new ActiveSplit(split.SplitNumber, split.StartedSoftwareTime, split.StartedUtcTime);
         }
 
 
-        return new ActiveTimings(trackId, lane, activeLap, activeSplit);
+        return new ActiveTimings(trackId, lane, existingTimings.LapNumber, activeLap, activeSplit);
+    }
+
+    public async Task<IEnumerable<ActiveTimings>> GetTimings(Guid sessionId)
+    {
+        var timings = await _dbContext.ActiveTimings.ToListAsync();
+
+        return timings.Where(x => x.SessionId == sessionId).Select(x =>
+        new ActiveTimings(x.SessionId, x.Lane, x.LapNumber, x.ActiveLap != null ? new ActiveLap(x.ActiveLap.StartedSoftwareTime, x.ActiveLap.StartedUtcTime, x.ActiveLap.StartedHardwareTime) : null, x.ActiveSplit != null ? new ActiveSplit(x.ActiveSplit.SplitNumber, x.ActiveSplit.StartedSoftwareTime, x.ActiveSplit.StartedUtcTime) : null));
     }
 }

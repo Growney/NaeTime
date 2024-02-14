@@ -13,7 +13,7 @@ public class FastestConsecutiveLapCalculatorTests
         foreach (var space in spacing)
         {
             finishTime = started.AddMilliseconds(space);
-            laps.Add(new Lap(lapNumber, started, finishTime.Value, LapStatus.Completed, space));
+            laps.Add(new Lap(Guid.NewGuid(), lapNumber, started, finishTime.Value, LapStatus.Completed, space));
             started = started.AddMilliseconds(space);
             totalSpacing += space;
             lapNumber++;
@@ -30,7 +30,7 @@ public class FastestConsecutiveLapCalculatorTests
         var started = start;
         var lapNumber = startLapNumber;
         var finishTime = started.AddMilliseconds(spacing);
-        laps.Add(new Lap(lapNumber, started, finishTime, LapStatus.Invalid, spacing));
+        laps.Add(new Lap(Guid.NewGuid(), lapNumber, started, finishTime, LapStatus.Invalid, spacing));
         return (finishTime, lapNumber + 1);
     }
     [Fact]

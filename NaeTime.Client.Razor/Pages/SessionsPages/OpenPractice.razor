@@ -34,44 +34,66 @@ else
         <div class="lane-container">
             @foreach (var laneConfiguration in _selectedSession.Lanes)
             {
-                <NaeTime.Client.Razor.Components.OpenPracticeComponents.SessionLaneConfiguration Configuration="laneConfiguration" Pilots="_pilots" SessionId="_selectedSession.Id"></NaeTime.Client.Razor.Components.OpenPracticeComponents.SessionLaneConfiguration>
+                <SessionLaneConfiguration 
+                    Pilots="_pilots"
+                    LaneNumber="laneConfiguration.LaneNumber"
+                    PilotId="laneConfiguration.PilotId"
+                    RssiValue="laneConfiguration.RssiValue"
+                    MaxRSSIValue="laneConfiguration.MaxRssiValue"
+                    BandId="laneConfiguration.BandId"
+                    FrequencyInMhz="laneConfiguration.FrequencyInMhz"
+                    IsEnabled="laneConfiguration.IsEnabled"
+                    LapStart="laneConfiguration.LapStarted"
+
+                    OnFrequencyChanged="(bandId,frequencyInMhz) => OnLaneFrequyencyChanged(laneConfiguration.LaneNumber,bandId,frequencyInMhz)"
+                    OnEnabledChanged="enabled => OnLaneEnabledChanged(laneConfiguration.LaneNumber,enabled)"
+                    OnPilotChanged="pilotId => OnLanePilotChanged(laneConfiguration.LaneNumber, pilotId)"
+                    OnDetectionTriggered="split => OnLaneDetectionTriggered(laneConfiguration.LaneNumber, split)"
+                    OnInvalidateTriggered="split => OnLaneInvalidateTriggered(laneConfiguration.LaneNumber,split)">
+                </SessionLaneConfiguration>
             }
         </div>
     }
-   
-    <Button Color=ButtonColor.Primary @onclick="AddSingleLap">Add Single Lap</Button>
+   <h3>Leaderboards</h3>
+    <hr />
+    @if (!_selectedSession.SingleLapLeaderboards.Any())
+    {
+        <Button Color=ButtonColor.Primary @onclick="AddSingleLapLeaderboard">Add Single Lap</Button>
+    }
     <Dropdown>
         <DropdownToggleButton Color="ButtonColor.Primary">Add Consecutive Laps</DropdownToggleButton>
         <DropdownMenu>
-            <DropdownItem Type="ButtonType.Button" @onclick="() => AddConsecutiveLaps(2)">2</DropdownItem>
-            <DropdownItem Type="ButtonType.Button" @onclick="() => AddConsecutiveLaps(3)">3</DropdownItem>
-            <DropdownItem Type="ButtonType.Button" @onclick="() => AddConsecutiveLaps(4)">4</DropdownItem>
-            <DropdownItem Type="ButtonType.Button" @onclick="() => AddConsecutiveLaps(5)">5</DropdownItem>
-            <DropdownItem Type="ButtonType.Button" @onclick="() => AddConsecutiveLaps(6)">6</DropdownItem>
-            <DropdownItem Type="ButtonType.Button" @onclick="() => AddConsecutiveLaps(7)">7</DropdownItem>
-            <DropdownItem Type="ButtonType.Button" @onclick="() => AddConsecutiveLaps(8)">8</DropdownItem>
-            <DropdownItem Type="ButtonType.Button" @onclick="() => AddConsecutiveLaps(9)">9</DropdownItem>
-            <DropdownItem Type="ButtonType.Button" @onclick="() => AddConsecutiveLaps(10)">10</DropdownItem>
+            @{
+                uint[] laps = [2,3,4,5,6,7,8,9,10];
+                foreach(var lap in laps)
+                {
+                    if (!_selectedSession.ConsecutiveLapLeaderboards.Any(x => x.ConsecutiveLaps == lap))
+                    {
+                        <DropdownItem Type="ButtonType.Button" @onclick="() => AddConsecutiveLapsLeaderboard(lap)">@lap</DropdownItem>
+                    }
+                }
+            }
         </DropdownMenu>
     </Dropdown>
     <div class="lane-container"> 
-
+        
         @foreach(var singleLapLeaderboard in _selectedSession.SingleLapLeaderboards)
         {
             <div class="shadow-sm p-3">
-                <NaeTime.Client.Razor.Components.OpenPracticeComponents.SingleLapLeaderboard Positions="singleLapLeaderboard.Positions"></NaeTime.Client.Razor.Components.OpenPracticeComponents.SingleLapLeaderboard>
+                <SingleLapLeaderboard Positions="singleLapLeaderboard.Positions"></SingleLapLeaderboard>
             </div>
         }
-        @foreach (var consecutiveLapLeaderboards in _selectedSession.ConsecutiveLapLeaderboards)
+        @foreach (var consecutiveLapLeaderboards in _selectedSession.ConsecutiveLapLeaderboards.OrderBy(x=>x.ConsecutiveLaps))
         {
             <div class="shadow-sm p-3">
-                <NaeTime.Client.Razor.Components.OpenPracticeComponents.ConsecutiveLapsLeaderboard Positions="consecutiveLapLeaderboards.Positions"></NaeTime.Client.Razor.Components.OpenPracticeComponents.ConsecutiveLapsLeaderboard>
+                <ConsecutiveLapsLeaderboard Leaderboard="consecutiveLapLeaderboards"></ConsecutiveLapsLeaderboard>
             </div>
         }
     </div>
     
-
-    <NaeTime.Client.Razor.Components.OpenPracticeComponents.LapList Laps="_selectedSession.Laps" IncludePilot=true></NaeTime.Client.Razor.Components.OpenPracticeComponents.LapList>
+    <h3>Laps</h3>
+    <hr />
+    <LapList SessionId="_selectedSession.Id" Laps="_selectedSession.Laps" IncludePilot=true></LapList>
 
 }
 

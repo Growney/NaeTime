@@ -1,8 +1,8 @@
-﻿.lane-container{
-    display:grid;
-    grid-auto-flow: column;
-    overflow:auto;
-}
-.lane{
-    width: 100px;
+﻿.lane-container {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
 }

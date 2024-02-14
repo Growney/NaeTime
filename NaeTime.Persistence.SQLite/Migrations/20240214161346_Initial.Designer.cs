@@ -11,7 +11,7 @@ using NaeTime.Persistence.SQLite.Context;
 namespace NaeTime.Persistence.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
-    [Migration("20240212124533_Initial")]
+    [Migration("20240214161346_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -44,6 +44,9 @@ namespace NaeTime.Persistence.SQLite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<byte>("Lane")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<uint>("LapNumber")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("SessionId")
@@ -218,9 +221,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                             b1.Property<Guid>("Id")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<uint>("LapNumber")
-                                .HasColumnType("INTEGER");
-
                             b1.Property<ulong?>("StartedHardwareTime")
                                 .HasColumnType("INTEGER");
 
@@ -245,9 +245,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
 
                             b1.Property<Guid>("Id")
                                 .HasColumnType("TEXT");
-
-                            b1.Property<uint>("LapNumber")
-                                .HasColumnType("INTEGER");
 
                             b1.Property<byte>("SplitNumber")
                                 .HasColumnType("INTEGER");

@@ -11,7 +11,7 @@ public class ConsecutiveLapsLeaderboard
         LeaderboardId = leaderboardId;
         LapCount = lapCount;
     }
-    public bool AddFastestConsecutiveLap(Guid pilotId, uint startLapNumber, uint endLapNumber, uint totalLaps, long totalMilliseconds, DateTime lastLapCompletionUtc)
+    public bool UpdateIfFaster(Guid pilotId, uint startLapNumber, uint endLapNumber, uint totalLaps, long totalMilliseconds, DateTime lastLapCompletionUtc)
     {
         if (!_pilotLaps.ContainsKey(pilotId))
         {
@@ -37,7 +37,29 @@ public class ConsecutiveLapsLeaderboard
         }
         return false;
     }
-
+    public void RemovePilot(Guid pilotId)
+    {
+        _pilotLaps.Remove(pilotId);
+    }
+    public bool SetFastest(Guid pilotId, uint startLapNumber, uint endLapNumber, uint totalLaps, long totalMilliseconds, DateTime lastLapCompletionUtc)
+    {
+        var newFastest = new FastestConsecutiveLaps(startLapNumber, endLapNumber, totalLaps, totalMilliseconds, lastLapCompletionUtc);
+        if (!_pilotLaps.ContainsKey(pilotId))
+        {
+            _pilotLaps.Add(pilotId, new FastestConsecutiveLaps(startLapNumber, endLapNumber, totalLaps, totalMilliseconds, lastLapCompletionUtc));
+            return true;
+        }
+        else
+        {
+            var existing = _pilotLaps[pilotId];
+            if (existing != newFastest)
+            {
+                _pilotLaps[pilotId] = new FastestConsecutiveLaps(startLapNumber, endLapNumber, totalLaps, totalMilliseconds, lastLapCompletionUtc);
+                return true;
+            }
+        }
+        return false;
+    }
     public IEnumerable<ConsecutiveLapsLeaderboardPosition> GetPositions()
     {
         var laps = _pilotLaps.ToList();

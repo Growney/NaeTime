@@ -24,6 +24,24 @@ public class SessionService : ISubscriber
             {
                 Models.SessionType.OpenPractice => SessionsResponse.SessionType.OpenPractice,
                 _ => throw new NotImplementedException()
-            })));
+            }, x.TrackId, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds)));
+    }
+    public async Task<SessionResponse?> On(SessionRequest request)
+    {
+        var sessionRepository = await _repositoryFactory.CreateSessionRepository();
+
+        var details = await sessionRepository.GetDetails(request.SessionId);
+
+        if (details == null)
+        {
+            return null;
+        }
+
+        return new SessionResponse(details.Id, details.Name,
+                       details.Type switch
+                       {
+                           Models.SessionType.OpenPractice => SessionResponse.SessionType.OpenPractice,
+                           _ => throw new NotImplementedException()
+                       }, details.TrackId, details.MinimumLapMilliseconds, details.MaximumLapMilliseconds);
     }
 }

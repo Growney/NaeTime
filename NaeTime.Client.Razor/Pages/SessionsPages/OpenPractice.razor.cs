@@ -3,6 +3,7 @@ using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.Messages.Events.Activation;
 using NaeTime.Messages.Events.Entities;
+using NaeTime.Messages.Events.Hardware;
 using NaeTime.Messages.Events.Timing;
 using NaeTime.Messages.Requests;
 using NaeTime.Messages.Responses;
@@ -23,6 +24,11 @@ public partial class OpenPractice : ComponentBase, IDisposable
     private Guid? _activeSessionId;
     protected override async Task OnInitializedAsync()
     {
+        PublishSubscribe.Subscribe<LapInvalidated>(this, When);
+        PublishSubscribe.Subscribe<OpenPracticeLapInvalidated>(this, When);
+        PublishSubscribe.Subscribe<OpenPracticeLapRemoved>(this, When);
+        PublishSubscribe.Subscribe<RssiLevelRecorded>(this, When);
+        PublishSubscribe.Subscribe<LapStarted>(this, When);
         PublishSubscribe.Subscribe<OpenPracticeLapCompleted>(this, When);
         PublishSubscribe.Subscribe<OpenPracticeSingleLapLeaderboardPositionsChanged>(this, When);
         PublishSubscribe.Subscribe<OpenPracticeConsecutiveLapLeaderboardPositionsChanged>(this, When);
@@ -82,6 +88,84 @@ public partial class OpenPractice : ComponentBase, IDisposable
             _activeSessionId = activeSessionReponse.SessionId;
             await SetupForSession(activeSessionReponse.SessionId);
         }
+
+    }
+    public async Task When(LapStarted started)
+    {
+        if (_selectedSession == null)
+        {
+            return;
+        }
+
+        var sessionLane = _selectedSession.Lanes.FirstOrDefault(x => x.LaneNumber == started.Lane);
+        if (sessionLane == null)
+        {
+            return;
+        }
+
+        sessionLane.LapStarted = started.StartedUtcTime;
+
+        await InvokeAsync(StateHasChanged);
+    }
+    public async Task When(LapInvalidated invalidated)
+    {
+        if (_selectedSession == null)
+        {
+            return;
+        }
+
+        var sessionLane = _selectedSession.Lanes.FirstOrDefault(x => x.LaneNumber == invalidated.Lane);
+        if (sessionLane == null)
+        {
+            return;
+        }
+
+        sessionLane.LapStarted = null;
+
+        await InvokeAsync(StateHasChanged);
+    }
+    public async Task When(RssiLevelRecorded rssiLevelRecorded)
+    {
+        if (_selectedSession == null)
+        {
+            return;
+        }
+
+        var sessionLane = _selectedSession.Lanes.FirstOrDefault(x => x.LaneNumber == rssiLevelRecorded.Lane);
+        if (sessionLane == null)
+        {
+            return;
+        }
+
+        sessionLane.RssiValue = rssiLevelRecorded.Level;
+        if (sessionLane.MaxRssiValue < rssiLevelRecorded.Level)
+        {
+            sessionLane.MaxRssiValue = rssiLevelRecorded.Level;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+    public async Task When(OpenPracticeLapRemoved removed)
+    {
+        if (_selectedSession == null)
+        {
+            return;
+        }
+
+        if (removed.SessionId != _selectedSession.Id)
+        {
+            return;
+        }
+
+        var lapIndex = _selectedSession.Laps.FindIndex(x => x.Id == removed.LapId);
+
+        if (lapIndex < 0)
+        {
+            return;
+        }
+
+        _selectedSession.Laps.RemoveAt(lapIndex);
+
+        await InvokeAsync(StateHasChanged);
     }
     public async Task When(OpenPracticeLapCompleted lap)
     {
@@ -217,6 +301,10 @@ public partial class OpenPractice : ComponentBase, IDisposable
             return;
         }
 
+
+        var timings = await PublishSubscribe.Request<ActiveTimingsRequest, ActiveTimingsResponse>(new ActiveTimingsRequest(sessionId));
+
+
         var allowedLanes = track.AllowedLanes;
 
         _selectedSession = new OpenPracticeSession
@@ -224,7 +312,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
             Id = practiceSessionResponse.SessionId,
             TrackId = practiceSessionResponse.TrackId,
             Name = practiceSessionResponse.Name,
-            Lanes = GetLaneConfigurations(allowedLanes, practiceSessionResponse.ActiveLanes).ToList(),
+            Lanes = GetLaneConfigurations(allowedLanes, practiceSessionResponse.ActiveLanes, timings?.Timings).ToList(),
             Laps = practiceSessionResponse.Laps.Select(x => new OpenPracticeLap()
             {
                 Id = x.Id,
@@ -275,8 +363,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         };
 
     }
-
-    private IEnumerable<OpenPracticeLaneConfiguration> GetLaneConfigurations(byte allowedLanes, IEnumerable<OpenPracticeSessionResponse.PilotLane> lanes)
+    private IEnumerable<OpenPracticeLaneConfiguration> GetLaneConfigurations(byte allowedLanes, IEnumerable<OpenPracticeSessionResponse.PilotLane> lanes, IEnumerable<ActiveTimingsResponse.ActiveTimings>? timings)
     {
         for (byte lane = 1; lane <= allowedLanes; lane++)
         {
@@ -289,7 +376,8 @@ public partial class OpenPractice : ComponentBase, IDisposable
                 BandId = laneConfig?.BandId,
                 FrequencyInMhz = laneConfig?.FrequencyInMhz ?? 0,
                 IsEnabled = laneConfig?.IsEnabled ?? false,
-                PilotId = pilotLaneConfig?.PilotId
+                PilotId = pilotLaneConfig?.PilotId,
+                LapStarted = timings?.FirstOrDefault(x => x.Lane == lane)?.Lap?.StartedUtcTime
             };
         }
     }
@@ -302,7 +390,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         return _selectedSession.Name;
     }
-
     public async Task StartNewSessionOnTrack(Guid sessionId, Guid trackId, long minimumLapMilliseconds, long? maximumLapMilliseconds)
     {
         await PublishSubscribe.Dispatch(new OpenPracticeSessionConfigured(sessionId, DateTime.Now.ToShortDateString(), trackId, minimumLapMilliseconds, maximumLapMilliseconds));
@@ -333,8 +420,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         await StartNewSessionOnTrack(sessionId, newTrackId, 0, null);
     }
-
-    public async Task AddSingleLap()
+    public async Task AddSingleLapLeaderboard()
     {
         if (_selectedSession == null)
         {
@@ -350,7 +436,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
 
     }
-    public async Task AddConsecutiveLaps(uint lapCap)
+    public async Task AddConsecutiveLapsLeaderboard(uint lapCap)
     {
         if (_selectedSession == null)
         {
@@ -365,6 +451,104 @@ public partial class OpenPractice : ComponentBase, IDisposable
         await PublishSubscribe.Dispatch(new OpenPracticeConsecutiveLapLeaderboardConfigured(_selectedSession!.Id, leaderboardId, lapCap));
     }
 
+    public async Task OnLaneFrequyencyChanged(byte lane, byte? bandId, int frequencyInMhz)
+    {
+        if (_selectedSession == null)
+        {
+            return;
+        }
+
+        var laneConfig = _selectedSession.Lanes.FirstOrDefault(x => x.LaneNumber == lane);
+
+        if (laneConfig == null)
+        {
+            return;
+        }
+
+        if (laneConfig.BandId == bandId && laneConfig.FrequencyInMhz == frequencyInMhz)
+        {
+            return;
+        }
+
+        laneConfig.BandId = bandId;
+        laneConfig.FrequencyInMhz = frequencyInMhz;
+
+        await PublishSubscribe.Dispatch(new LaneRadioFrequencyConfigured(lane, bandId, frequencyInMhz));
+    }
+    public async Task OnLaneEnabledChanged(byte lane, bool isEnabled)
+    {
+        if (_selectedSession == null)
+        {
+            return;
+        }
+
+        var laneConfig = _selectedSession.Lanes.FirstOrDefault(x => x.LaneNumber == lane);
+
+        if (laneConfig == null)
+        {
+            return;
+        }
+
+        if (laneConfig.IsEnabled == isEnabled)
+        {
+            return;
+        }
+
+        laneConfig.IsEnabled = isEnabled;
+
+        if (isEnabled)
+        {
+            await PublishSubscribe.Dispatch(new LaneEnabled(lane));
+        }
+        else
+        {
+            await PublishSubscribe.Dispatch(new LaneDisabled(lane));
+        }
+    }
+    public async Task OnLanePilotChanged(byte lane, Guid? pilotId)
+    {
+        if (_selectedSession == null)
+        {
+            return;
+        }
+        if (pilotId == null)
+        {
+            throw new NotImplementedException();
+        }
+        var laneConfig = _selectedSession.Lanes.FirstOrDefault(x => x.LaneNumber == lane);
+
+        if (laneConfig == null)
+        {
+            return;
+        }
+
+        if (laneConfig.PilotId == pilotId)
+        {
+            return;
+        }
+
+        laneConfig.PilotId = pilotId;
+
+        await PublishSubscribe.Dispatch(new OpenPracticeLanePilotSet(_selectedSession.Id, pilotId.Value, lane));
+    }
+    public Task OnLaneDetectionTriggered(byte lane, byte split)
+    {
+        if (_selectedSession == null)
+        {
+            return Task.CompletedTask;
+        }
+        return PublishSubscribe.Dispatch(new SessionDetectionTriggered(_selectedSession.Id, lane, split));
+
+    }
+    public Task OnLaneInvalidateTriggered(byte lane, byte split)
+    {
+        if (_selectedSession == null)
+        {
+            return Task.CompletedTask;
+        }
+        return PublishSubscribe.Dispatch(new SessionInvalidationTriggered(_selectedSession.Id, lane));
+
+    }
     public void Dispose()
     {
         PublishSubscribe.Unsubscribe(this);

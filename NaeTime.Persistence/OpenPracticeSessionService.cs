@@ -12,6 +12,13 @@ public class OpenPracticeSessionService : ISubscriber
     {
         _repositoryFactory = repositoryFactory;
     }
+    public async Task When(OpenPracticeLapRemoved removed)
+    {
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+
+        await repository.RemoveLap(removed.SessionId, removed.LapId);
+
+    }
     public async Task When(OpenPracticeSessionConfigured configured)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
@@ -48,7 +55,6 @@ public class OpenPracticeSessionService : ISubscriber
             consecutiveLapLeaderboards);
 
     }
-
     public async Task When(OpenPracticeLapCompleted openPracticeLapCompleted)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
@@ -75,7 +81,6 @@ public class OpenPracticeSessionService : ISubscriber
 
         await repository.AddLapToSession(openPracticeLapInvalidated.SessionId, openPracticeLapInvalidated.LapId, openPracticeLapInvalidated.PilotId, openPracticeLapInvalidated.LapNumber, Models.OpenPracticeLapStatus.Invalid, openPracticeLapInvalidated.StartedUtc, openPracticeLapInvalidated.FinishedUtc, openPracticeLapInvalidated.TotalMilliseconds);
     }
-
     public async Task When(OpenPracticeLanePilotSet laneSet)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
@@ -89,7 +94,6 @@ public class OpenPracticeSessionService : ISubscriber
 
         await repository.SetSessionLanePilot(laneSet.SessionId, laneSet.Lane, laneSet.PilotId);
     }
-
     public async Task When(OpenPracticeConsecutiveLapLeaderboardPositionsChanged newPositions)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
@@ -105,7 +109,6 @@ public class OpenPracticeSessionService : ISubscriber
 
         await repository.UpdateConsecutiveLapsLeaderboardPositions(newPositions.SessionId, newPositions.LeaderboardId, positions);
     }
-
     public async Task When(OpenPracticeSingleLapLeaderboardPositionsChanged newPositions)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
@@ -121,7 +124,6 @@ public class OpenPracticeSessionService : ISubscriber
 
         await repository.UpdateSingleLapLeaderboard(newPositions.SessionId, newPositions.LeaderboardId, positions);
     }
-
     public async Task When(OpenPracticeConsecutiveLapLeaderboardConfigured leaderboard)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
@@ -135,7 +137,6 @@ public class OpenPracticeSessionService : ISubscriber
 
         await repository.AddOrUpdateConsecutiveLapsLeaderboard(leaderboard.SessionId, leaderboard.LeaderboardId, leaderboard.ConsecutiveLaps);
     }
-
     public async Task When(OpenPracticeSingleLapLeaderboardConfigured leaderboard)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
