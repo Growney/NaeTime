@@ -30,7 +30,7 @@ public class OpenPracticeSessionManager : ISubscriber
         var consecutiveLapCalculator = new FastestConsecutiveLapCalculator();
         foreach (var group in groupedLaps)
         {
-            var fastestConsecutive = consecutiveLapCalculator.CalculateFastestConsecutiveLaps(consecutiveLapLeaderboard.LapCount, group.Select(x => new Lap(x.Id, x.LapNumber, x.StartedUtc, x.FinishedUtc,
+            var fastestConsecutive = consecutiveLapCalculator.CalculateFastestConsecutiveLaps(consecutiveLapLeaderboard.LapCount, group.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
                                x.Status switch
                                {
                                    OpenPracticeSessionResponse.LapStatus.Invalid => LapStatus.Invalid,
@@ -68,7 +68,7 @@ public class OpenPracticeSessionManager : ISubscriber
         var consecutiveLapCalculator = new FastestSingleLapCalculator();
         foreach (var group in groupedLaps)
         {
-            var fastestConsecutive = consecutiveLapCalculator.Calculate(group.Select(x => new Lap(x.Id, x.LapNumber, x.StartedUtc, x.FinishedUtc,
+            var fastestConsecutive = consecutiveLapCalculator.Calculate(group.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
                                x.Status switch
                                {
                                    OpenPracticeSessionResponse.LapStatus.Invalid => LapStatus.Invalid,
@@ -80,12 +80,12 @@ public class OpenPracticeSessionManager : ISubscriber
             {
                 continue;
             }
-            consecutiveLapLeaderboard.UpdateIfFaster(group.Key, fastestConsecutive.LapNumber, fastestConsecutive.LapMilliseconds, fastestConsecutive.CompletionUtc);
+            consecutiveLapLeaderboard.UpdateIfFaster(group.Key, fastestConsecutive.LapId, fastestConsecutive.LapMilliseconds, fastestConsecutive.CompletionUtc);
         }
         var positions = consecutiveLapLeaderboard.GetPositions();
         await _publishSubscribe.Dispatch(new OpenPracticeSingleLapLeaderboardPositionsChanged(leaderboard.SessionId, leaderboard.LeaderboardId,
                                Enumerable.Empty<OpenPracticeSingleLapLeaderboardPositionsChanged.SingleLapLeaderboardPosition>(),
-                               positions.Select(x => new OpenPracticeSingleLapLeaderboardPositionsChanged.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapNumber, x.LapMilliseconds, x.CompletionTime))));
+                               positions.Select(x => new OpenPracticeSingleLapLeaderboardPositionsChanged.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapId, x.LapMilliseconds, x.CompletionTime))));
     }
     public async Task When(LapCompleted lapCompleted)
     {
@@ -104,14 +104,14 @@ public class OpenPracticeSessionManager : ISubscriber
 
         var newLapId = Guid.NewGuid();
 
-        await _publishSubscribe.Dispatch(new OpenPracticeLapCompleted(newLapId, lapCompleted.SessionId, pilotLane.PilotId, lapCompleted.LapNumber, lapCompleted.StartedUtcTime, lapCompleted.FinishedUtcTime, lapCompleted.TotalTime));
+        await _publishSubscribe.Dispatch(new OpenPracticeLapCompleted(newLapId, lapCompleted.SessionId, pilotLane.PilotId, lapCompleted.StartedUtcTime, lapCompleted.FinishedUtcTime, lapCompleted.TotalTime));
 
         var singleLapLeaderboards = BuildSingleLapLeaderboards(sessionResponse.SingleLapLeaderboards);
         var consecutiveLapLeaderboards = BuildConsecutiveLapLeaderboard(sessionResponse.ConsecutiveLapLeaderboards);
 
         if (singleLapLeaderboards.Any() || consecutiveLapLeaderboards.Any())
         {
-            var pilotLaps = sessionResponse.Laps.Where(x => x.PilotId == pilotLane.PilotId).Select(x => new Lap(x.Id, x.LapNumber, x.StartedUtc, x.FinishedUtc,
+            var pilotLaps = sessionResponse.Laps.Where(x => x.PilotId == pilotLane.PilotId).Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
                 x.Status switch
                 {
                     OpenPracticeSessionResponse.LapStatus.Invalid => LapStatus.Invalid,
@@ -119,7 +119,7 @@ public class OpenPracticeSessionManager : ISubscriber
                     _ => throw new NotImplementedException()
                 }, x.TotalMilliseconds)).ToList();
 
-            pilotLaps.Add(new Lap(newLapId, lapCompleted.LapNumber, lapCompleted.StartedUtcTime, lapCompleted.FinishedUtcTime, LapStatus.Completed, lapCompleted.TotalTime));
+            pilotLaps.Add(new Lap(newLapId, lapCompleted.StartedUtcTime, lapCompleted.FinishedUtcTime, LapStatus.Completed, lapCompleted.TotalTime));
 
             foreach (var singlelapLeaderboard in singleLapLeaderboards)
             {
@@ -144,7 +144,7 @@ public class OpenPracticeSessionManager : ISubscriber
 
         if (singleLapLeaderboards.Any() || consecutiveLapLeaderboards.Any())
         {
-            var pilotLaps = sessionResponse.Laps.Where(x => x.PilotId == removed.PilotId && x.Id != removed.LapId).Select(x => new Lap(x.Id, x.LapNumber, x.StartedUtc, x.FinishedUtc,
+            var pilotLaps = sessionResponse.Laps.Where(x => x.PilotId == removed.PilotId && x.Id != removed.LapId).Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
                 x.Status switch
                 {
                     OpenPracticeSessionResponse.LapStatus.Invalid => LapStatus.Invalid,
@@ -190,7 +190,7 @@ public class OpenPracticeSessionManager : ISubscriber
             var leaderboard = new SingleLapLeaderboard(singleLapLeaderboard.LeaderboardId);
             foreach (var position in singleLapLeaderboard.Positions)
             {
-                leaderboard.UpdateIfFaster(position.PilotId, position.LapNumber, position.TotalMilliseconds, position.CompletionUtc);
+                leaderboard.UpdateIfFaster(position.PilotId, position.LapId, position.TotalMilliseconds, position.CompletionUtc);
             }
             singleLapLeaderboards.Add(leaderboard);
         }
@@ -227,7 +227,7 @@ public class OpenPracticeSessionManager : ISubscriber
         }
         var oldPositions = leaderboard.GetPositions();
 
-        if (leaderboard.UpdateIfFaster(pilotId, fastestSingle.LapNumber, fastestSingle.LapMilliseconds, fastestSingle.CompletionUtc))
+        if (leaderboard.UpdateIfFaster(pilotId, fastestSingle.LapId, fastestSingle.LapMilliseconds, fastestSingle.CompletionUtc))
         {
             await DispatchUpdatedSingleLeaderboardPositions(sessionId, leaderboard, oldPositions);
         }
@@ -246,7 +246,7 @@ public class OpenPracticeSessionManager : ISubscriber
         }
         else
         {
-            if (leaderboard.SetFastest(pilotId, fastestSingle.LapNumber, fastestSingle.LapMilliseconds, fastestSingle.CompletionUtc))
+            if (leaderboard.SetFastest(pilotId, fastestSingle.LapId, fastestSingle.LapMilliseconds, fastestSingle.CompletionUtc))
             {
                 await DispatchUpdatedSingleLeaderboardPositions(sessionId, leaderboard, oldPositions);
             }
@@ -257,8 +257,8 @@ public class OpenPracticeSessionManager : ISubscriber
     {
         var newPositions = leaderboard.GetPositions();
         await _publishSubscribe.Dispatch(new OpenPracticeSingleLapLeaderboardPositionsChanged(sessionId, leaderboard.LeaderboardId,
-            oldPositions.Select(x => new OpenPracticeSingleLapLeaderboardPositionsChanged.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapNumber, x.LapMilliseconds, x.CompletionTime)),
-            newPositions.Select(x => new OpenPracticeSingleLapLeaderboardPositionsChanged.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapNumber, x.LapMilliseconds, x.CompletionTime))));
+            oldPositions.Select(x => new OpenPracticeSingleLapLeaderboardPositionsChanged.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapId, x.LapMilliseconds, x.CompletionTime)),
+            newPositions.Select(x => new OpenPracticeSingleLapLeaderboardPositionsChanged.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapId, x.LapMilliseconds, x.CompletionTime))));
     }
     private async Task CheckConsecutiveLapLeaderboards(Guid sessionId, Guid pilotId, ConsecutiveLapsLeaderboard leaderboard, IEnumerable<Lap> laps)
     {

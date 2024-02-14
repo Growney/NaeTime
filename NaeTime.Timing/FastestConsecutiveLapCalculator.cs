@@ -5,7 +5,7 @@ public class FastestConsecutiveLapCalculator
 {
     public FastestConsecutiveLaps? CalculateFastestConsecutiveLaps(uint lapCount, IEnumerable<Lap> laps)
     {
-        if (!laps.Any())
+        if (!laps.Any(x => x.Status == LapStatus.Completed))
         {
             return null;
         }

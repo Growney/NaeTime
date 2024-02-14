@@ -364,9 +364,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                             b1.Property<DateTime>("FinishedUtc")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<uint>("LapNumber")
-                                .HasColumnType("INTEGER");
-
                             b1.Property<Guid>("PilotId")
                                 .HasColumnType("TEXT");
 
@@ -441,10 +438,10 @@ namespace NaeTime.Persistence.SQLite.Migrations
                                     b2.Property<DateTime>("CompletionUtc")
                                         .HasColumnType("TEXT");
 
-                                    b2.Property<long>("LapMilliseconds")
-                                        .HasColumnType("INTEGER");
+                                    b2.Property<Guid>("LapId")
+                                        .HasColumnType("TEXT");
 
-                                    b2.Property<uint>("LapNumber")
+                                    b2.Property<long>("LapMilliseconds")
                                         .HasColumnType("INTEGER");
 
                                     b2.Property<Guid>("PilotId")

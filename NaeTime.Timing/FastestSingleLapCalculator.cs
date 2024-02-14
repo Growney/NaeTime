@@ -9,7 +9,7 @@ public class FastestSingleLapCalculator
         {
             return null;
         }
-        uint lapNumber = 0;
+        Guid lapId = Guid.Empty;
         long lapMilliseconds = long.MaxValue;
         DateTime finishedUtc = DateTime.MinValue;
         foreach (var lap in laps)
@@ -21,11 +21,11 @@ public class FastestSingleLapCalculator
 
             if (lap.TotalMilliseconds < lapMilliseconds)
             {
-                lapNumber = lap.LapNumber;
+                lapId = lap.LapId;
                 lapMilliseconds = lap.TotalMilliseconds;
                 finishedUtc = lap.FinishedUtc;
             }
         }
-        return new FastestSingleLap(lapNumber, lapMilliseconds, finishedUtc);
+        return new FastestSingleLap(lapId, lapMilliseconds, finishedUtc);
     }
 }

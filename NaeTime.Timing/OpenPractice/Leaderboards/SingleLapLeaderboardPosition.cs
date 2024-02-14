@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Timing.OpenPractice.Leaderboards;
-public record SingleLapLeaderboardPosition(uint Position, Guid PilotId, uint LapNumber, long LapMilliseconds, DateTime CompletionTime);
+public record SingleLapLeaderboardPosition(uint Position, Guid PilotId, Guid LapId, long LapMilliseconds, DateTime CompletionTime);

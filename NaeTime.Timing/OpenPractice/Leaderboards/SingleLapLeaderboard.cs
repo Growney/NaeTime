@@ -11,18 +11,18 @@ public class SingleLapLeaderboard
         LeaderboardId = leaderboardId;
     }
 
-    public bool UpdateIfFaster(Guid pilotId, uint lapNumber, long totalMilliseconds, DateTime completionUtc)
+    public bool UpdateIfFaster(Guid pilotId, Guid lapId, long totalMilliseconds, DateTime completionUtc)
     {
         if (!_pilotLaps.ContainsKey(pilotId))
         {
-            _pilotLaps.Add(pilotId, new FastestSingleLap(lapNumber, totalMilliseconds, completionUtc));
+            _pilotLaps.Add(pilotId, new FastestSingleLap(lapId, totalMilliseconds, completionUtc));
             return true;
         }
         else
         {
             if (_pilotLaps[pilotId].LapMilliseconds > totalMilliseconds)
             {
-                _pilotLaps[pilotId] = new FastestSingleLap(lapNumber, totalMilliseconds, completionUtc);
+                _pilotLaps[pilotId] = new FastestSingleLap(lapId, totalMilliseconds, completionUtc);
                 return true;
             }
         }
@@ -32,9 +32,9 @@ public class SingleLapLeaderboard
     {
         _pilotLaps.Remove(pilotId);
     }
-    public bool SetFastest(Guid pilotId, uint lapNumber, long totalMilliseconds, DateTime completionUtc)
+    public bool SetFastest(Guid pilotId, Guid lapId, long totalMilliseconds, DateTime completionUtc)
     {
-        var newFastest = new FastestSingleLap(lapNumber, totalMilliseconds, completionUtc);
+        var newFastest = new FastestSingleLap(lapId, totalMilliseconds, completionUtc);
 
         if (!_pilotLaps.ContainsKey(pilotId))
         {
@@ -46,7 +46,7 @@ public class SingleLapLeaderboard
             var existing = _pilotLaps[pilotId];
             if (existing != newFastest)
             {
-                _pilotLaps[pilotId] = new FastestSingleLap(lapNumber, totalMilliseconds, completionUtc);
+                _pilotLaps[pilotId] = new FastestSingleLap(lapId, totalMilliseconds, completionUtc);
                 return true;
             }
         }
@@ -61,7 +61,7 @@ public class SingleLapLeaderboard
         for (int i = 0; i < laps.Count; i++)
         {
             var lap = laps[i];
-            positions.Add(new SingleLapLeaderboardPosition((uint)i, lap.Key, lap.Value.LapNumber, lap.Value.LapMilliseconds, lap.Value.CompletionUtc));
+            positions.Add(new SingleLapLeaderboardPosition((uint)i, lap.Key, lap.Value.LapId, lap.Value.LapMilliseconds, lap.Value.CompletionUtc));
         }
         return positions;
     }

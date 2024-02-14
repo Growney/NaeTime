@@ -20,29 +20,32 @@
         </th>
     </tr>
     <tbody>
-
-        @foreach (var lap in Laps.OrderByDescending(x=>x.FinishedUtc))
-        {
-            <tr @onmouseover="() => showRemove = true" @onmouseleave="() => showRemove = false">
-                <td>
-                    @lap.LapNumber
-                </td>
-                @if (IncludePilot)
-                {
+        @{
+            int lapNumber = Laps.Count();
+        
+            @foreach (var lap in Laps.OrderByDescending(x=>x.FinishedUtc))
+            {
+                <tr @onmouseover="() => showRemove = true" @onmouseleave="() => showRemove = false">
                     <td>
-                        @lap.PilotName
+                        @(lapNumber--)
                     </td>
-                }
-                <td>
-                    @lap.FinishedUtc
-                </td>
-                <td>
-                    @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):mm\\:ss\\:ffff}")
-                </td>
-                <td>
-                    <Button Size=Size.ExtraSmall Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>
-                </td>
-            </tr>
+                    @if (IncludePilot)
+                    {
+                        <td>
+                            @lap.PilotName
+                        </td>
+                    }
+                    <td>
+                        @lap.FinishedUtc
+                    </td>
+                    <td>
+                        @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):mm\\:ss\\:ffff}")
+                    </td>
+                    <td>
+                        <Button Size=Size.ExtraSmall Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>
+                    </td>
+                </tr>
+            }
         }
     </tbody>
 </table>

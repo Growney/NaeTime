@@ -86,7 +86,7 @@ else
         @foreach (var consecutiveLapLeaderboards in _selectedSession.ConsecutiveLapLeaderboards.OrderBy(x=>x.ConsecutiveLaps))
         {
             <div class="shadow-sm p-3">
-                <ConsecutiveLapsLeaderboard Leaderboard="consecutiveLapLeaderboards"></ConsecutiveLapsLeaderboard>
+                <ConsecutiveLapsLeaderboard Leaderboard="consecutiveLapLeaderboards" AllLaps="_selectedSession.Laps"></ConsecutiveLapsLeaderboard>
             </div>
         }
     </div>

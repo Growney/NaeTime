@@ -36,10 +36,10 @@ public class OpenPracticeSessionService : ISubscriber
             return null;
         }
         var singleLapLeaderboards = session.SingleLapLeaderboards.Select(x => new OpenPracticeSessionResponse.SingleLapLeaderboard(x.LeaderboardId,
-            x.Positions.Select(y => new OpenPracticeSessionResponse.SingleLapLeaderboardPosition(y.Position, y.PilotId, y.LapNumber, y.LapMilliseconds, y.CompletionUtc))));
+            x.Positions.Select(y => new OpenPracticeSessionResponse.SingleLapLeaderboardPosition(y.Position, y.PilotId, y.LapId, y.LapMilliseconds, y.CompletionUtc))));
         var consecutiveLapLeaderboards = session.ConsecutiveLapLeaderboards.Select(x => new OpenPracticeSessionResponse.ConsecutiveLapLeaderboard(x.LeaderboardId, x.ConsecutiveLaps,
             x.Positions.Select(y => new OpenPracticeSessionResponse.ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc, y.IncludedLaps))));
-        var laps = session.Laps.Select(x => new OpenPracticeSessionResponse.Lap(x.LapId, x.PilotId, x.LapNumber, x.StartedUtc, x.FinishedUtc,
+        var laps = session.Laps.Select(x => new OpenPracticeSessionResponse.Lap(x.LapId, x.PilotId, x.StartedUtc, x.FinishedUtc,
             x.Status switch
             {
                 Models.OpenPracticeLapStatus.Invalid => OpenPracticeSessionResponse.LapStatus.Invalid,
@@ -66,7 +66,7 @@ public class OpenPracticeSessionService : ISubscriber
             return;
         }
 
-        await repository.AddLapToSession(openPracticeLapCompleted.SessionId, openPracticeLapCompleted.LapId, openPracticeLapCompleted.PilotId, openPracticeLapCompleted.LapNumber, Models.OpenPracticeLapStatus.Completed, openPracticeLapCompleted.StartedUtc, openPracticeLapCompleted.FinishedUtc, openPracticeLapCompleted.TotalMilliseconds);
+        await repository.AddLapToSession(openPracticeLapCompleted.SessionId, openPracticeLapCompleted.LapId, openPracticeLapCompleted.PilotId, Models.OpenPracticeLapStatus.Completed, openPracticeLapCompleted.StartedUtc, openPracticeLapCompleted.FinishedUtc, openPracticeLapCompleted.TotalMilliseconds);
     }
     public async Task When(OpenPracticeLapInvalidated openPracticeLapInvalidated)
     {
@@ -79,7 +79,7 @@ public class OpenPracticeSessionService : ISubscriber
             return;
         }
 
-        await repository.AddLapToSession(openPracticeLapInvalidated.SessionId, openPracticeLapInvalidated.LapId, openPracticeLapInvalidated.PilotId, openPracticeLapInvalidated.LapNumber, Models.OpenPracticeLapStatus.Invalid, openPracticeLapInvalidated.StartedUtc, openPracticeLapInvalidated.FinishedUtc, openPracticeLapInvalidated.TotalMilliseconds);
+        await repository.AddLapToSession(openPracticeLapInvalidated.SessionId, openPracticeLapInvalidated.LapId, openPracticeLapInvalidated.PilotId, Models.OpenPracticeLapStatus.Invalid, openPracticeLapInvalidated.StartedUtc, openPracticeLapInvalidated.FinishedUtc, openPracticeLapInvalidated.TotalMilliseconds);
     }
     public async Task When(OpenPracticeLanePilotSet laneSet)
     {
@@ -120,7 +120,7 @@ public class OpenPracticeSessionService : ISubscriber
             return;
         }
 
-        var positions = newPositions.NewPositions.Select(x => new Models.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapNumber, x.LapMilliseconds, x.CompletionUtc));
+        var positions = newPositions.NewPositions.Select(x => new Models.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapId, x.LapMilliseconds, x.CompletionUtc));
 
         await repository.UpdateSingleLapLeaderboard(newPositions.SessionId, newPositions.LeaderboardId, positions);
     }

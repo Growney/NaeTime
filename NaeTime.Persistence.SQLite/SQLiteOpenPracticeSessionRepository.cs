@@ -12,13 +12,12 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    public async Task AddLapToSession(Guid sessionId, Guid lapId, Guid pilotId, uint lapNumber, OpenPracticeLapStatus status, DateTime startedUtc, DateTime finishedUtc, long totalMilliseconds)
+    public async Task AddLapToSession(Guid sessionId, Guid lapId, Guid pilotId, OpenPracticeLapStatus status, DateTime startedUtc, DateTime finishedUtc, long totalMilliseconds)
     {
         var lap = new Models.OpenPracticeLap
         {
             Id = lapId,
             PilotId = pilotId,
-            LapNumber = lapNumber,
             Status = status switch
             {
                 OpenPracticeLapStatus.Invalid => Models.OpenPracticeLapStatus.Invalid,
@@ -101,7 +100,7 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
             Id = Guid.NewGuid(),
             Position = x.Position,
             PilotId = x.PilotId,
-            LapNumber = x.LapNumber,
+            LapId = x.LapId,
             CompletionUtc = x.CompletionUtc,
             LapMilliseconds = x.LapMilliseconds,
         }));
@@ -126,7 +125,7 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
         //If we don't call to list on each of these, some sort of magic happens and the lists are bound to the database so calls that don't expect them to have been updated end up being updated,
         //look at turning off tracking and update the rest of the update queries to update records
         var lanes = session.ActiveLanes.Select(x => new PilotLane(x.PilotId, x.Lane)).ToList();
-        var laps = session.Laps.Select(x => new OpenPracticeLap(x.Id, x.PilotId, x.LapNumber, x.StartedUtc, x.FinishedUtc,
+        var laps = session.Laps.Select(x => new OpenPracticeLap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc,
             x.Status switch
             {
                 Models.OpenPracticeLapStatus.Invalid => OpenPracticeLapStatus.Invalid,
@@ -135,7 +134,7 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
             }, x.TotalMilliseconds)).ToList();
         var singleLapLeaderboards = session.SingleLapLeaderboards.Select(
             x => new SingleLapLeaderboard(x.Id,
-                x.Positions.Select(y => new SingleLapLeaderboardPosition(y.Position, y.PilotId, y.LapNumber, y.LapMilliseconds, y.CompletionUtc)))).ToList();
+                x.Positions.Select(y => new SingleLapLeaderboardPosition(y.Position, y.PilotId, y.LapId, y.LapMilliseconds, y.CompletionUtc)))).ToList();
         var consecutiveLapLeaderboards = session.ConsecutiveLapLeaderboards.Select(
             x => new ConsecutiveLapLeaderboard(x.Id, x.ConsecutiveLaps,
                 x.Positions.Select(y => new ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc, y.IncludedLaps.Select(x => x.LapId))))).ToList();

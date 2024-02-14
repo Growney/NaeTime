@@ -174,7 +174,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     OpenPracticeSessionId = table.Column<Guid>(type: "TEXT", nullable: false),
                     PilotId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    LapNumber = table.Column<uint>(type: "INTEGER", nullable: false),
                     StartedUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
                     FinishedUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
                     Status = table.Column<int>(type: "INTEGER", nullable: false),
@@ -281,7 +280,7 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     SingleLapLeaderboardId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Position = table.Column<uint>(type: "INTEGER", nullable: false),
                     PilotId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    LapNumber = table.Column<uint>(type: "INTEGER", nullable: false),
+                    LapId = table.Column<Guid>(type: "TEXT", nullable: false),
                     LapMilliseconds = table.Column<long>(type: "INTEGER", nullable: false),
                     CompletionUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },

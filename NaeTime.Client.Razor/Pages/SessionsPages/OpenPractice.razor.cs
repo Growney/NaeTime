@@ -184,7 +184,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
             Id = lap.LapId,
             PilotId = lap.PilotId,
             PilotName = _pilots.FirstOrDefault(x => x.Id == lap.PilotId)?.CallSign,
-            LapNumber = lap.LapNumber,
             StartedUtc = lap.StartedUtc,
             FinishedUtc = lap.FinishedUtc,
             TotalMilliseconds = lap.TotalMilliseconds,
@@ -209,7 +208,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
             Id = lap.LapId,
             PilotId = lap.PilotId,
             PilotName = _pilots.FirstOrDefault(x => x.Id == lap.PilotId)?.CallSign,
-            LapNumber = lap.LapNumber,
             StartedUtc = lap.StartedUtc,
             FinishedUtc = lap.FinishedUtc,
             TotalMilliseconds = lap.TotalMilliseconds,
@@ -248,7 +246,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         {
             Position = x.Position,
             PilotId = x.PilotId,
-            LapNumber = x.LapNumber,
+            LapId = x.LapId,
             LapMilliseconds = x.LapMilliseconds,
             CompletionUtc = x.CompletionUtc,
             PilotName = _pilots.FirstOrDefault(y => y.Id == x.PilotId)?.CallSign
@@ -317,7 +315,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
                 Id = x.Id,
                 PilotId = x.PilotId,
                 PilotName = _pilots.FirstOrDefault(y => y.Id == x.PilotId)?.CallSign,
-                LapNumber = x.LapNumber,
                 StartedUtc = x.StartedUtc,
                 FinishedUtc = x.FinishedUtc,
                 TotalMilliseconds = x.TotalMilliseconds,
@@ -336,7 +333,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
                  {
                      Position = y.Position,
                      PilotId = y.PilotId,
-                     LapNumber = y.LapNumber,
+                     LapId = y.LapId,
                      LapMilliseconds = y.TotalMilliseconds,
                      CompletionUtc = y.CompletionUtc,
                      PilotName = _pilots.FirstOrDefault(x => x.Id == y.PilotId)?.CallSign

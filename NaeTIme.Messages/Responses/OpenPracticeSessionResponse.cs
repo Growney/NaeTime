@@ -4,7 +4,7 @@ public record OpenPracticeSessionResponse(Guid SessionId, Guid TrackId, string? 
     IEnumerable<OpenPracticeSessionResponse.SingleLapLeaderboard> SingleLapLeaderboards,
     IEnumerable<OpenPracticeSessionResponse.ConsecutiveLapLeaderboard> ConsecutiveLapLeaderboards)
 {
-    public record Lap(Guid Id, Guid PilotId, uint LapNumber, DateTime StartedUtc, DateTime FinishedUtc, LapStatus Status, long TotalMilliseconds);
+    public record Lap(Guid Id, Guid PilotId, DateTime StartedUtc, DateTime FinishedUtc, LapStatus Status, long TotalMilliseconds);
     public enum LapStatus
     {
         Invalid,
@@ -14,5 +14,5 @@ public record OpenPracticeSessionResponse(Guid SessionId, Guid TrackId, string? 
     public record ConsecutiveLapLeaderboard(Guid LeaderboardId, uint ConsecutiveLaps, IEnumerable<ConsecutiveLapLeaderboardPosition> Positions);
     public record ConsecutiveLapLeaderboardPosition(uint Position, Guid PilotId, uint TotalLaps, long TotalMilliseconds, DateTime LastLapCompletionUtc, IEnumerable<Guid> IncludedLaps);
     public record SingleLapLeaderboard(Guid LeaderboardId, IEnumerable<SingleLapLeaderboardPosition> Positions);
-    public record SingleLapLeaderboardPosition(uint Position, Guid PilotId, uint LapNumber, long TotalMilliseconds, DateTime CompletionUtc);
+    public record SingleLapLeaderboardPosition(uint Position, Guid PilotId, Guid LapId, long TotalMilliseconds, DateTime CompletionUtc);
 }

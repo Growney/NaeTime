@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Timing.Models;
-public record FastestSingleLap(uint LapNumber, long LapMilliseconds, DateTime CompletionUtc);
+public record FastestSingleLap(Guid LapId, long LapMilliseconds, DateTime CompletionUtc);
