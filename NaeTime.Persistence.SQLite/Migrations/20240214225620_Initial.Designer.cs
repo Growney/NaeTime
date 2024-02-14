@@ -11,7 +11,7 @@ using NaeTime.Persistence.SQLite.Context;
 namespace NaeTime.Persistence.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
-    [Migration("20240214222823_Initial")]
+    [Migration("20240214225620_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -340,6 +340,9 @@ namespace NaeTime.Persistence.SQLite.Migrations
 
                                             b3.Property<Guid>("LapId")
                                                 .HasColumnType("TEXT");
+
+                                            b3.Property<int>("Ordinal")
+                                                .HasColumnType("INTEGER");
 
                                             b3.HasKey("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId", "ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId", "ConsecutiveLapLeaderboardPositionId", "Id");
 

@@ -58,6 +58,7 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
 
         existingLeaderboard.Positions.Clear();
 
+
         existingLeaderboard.Positions.AddRange(positions.Select(x => new Models.ConsecutiveLapLeaderboardPosition
         {
             Id = Guid.NewGuid(),
@@ -66,10 +67,12 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
             TotalLaps = x.TotalLaps,
             TotalMilliseconds = x.TotalMilliseconds,
             LastLapCompletionUtc = x.LastLapCompletionUtc,
-            IncludedLaps = x.IncludedLaps.Select(x => new Models.ConsecutiveLapLeaderboardPositionLap
+            IncludedLaps = x.IncludedLaps.Select(lapId => new Models.ConsecutiveLapLeaderboardPositionLap
             {
                 Id = Guid.NewGuid(),
-                LapId = x
+                LapId = lapId,
+                //This feels bad but in order to do it on a single line its requried
+                Ordinal = x.IncludedLaps.TakeWhile(y => y != lapId).Count()
             }).ToList()
         }));
 
@@ -137,7 +140,7 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
                 x.Positions.Select(y => new SingleLapLeaderboardPosition(y.Position, y.PilotId, y.LapId, y.LapMilliseconds, y.CompletionUtc)))).ToList();
         var consecutiveLapLeaderboards = session.ConsecutiveLapLeaderboards.Select(
             x => new ConsecutiveLapLeaderboard(x.Id, x.ConsecutiveLaps,
-                x.Positions.Select(y => new ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc, y.IncludedLaps.Select(x => x.LapId))))).ToList();
+                x.Positions.Select(y => new ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc, y.IncludedLaps.OrderBy(x => x.Ordinal).Select(x => x.LapId))))).ToList();
 
         return new OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, laps, lanes, singleLapLeaderboards, consecutiveLapLeaderboards);
     }

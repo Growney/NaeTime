@@ -303,6 +303,7 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId = table.Column<Guid>(type: "TEXT", nullable: false),
                     ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId = table.Column<Guid>(type: "TEXT", nullable: false),
                     ConsecutiveLapLeaderboardPositionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Ordinal = table.Column<int>(type: "INTEGER", nullable: false),
                     LapId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>

@@ -338,6 +338,9 @@ namespace NaeTime.Persistence.SQLite.Migrations
                                             b3.Property<Guid>("LapId")
                                                 .HasColumnType("TEXT");
 
+                                            b3.Property<int>("Ordinal")
+                                                .HasColumnType("INTEGER");
+
                                             b3.HasKey("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId", "ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId", "ConsecutiveLapLeaderboardPositionId", "Id");
 
                                             b3.ToTable("ConsecutiveLapLeaderboardPositionLap");
