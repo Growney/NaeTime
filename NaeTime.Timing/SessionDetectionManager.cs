@@ -21,14 +21,14 @@ public class SessionDetectionManager : ISubscriber
 
     private async Task TriggerTrackDetection(Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        var activeSessionResponse = await _publishSubscribe.Request<ActiveSessionRequest, ActiveSessionResponse>();
+        var activeSessionResponse = await _publishSubscribe.Request<ActiveSessionRequest, ActiveSessionResponse>().ConfigureAwait(false);
 
         if (activeSessionResponse == null)
         {
             return;
         }
 
-        ActiveTrack activeTrack = new ActiveTrack(activeSessionResponse.ActiveTrack.Timers);
+        ActiveTrack activeTrack = new(activeSessionResponse.ActiveTrack.Timers);
 
         var timerPosition = activeTrack.GetTimerPosition(timerId);
         var timerCount = activeTrack.Timers.Count();
@@ -37,6 +37,7 @@ public class SessionDetectionManager : ISubscriber
             //TODO dispatch timer detection discarded
             return;
         }
-        await _publishSubscribe.Dispatch(new SessionDetectionOccured(activeSessionResponse.SessionId, lane, (byte)timerPosition, activeSessionResponse.MinimumLapMilliseconds, activeSessionResponse.MaximumLapMilliseconds, (byte)timerCount, hardwareTime, softwareTime, utcTime));
+
+        await _publishSubscribe.Dispatch(new SessionDetectionOccured(activeSessionResponse.SessionId, lane, (byte)timerPosition, activeSessionResponse.MinimumLapMilliseconds, activeSessionResponse.MaximumLapMilliseconds, (byte)timerCount, hardwareTime, softwareTime, utcTime)).ConfigureAwait(false);
     }
 }

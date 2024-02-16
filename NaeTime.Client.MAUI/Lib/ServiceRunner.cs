@@ -14,7 +14,7 @@ public class ServiceRunner : IAsyncDisposable
     {
         foreach (var service in _services)
         {
-            await service.StopAsync(CancellationToken.None);
+            await service.StopAsync(CancellationToken.None).ConfigureAwait(false);
         }
     }
 
@@ -22,7 +22,7 @@ public class ServiceRunner : IAsyncDisposable
     {
         foreach (var service in _services)
         {
-            await service.StartAsync(CancellationToken.None);
+            await service.StartAsync(CancellationToken.None).ConfigureAwait(false);
         }
     }
 

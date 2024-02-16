@@ -1,27 +1,59 @@
 @page "/openpractice"
 @layout MainLayout
-<div>
-    <h1>Open Practice</h1>
-    <Dropdown>
-        <DropdownToggleButton Color="ButtonColor.Primary">Start Session On</DropdownToggleButton>
-            <DropdownMenu>
-                @foreach(var track in _tracks)
-                {
-                    <DropdownItem Type="ButtonType.Button" @onclick="() => StartNewSessionOnTrack(Guid.NewGuid(),track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)">@track.Name</DropdownItem>
-                }
-                <DropdownItem Type="ButtonType.Button" @onclick="() => StartSessionOnNewTrack()">[New Track]</DropdownItem>
-            </DropdownMenu>
-    </Dropdown>
-    <Dropdown>
-        <DropdownToggleButton Color="ButtonColor.Primary">@GetActiveSessionName()</DropdownToggleButton>
-        <DropdownMenu>
-            @foreach (var session in _sessionDetails)
-            {
-                <DropdownItem Type="ButtonType.Button" @onclick="() => SetupForSession(session.Id)">@session.Name</DropdownItem>
-            }
-        </DropdownMenu>
-    </Dropdown>
-</div>
+<table class="w-100 mb-2">
+    <tr>
+        <td>
+
+            <h1>Open Practice</h1>
+            <Dropdown>
+                <DropdownToggleButton Color="ButtonColor.Primary">Start Session On</DropdownToggleButton>
+                <DropdownMenu>
+                    @foreach (var track in _tracks)
+                    {
+                        <DropdownItem Type="ButtonType.Button" @onclick="() => StartNewSessionOnTrack(Guid.NewGuid(),track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)">@track.Name</DropdownItem>
+                    }
+                    <DropdownItem Type="ButtonType.Button" @onclick="() => StartSessionOnNewTrack()">[New Track]</DropdownItem>
+                </DropdownMenu>
+            </Dropdown>
+            <Dropdown>
+                <DropdownToggleButton Color="ButtonColor.Primary">@GetActiveSessionName()</DropdownToggleButton>
+                    <DropdownMenu>
+                        @foreach (var session in _sessionDetails)
+                    {
+                        <DropdownItem Type="ButtonType.Button" @onclick="() => SetupForSession(session.Id)">@session.Name</DropdownItem>
+                    }
+                </DropdownMenu>
+            </Dropdown>
+        </td>
+        @if (_selectedSession != null)
+        {
+            <td class="content-end">
+                <table style="float:right;">
+                    <th>
+                        Lap Times (ms)
+                    </th>
+                    <tr>
+                        <th>
+                            Minimum
+                        </th>
+                        <th>
+                            Maximum
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <NumberInput Class="rounded-0 rounded-end" TValue=long ValueChanged="SetSessionMinimumLapTime" Value="_selectedSession.MinimumLapMilliseconds" ValueExpression="() => _selectedSession.MinimumLapMilliseconds"></NumberInput>
+                        </td>
+                        <td>
+                            <NumberInput Class="rounded-0 rounded-end" TValue=long? ValueChanged="SetSessionMaximumLapTime" Value="_selectedSession.MaximumLapMilliseconds" ValueExpression="() => _selectedSession.MaximumLapMilliseconds"></NumberInput>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+                
+        }
+    </tr>
+</table>
 
 @if(_selectedSession == null)
 {
@@ -36,20 +68,8 @@ else
             {
                 <SessionLaneConfiguration 
                     Pilots="_pilots"
-                    LaneNumber="laneConfiguration.LaneNumber"
-                    PilotId="laneConfiguration.PilotId"
-                    RssiValue="laneConfiguration.RssiValue"
-                    MaxRSSIValue="laneConfiguration.MaxRssiValue"
-                    BandId="laneConfiguration.BandId"
-                    FrequencyInMhz="laneConfiguration.FrequencyInMhz"
-                    IsEnabled="laneConfiguration.IsEnabled"
-                    LapStart="laneConfiguration.LapStarted"
-
-                    OnFrequencyChanged="(bandId,frequencyInMhz) => OnLaneFrequyencyChanged(laneConfiguration.LaneNumber,bandId,frequencyInMhz)"
-                    OnEnabledChanged="enabled => OnLaneEnabledChanged(laneConfiguration.LaneNumber,enabled)"
-                    OnPilotChanged="pilotId => OnLanePilotChanged(laneConfiguration.LaneNumber, pilotId)"
-                    OnDetectionTriggered="split => OnLaneDetectionTriggered(laneConfiguration.LaneNumber, split)"
-                    OnInvalidateTriggered="split => OnLaneInvalidateTriggered(laneConfiguration.LaneNumber,split)">
+                    Configuration="laneConfiguration"
+                    SessionId = "_selectedSession.Id">
                 </SessionLaneConfiguration>
             }
         </div>

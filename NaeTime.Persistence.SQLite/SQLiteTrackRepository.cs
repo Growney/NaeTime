@@ -15,7 +15,7 @@ public class SQLiteTrackRepository : ITrackRepository
     }
     public async Task AddOrUpdateTrack(Guid id, string name, long minimumLapMilliseconds, long? maximumLapMilliseconds, IEnumerable<Guid> timers, byte allowedLanes)
     {
-        var existing = await _dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == id);
+        var existing = await _dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -40,12 +40,12 @@ public class SQLiteTrackRepository : ITrackRepository
             existing.AllowedLanes = allowedLanes;
         }
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
     public async Task<Track?> Get(Guid id)
     {
-        var existing = await _dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == id);
+        var existing = await _dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -57,7 +57,7 @@ public class SQLiteTrackRepository : ITrackRepository
 
     public async Task<IEnumerable<Track>> GetAll()
     {
-        return await _dbContext.Tracks.Select(x => new Track(x.Id, x.Name, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds, x.Timers.Select(y => y.TimerId), x.AllowedLanes)).ToListAsync();
+        return await _dbContext.Tracks.Select(x => new Track(x.Id, x.Name, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds, x.Timers.Select(y => y.TimerId), x.AllowedLanes)).ToListAsync().ConfigureAwait(false);
     }
 
 }

@@ -15,7 +15,7 @@ public partial class CreateEthernetLapRF8Channel : ComponentBase
     [Parameter]
     public string? ReturnUrl { get; set; }
 
-    private EthernetLapRF8Channel? _model = new()
+    private readonly EthernetLapRF8Channel? _model = new()
     {
         Id = Guid.NewGuid(),
         Name = null,
@@ -40,7 +40,6 @@ public partial class CreateEthernetLapRF8Channel : ComponentBase
         {
             return;
         }
-
 
         await Dispatcher.Dispatch(new EthernetLapRF8ChannelConfigured(timer.Id, timer.Name, validIP, timer.Port));
 

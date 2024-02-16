@@ -11,7 +11,7 @@ public static class IServiceCollectionExtensions
         services.AddDbContext<NaeTimeDbContext>(options =>
         {
             options.UseSqlite($"Data Source=naetime.db");
-        });
+        }, contextLifetime: ServiceLifetime.Transient);
 
         return services;
     }

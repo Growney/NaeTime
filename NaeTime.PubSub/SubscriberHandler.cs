@@ -37,13 +37,13 @@ internal class SubscriberHandler : ISubscriptionHandler
         switch (SubscriberLifetime)
         {
             case ServiceLifetime.Singleton:
-                await HandleScopedMessage(message);
+                await HandleScopedMessage(message).ConfigureAwait(false);
                 break;
             case ServiceLifetime.Scoped:
-                await HandleScopedMessage(message);
+                await HandleScopedMessage(message).ConfigureAwait(false);
                 break;
             case ServiceLifetime.Transient:
-                await HandleTransientMessage(message);
+                await HandleTransientMessage(message).ConfigureAwait(false);
                 break;
             default:
                 throw new NotImplementedException();
@@ -69,9 +69,9 @@ internal class SubscriberHandler : ISubscriptionHandler
     }
     private Task HandleSingletonMessage(object message)
     {
-        var subscriber = _subscriber ?? ActivatorUtilities.CreateInstance(_serviceProvider, SubscriberType);
+        _subscriber ??= ActivatorUtilities.CreateInstance(_serviceProvider, SubscriberType);
 
-        var result = _whenMethodInfo.Invoke(subscriber, [message]);
+        var result = _whenMethodInfo.Invoke(_subscriber, [message]);
 
         return AwaitResult(result);
     }
@@ -79,11 +79,11 @@ internal class SubscriberHandler : ISubscriptionHandler
     {
         if (result is Task task)
         {
-            await task;
+            await task.ConfigureAwait(false);
         }
         else if (result is ValueTask valueTask)
         {
-            await valueTask;
+            await valueTask.ConfigureAwait(false);
         }
     }
     private MethodInfo? FindMethodInfo(Type subscriberType, Type messageType)
@@ -96,6 +96,7 @@ internal class SubscriberHandler : ISubscriptionHandler
             {
                 continue;
             }
+
             var parameters = method.GetParameters();
 
             if (parameters.Length != 1)

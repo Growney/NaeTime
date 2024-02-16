@@ -17,6 +17,7 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
         var lap = new Models.OpenPracticeLap
         {
             Id = lapId,
+            SessionId = sessionId,
             PilotId = pilotId,
             Status = status switch
             {
@@ -29,27 +30,14 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
             TotalMilliseconds = totalMilliseconds
         };
 
-        var session = _dbContext.OpenPracticeSessions.Include(x => x.Laps).FirstOrDefault(x => x.Id == sessionId);
+        _dbContext.OpenPracticeLaps.Add(lap);
 
-        if (session != null)
-        {
-            session.Laps.Add(lap);
-
-            _dbContext.OpenPracticeSessions.Update(session);
-
-            await _dbContext.SaveChangesAsync();
-        }
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
     public async Task UpdateConsecutiveLapsLeaderboardPositions(Guid sessionId, Guid leaderboardId, IEnumerable<ConsecutiveLapLeaderboardPosition> positions)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId);
 
-        if (session == null)
-        {
-            return;
-        }
-
-        var existingLeaderboard = session.ConsecutiveLapLeaderboards.FirstOrDefault(x => x.Id == leaderboardId);
+        var existingLeaderboard = await _dbContext.ConsecutiveLapLeaderboards.FirstOrDefaultAsync(x => x.Id == leaderboardId).ConfigureAwait(false);
 
         if (existingLeaderboard == null)
         {
@@ -57,7 +45,6 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
         }
 
         existingLeaderboard.Positions.Clear();
-
 
         existingLeaderboard.Positions.AddRange(positions.Select(x => new Models.ConsecutiveLapLeaderboardPosition
         {
@@ -76,20 +63,13 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
             }).ToList()
         }));
 
-        _dbContext.OpenPracticeSessions.Update(session);
+        _dbContext.ConsecutiveLapLeaderboards.Update(existingLeaderboard);
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
     public async Task UpdateSingleLapLeaderboard(Guid sessionId, Guid leaderboardId, IEnumerable<SingleLapLeaderboardPosition> positions)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId);
-
-        if (session == null)
-        {
-            return;
-        }
-
-        var existingLeaderboard = session.SingleLapLeaderboards.FirstOrDefault(x => x.Id == leaderboardId);
+        var existingLeaderboard = await _dbContext.SingleLapLeaderboards.FirstOrDefaultAsync(x => x.Id == leaderboardId).ConfigureAwait(false);
 
         if (existingLeaderboard == null)
         {
@@ -108,18 +88,15 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
             LapMilliseconds = x.LapMilliseconds,
         }));
 
-        _dbContext.OpenPracticeSessions.Update(session);
+        _dbContext.SingleLapLeaderboards.Update(existingLeaderboard);
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
     public async Task<OpenPracticeSession?> Get(Guid sessionId)
     {
         var session = await _dbContext.OpenPracticeSessions
-            .Include(x => x.ActiveLanes)
-            .Include(x => x.Laps)
-            .Include(x => x.SingleLapLeaderboards).ThenInclude(x => x.Positions)
-            .Include(x => x.ConsecutiveLapLeaderboards).ThenInclude(x => x.Positions).FirstOrDefaultAsync(x => x.Id == sessionId);
+            .Include(x => x.ActiveLanes).FirstOrDefaultAsync(x => x.Id == sessionId);
 
         if (session == null)
         {
@@ -128,25 +105,27 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
         //If we don't call to list on each of these, some sort of magic happens and the lists are bound to the database so calls that don't expect them to have been updated end up being updated,
         //look at turning off tracking and update the rest of the update queries to update records
         var lanes = session.ActiveLanes.Select(x => new PilotLane(x.PilotId, x.Lane)).ToList();
-        var laps = session.Laps.Select(x => new OpenPracticeLap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc,
+        var laps = (await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == sessionId).ToListAsync().ConfigureAwait(false)).Select(x => new OpenPracticeLap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc,
             x.Status switch
             {
                 Models.OpenPracticeLapStatus.Invalid => OpenPracticeLapStatus.Invalid,
                 Models.OpenPracticeLapStatus.Completed => OpenPracticeLapStatus.Completed,
                 _ => throw new NotImplementedException()
-            }, x.TotalMilliseconds)).ToList();
-        var singleLapLeaderboards = session.SingleLapLeaderboards.Select(
+            }, x.TotalMilliseconds));
+
+        var singleLapLeaderboards = await _dbContext.SingleLapLeaderboards.Where(x => x.SessionId == sessionId).Select(
             x => new SingleLapLeaderboard(x.Id,
-                x.Positions.Select(y => new SingleLapLeaderboardPosition(y.Position, y.PilotId, y.LapId, y.LapMilliseconds, y.CompletionUtc)))).ToList();
-        var consecutiveLapLeaderboards = session.ConsecutiveLapLeaderboards.Select(
+                x.Positions.Select(y => new SingleLapLeaderboardPosition(y.Position, y.PilotId, y.LapId, y.LapMilliseconds, y.CompletionUtc)))).ToListAsync();
+
+        var consecutiveLapLeaderboards = await _dbContext.ConsecutiveLapLeaderboards.Where(x => x.SessionId == sessionId).Select(
             x => new ConsecutiveLapLeaderboard(x.Id, x.ConsecutiveLaps,
-                x.Positions.Select(y => new ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc, y.IncludedLaps.OrderBy(x => x.Ordinal).Select(x => x.LapId))))).ToList();
+                x.Positions.Select(y => new ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc, y.IncludedLaps.OrderBy(x => x.Ordinal).Select(x => x.LapId))))).ToListAsync();
 
         return new OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, laps, lanes, singleLapLeaderboards, consecutiveLapLeaderboards);
     }
     public async Task SetSessionLanePilot(Guid sessionId, byte lane, Guid pilotId)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId);
+        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
 
         if (session == null)
         {
@@ -168,44 +147,29 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
 
         _dbContext.OpenPracticeSessions.Update(session);
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
     public async Task AddOrUpdateConsecutiveLapsLeaderboard(Guid sessionId, Guid leaderboardId, uint consecutiveLaps)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId);
-
-        if (session == null)
-        {
-            return;
-        }
-
-        var existingLeaderboard = session.ConsecutiveLapLeaderboards.FirstOrDefault(x => x.Id == leaderboardId);
+        var existingLeaderboard = await _dbContext.ConsecutiveLapLeaderboards.FirstOrDefaultAsync(x => x.Id == leaderboardId && x.SessionId == sessionId).ConfigureAwait(false);
 
         if (existingLeaderboard == null)
         {
             existingLeaderboard = new Models.ConsecutiveLapLeaderboard
             {
                 Id = leaderboardId,
+                SessionId = sessionId,
             };
-            session.ConsecutiveLapLeaderboards.Add(existingLeaderboard);
+            _dbContext.ConsecutiveLapLeaderboards.Add(existingLeaderboard);
         }
 
         existingLeaderboard.ConsecutiveLaps = consecutiveLaps;
 
-        _dbContext.OpenPracticeSessions.Update(session);
-
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
     public async Task AddOrUpdateSingleLapLeaderboard(Guid sessionId, Guid leaderboardId)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId);
-
-        if (session == null)
-        {
-            return;
-        }
-
-        var existingLeaderboard = session.SingleLapLeaderboards.FirstOrDefault(x => x.Id == leaderboardId);
+        var existingLeaderboard = await _dbContext.SingleLapLeaderboards.FirstOrDefaultAsync(x => x.Id == leaderboardId && x.SessionId == sessionId);
 
         //Because there is nothing to update on this we just return 
         if (existingLeaderboard != null)
@@ -216,45 +180,22 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
         existingLeaderboard = new Models.SingleLapLeaderboard
         {
             Id = leaderboardId,
+            SessionId = sessionId,
         };
-        session.SingleLapLeaderboards.Add(existingLeaderboard);
 
-        _dbContext.OpenPracticeSessions.Update(session);
+        _dbContext.SingleLapLeaderboards.Add(existingLeaderboard);
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
     public async Task RemoveLeaderboard(Guid sessionId, Guid leaderboardId)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId);
-
-        if (session == null)
-        {
-            return;
-        }
-
-        var singleLapLeaderboard = session.SingleLapLeaderboards.FirstOrDefault(x => x.Id == leaderboardId);
-
-        //Because there is nothing to update on this we just return 
-        if (singleLapLeaderboard != null)
-        {
-            session.SingleLapLeaderboards.Remove(singleLapLeaderboard);
-        }
-
-        var consecutiveLapLeaderboard = session.ConsecutiveLapLeaderboards.FirstOrDefault(x => x.Id == leaderboardId);
-
-        if (consecutiveLapLeaderboard != null)
-        {
-            session.ConsecutiveLapLeaderboards.Remove(consecutiveLapLeaderboard);
-        }
-
-        _dbContext.OpenPracticeSessions.Update(session);
-
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SingleLapLeaderboards.Where(x => x.SessionId == sessionId && x.Id == leaderboardId).ExecuteDeleteAsync();
+        await _dbContext.ConsecutiveLapLeaderboards.Where(x => x.SessionId == sessionId && x.Id == leaderboardId).ExecuteDeleteAsync();
     }
 
     public async Task AddOrUpdate(Guid sessionId, string name, Guid trackId, long minimumLapMilliseconds, long? maximumLapMilliseconds)
     {
-        var existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId);
+        var existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -269,25 +210,36 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
         existing.MaximumLapMilliseconds = maximumLapMilliseconds;
         existing.Name = name;
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
-    public async Task RemoveLap(Guid sessionId, Guid lapId)
+    public Task RemoveLap(Guid sessionId, Guid lapId) => _dbContext.OpenPracticeLaps.Where(x => x.Id == lapId && x.SessionId == sessionId).ExecuteDeleteAsync();
+
+
+    public async Task SetMinimumLap(Guid sessionId, long minimumLapMilliseconds)
     {
-        var session = await _dbContext.OpenPracticeSessions.Include(x => x.Laps).FirstOrDefaultAsync(x => x.Id == sessionId);
+        var existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
 
-        if (session == null)
+        if (existing == null)
         {
             return;
         }
 
-        var lapIndex = session.Laps.FindIndex(x => x.Id == lapId);
-        if (lapIndex == -1)
+        existing.MinimumLapMilliseconds = minimumLapMilliseconds;
+
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
+    }
+    public async Task SetMaximumLap(Guid sessionId, long? maximumLapMilliseconds)
+    {
+        var existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
+
+        if (existing == null)
         {
             return;
         }
-        session.Laps.RemoveAt(lapIndex);
 
-        await _dbContext.SaveChangesAsync();
+        existing.MaximumLapMilliseconds = maximumLapMilliseconds;
+
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 }

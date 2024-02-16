@@ -5,18 +5,13 @@ public class RequestHandler
 {
     private readonly Type _requestType;
     private readonly Type _responseType;
-    private Func<object> _handler;
+    private readonly Func<object> _handler;
 
     private readonly MethodInfo _onMethodInfo;
 
     public RequestHandler(Type handlerType, Type requestType, Type responseType, Func<object> handler)
     {
-        var method = FindMethodInfo(handlerType, requestType, responseType);
-
-        if (method == null)
-        {
-            throw new ArgumentException($"Handler method not found");
-        }
+        var method = FindMethodInfo(handlerType, requestType, responseType) ?? throw new ArgumentException($"Handler method not found");
 
         _onMethodInfo = method;
 
@@ -54,6 +49,7 @@ public class RequestHandler
             {
                 continue;
             }
+
             var parameters = method.GetParameters();
 
             if (parameters.Length != 1)
@@ -89,7 +85,6 @@ public class RequestHandler
                 {
                     continue;
                 }
-
             }
             else
             {
@@ -97,7 +92,6 @@ public class RequestHandler
                 {
                     continue;
                 }
-
             }
 
             return method;

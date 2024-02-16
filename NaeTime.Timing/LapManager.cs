@@ -18,7 +18,7 @@ public class LapManager : ISubscriber
 
     private async Task HandleDetection(Guid sessionId, long minimumLapMilliseconds, long? maximumLapMilliseconds, byte lane, byte split, byte timerCount, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        var activeTimingsResponse = await _publishSubscribe.Request<ActiveTimingRequest, ActiveTimingResponse>(new ActiveTimingRequest(sessionId, lane));
+        var activeTimingsResponse = await _publishSubscribe.Request<ActiveTimingRequest, ActiveTimingResponse>(new ActiveTimingRequest(sessionId, lane)).ConfigureAwait(false);
 
         ActiveLap? activeLap = null;
         if (activeTimingsResponse?.Lap != null)
@@ -37,13 +37,12 @@ public class LapManager : ISubscriber
         {
             if (split == 0)
             {
-                await StartLap(sessionId, lane, 0, hardwareTime, softwareTime, utcTime);
+                await StartLap(sessionId, lane, 0, hardwareTime, softwareTime, utcTime).ConfigureAwait(false);
             }
-
 
             if (timerCount > 0)
             {
-                await StartSplit(sessionId, 0, lane, softwareTime, utcTime, split);
+                await StartSplit(sessionId, 0, lane, softwareTime, utcTime, split).ConfigureAwait(false);
             }
         }
         else
@@ -51,16 +50,17 @@ public class LapManager : ISubscriber
             uint lapNumber;
             if (activeLap == null)
             {
-                await StartLap(sessionId, lane, 0, hardwareTime, softwareTime, utcTime);
+                await StartLap(sessionId, lane, 0, hardwareTime, softwareTime, utcTime).ConfigureAwait(false);
                 lapNumber = 0;
             }
             else
             {
-                lapNumber = await HandleLapDetection(sessionId, lane, hardwareTime, softwareTime, utcTime, split, activeLap, minimumLapMilliseconds, maximumLapMilliseconds);
+                lapNumber = await HandleLapDetection(sessionId, lane, hardwareTime, softwareTime, utcTime, split, activeLap, minimumLapMilliseconds, maximumLapMilliseconds).ConfigureAwait(false);
             }
+
             if (timerCount > 0)
             {
-                await HandleSplitDetection(sessionId, lane, softwareTime, utcTime, activeLap, activeSplit, split, timerCount, lapNumber);
+                await HandleSplitDetection(sessionId, lane, softwareTime, utcTime, activeLap, activeSplit, split, timerCount, lapNumber).ConfigureAwait(false);
             }
         }
     }
@@ -81,16 +81,16 @@ public class LapManager : ISubscriber
         //Laps that are two long get invalidated instead of the detection being discarded
         if (maximumLapMilliseconds.HasValue && totalTime > maximumLapMilliseconds)
         {
-            await InvalidateLap(sessionId, lane, activeLap.StartedHardwareTime, activeLap.StartedSoftwareTime, activeLap.StartedUtcTime, hardwareTime, softwareTime, utcTime, activeLap, totalTime, LapInvalidReason.TooLong);
+            await InvalidateLap(sessionId, lane, activeLap.StartedHardwareTime, activeLap.StartedSoftwareTime, activeLap.StartedUtcTime, hardwareTime, softwareTime, utcTime, activeLap, totalTime, LapInvalidReason.TooLong).ConfigureAwait(false);
         }
         else
         {
-            await CompleteLap(sessionId, lane, activeLap.StartedHardwareTime, activeLap.StartedSoftwareTime, activeLap.StartedUtcTime, hardwareTime, softwareTime, utcTime, activeLap, totalTime);
+            await CompleteLap(sessionId, lane, activeLap.StartedHardwareTime, activeLap.StartedSoftwareTime, activeLap.StartedUtcTime, hardwareTime, softwareTime, utcTime, activeLap, totalTime).ConfigureAwait(false);
         }
 
         var nextLapNumber = activeLap.LapNumber + 1;
 
-        await StartLap(sessionId, lane, nextLapNumber, hardwareTime, softwareTime, utcTime);
+        await StartLap(sessionId, lane, nextLapNumber, hardwareTime, softwareTime, utcTime).ConfigureAwait(false);
 
         return nextLapNumber;
     }
@@ -103,13 +103,13 @@ public class LapManager : ISubscriber
             _ => throw new NotImplementedException()
         });
 
-        await _publishSubscribe.Dispatch(completedLap);
+        await _publishSubscribe.Dispatch(completedLap).ConfigureAwait(false);
     }
     private async Task CompleteLap(Guid sessionId, byte lane, ulong? startedHardwareTime, long startedSoftwareTime, DateTime startedUtcTime, ulong? finishedHardwareTime, long finishedSoftwareTime, DateTime finishedUtcTime, ActiveLap activeLap, long totalTime)
     {
         var completedLap = new LapCompleted(sessionId, lane, activeLap.LapNumber, startedSoftwareTime, startedUtcTime, startedHardwareTime, finishedSoftwareTime, finishedUtcTime, finishedHardwareTime, totalTime);
 
-        await _publishSubscribe.Dispatch(completedLap);
+        await _publishSubscribe.Dispatch(completedLap).ConfigureAwait(false);
     }
     private long CalculateTotalTime(ulong? startHardwareTime, long startSoftwareTime, DateTime startUtcTime, ulong? endHardwareTime, long endSoftwareTime, DateTime endUtcTime)
     {
@@ -122,14 +122,7 @@ public class LapManager : ISubscriber
         }
 
         var softwareDifference = endSoftwareTime - startSoftwareTime;
-        if (softwareDifference < 0)
-        {
-            return (long)endUtcTime.Subtract(startUtcTime).TotalMilliseconds;
-        }
-        else
-        {
-            return softwareDifference;
-        }
+        return softwareDifference < 0 ? (long)endUtcTime.Subtract(startUtcTime).TotalMilliseconds : softwareDifference;
     }
     private IEnumerable<(uint lapNumber, byte splitNumber)> GetMissingSplits(byte timerCount, uint activeLap, byte activeSplit, uint detectedLap, byte detectedSplit)
     {
@@ -147,6 +140,7 @@ public class LapManager : ISubscriber
             {
                 yield return (lapIndex, splitIndex);
             }
+
             startSplit = 0;
         }
     }
@@ -154,44 +148,27 @@ public class LapManager : ISubscriber
     {
         if (activeSplit == null)
         {
-            await StartSplit(sessionId, lapNumber, lane, softwareTime, utcTime, timerPosition);
+            await StartSplit(sessionId, lapNumber, lane, softwareTime, utcTime, timerPosition).ConfigureAwait(false);
         }
         else
         {
             var currentSplitNumber = activeSplit.SplitNumber;
 
-            int expectedTimerPosition;
-            if (currentSplitNumber == timerCount - 1)
-            {
-                expectedTimerPosition = 0;
-            }
-            else
-            {
-                expectedTimerPosition = currentSplitNumber + 1;
-            }
+            int expectedTimerPosition = currentSplitNumber == timerCount - 1 ? 0 : currentSplitNumber + 1;
 
-            uint expectedLapNumber;
+            uint expectedLapNumber = timerPosition == timerCount - 1 ? activeSplit.LapNumber + 1 : activeSplit.LapNumber;
             //If we are the last split we expect the next lap on the next detection
-            if (timerPosition == timerCount - 1)
-            {
-                expectedLapNumber = activeSplit.LapNumber + 1;
-            }
-            else
-            {
-                expectedLapNumber = activeSplit.LapNumber;
-            }
-
 
             if (expectedLapNumber != lapNumber || expectedTimerPosition != timerPosition)
             {
-                await HandleSkippedSplits(sessionId, lane, timerCount, activeLap?.LapNumber ?? 0, currentSplitNumber, lapNumber, timerPosition);
+                await HandleSkippedSplits(sessionId, lane, timerCount, activeLap?.LapNumber ?? 0, currentSplitNumber, lapNumber, timerPosition).ConfigureAwait(false);
             }
 
             var totalTime = CalculateTotalTime(activeSplit.StartedSoftwareTime, activeSplit.StartedUtcTime, softwareTime, utcTime);
 
-            await CompleteSplit(sessionId, lane, softwareTime, utcTime, lapNumber, currentSplitNumber, totalTime);
+            await CompleteSplit(sessionId, lane, softwareTime, utcTime, lapNumber, currentSplitNumber, totalTime).ConfigureAwait(false);
 
-            await StartSplit(sessionId, lapNumber, lane, softwareTime, utcTime, timerPosition);
+            await StartSplit(sessionId, lapNumber, lane, softwareTime, utcTime, timerPosition).ConfigureAwait(false);
 
         }
     }
@@ -199,39 +176,32 @@ public class LapManager : ISubscriber
     {
         var splitEnded = new SplitCompleted(sessionId, lane, lapNumber, (byte)currentSplitNumber, softwareTime, utcTime, totalTime);
 
-        await _publishSubscribe.Dispatch(splitEnded);
+        await _publishSubscribe.Dispatch(splitEnded).ConfigureAwait(false);
     }
     private long CalculateTotalTime(long startSoftwareTime, DateTime startUtcTime, long endSoftwareTime, DateTime endUtcTime)
     {
         var softwareDifference = endSoftwareTime - startSoftwareTime;
-        if (softwareDifference < 0)
-        {
-            return (long)endUtcTime.Subtract(startUtcTime).TotalMilliseconds;
-        }
-        else
-        {
-            return softwareDifference;
-        }
+        return softwareDifference < 0 ? (long)endUtcTime.Subtract(startUtcTime).TotalMilliseconds : softwareDifference;
     }
     private async Task HandleSkippedSplits(Guid sessionId, byte lane, byte timerCount, uint activeLap, byte activeSplit, uint detectedLap, byte detectedSplit)
     {
-        foreach (var missingSplit in GetMissingSplits(timerCount, activeLap, activeSplit, detectedLap, detectedSplit))
+        foreach (var (lapNumber, splitNumber) in GetMissingSplits(timerCount, activeLap, activeSplit, detectedLap, detectedSplit))
         {
-            var skippedSplit = new SplitSkipped(sessionId, lane, missingSplit.lapNumber, missingSplit.splitNumber);
+            var skippedSplit = new SplitSkipped(sessionId, lane, lapNumber, splitNumber);
 
-            await _publishSubscribe.Dispatch(skippedSplit);
+            await _publishSubscribe.Dispatch(skippedSplit).ConfigureAwait(false);
         }
     }
     private async Task StartSplit(Guid sessionId, uint lapNumber, byte lane, long softwareTime, DateTime utcTime, int timerPosition)
     {
         var splitStarted = new SplitStarted(sessionId, lane, lapNumber, (byte)timerPosition, softwareTime, utcTime);
 
-        await _publishSubscribe.Dispatch(splitStarted);
+        await _publishSubscribe.Dispatch(splitStarted).ConfigureAwait(false);
     }
     private async Task StartLap(Guid sessionId, byte lane, uint lapNumber, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
         var lapStarted = new LapStarted(sessionId, lane, lapNumber, softwareTime, utcTime, hardwareTime);
 
-        await _publishSubscribe.Dispatch(lapStarted);
+        await _publishSubscribe.Dispatch(lapStarted).ConfigureAwait(false);
     }
 }

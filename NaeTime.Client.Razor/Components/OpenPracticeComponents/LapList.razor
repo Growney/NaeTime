@@ -25,7 +25,7 @@
         
             @foreach (var lap in Laps.OrderByDescending(x=>x.FinishedUtc))
             {
-                <tr @onmouseover="() => showRemove = true" @onmouseleave="() => showRemove = false">
+                <tr>
                     <td>
                         @(lapNumber--)
                     </td>
@@ -38,8 +38,8 @@
                     <td>
                         @lap.FinishedUtc
                     </td>
-                    <td>
-                        @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):mm\\:ss\\:ffff}")
+                    <td class="@(lap.Status != Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed ?"text-danger" :"")">
+                        @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):mm\\:ss\\:fff}")
                     </td>
                     <td>
                         <Button Size=Size.ExtraSmall Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>

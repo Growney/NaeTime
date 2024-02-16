@@ -23,13 +23,10 @@ internal class LapRFEthernetCommunication : ILapRFCommunication
 
     public async Task ConnectAsync(CancellationToken token)
     {
-        if (_client != null)
-        {
-            _client.Dispose();
-        }
+        _client?.Dispose();
 
         _client = new TcpClient();
-        await _client.ConnectAsync(_address, _port, token);
+        await _client.ConnectAsync(_address, _port, token).ConfigureAwait(false);
     }
     public Task DisconnectAsync(CancellationToken token)
     {
@@ -51,7 +48,7 @@ internal class LapRFEthernetCommunication : ILapRFCommunication
 
         var stream = _client.GetStream();
 
-        int readBytes = await stream.ReadAsync(_rxBuffer, 0, _rxBuffer.Length);
+        int readBytes = await stream.ReadAsync(_rxBuffer, 0, _rxBuffer.Length).ConfigureAwait(false);
 
         return _rxBuffer.AsMemory(0, readBytes);
     }

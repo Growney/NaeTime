@@ -7,8 +7,8 @@
         <th>
             Pilot
         </th>
-        <th>
-            Lap Time
+        <th class="text-center">
+            Time
         </th>
     </tr>
     <tbody>
@@ -18,11 +18,11 @@
                 <td>
                     @position.Position
                 </td>
-                <td class="px-3">
+                <td>
                     @position.PilotName
                 </td>
-                <td class="px-3">
-                    @($"{TimeSpan.FromMilliseconds(position.LapMilliseconds):m\\:ss\\:ffff}")
+                <td>
+                    @($"{TimeSpan.FromMilliseconds(position.LapMilliseconds):m\\:ss\\:fff}")
                 </td>
             </tr>
         }

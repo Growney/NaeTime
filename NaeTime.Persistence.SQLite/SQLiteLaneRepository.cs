@@ -13,13 +13,13 @@ public class SQLiteLaneRepository : ILaneRepository
     }
     public async Task<IEnumerable<Lane>> GetLanes()
     {
-        return await _dbContext.Lanes.Select(x => new Lane(x.Id, x.BandId, x.RadioFrequencyInMhz, x.IsEnabled)).ToListAsync();
+        return await _dbContext.Lanes.Select(x => new Lane(x.Id, x.BandId, x.RadioFrequencyInMhz, x.IsEnabled)).ToListAsync().ConfigureAwait(false);
     }
 
 
     public async Task SetLaneRadioFrequency(byte lane, byte? bandId, int frequencyInMhz)
     {
-        var existingStatus = await _dbContext.Lanes.FirstOrDefaultAsync(x => x.Id == lane);
+        var existingStatus = await _dbContext.Lanes.FirstOrDefaultAsync(x => x.Id == lane).ConfigureAwait(false);
 
         if (existingStatus == null)
         {
@@ -39,11 +39,11 @@ public class SQLiteLaneRepository : ILaneRepository
             existingStatus.BandId = bandId;
         }
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
-    public Task SetLaneStatus(byte lane, bool isEnabled)
+    public async Task SetLaneStatus(byte lane, bool isEnabled)
     {
-        var existingStatus = _dbContext.Lanes.FirstOrDefault(x => x.Id == lane);
+        var existingStatus = await _dbContext.Lanes.FirstOrDefaultAsync(x => x.Id == lane).ConfigureAwait(false);
 
         if (existingStatus == null)
         {
@@ -60,6 +60,6 @@ public class SQLiteLaneRepository : ILaneRepository
             existingStatus.IsEnabled = isEnabled;
         }
 
-        return _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 }

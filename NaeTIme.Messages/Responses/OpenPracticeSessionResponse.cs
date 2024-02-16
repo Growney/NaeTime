@@ -1,5 +1,5 @@
 ﻿namespace NaeTime.Messages.Responses;
-public record OpenPracticeSessionResponse(Guid SessionId, Guid TrackId, string? Name, IEnumerable<OpenPracticeSessionResponse.Lap> Laps,
+public record OpenPracticeSessionResponse(Guid SessionId, Guid TrackId, string? Name, long MinimumLapMilliseconds, long? MaximumLapMilliseconds, IEnumerable<OpenPracticeSessionResponse.Lap> Laps,
     IEnumerable<OpenPracticeSessionResponse.PilotLane> ActiveLanes,
     IEnumerable<OpenPracticeSessionResponse.SingleLapLeaderboard> SingleLapLeaderboards,
     IEnumerable<OpenPracticeSessionResponse.ConsecutiveLapLeaderboard> ConsecutiveLapLeaderboards)

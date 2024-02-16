@@ -40,26 +40,26 @@ internal class LapRFConnection
         {
             try
             {
-                await _communication.ConnectAsync(token);
+                await _communication.ConnectAsync(token).ConfigureAwait(false);
                 IsConnected = true;
 
                 //We must start the run task before we dispatch the connection established as data may be requested when the connection is established
-                var runTask = _protocol.RunAsync(token);
+                var runTask = _protocol.RunAsync(token).ConfigureAwait(false);
 
-                await _dispatcher.Dispatch(new TimerConnectionEstablished(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow));
+                await _dispatcher.Dispatch(new TimerConnectionEstablished(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
 
                 await runTask;
             }
             catch
             {
-                await Task.Delay(1000);
+                await Task.Delay(1000).ConfigureAwait(false);
             }
             if (IsConnected)
             {
                 IsConnected = false;
-                await _dispatcher.Dispatch(new TimerDisconnected(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow));
+                await _dispatcher.Dispatch(new TimerDisconnected(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
             }
-            await _communication.DisconnectAsync(token);
+            await _communication.DisconnectAsync(token).ConfigureAwait(false);
         }
 
     }
@@ -143,7 +143,7 @@ internal class LapRFConnection
         {
             return;
         }
-        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, isEnabled: isEnabled);
+        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, isEnabled: isEnabled).ConfigureAwait(false);
     }
     public async Task SetLaneRadioFrequency(byte Lane, int frequencyInMhz)
     {
@@ -151,7 +151,7 @@ internal class LapRFConnection
         {
             return;
         }
-        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, frequencyInMHz: (ushort)frequencyInMhz);
+        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, frequencyInMHz: (ushort)frequencyInMhz).ConfigureAwait(false);
     }
     public Task Stop()
     {

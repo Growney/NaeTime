@@ -29,7 +29,7 @@ internal class LapRFManager : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        var response = await _publisher.Request<EthernetLapRF8ChannelTimersRequest, EthernetLapRF8ChannelTimersResponse>();
+        var response = await _publisher.Request<EthernetLapRF8ChannelTimersRequest, EthernetLapRF8ChannelTimersResponse>().ConfigureAwait(false);
 
         if (response == null)
         {
@@ -46,7 +46,7 @@ internal class LapRFManager : IHostedService
     {
         foreach (var device in _hardwareProcesses)
         {
-            await device.Value.Stop();
+            await device.Value.Stop().ConfigureAwait(false);
         }
 
         _publisher.Unsubscribe(this);
@@ -64,7 +64,7 @@ internal class LapRFManager : IHostedService
             return null;
         }
 
-        var frequencies = await connection.GetAllLaneConfigurations();
+        var frequencies = await connection.GetAllLaneConfigurations().ConfigureAwait(false);
 
         return new TimerLanesConfigurationResponse(requested.TimerId, frequencies.Select(x => new TimerLanesConfigurationResponse.TimerLaneConfiguration(x.Lane, x.BandId, x.FrequencyInMhz, x.IsEnabled)));
     }
@@ -80,7 +80,7 @@ internal class LapRFManager : IHostedService
             return null;
         }
 
-        var frequencies = await connection.GetLaneConfigurations(requested.Lane);
+        var frequencies = await connection.GetLaneConfigurations(requested.Lane).ConfigureAwait(false);
 
         if (!frequencies.Any())
         {
@@ -95,7 +95,7 @@ internal class LapRFManager : IHostedService
     {
         if (_hardwareProcesses.TryGetValue(configured.TimerId, out var connection))
         {
-            await connection.Stop();
+            await connection.Stop().ConfigureAwait(false);
         }
 
         var newConnection = _connectionFactory.CreateEthernetConnection(configured.TimerId, configured.IpAddress, configured.Port);
@@ -103,47 +103,47 @@ internal class LapRFManager : IHostedService
         _hardwareProcesses.AddOrUpdate(configured.TimerId, newConnection,
             (id, existing) => newConnection);
     }
-    public async Task When(TimerLaneEnabled lane)
+    public Task When(TimerLaneEnabled lane)
     {
         if (!_hardwareProcesses.TryGetValue(lane.TimerId, out var connection))
         {
-            return;
+            return Task.CompletedTask;
         }
 
         if (!connection.IsConnected)
         {
-            return;
+            return Task.CompletedTask;
         }
 
-        await connection.SetLaneStatus(lane.Lane, true);
+        return connection.SetLaneStatus(lane.Lane, true);
     }
-    public async Task When(TimerLaneDisabled lane)
+    public Task When(TimerLaneDisabled lane)
     {
         if (!_hardwareProcesses.TryGetValue(lane.TimerId, out var connection))
         {
-            return;
+            return Task.CompletedTask;
         }
 
         if (!connection.IsConnected)
         {
-            return;
+            return Task.CompletedTask;
         }
 
-        await connection.SetLaneStatus(lane.Lane, false);
+        return connection.SetLaneStatus(lane.Lane, false);
     }
-    public async Task When(TimerLaneRadioFrequencyConfigured lane)
+    public Task When(TimerLaneRadioFrequencyConfigured lane)
     {
         if (!_hardwareProcesses.TryGetValue(lane.TimerId, out var connection))
         {
-            return;
+            return Task.CompletedTask;
         }
 
         if (!connection.IsConnected)
         {
-            return;
+            return Task.CompletedTask;
         }
 
-        await connection.SetLaneRadioFrequency(lane.Lane, lane.FrequencyInMhz);
+        return connection.SetLaneRadioFrequency(lane.Lane, lane.FrequencyInMhz);
 
     }
 

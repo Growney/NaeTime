@@ -10,6 +10,7 @@ public static class IServiceCollectionExtensions
         where TSimpleStorage : class, ISimpleStorageProvider
     {
         services.TryAddTransient<ISimpleStorageProvider, TSimpleStorage>();
+        services.TryAddTransient<ILocalConfigurationRepository, LocalConfigurationRepository>();
         services.AddSubscriberAssembly(typeof(ClientMode).Assembly);
         services.AddPersistence<ClientRepositoryFactory>();
         services.AddSQLitePersistence();

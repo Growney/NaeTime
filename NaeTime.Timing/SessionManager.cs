@@ -19,7 +19,7 @@ public class SessionManager : ISubscriber
 
     public async Task When(SystemStarted started)
     {
-        var activeSession = await _publishSubscribe.Request<ActiveSessionRequest, ActiveSessionResponse>();
+        var activeSession = await _publishSubscribe.Request<ActiveSessionRequest, ActiveSessionResponse>().ConfigureAwait(false);
 
         if (activeSession == null)
         {
@@ -53,8 +53,6 @@ public class SessionManager : ISubscriber
     {
         DisableAllSubscribers();
         ActivateSubsribersForSessionType(sessionType);
-
-
     }
     public void DisableAllSubscribers()
     {

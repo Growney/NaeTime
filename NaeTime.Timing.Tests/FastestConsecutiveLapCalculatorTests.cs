@@ -18,12 +18,8 @@ public class FastestConsecutiveLapCalculatorTests
             totalSpacing += space;
             lapNumber++;
         }
-        if (finishTime == null)
-        {
-            throw new InvalidOperationException("No laps were added");
-        }
 
-        return (finishTime.Value, lapNumber, totalSpacing);
+        return finishTime == null ? throw new InvalidOperationException("No laps were added") : ((DateTime finishTime, uint finishLapNumber, long totalSpacing))(finishTime.Value, lapNumber, totalSpacing);
     }
     private (DateTime finishTime, uint finishLapNumber) AddInvalidLap(List<Lap> laps, DateTime start, uint startLapNumber, long spacing)
     {
@@ -65,7 +61,6 @@ public class FastestConsecutiveLapCalculatorTests
         Assert.Equal(50 + 40 + 30 + 20 + 10, position.TotalMilliseconds);
         Assert.Equal((uint)5, position.TotalLaps);
 
-
     }
     [Fact]
     public void When_3FasterButNotConsecutive_Expect_CorrectResults()
@@ -77,8 +72,7 @@ public class FastestConsecutiveLapCalculatorTests
         (start, lap) = AddInvalidLap(laps, start, lap, 5000);
         (start, lap, _) = AddConsecutiveLaps(laps, start, lap, 5000, 5000);
         (start, lap) = AddInvalidLap(laps, start, lap, 5000);
-        (start, lap, _) = AddConsecutiveLaps(laps, start, lap, 5000, 5000);
-
+        (_, _, _) = AddConsecutiveLaps(laps, start, lap, 5000, 5000);
 
         var calculator = new FastestConsecutiveLapCalculator();
 
@@ -86,8 +80,6 @@ public class FastestConsecutiveLapCalculatorTests
 
         Assert.Equal(10000 + 10000 + 10000, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
-
-
     }
     [Fact]
     public void When_3FastestDecrementingLapsAtTheStart_Expect_CorrectResults()
@@ -103,8 +95,6 @@ public class FastestConsecutiveLapCalculatorTests
 
         Assert.Equal(9000 + 8500 + 8000, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
-
-
     }
     [Fact]
     public void When_3FastestDecrementingLapsInTheMiddle_Expect_CorrectResults()
@@ -120,8 +110,6 @@ public class FastestConsecutiveLapCalculatorTests
 
         Assert.Equal(9000 + 8500 + 8000, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
-
-
     }
     [Fact]
     public void When_3FastestAllTheSameBarOneAtTheEnd_Expect_CorrectResults()
@@ -137,11 +125,7 @@ public class FastestConsecutiveLapCalculatorTests
 
         Assert.Equal(1000 + 1000 + 999, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
-
-
     }
-
-
     [Fact]
     public void When_OnlyOneLap_Expect_CorrectResults()
     {
@@ -156,8 +140,6 @@ public class FastestConsecutiveLapCalculatorTests
 
         Assert.Equal(1000, position.TotalMilliseconds);
         Assert.Equal((uint)1, position.TotalLaps);
-
-
     }
     [Fact]
     public void When_SecondOfTwoNonConsecutiveLaps_Expect_CorrectResults()
@@ -175,7 +157,5 @@ public class FastestConsecutiveLapCalculatorTests
 
         Assert.Equal(500, position.TotalMilliseconds);
         Assert.Equal((uint)1, position.TotalLaps);
-
-
     }
 }

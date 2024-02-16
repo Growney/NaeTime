@@ -1,0 +1,36 @@
+﻿<table>
+    <tr>
+        <td class="mx-0 px-0">
+            <Button @onclick="ToggleMute" Class="rounded-0 rounded-start" Color="ButtonColor.Primary">
+                @if (_isMuted)
+                {
+                    <i class="fa-solid fa-volume-xmark"></i>
+                }
+                else
+                {
+                    if(_volume == 0)
+                    {
+                        <i class="fa-solid fa-volume-off"></i>
+                    }
+                    else if (_volume < 50)
+                    {
+                        <i class="fa-solid fa-volume-low"></i>
+                    }
+                    else
+                    {
+                        <i class="fa-solid fa-volume-high"></i>
+                    }
+                }
+            </Button>
+        </td>
+        <td class="mx-0 px-0 ">
+            <Dropdown @onclick:preventDefault>
+                <DropdownToggleButton Class="px-1 rounded-0 rounded-end" Color="ButtonColor.Primary"></DropdownToggleButton>
+                <DropdownMenu>
+                    <RangeInput TValue=int Value="_volume" ValueExpression="() => _volume" ValueChanged="VolumeChange" Max="100" Min="0">
+                    </RangeInput>
+                </DropdownMenu>
+            </Dropdown>
+        </td>
+    </tr>
+</table>

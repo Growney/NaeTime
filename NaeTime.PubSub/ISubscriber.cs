@@ -1,4 +1,5 @@
-﻿namespace NaeTime.PubSub;
+﻿
+namespace NaeTime.PubSub;
 public interface ISubscriber
 {
 }

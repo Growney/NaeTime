@@ -3,16 +3,16 @@
         <tbody>
             <tr>
                 <td class="align-start" style="width:10px">
-                    <Switch ValueChanged="EnabledChanged" Value=IsEnabled ValueExpression="()=>IsEnabled"></Switch>
+                    <Switch ValueChanged="EnabledChanged" Value=Configuration.IsEnabled ValueExpression="()=>Configuration.IsEnabled"></Switch>
                 </td>
                 <td >
                     <div class="h4 text-start">
-                        @LaneNumber
+                        @Configuration.LaneNumber
                     </div>
                 </td>
                 <td>
                     <div class="h5 text-end">
-                            @FrequencyInMhz <sup style="font-size:0.5em">MHz</sup>
+                        @Configuration.FrequencyInMhz <sup style="font-size:0.5em">MHz</sup>
                     </div>
                 </td>
             </tr>
@@ -20,7 +20,7 @@
     </table>
     <div>
         <Dropdown Class="w-100">
-            <DropdownToggleButton Color="ButtonColor.Primary">@GetPilotString(PilotId)</DropdownToggleButton>
+            <DropdownToggleButton Color="ButtonColor.Primary">@GetPilotString(Configuration.PilotId)</DropdownToggleButton>
                 <DropdownMenu>
                     @foreach (var pilot in Pilots)
                 {
@@ -45,13 +45,13 @@
                         </Dropdown>
                     </td>
                     <td class="w-50">
-                        @if (Messages.Frequency.Band.Bands.Any(x => x.Id == BandId))
+                        @if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
                         {
                             <Dropdown Class="w-100">
                                 <DropdownToggleButton Class="rounded-0 rounded-end" Color="ButtonColor.Primary">@GetFrequencyString()</DropdownToggleButton>
                                     <DropdownMenu>
                                         @{
-                                        var band = Messages.Frequency.Band.Bands.First(b => b.Id == BandId);
+                                        var band = Messages.Frequency.Band.Bands.First(b => b.Id == Configuration.BandId);
                                         foreach (var frequency in band.Frequencies)
                                         {
                                             <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(frequency.FrequencyInMhz)">@frequency.Name</DropdownItem>
@@ -62,7 +62,7 @@
                         }
                         else
                         {
-                            <NumberInput Class="rounded-0 rounded-end" TValue=int ValueChanged="GoToFrequency" Value="FrequencyInMhz" ValueExpression="() => FrequencyInMhz"></NumberInput>
+                            <NumberInput Class="rounded-0 rounded-end" TValue=int ValueChanged="GoToFrequency" Value="Configuration.FrequencyInMhz" ValueExpression="() => Configuration.FrequencyInMhz"></NumberInput>
                         }
                     </td>
                 </tr>
@@ -70,9 +70,9 @@
         </table>
     </div>
     <div class="progress mt-1" style="height: 10px">
-        @if(MaxRSSIValue > 0)
+        @if (Configuration.MaxRssiValue > 0)
         {
-            var percent = (int)((RssiValue / MaxRSSIValue) * 100);
+            var percent = (int)((Configuration.RssiValue / Configuration.MaxRssiValue) * 100);
             <div class="progress-bar bg-success" role="progressbar" style="width: @percent%" aria-valuenow="@percent" aria-valuemin="0" aria-valuemax="100"></div>
         }
         else
@@ -80,7 +80,7 @@
             <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
         }
     </div>
-    <TimerDisplay Start="LapStart"></TimerDisplay>
+    <TimerDisplay Start="Configuration.LapStarted"></TimerDisplay>
     <table class="w-100">
         <tbody> 
             <tr>

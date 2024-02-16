@@ -10,7 +10,7 @@
         <th>
             Laps
         </th>
-        <th>
+        <th class="text-center">
             Time
         </th>
     </tr>
@@ -29,7 +29,7 @@
                     @position.TotalLaps
                 </td>
                 <td>
-                    @($"{TimeSpan.FromMilliseconds(position.TotalMilliseconds):m\\:ss\\:ffff}")
+                    @($"{TimeSpan.FromMilliseconds(position.TotalMilliseconds):m\\:ss\\:fff}")
                     
                 </td>
             </tr>

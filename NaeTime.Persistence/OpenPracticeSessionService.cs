@@ -14,22 +14,34 @@ public class OpenPracticeSessionService : ISubscriber
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        await repository.RemoveLap(removed.SessionId, removed.LapId);
+        await repository.RemoveLap(removed.SessionId, removed.LapId).ConfigureAwait(false);
 
     }
     public async Task When(OpenPracticeSessionConfigured configured)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        await repository.AddOrUpdate(configured.SessionId, configured.Name, configured.TrackId, configured.MinimumLapMilliseconds, configured.MaximumLapMilliseconds);
+        await repository.AddOrUpdate(configured.SessionId, configured.Name, configured.TrackId, configured.MinimumLapMilliseconds, configured.MaximumLapMilliseconds).ConfigureAwait(false);
+    }
+    public async Task When(OpenPracticeMaximumLapTimeConfigured configured)
+    {
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
+
+        await repository.SetMaximumLap(configured.SessionId, configured.MaximumLapMilliseconds).ConfigureAwait(false);
+    }
+    public async Task When(OpenPracticeMinimumLapTimeConfigured configured)
+    {
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
+
+        await repository.SetMinimumLap(configured.SessionId, configured.MinimumLapMilliseconds).ConfigureAwait(false);
     }
     public async Task<OpenPracticeSessionResponse?> On(OpenPracticeSessionRequest request)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var session = await repository.Get(request.SessionId);
+        var session = await repository.Get(request.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
@@ -48,7 +60,7 @@ public class OpenPracticeSessionService : ISubscriber
             }, x.TotalMilliseconds));
         var lanes = session.ActiveLanes.Select(x => new OpenPracticeSessionResponse.PilotLane(x.PilotId, x.Lane));
 
-        return new OpenPracticeSessionResponse(session.SessionId, session.TrackId, session.Name,
+        return new OpenPracticeSessionResponse(session.SessionId, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
             laps,
             lanes,
             singleLapLeaderboards,
@@ -57,63 +69,56 @@ public class OpenPracticeSessionService : ISubscriber
     }
     public async Task When(OpenPracticeLapCompleted openPracticeLapCompleted)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var session = await repository.Get(openPracticeLapCompleted.SessionId);
+        var session = await repository.Get(openPracticeLapCompleted.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
             return;
         }
 
-        await repository.AddLapToSession(openPracticeLapCompleted.SessionId, openPracticeLapCompleted.LapId, openPracticeLapCompleted.PilotId, Models.OpenPracticeLapStatus.Completed, openPracticeLapCompleted.StartedUtc, openPracticeLapCompleted.FinishedUtc, openPracticeLapCompleted.TotalMilliseconds);
+        await repository.AddLapToSession(openPracticeLapCompleted.SessionId, openPracticeLapCompleted.LapId, openPracticeLapCompleted.PilotId, Models.OpenPracticeLapStatus.Completed, openPracticeLapCompleted.StartedUtc, openPracticeLapCompleted.FinishedUtc, openPracticeLapCompleted.TotalMilliseconds).ConfigureAwait(false);
     }
     public async Task When(OpenPracticeLapInvalidated openPracticeLapInvalidated)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var session = await repository.Get(openPracticeLapInvalidated.SessionId);
+        var session = await repository.Get(openPracticeLapInvalidated.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
             return;
         }
 
-        await repository.AddLapToSession(openPracticeLapInvalidated.SessionId, openPracticeLapInvalidated.LapId, openPracticeLapInvalidated.PilotId, Models.OpenPracticeLapStatus.Invalid, openPracticeLapInvalidated.StartedUtc, openPracticeLapInvalidated.FinishedUtc, openPracticeLapInvalidated.TotalMilliseconds);
+        await repository.AddLapToSession(openPracticeLapInvalidated.SessionId, openPracticeLapInvalidated.LapId, openPracticeLapInvalidated.PilotId, Models.OpenPracticeLapStatus.Invalid, openPracticeLapInvalidated.StartedUtc, openPracticeLapInvalidated.FinishedUtc, openPracticeLapInvalidated.TotalMilliseconds).ConfigureAwait(false);
     }
     public async Task When(OpenPracticeLanePilotSet laneSet)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var session = await repository.Get(laneSet.SessionId);
+        var session = await repository.Get(laneSet.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
             return;
         }
 
-        await repository.SetSessionLanePilot(laneSet.SessionId, laneSet.Lane, laneSet.PilotId);
+        await repository.SetSessionLanePilot(laneSet.SessionId, laneSet.Lane, laneSet.PilotId).ConfigureAwait(false);
     }
     public async Task When(OpenPracticeConsecutiveLapLeaderboardPositionsChanged newPositions)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
-
-        var session = await repository.Get(newPositions.SessionId);
-
-        if (session == null)
-        {
-            return;
-        }
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
         var positions = newPositions.NewPositions.Select(x => new Models.ConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion, x.IncludedLaps));
 
-        await repository.UpdateConsecutiveLapsLeaderboardPositions(newPositions.SessionId, newPositions.LeaderboardId, positions);
+        await repository.UpdateConsecutiveLapsLeaderboardPositions(newPositions.SessionId, newPositions.LeaderboardId, positions).ConfigureAwait(false);
     }
     public async Task When(OpenPracticeSingleLapLeaderboardPositionsChanged newPositions)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var session = await repository.Get(newPositions.SessionId);
+        var session = await repository.Get(newPositions.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
@@ -122,45 +127,45 @@ public class OpenPracticeSessionService : ISubscriber
 
         var positions = newPositions.NewPositions.Select(x => new Models.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapId, x.LapMilliseconds, x.CompletionUtc));
 
-        await repository.UpdateSingleLapLeaderboard(newPositions.SessionId, newPositions.LeaderboardId, positions);
+        await repository.UpdateSingleLapLeaderboard(newPositions.SessionId, newPositions.LeaderboardId, positions).ConfigureAwait(false);
     }
     public async Task When(OpenPracticeConsecutiveLapLeaderboardConfigured leaderboard)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var session = await repository.Get(leaderboard.SessionId);
+        var session = await repository.Get(leaderboard.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
             return;
         }
 
-        await repository.AddOrUpdateConsecutiveLapsLeaderboard(leaderboard.SessionId, leaderboard.LeaderboardId, leaderboard.ConsecutiveLaps);
+        await repository.AddOrUpdateConsecutiveLapsLeaderboard(leaderboard.SessionId, leaderboard.LeaderboardId, leaderboard.ConsecutiveLaps).ConfigureAwait(false);
     }
     public async Task When(OpenPracticeSingleLapLeaderboardConfigured leaderboard)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var session = await repository.Get(leaderboard.SessionId);
+        var session = await repository.Get(leaderboard.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
             return;
         }
 
-        await repository.AddOrUpdateSingleLapLeaderboard(leaderboard.SessionId, leaderboard.LeaderboardId);
+        await repository.AddOrUpdateSingleLapLeaderboard(leaderboard.SessionId, leaderboard.LeaderboardId).ConfigureAwait(false);
     }
     public async Task When(OpenPracticeLeaderboardRemoved removed)
     {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository();
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var session = await repository.Get(removed.SessionId);
+        var session = await repository.Get(removed.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
             return;
         }
-        await repository.RemoveLeaderboard(removed.SessionId, removed.LeaderboardId);
+        await repository.RemoveLeaderboard(removed.SessionId, removed.LeaderboardId).ConfigureAwait(false);
     }
 }
 

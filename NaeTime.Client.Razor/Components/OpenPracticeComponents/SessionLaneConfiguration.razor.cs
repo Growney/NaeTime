@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.Client.Razor.Lib.Models.OpenPractice;
+using NaeTime.Messages.Events.Hardware;
+using NaeTime.Messages.Events.Timing;
+using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
 public partial class SessionLaneConfiguration : ComponentBase
@@ -7,24 +11,11 @@ public partial class SessionLaneConfiguration : ComponentBase
     [Parameter]
     public IEnumerable<Pilot> Pilots { get; set; } = Enumerable.Empty<Pilot>();
     [Parameter]
-    public byte LaneNumber { get; set; }
+    [EditorRequired]
+    public OpenPracticeLaneConfiguration Configuration { get; set; } = null!;
     [Parameter]
-    public Guid? PilotId { get; set; }
-    [Parameter]
-    public float RssiValue { get; set; }
-    [Parameter]
-    public float MaxRSSIValue { get; set; }
-    [Parameter]
-    public byte? BandId { get; set; }
-    [Parameter]
-    public int FrequencyInMhz { get; set; }
-    [Parameter]
-    public bool IsEnabled { get; set; }
-    [Parameter]
-    public DateTime? LapStart { get; set; }
-
-    [Parameter]
-    public Func<byte?, int, Task>? OnFrequencyChanged { get; set; }
+    [EditorRequired]
+    public Guid SessionId { get; set; }
     [Parameter]
     public Func<bool, Task>? OnEnabledChanged { get; set; }
     [Parameter]
@@ -34,41 +25,113 @@ public partial class SessionLaneConfiguration : ComponentBase
     [Parameter]
     public Func<byte, Task>? OnInvalidateTriggered { get; set; }
 
+    [Inject]
+    public IPublishSubscribe PublishSubscribe { get; set; } = null!;
+
+    protected override Task OnInitializedAsync()
+    {
+        PublishSubscribe.Subscribe<RssiLevelRecorded>(this, When);
+        PublishSubscribe.Subscribe<LapStarted>(this, When);
+        PublishSubscribe.Subscribe<LapInvalidated>(this, When);
+        return base.OnInitializedAsync();
+    }
+
+    public async Task When(RssiLevelRecorded rssiLevelRecorded)
+    {
+        if (rssiLevelRecorded.Lane != Configuration.LaneNumber)
+        {
+            return;
+        }
+
+        Configuration.RssiValue = rssiLevelRecorded.Level;
+        if (Configuration.MaxRssiValue < rssiLevelRecorded.Level)
+        {
+            Configuration.MaxRssiValue = rssiLevelRecorded.Level;
+        }
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+    }
+    public async Task When(LapStarted started)
+    {
+        if (SessionId != started.SessionId)
+        {
+            return;
+        }
+
+        if (started.Lane != Configuration.LaneNumber)
+        {
+            return;
+        }
+
+        Configuration.LapStarted = started.StartedUtcTime;
+
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+    }
+    public async Task When(LapInvalidated invalidated)
+    {
+        if (SessionId != invalidated.SessionId)
+        {
+            return;
+        }
+
+        if (invalidated.Lane != Configuration.LaneNumber)
+        {
+            return;
+        }
+
+        Configuration.LapStarted = null;
+
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+    }
 
     public Task EnabledChanged(bool value)
     {
-        IsEnabled = value;
-        return OnEnabledChanged?.Invoke(value) ?? Task.CompletedTask;
-    }
-    public Task GoToBand(byte? bandId)
-    {
-        if (bandId == BandId)
+        if (Configuration.IsEnabled == value)
         {
             return Task.CompletedTask;
         }
-        BandId = bandId;
-        if (Messages.Frequency.Band.Bands.Any(x => x.Id == BandId))
+        Configuration.IsEnabled = value;
+        if (value)
         {
-            var band = Messages.Frequency.Band.Bands.First(x => x.Id == BandId);
+            return PublishSubscribe.Dispatch(new LaneEnabled(Configuration.LaneNumber));
+        }
+        else
+        {
+            return PublishSubscribe.Dispatch(new LaneDisabled(Configuration.LaneNumber));
+        }
+    }
+    public Task GoToBand(byte? bandId)
+    {
+        int newFrequency = Configuration.FrequencyInMhz;
+
+        if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
+        {
+            var band = Messages.Frequency.Band.Bands.First(x => x.Id == Configuration.BandId);
 
             if (band.Frequencies.Any())
             {
                 var firstFrequency = band.Frequencies.First();
-                FrequencyInMhz = firstFrequency.FrequencyInMhz;
+                newFrequency = firstFrequency.FrequencyInMhz;
             }
         }
-        return OnFrequencyChanged?.Invoke(bandId, FrequencyInMhz) ?? Task.CompletedTask;
+        return ChangeFrequency(bandId, newFrequency);
+
     }
-    public Task GoToFrequency(int value)
+    public Task GoToFrequency(int value) => ChangeFrequency(Configuration.BandId, value);
+
+    private Task ChangeFrequency(byte? bandId, int frequencyInMhz)
     {
-        FrequencyInMhz = value;
-        return OnFrequencyChanged?.Invoke(BandId, value) ?? Task.CompletedTask;
+        if (Configuration.BandId == bandId && Configuration.FrequencyInMhz == frequencyInMhz)
+        {
+            return Task.CompletedTask;
+        }
+
+        return PublishSubscribe.Dispatch(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, bandId, frequencyInMhz));
     }
     private string GetBandString()
     {
-        if (Messages.Frequency.Band.Bands.Any(x => x.Id == BandId))
+        if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
         {
-            var band = Messages.Frequency.Band.Bands.First(x => x.Id == BandId);
+            var band = Messages.Frequency.Band.Bands.First(x => x.Id == Configuration.BandId);
 
             return band.ShortName;
         }
@@ -77,23 +140,27 @@ public partial class SessionLaneConfiguration : ComponentBase
     }
     private string GetFrequencyString()
     {
-        if (Messages.Frequency.Band.Bands.Any(x => x.Id == BandId))
+        if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
         {
-            var band = Messages.Frequency.Band.Bands.First(x => x.Id == BandId);
+            var band = Messages.Frequency.Band.Bands.First(x => x.Id == Configuration.BandId);
 
-            if (band.Frequencies.Any(x => x.FrequencyInMhz == FrequencyInMhz))
+            if (band.Frequencies.Any(x => x.FrequencyInMhz == Configuration.FrequencyInMhz))
             {
-                var frequency = band.Frequencies.First(x => x.FrequencyInMhz == FrequencyInMhz);
+                var frequency = band.Frequencies.First(x => x.FrequencyInMhz == Configuration.FrequencyInMhz);
                 return frequency.Name;
             }
         }
 
-        return $"{FrequencyInMhz} Mhz";
+        return $"{Configuration.FrequencyInMhz} Mhz";
     }
     private Task SetPilot(Guid pilotId)
     {
-        PilotId = pilotId;
-        return OnPilotChanged?.Invoke(pilotId) ?? Task.CompletedTask;
+        if (Configuration.PilotId == pilotId)
+        {
+            return Task.CompletedTask;
+        }
+        Configuration.PilotId = pilotId;
+        return PublishSubscribe.Dispatch(new OpenPracticeLanePilotSet(SessionId, pilotId, Configuration.LaneNumber));
     }
     private string GetPilotString(Guid? pilotId)
     {
@@ -106,7 +173,9 @@ public partial class SessionLaneConfiguration : ComponentBase
 
         return pilot.CallSign ?? $"{pilot.FirstName} {pilot.LastName}";
     }
-    private Task TriggerDetection(byte split) => OnDetectionTriggered?.Invoke(split) ?? Task.CompletedTask;
-    private Task TriggerInvalidation(byte split) => OnInvalidateTriggered?.Invoke(split) ?? Task.CompletedTask;
+    private Task TriggerDetection(byte split) => PublishSubscribe.Dispatch(new SessionDetectionTriggered(SessionId, Configuration.LaneNumber, split));
+
+    private Task TriggerInvalidation(byte split) => PublishSubscribe.Dispatch(new SessionInvalidationTriggered(SessionId, Configuration.LaneNumber));
+
 
 }

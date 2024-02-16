@@ -19,7 +19,7 @@ public class ClientRepositoryFactory : IRepositoryFactory
 
     private async Task<ClientMode> GetClientMode()
     {
-        var currentModeResponse = await _pubSub.Request<ClientModeRequest, ClientModeResponse>();
+        var currentModeResponse = await _pubSub.Request<ClientModeRequest, ClientModeResponse>().ConfigureAwait(false);
 
         var currentMode = ClientMode.Local;
         if (currentModeResponse != null)
@@ -32,7 +32,7 @@ public class ClientRepositoryFactory : IRepositoryFactory
 
     public async Task<IHardwareRepository> CreateHardwareRepository()
     {
-        var clientMode = await GetClientMode();
+        var clientMode = await GetClientMode().ConfigureAwait(false);
 
         return clientMode switch
         {
@@ -43,7 +43,7 @@ public class ClientRepositoryFactory : IRepositoryFactory
 
     public async Task<IPilotRepository> CreatePilotRepository()
     {
-        var clientMode = await GetClientMode();
+        var clientMode = await GetClientMode().ConfigureAwait(false);
 
         return clientMode switch
         {
@@ -54,7 +54,7 @@ public class ClientRepositoryFactory : IRepositoryFactory
 
     public async Task<ITimingRepository> CreateTimingRepository()
     {
-        var clientMode = await GetClientMode();
+        var clientMode = await GetClientMode().ConfigureAwait(false);
 
         return clientMode switch
         {
@@ -65,7 +65,7 @@ public class ClientRepositoryFactory : IRepositoryFactory
 
     public async Task<ITrackRepository> CreateTrackRepository()
     {
-        var clientMode = await GetClientMode();
+        var clientMode = await GetClientMode().ConfigureAwait(false);
 
         return clientMode switch
         {
@@ -76,7 +76,7 @@ public class ClientRepositoryFactory : IRepositoryFactory
 
     public async Task<IActiveRepository> CreateActiveRepository()
     {
-        var clientMode = await GetClientMode();
+        var clientMode = await GetClientMode().ConfigureAwait(false);
 
         return clientMode switch
         {
@@ -86,7 +86,7 @@ public class ClientRepositoryFactory : IRepositoryFactory
     }
     public async Task<ILaneRepository> CreateLaneRepository()
     {
-        var clientMode = await GetClientMode();
+        var clientMode = await GetClientMode().ConfigureAwait(false);
 
         return clientMode switch
         {
@@ -97,7 +97,7 @@ public class ClientRepositoryFactory : IRepositoryFactory
 
     public async Task<IOpenPracticeSessionRepository> CreateOpenPracticeSessionRepository()
     {
-        var clientMode = await GetClientMode();
+        var clientMode = await GetClientMode().ConfigureAwait(false);
 
         return clientMode switch
         {
@@ -108,7 +108,7 @@ public class ClientRepositoryFactory : IRepositoryFactory
 
     public async Task<ISessionRepository> CreateSessionRepository()
     {
-        var clientMode = await GetClientMode();
+        var clientMode = await GetClientMode().ConfigureAwait(false);
 
         return clientMode switch
         {

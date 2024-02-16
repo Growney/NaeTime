@@ -39,19 +39,22 @@ public static class IServiceCollectionExtensions
         {
             return services;
         }
+
         if (!subscriberType.IsAssignableTo(typeof(ISubscriber)))
         {
             return services;
         }
+
         var messageTypes = GetMessageTypes(subscriberType);
         foreach (var messageType in messageTypes)
         {
-            services.AddSingleton<ISubscriberRegistration>(new SubscriberRegistration(subscriberType, messageType, ServiceLifetime.Transient));
+            services.AddSingleton<ISubscriberRegistration>(new SubscriberRegistration(subscriberType, messageType, ServiceLifetime.Scoped));
         }
+
         var handlerTypes = GetHandlerTypes(subscriberType);
-        foreach (var handlerType in handlerTypes)
+        foreach (var (requestType, responseType) in handlerTypes)
         {
-            services.AddSingleton<IHandlerRegistration>(new HandlerRegistration(subscriberType, handlerType.requestType, handlerType.responseType, ServiceLifetime.Transient));
+            services.AddSingleton<IHandlerRegistration>(new HandlerRegistration(subscriberType, requestType, responseType, ServiceLifetime.Scoped));
         }
 
         return services;
@@ -67,6 +70,7 @@ public static class IServiceCollectionExtensions
             {
                 continue;
             }
+
             var parameters = method.GetParameters();
 
             if (parameters.Length != 1)
@@ -85,6 +89,7 @@ public static class IServiceCollectionExtensions
                 {
                     continue;
                 }
+
                 responseType = returnType.GetGenericArguments().First();
             }
             else
@@ -106,6 +111,7 @@ public static class IServiceCollectionExtensions
             {
                 continue;
             }
+
             var parameters = method.GetParameters();
 
             if (parameters.Length != 1)
@@ -118,8 +124,6 @@ public static class IServiceCollectionExtensions
             yield return parameter.ParameterType;
         }
     }
-
-
     public static IServiceCollection AddSubscriberAssembly(this IServiceCollection services, Assembly assembly)
     {
         var assemblyTypes = assembly.GetTypes();

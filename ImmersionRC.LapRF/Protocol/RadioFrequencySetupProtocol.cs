@@ -5,8 +5,8 @@ namespace ImmersionRC.LapRF.Protocol;
 internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
 {
     private readonly ILapRFCommunication _lapRFCommunication;
-    private ConcurrentDictionary<byte, RFSetup> _latestSetup = new();
-    private ConcurrentDictionary<byte, List<TaskCompletionSource<RFSetup>>> _responders = new();
+    private readonly ConcurrentDictionary<byte, RFSetup> _latestSetup = new();
+    private readonly ConcurrentDictionary<byte, List<TaskCompletionSource<RFSetup>>> _responders = new();
     private readonly Crc16 _crc16 = new();
 
     public RadioFrequencySetupProtocol(ILapRFCommunication lapRFCommunication)
@@ -77,6 +77,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
             {
                 responder.SetResult(setup);
             }
+
             responders.Clear();
         }
     }
@@ -93,22 +94,27 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
             ushort enabledFlag = (ushort)(isEnabled.Value ? 1 : 0);
             writer.WriteField((byte)RadioFrequencySetupField.IsEnabled, enabledFlag);
         }
+
         if (channel.HasValue)
         {
             writer.WriteField((byte)RadioFrequencySetupField.Channel, channel.Value);
         }
+
         if (band.HasValue)
         {
             writer.WriteField((byte)RadioFrequencySetupField.Band, band.Value);
         }
+
         if (attenuation.HasValue)
         {
             writer.WriteField((byte)RadioFrequencySetupField.Attenuation, attenuation.Value);
         }
+
         if (frequencyInMHz.HasValue)
         {
             writer.WriteField((byte)RadioFrequencySetupField.Frequency, frequencyInMHz.Value);
         }
+
         writer.Write(LapRFProtocol.END_OF_RECORD);
 
         var finalisedData = memoryStream.FinalisePacketData();
@@ -135,13 +141,14 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
         {
             writer.WriteField((byte)RadioFrequencySetupField.TransponderId, transponderId);
         }
+
         writer.Write(LapRFProtocol.END_OF_RECORD);
 
         var finalisedData = memoryStream.FinalisePacketData();
 
-        await _lapRFCommunication.SendAsync(finalisedData, cancellationToken);
+        await _lapRFCommunication.SendAsync(finalisedData, cancellationToken).ConfigureAwait(false);
 
-        await Task.WhenAll(responders.Select(x => x.Task));
+        await Task.WhenAll(responders.Select(x => x.Task)).ConfigureAwait(false);
 
         var results = new List<RFSetup>();
 
@@ -151,17 +158,13 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
             results.Add(result);
         }
 
-
         return results;
     }
     private TaskCompletionSource<RFSetup> AddListenerForTransponderId(byte transponderId, CancellationToken cancellationToken)
     {
         var responderCompletionSource = new TaskCompletionSource<RFSetup>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        cancellationToken.Register(() =>
-        {
-            responderCompletionSource.TrySetCanceled();
-        });
+        cancellationToken.Register(() => responderCompletionSource.TrySetCanceled());
 
         _responders.AddOrUpdate(transponderId, new List<TaskCompletionSource<RFSetup>>() { responderCompletionSource }, (key, oldValue) =>
         {

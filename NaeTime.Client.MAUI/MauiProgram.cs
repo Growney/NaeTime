@@ -19,7 +19,7 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddClientPersistence<LocalStorageProvider>();
         builder.Services.AddNaeTimeComponents();
-
+        builder.Services.AddAnnouncer<MauiSpeechProvider>();
         builder.Services.AddTimingCore();
         builder.Services.AddImmersionRCTiming();
 

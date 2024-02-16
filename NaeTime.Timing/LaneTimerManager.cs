@@ -16,8 +16,8 @@ public class LaneTimerManager : ISubscriber
     }
     public async Task When(TimerConnectionEstablished connectionEstablished)
     {
-        var laneConfigurations = await _publisher.Request<ActiveLanesConfigurationRequest, ActiveLanesConfigurationResponse>();
-        var timerLaneConfigurationReponse = await _publisher.Request<TimerLanesConfigurationRequest, TimerLanesConfigurationResponse>(new TimerLanesConfigurationRequest(connectionEstablished.TimerId));
+        var laneConfigurations = await _publisher.Request<ActiveLanesConfigurationRequest, ActiveLanesConfigurationResponse>().ConfigureAwait(false);
+        var timerLaneConfigurationReponse = await _publisher.Request<TimerLanesConfigurationRequest, TimerLanesConfigurationResponse>(new TimerLanesConfigurationRequest(connectionEstablished.TimerId)).ConfigureAwait(false);
 
         //We have no lane configurations update the configurations with those from the timer
         if (laneConfigurations == null || !laneConfigurations.Lanes.Any())
@@ -26,7 +26,7 @@ public class LaneTimerManager : ISubscriber
             {
                 foreach (var timerLane in timerLaneConfigurationReponse.Lanes)
                 {
-                    await GenerateConfigurationEvents(timerLane);
+                    await GenerateConfigurationEvents(timerLane).ConfigureAwait(false);
                 }
             }
         }
@@ -36,9 +36,9 @@ public class LaneTimerManager : ISubscriber
             if (timerLaneConfigurationReponse != null)
             {
                 //Loop through the lane configuration and update the timer configuration
-                await ReconfigureTimerLanes(connectionEstablished, laneConfigurations, timerLaneConfigurationReponse);
+                await ReconfigureTimerLanes(connectionEstablished, laneConfigurations, timerLaneConfigurationReponse).ConfigureAwait(false);
 
-                await ReconfigurationLocalFromTimer(laneConfigurations, timerLaneConfigurationReponse);
+                await ReconfigurationLocalFromTimer(laneConfigurations, timerLaneConfigurationReponse).ConfigureAwait(false);
             }
         }
     }
@@ -50,7 +50,7 @@ public class LaneTimerManager : ISubscriber
             //The lane is not configured locally
             if (!laneConfigurations.Lanes.Any(x => x.Lane == timerLane.Lane))
             {
-                await GenerateConfigurationEvents(timerLane);
+                await GenerateConfigurationEvents(timerLane).ConfigureAwait(false);
             }
         }
     }
@@ -74,29 +74,29 @@ public class LaneTimerManager : ISubscriber
         if (timerReconfigurations.Any())
         {
             await _publisher.Dispatch(
-                 new TimersLaneConfigured(connectionEstablished.TimerId, timerReconfigurations));
+                 new TimersLaneConfigured(connectionEstablished.TimerId, timerReconfigurations)).ConfigureAwait(false);
         }
     }
     public async Task GenerateConfigurationEvents(TimerLanesConfigurationResponse.TimerLaneConfiguration configuration)
     {
         if (configuration.IsEnabled)
         {
-            await _publisher.Dispatch(new LaneEnabled(configuration.Lane));
+            await _publisher.Dispatch(new LaneEnabled(configuration.Lane)).ConfigureAwait(false);
         }
         else
         {
-            await _publisher.Dispatch(new LaneDisabled(configuration.Lane));
+            await _publisher.Dispatch(new LaneDisabled(configuration.Lane)).ConfigureAwait(false);
         }
 
         if (configuration.FrequencyInMhz != null)
         {
-            await _publisher.Dispatch(new LaneRadioFrequencyConfigured(configuration.Lane, null, configuration.FrequencyInMhz.Value));
+            await _publisher.Dispatch(new LaneRadioFrequencyConfigured(configuration.Lane, null, configuration.FrequencyInMhz.Value)).ConfigureAwait(false);
         }
     }
 
     public async Task When(LaneEnabled laneEnabled)
     {
-        var timers = await _publisher.Request<TimerDetailsRequest, TimerDetailsResponse>();
+        var timers = await _publisher.Request<TimerDetailsRequest, TimerDetailsResponse>().ConfigureAwait(false);
 
         if (timers == null)
         {
@@ -109,13 +109,13 @@ public class LaneTimerManager : ISubscriber
 
             if (timerLaneConfiguration == null || !timerLaneConfiguration.IsEnabled)
             {
-                await _publisher.Dispatch(new TimerLaneEnabled(timer.Id, laneEnabled.LaneNumber));
+                await _publisher.Dispatch(new TimerLaneEnabled(timer.Id, laneEnabled.LaneNumber)).ConfigureAwait(false);
             }
         }
     }
     public async Task When(LaneDisabled laneDisabled)
     {
-        var timers = await _publisher.Request<TimerDetailsRequest, TimerDetailsResponse>();
+        var timers = await _publisher.Request<TimerDetailsRequest, TimerDetailsResponse>().ConfigureAwait(false);
 
         if (timers == null)
         {
@@ -124,17 +124,17 @@ public class LaneTimerManager : ISubscriber
 
         foreach (var timer in timers.Timers)
         {
-            var timerLaneConfiguration = await _publisher.Request<TimerLaneConfigurationRequest, TimerLaneConfigurationResponse>(new TimerLaneConfigurationRequest(timer.Id, laneDisabled.LaneNumber));
+            var timerLaneConfiguration = await _publisher.Request<TimerLaneConfigurationRequest, TimerLaneConfigurationResponse>(new TimerLaneConfigurationRequest(timer.Id, laneDisabled.LaneNumber)).ConfigureAwait(false);
 
             if (timerLaneConfiguration == null || timerLaneConfiguration.IsEnabled)
             {
-                await _publisher.Dispatch(new TimerLaneDisabled(timer.Id, laneDisabled.LaneNumber));
+                await _publisher.Dispatch(new TimerLaneDisabled(timer.Id, laneDisabled.LaneNumber)).ConfigureAwait(false);
             }
         }
     }
     public async Task When(LaneRadioFrequencyConfigured frequencyChange)
     {
-        var timers = await _publisher.Request<TimerDetailsRequest, TimerDetailsResponse>();
+        var timers = await _publisher.Request<TimerDetailsRequest, TimerDetailsResponse>().ConfigureAwait(false);
 
         if (timers == null)
         {
@@ -143,11 +143,11 @@ public class LaneTimerManager : ISubscriber
 
         foreach (var timer in timers.Timers)
         {
-            var timerLaneConfiguration = await _publisher.Request<TimerLaneConfigurationRequest, TimerLaneConfigurationResponse>(new TimerLaneConfigurationRequest(timer.Id, frequencyChange.LaneNumber));
+            var timerLaneConfiguration = await _publisher.Request<TimerLaneConfigurationRequest, TimerLaneConfigurationResponse>(new TimerLaneConfigurationRequest(timer.Id, frequencyChange.LaneNumber)).ConfigureAwait(false);
 
             if (timerLaneConfiguration == null || timerLaneConfiguration.FrequencyInMhz != frequencyChange.FrequencyInMhz)
             {
-                await _publisher.Dispatch(new TimerLaneRadioFrequencyConfigured(timer.Id, frequencyChange.LaneNumber, frequencyChange.FrequencyInMhz));
+                await _publisher.Dispatch(new TimerLaneRadioFrequencyConfigured(timer.Id, frequencyChange.LaneNumber, frequencyChange.FrequencyInMhz)).ConfigureAwait(false);
             }
         }
     }

@@ -54,6 +54,23 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.ToTable("ActiveTimings");
                 });
 
+            modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.ConsecutiveLapLeaderboard", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<uint>("ConsecutiveLaps")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConsecutiveLapLeaderboards");
+                });
+
             modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.Detection", b =>
                 {
                     b.Property<Guid>("Id")
@@ -124,6 +141,35 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.ToTable("Lanes");
                 });
 
+            modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.OpenPracticeLap", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("FinishedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PilotId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("TotalMilliseconds")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OpenPracticeLaps");
+                });
+
             modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.OpenPracticeSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -165,6 +211,20 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Pilots");
+                });
+
+            modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.SingleLapLeaderboard", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SingleLapLeaderboards");
                 });
 
             modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.TimerStatus", b =>
@@ -265,128 +325,73 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Navigation("ActiveSplit");
                 });
 
-            modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.OpenPracticeSession", b =>
+            modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.ConsecutiveLapLeaderboard", b =>
                 {
-                    b.OwnsMany("NaeTime.Persistence.SQLite.Models.ConsecutiveLapLeaderboard", "ConsecutiveLapLeaderboards", b1 =>
+                    b.OwnsMany("NaeTime.Persistence.SQLite.Models.ConsecutiveLapLeaderboardPosition", "Positions", b1 =>
                         {
-                            b1.Property<Guid>("OpenPracticeSessionId")
+                            b1.Property<Guid>("ConsecutiveLapLeaderboardId")
                                 .HasColumnType("TEXT");
 
                             b1.Property<Guid>("Id")
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("TEXT");
 
-                            b1.Property<uint>("ConsecutiveLaps")
+                            b1.Property<DateTime>("LastLapCompletionUtc")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("PilotId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<uint>("Position")
                                 .HasColumnType("INTEGER");
 
-                            b1.HasKey("OpenPracticeSessionId", "Id");
+                            b1.Property<uint>("TotalLaps")
+                                .HasColumnType("INTEGER");
 
-                            b1.ToTable("ConsecutiveLapLeaderboard");
+                            b1.Property<long>("TotalMilliseconds")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("ConsecutiveLapLeaderboardId", "Id");
+
+                            b1.ToTable("ConsecutiveLapLeaderboardPosition");
 
                             b1.WithOwner()
-                                .HasForeignKey("OpenPracticeSessionId");
+                                .HasForeignKey("ConsecutiveLapLeaderboardId");
 
-                            b1.OwnsMany("NaeTime.Persistence.SQLite.Models.ConsecutiveLapLeaderboardPosition", "Positions", b2 =>
+                            b1.OwnsMany("NaeTime.Persistence.SQLite.Models.ConsecutiveLapLeaderboardPositionLap", "IncludedLaps", b2 =>
                                 {
-                                    b2.Property<Guid>("ConsecutiveLapLeaderboardOpenPracticeSessionId")
+                                    b2.Property<Guid>("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId")
                                         .HasColumnType("TEXT");
 
-                                    b2.Property<Guid>("ConsecutiveLapLeaderboardId")
+                                    b2.Property<Guid>("ConsecutiveLapLeaderboardPositionId")
                                         .HasColumnType("TEXT");
 
                                     b2.Property<Guid>("Id")
                                         .ValueGeneratedOnAdd()
                                         .HasColumnType("TEXT");
 
-                                    b2.Property<DateTime>("LastLapCompletionUtc")
+                                    b2.Property<Guid>("LapId")
                                         .HasColumnType("TEXT");
 
-                                    b2.Property<Guid>("PilotId")
-                                        .HasColumnType("TEXT");
-
-                                    b2.Property<uint>("Position")
+                                    b2.Property<int>("Ordinal")
                                         .HasColumnType("INTEGER");
 
-                                    b2.Property<uint>("TotalLaps")
-                                        .HasColumnType("INTEGER");
+                                    b2.HasKey("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId", "ConsecutiveLapLeaderboardPositionId", "Id");
 
-                                    b2.Property<long>("TotalMilliseconds")
-                                        .HasColumnType("INTEGER");
-
-                                    b2.HasKey("ConsecutiveLapLeaderboardOpenPracticeSessionId", "ConsecutiveLapLeaderboardId", "Id");
-
-                                    b2.ToTable("ConsecutiveLapLeaderboardPosition");
+                                    b2.ToTable("ConsecutiveLapLeaderboardPositionLap");
 
                                     b2.WithOwner()
-                                        .HasForeignKey("ConsecutiveLapLeaderboardOpenPracticeSessionId", "ConsecutiveLapLeaderboardId");
-
-                                    b2.OwnsMany("NaeTime.Persistence.SQLite.Models.ConsecutiveLapLeaderboardPositionLap", "IncludedLaps", b3 =>
-                                        {
-                                            b3.Property<Guid>("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId")
-                                                .HasColumnType("TEXT");
-
-                                            b3.Property<Guid>("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId")
-                                                .HasColumnType("TEXT");
-
-                                            b3.Property<Guid>("ConsecutiveLapLeaderboardPositionId")
-                                                .HasColumnType("TEXT");
-
-                                            b3.Property<Guid>("Id")
-                                                .ValueGeneratedOnAdd()
-                                                .HasColumnType("TEXT");
-
-                                            b3.Property<Guid>("LapId")
-                                                .HasColumnType("TEXT");
-
-                                            b3.Property<int>("Ordinal")
-                                                .HasColumnType("INTEGER");
-
-                                            b3.HasKey("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId", "ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId", "ConsecutiveLapLeaderboardPositionId", "Id");
-
-                                            b3.ToTable("ConsecutiveLapLeaderboardPositionLap");
-
-                                            b3.WithOwner()
-                                                .HasForeignKey("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardOpenPracticeSessionId", "ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId", "ConsecutiveLapLeaderboardPositionId");
-                                        });
-
-                                    b2.Navigation("IncludedLaps");
+                                        .HasForeignKey("ConsecutiveLapLeaderboardPositionConsecutiveLapLeaderboardId", "ConsecutiveLapLeaderboardPositionId");
                                 });
 
-                            b1.Navigation("Positions");
+                            b1.Navigation("IncludedLaps");
                         });
 
-                    b.OwnsMany("NaeTime.Persistence.SQLite.Models.OpenPracticeLap", "Laps", b1 =>
-                        {
-                            b1.Property<Guid>("OpenPracticeSessionId")
-                                .HasColumnType("TEXT");
+                    b.Navigation("Positions");
+                });
 
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<DateTime>("FinishedUtc")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<Guid>("PilotId")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<DateTime>("StartedUtc")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<int>("Status")
-                                .HasColumnType("INTEGER");
-
-                            b1.Property<long>("TotalMilliseconds")
-                                .HasColumnType("INTEGER");
-
-                            b1.HasKey("OpenPracticeSessionId", "Id");
-
-                            b1.ToTable("OpenPracticeLap");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OpenPracticeSessionId");
-                        });
-
+            modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.OpenPracticeSession", b =>
+                {
                     b.OwnsMany("NaeTime.Persistence.SQLite.Models.PilotLane", "ActiveLanes", b1 =>
                         {
                             b1.Property<Guid>("OpenPracticeSessionId")
@@ -410,67 +415,44 @@ namespace NaeTime.Persistence.SQLite.Migrations
                                 .HasForeignKey("OpenPracticeSessionId");
                         });
 
-                    b.OwnsMany("NaeTime.Persistence.SQLite.Models.SingleLapLeaderboard", "SingleLapLeaderboards", b1 =>
+                    b.Navigation("ActiveLanes");
+                });
+
+            modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.SingleLapLeaderboard", b =>
+                {
+                    b.OwnsMany("NaeTime.Persistence.SQLite.Models.SingleLapLeaderboardPosition", "Positions", b1 =>
                         {
-                            b1.Property<Guid>("OpenPracticeSessionId")
+                            b1.Property<Guid>("SingleLapLeaderboardId")
                                 .HasColumnType("TEXT");
 
                             b1.Property<Guid>("Id")
                                 .ValueGeneratedOnAdd()
                                 .HasColumnType("TEXT");
 
-                            b1.HasKey("OpenPracticeSessionId", "Id");
+                            b1.Property<DateTime>("CompletionUtc")
+                                .HasColumnType("TEXT");
 
-                            b1.ToTable("SingleLapLeaderboard");
+                            b1.Property<Guid>("LapId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<long>("LapMilliseconds")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid>("PilotId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<uint>("Position")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("SingleLapLeaderboardId", "Id");
+
+                            b1.ToTable("SingleLapLeaderboardPosition");
 
                             b1.WithOwner()
-                                .HasForeignKey("OpenPracticeSessionId");
-
-                            b1.OwnsMany("NaeTime.Persistence.SQLite.Models.SingleLapLeaderboardPosition", "Positions", b2 =>
-                                {
-                                    b2.Property<Guid>("SingleLapLeaderboardOpenPracticeSessionId")
-                                        .HasColumnType("TEXT");
-
-                                    b2.Property<Guid>("SingleLapLeaderboardId")
-                                        .HasColumnType("TEXT");
-
-                                    b2.Property<Guid>("Id")
-                                        .ValueGeneratedOnAdd()
-                                        .HasColumnType("TEXT");
-
-                                    b2.Property<DateTime>("CompletionUtc")
-                                        .HasColumnType("TEXT");
-
-                                    b2.Property<Guid>("LapId")
-                                        .HasColumnType("TEXT");
-
-                                    b2.Property<long>("LapMilliseconds")
-                                        .HasColumnType("INTEGER");
-
-                                    b2.Property<Guid>("PilotId")
-                                        .HasColumnType("TEXT");
-
-                                    b2.Property<uint>("Position")
-                                        .HasColumnType("INTEGER");
-
-                                    b2.HasKey("SingleLapLeaderboardOpenPracticeSessionId", "SingleLapLeaderboardId", "Id");
-
-                                    b2.ToTable("SingleLapLeaderboardPosition");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("SingleLapLeaderboardOpenPracticeSessionId", "SingleLapLeaderboardId");
-                                });
-
-                            b1.Navigation("Positions");
+                                .HasForeignKey("SingleLapLeaderboardId");
                         });
 
-                    b.Navigation("ActiveLanes");
-
-                    b.Navigation("ConsecutiveLapLeaderboards");
-
-                    b.Navigation("Laps");
-
-                    b.Navigation("SingleLapLeaderboards");
+                    b.Navigation("Positions");
                 });
 
             modelBuilder.Entity("NaeTime.Persistence.SQLite.Models.Track", b =>

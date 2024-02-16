@@ -13,7 +13,7 @@ public class SQLiteHardwareRepository : IHardwareRepository
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
     private TimerDetails GetTimerDetails(Models.EthernetLapRF8Channel timer)
-        => new TimerDetails
+        => new()
         {
             Id = timer.Id,
             Name = timer.Name,
@@ -23,7 +23,7 @@ public class SQLiteHardwareRepository : IHardwareRepository
 
     public async Task AddOrUpdateEthernetLapRF8Channel(Guid id, string name, byte[] ipAddress, int port)
     {
-        var existing = await _dbContext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == id);
+        var existing = await _dbContext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -35,7 +35,7 @@ public class SQLiteHardwareRepository : IHardwareRepository
                 Name = name,
             };
 
-            _dbContext.EthernetLapRF8Channels.Add(existing);
+            _ = _dbContext.EthernetLapRF8Channels.Add(existing);
         }
         else
         {
@@ -44,51 +44,44 @@ public class SQLiteHardwareRepository : IHardwareRepository
             existing.Name = name;
         }
 
-        await _dbContext.SaveChangesAsync();
+        _ = await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
-    public async Task<IEnumerable<EthernetLapRF8Channel>> GetAllEthernetLapRF8ChannelTimers()
-    {
-        return await _dbContext.EthernetLapRF8Channels.Select(x => new EthernetLapRF8Channel(x.Id, x.Name, x.IpAddress, x.Port)).ToListAsync();
-    }
+    public async Task<IEnumerable<EthernetLapRF8Channel>> GetAllEthernetLapRF8ChannelTimers() =>
+        await _dbContext.EthernetLapRF8Channels.Select(x => new EthernetLapRF8Channel(x.Id, x.Name, x.IpAddress, x.Port)).ToListAsync().ConfigureAwait(false);
 
     public async Task<IEnumerable<TimerDetails>> GetAllTimerDetails()
     {
         var timers = new List<TimerDetails>();
 
-        var ethernetLapRF8Channels = await _dbContext.EthernetLapRF8Channels.ToListAsync();
+        var ethernetLapRF8Channels = await _dbContext.EthernetLapRF8Channels.ToListAsync().ConfigureAwait(false);
 
-        timers.AddRange(ethernetLapRF8Channels.Select(x => GetTimerDetails(x)));
+        timers.AddRange(ethernetLapRF8Channels.Select(GetTimerDetails));
 
         return timers;
     }
 
     public async Task<EthernetLapRF8Channel?> GetEthernetLapRF8Channel(Guid id)
     {
-        var timer = await _dbContext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == id);
+        var timer = await _dbContext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
-        if (timer == null)
-        {
-            return null;
-        }
-
-        return new EthernetLapRF8Channel(timer.Id, timer.Name, timer.IpAddress, timer.Port);
+        return timer == null ? null : new EthernetLapRF8Channel(timer.Id, timer.Name, timer.IpAddress, timer.Port);
     }
 
     public async Task<IEnumerable<TimerDetails>> GetTimerDetails(IEnumerable<Guid> ids)
     {
         var timers = new List<TimerDetails>();
 
-        var ethernetLapRF8Channels = await _dbContext.EthernetLapRF8Channels.Where(x => ids.Contains(x.Id)).ToListAsync();
+        var ethernetLapRF8Channels = await _dbContext.EthernetLapRF8Channels.Where(x => ids.Contains(x.Id)).ToListAsync().ConfigureAwait(false);
 
-        timers.AddRange(ethernetLapRF8Channels.Select(x => GetTimerDetails(x)));
+        timers.AddRange(ethernetLapRF8Channels.Select(GetTimerDetails));
 
         return timers;
     }
 
     public async Task SetTimerConnectionStatus(Guid id, bool isConnected, DateTime utcTime)
     {
-        var existing = await _dbContext.TimerStatuses.FirstOrDefaultAsync(x => x.Id == id);
+        var existing = await _dbContext.TimerStatuses.FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -98,7 +91,7 @@ public class SQLiteHardwareRepository : IHardwareRepository
                 WasConnected = isConnected,
             };
 
-            _dbContext.TimerStatuses.Add(existing);
+            _ = _dbContext.TimerStatuses.Add(existing);
         }
         else
         {
@@ -106,6 +99,6 @@ public class SQLiteHardwareRepository : IHardwareRepository
             existing.WasConnected = isConnected;
         }
 
-        await _dbContext.SaveChangesAsync();
+        _ = await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 }

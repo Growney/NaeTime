@@ -14,9 +14,9 @@ public class SessionService : ISubscriber
     }
     public async Task<SessionsResponse> On(SessionsRequest request)
     {
-        var sessionRepository = await _repositoryFactory.CreateSessionRepository();
+        var sessionRepository = await _repositoryFactory.CreateSessionRepository().ConfigureAwait(false);
 
-        var details = await sessionRepository.GetDetails();
+        var details = await sessionRepository.GetDetails().ConfigureAwait(false);
 
         return new SessionsResponse(
             details.Select(x => new SessionsResponse.Session(x.Id, x.Name,
@@ -28,9 +28,9 @@ public class SessionService : ISubscriber
     }
     public async Task<SessionResponse?> On(SessionRequest request)
     {
-        var sessionRepository = await _repositoryFactory.CreateSessionRepository();
+        var sessionRepository = await _repositoryFactory.CreateSessionRepository().ConfigureAwait(false);
 
-        var details = await sessionRepository.GetDetails(request.SessionId);
+        var details = await sessionRepository.GetDetails(request.SessionId).ConfigureAwait(false);
 
         if (details == null)
         {

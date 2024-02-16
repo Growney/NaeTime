@@ -14,7 +14,7 @@ public class SQLitePilotRepository : IPilotRepository
     }
     public async Task AddOrUpdatePilot(Guid id, string firstName, string lastName, string callSign)
     {
-        var existing = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == id);
+        var existing = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -35,12 +35,12 @@ public class SQLitePilotRepository : IPilotRepository
             existing.CallSign = callSign;
         }
 
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
     public async Task<Pilot?> GetPilot(Guid id)
     {
-        var existing = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == id);
+        var existing = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == id).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -52,6 +52,6 @@ public class SQLitePilotRepository : IPilotRepository
 
     public async Task<IEnumerable<Pilot>> GetPilots()
     {
-        return await _dbContext.Pilots.Select(x => new Persistence.Models.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign)).ToListAsync();
+        return await _dbContext.Pilots.Select(x => new Persistence.Models.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign)).ToListAsync().ConfigureAwait(false);
     }
 }

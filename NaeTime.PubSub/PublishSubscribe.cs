@@ -7,20 +7,19 @@ internal class PublishSubscribe : IPublishSubscribe
 {
     private readonly IServiceProvider _serviceProvider;
 
-    private ConcurrentDictionary<Type, bool> _subscriberStatus = new();
-    private ConcurrentDictionary<Type, IEnumerable<SubscriberHandler>> _subscribers = new();
-    private ConcurrentDictionary<Type, ConcurrentDictionary<Type, RequestHandler>> _classHandlers = new();
+    private readonly ConcurrentDictionary<Type, bool> _subscriberStatus = new();
+    private readonly ConcurrentDictionary<Type, IEnumerable<SubscriberHandler>> _subscribers = new();
+    private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, RequestHandler>> _classHandlers = new();
 
-    private ConcurrentDictionary<object, ConcurrentDictionary<(Type requestType, Type responseType), int>> _instanceDynamicHandlers = new();
-    private ConcurrentDictionary<Type, ConcurrentDictionary<Type, Func<object, Task<object?>>>> _dynamicHandlers = new();
+    private readonly ConcurrentDictionary<object, ConcurrentDictionary<(Type requestType, Type responseType), int>> _instanceDynamicHandlers = new();
+    private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, Func<object, Task<object?>>>> _dynamicHandlers = new();
 
-    private ConcurrentDictionary<object, ConcurrentDictionary<Type, int>> _instanceTypes = new();
-    private ConcurrentDictionary<Type, ConcurrentDictionary<object, Func<object, Task>>> _subscriptions = new();
+    private readonly ConcurrentDictionary<object, ConcurrentDictionary<Type, int>> _instanceTypes = new();
+    private readonly ConcurrentDictionary<Type, ConcurrentDictionary<object, Func<object, Task>>> _subscriptions = new();
     public PublishSubscribe(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     }
-
 
     public async Task<TResponse?> Request<TRequest, TResponse>(TRequest request)
         where TRequest : notnull
@@ -32,21 +31,16 @@ internal class PublishSubscribe : IPublishSubscribe
         {
             if (dynamicReponseHandlers.TryGetValue(responseType, out var handler))
             {
-                var response = await handler(request);
+                var response = await handler(request).ConfigureAwait(false);
 
-                if (response == null)
-                {
-                    return default;
-                }
-
-                return (TResponse)response;
+                return response == null ? default : (TResponse)response;
             }
         }
 
         var classHandler = TryGetHandler(requestType, responseType);
         if (classHandler != null)
         {
-            return await classHandler.Handle<TResponse>(request);
+            return await classHandler.Handle<TResponse>(request).ConfigureAwait(false);
         }
 #if DEBUG
         throw new NotImplementedException($"Missing Handler for Request: {requestType} Response: {responseType}");
@@ -96,10 +90,7 @@ internal class PublishSubscribe : IPublishSubscribe
             DispatchToDynamicSubscribers(message)
         };
 
-        var subscriberBag = _subscribers.GetOrAdd(message.GetType(), _ =>
-        {
-            return CreateSubscribers<T>();
-        });
+        var subscriberBag = _subscribers.GetOrAdd(message.GetType(), _ => CreateSubscribers<T>());
 
         foreach (var subscriber in subscriberBag)
         {
@@ -107,10 +98,11 @@ internal class PublishSubscribe : IPublishSubscribe
             {
                 continue;
             }
+
             publishTasks.Add(subscriber.Handle(message));
         }
 
-        await Task.WhenAll(publishTasks);
+        await Task.WhenAll(publishTasks).ConfigureAwait(false);
     }
     private RequestHandler? CreateResponseTypeHandler(Type requestType, Type responseType)
     {
@@ -122,10 +114,12 @@ internal class PublishSubscribe : IPublishSubscribe
             {
                 continue;
             }
+
             if (handler.ResponseType != responseType)
             {
                 continue;
             }
+
             Func<object> getHandler;
             if (handler.Lifetime == ServiceLifetime.Singleton)
             {
@@ -212,12 +206,7 @@ internal class PublishSubscribe : IPublishSubscribe
 
         var classHandler = TryGetHandler(requestType, responseType);
 
-        if (classHandler != null)
-        {
-            return true;
-        }
-
-        return false;
+        return classHandler != null;
     }
 
     public void RespondTo<TRequest, TResponse>(object subscriber, Func<TRequest, Task<TResponse?>> onRequest)
@@ -237,11 +226,10 @@ internal class PublishSubscribe : IPublishSubscribe
         {
             var typedRequest = (TRequest)x;
 
-            var response = await onRequest(typedRequest);
+            var response = await onRequest(typedRequest).ConfigureAwait(false);
 
             return response;
         });
-
 
         var handlers = _instanceDynamicHandlers.GetOrAdd(subscriber, _ => new ConcurrentDictionary<(Type requestType, Type responseType), int>());
         handlers.TryAdd((requestType, responseType), 0);
@@ -281,16 +269,11 @@ internal class PublishSubscribe : IPublishSubscribe
 
             typeSubscriptions.TryRemove(subscriber, out _);
         }
+
         _instanceTypes.TryRemove(subscriber, out _);
     }
 
-    public void DisableSubscriber(Type subscriberType)
-    {
-        _subscriberStatus.TryUpdate(subscriberType, false, true);
-    }
+    public void DisableSubscriber(Type subscriberType) => _subscriberStatus.TryUpdate(subscriberType, false, true);
 
-    public void EnableSubscriber(Type subscriberType)
-    {
-        _subscriberStatus.TryUpdate(subscriberType, true, false);
-    }
+    public void EnableSubscriber(Type subscriberType) => _subscriberStatus.TryUpdate(subscriberType, true, false);
 }

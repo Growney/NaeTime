@@ -18,11 +18,6 @@ public partial class LapList : ComponentBase
     [Inject]
     public IDispatcher Dispatch { get; set; } = null!;
 
-    private bool showRemove = false;
-
-    public async Task Remove(Guid lapId, Guid pilotId)
-    {
-        await Dispatch.Dispatch(new OpenPracticeLapRemoved(SessionId, lapId, pilotId));
-    }
+    public Task Remove(Guid lapId, Guid pilotId) => Dispatch.Dispatch(new OpenPracticeLapRemoved(SessionId, lapId, pilotId));
 
 }

@@ -13,14 +13,13 @@ public class SQLiteActiveRepository : IActiveRepository
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-
     public async Task ActivateSession(Guid sessionId, SessionType type)
     {
-        var existingEntities = await _dbContext.ActiveSession.FirstOrDefaultAsync();
+        var existingEntities = await _dbContext.ActiveSession.FirstOrDefaultAsync().ConfigureAwait(false);
 
         if (existingEntities != null)
         {
-            _dbContext.ActiveSession.Remove(existingEntities);
+            _ = _dbContext.ActiveSession.Remove(existingEntities);
         }
 
         var newActiveSession = new Models.ActiveSession
@@ -34,27 +33,27 @@ public class SQLiteActiveRepository : IActiveRepository
             },
         };
 
-        _dbContext.ActiveSession.Add(newActiveSession);
+        _ = _dbContext.ActiveSession.Add(newActiveSession);
 
-        await _dbContext.SaveChangesAsync();
+        _ = await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
     public async Task DeactivateSession()
     {
-        var existingEntities = await _dbContext.ActiveSession.FirstOrDefaultAsync();
+        var existingEntities = await _dbContext.ActiveSession.FirstOrDefaultAsync().ConfigureAwait(false);
 
         if (existingEntities == null)
         {
             return;
         }
 
-        _dbContext.ActiveSession.Remove(existingEntities);
+        _ = _dbContext.ActiveSession.Remove(existingEntities);
 
-        await _dbContext.SaveChangesAsync();
+        _ = await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
     public async Task ActivateLap(Guid sessionId, byte lane, uint lapNumber, long startedSoftwareTime, DateTime startedUtcTime, ulong? startedHardwareTime)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.Lane == lane);
+        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.Lane == lane).ConfigureAwait(false);
 
         if (existingTimings == null)
         {
@@ -64,7 +63,7 @@ public class SQLiteActiveRepository : IActiveRepository
                 Lane = lane,
                 SessionId = sessionId
             };
-            _dbContext.ActiveTimings.Add(existingTimings);
+            _ = _dbContext.ActiveTimings.Add(existingTimings);
         }
 
         existingTimings.LapNumber = lapNumber;
@@ -80,12 +79,12 @@ public class SQLiteActiveRepository : IActiveRepository
 
         existingTimings.ActiveLap = activeLap;
 
-        await _dbContext.SaveChangesAsync();
+        _ = await _dbContext.SaveChangesAsync().ConfigureAwait(false);
 
     }
     public async Task DeactivateLap(Guid sessionId, byte lane)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.Lane == lane);
+        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.Lane == lane).ConfigureAwait(false);
 
         if (existingTimings == null)
         {
@@ -94,13 +93,14 @@ public class SQLiteActiveRepository : IActiveRepository
 
         existingTimings.ActiveLap = null;
 
-        await _dbContext.SaveChangesAsync();
-    }
+        _ = _dbContext.ActiveTimings.Update(existingTimings);
 
+        _ = await _dbContext.SaveChangesAsync().ConfigureAwait(false);
+    }
 
     public async Task ActivateSplit(Guid sessionId, byte lane, uint lapNumber, byte splitNumber, long startedSoftwareTime, DateTime startedUtcTime)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.Lane == lane);
+        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.Lane == lane).ConfigureAwait(false);
 
         if (existingTimings == null)
         {
@@ -110,7 +110,7 @@ public class SQLiteActiveRepository : IActiveRepository
                 Lane = lane,
                 SessionId = sessionId
             };
-            _dbContext.ActiveTimings.Add(existingTimings);
+            _ = _dbContext.ActiveTimings.Add(existingTimings);
         }
 
         existingTimings.LapNumber = lapNumber;
@@ -126,11 +126,11 @@ public class SQLiteActiveRepository : IActiveRepository
 
         existingTimings.ActiveSplit = activeSplit;
 
-        await _dbContext.SaveChangesAsync();
+        _ = await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
     public async Task DeactivateSplit(Guid sessionId, byte lane)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.Lane == lane);
+        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.Lane == lane).ConfigureAwait(false);
 
         if (existingTimings == null)
         {
@@ -139,40 +139,32 @@ public class SQLiteActiveRepository : IActiveRepository
 
         existingTimings.ActiveSplit = null;
 
-        await _dbContext.SaveChangesAsync();
+        _ = await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
-
 
     public async Task<ActiveSession?> GetSession()
     {
-        var existingSession = await _dbContext.ActiveSession.FirstOrDefaultAsync();
+        var existingSession = await _dbContext.ActiveSession.FirstOrDefaultAsync().ConfigureAwait(false);
 
-        if (existingSession == null)
-        {
-            return null;
-        }
-
-        return new ActiveSession(existingSession.SessionId, existingSession.SessionType switch
-        {
-            Models.SessionType.OpenPractice => SessionType.OpenPractice,
-            _ => throw new NotImplementedException()
-        });
+        return existingSession == null
+            ? null
+            : new ActiveSession(existingSession.SessionId, existingSession.SessionType switch
+            {
+                Models.SessionType.OpenPractice => SessionType.OpenPractice,
+                _ => throw new NotImplementedException()
+            });
     }
-
 
     public async Task<ActiveTimings> GetTimings(Guid trackId, byte lane)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == trackId && x.Lane == lane);
-
-        if (existingTimings == null)
-        {
-            existingTimings = new Models.ActiveTimings()
+        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == trackId && x.Lane == lane).ConfigureAwait(false)
+            ?? new Models.ActiveTimings()
             {
                 Id = Guid.NewGuid(),
                 SessionId = trackId,
                 Lane = lane,
             };
-        }
+
         ActiveLap? activeLap = null;
 
         if (existingTimings.ActiveLap != null)
@@ -189,13 +181,12 @@ public class SQLiteActiveRepository : IActiveRepository
             activeSplit = new ActiveSplit(split.SplitNumber, split.StartedSoftwareTime, split.StartedUtcTime);
         }
 
-
         return new ActiveTimings(trackId, lane, existingTimings.LapNumber, activeLap, activeSplit);
     }
 
     public async Task<IEnumerable<ActiveTimings>> GetTimings(Guid sessionId)
     {
-        var timings = await _dbContext.ActiveTimings.ToListAsync();
+        var timings = await _dbContext.ActiveTimings.ToListAsync().ConfigureAwait(false);
 
         return timings.Where(x => x.SessionId == sessionId).Select(x =>
         new ActiveTimings(x.SessionId, x.Lane, x.LapNumber, x.ActiveLap != null ? new ActiveLap(x.ActiveLap.StartedSoftwareTime, x.ActiveLap.StartedUtcTime, x.ActiveLap.StartedHardwareTime) : null, x.ActiveSplit != null ? new ActiveSplit(x.ActiveSplit.SplitNumber, x.ActiveSplit.StartedSoftwareTime, x.ActiveSplit.StartedUtcTime) : null));

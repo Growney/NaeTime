@@ -16,7 +16,7 @@ public class SQLiteSessionRepository : ISessionRepository
     {
         var details = new List<SessionDetails>();
 
-        var openPracticeSessions = await _dbContext.OpenPracticeSessions.Select(x => new SessionDetails(x.Id, x.Name, SessionType.OpenPractice, x.TrackId, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds)).ToListAsync();
+        var openPracticeSessions = await _dbContext.OpenPracticeSessions.Select(x => new SessionDetails(x.Id, x.Name, SessionType.OpenPractice, x.TrackId, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds)).ToListAsync().ConfigureAwait(false);
 
         details.AddRange(openPracticeSessions);
 
@@ -24,7 +24,7 @@ public class SQLiteSessionRepository : ISessionRepository
     }
     public async Task<SessionDetails?> GetDetails(Guid sessionId)
     {
-        var openPracticeSession = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId);
+        var openPracticeSession = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
 
         if (openPracticeSession == null)
         {

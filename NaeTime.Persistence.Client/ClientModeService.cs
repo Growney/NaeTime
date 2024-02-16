@@ -15,7 +15,7 @@ public class ClientModeService : ISubscriber
 
     public async Task<ClientModeResponse> On(ClientModeRequest request)
     {
-        var storedValue = await _storageProvider.GetAsync("Mode");
+        var storedValue = await _storageProvider.GetAsync("Mode").ConfigureAwait(false);
 
         if (!Enum.TryParse<ClientMode>(storedValue, out var storedMode))
         {
