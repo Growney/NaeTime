@@ -242,4 +242,23 @@ public class SQLiteOpenPracticeSessionRepository : IOpenPracticeSessionRepositor
 
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
+
+    public async Task SetLapStatus(Guid lapId, OpenPracticeLapStatus status)
+    {
+        var existingLap = await _dbContext.OpenPracticeLaps.FirstOrDefaultAsync(x => x.Id == lapId).ConfigureAwait(false);
+
+        if (existingLap == null)
+        {
+            return;
+        }
+
+        existingLap.Status = status switch
+        {
+            OpenPracticeLapStatus.Invalid => Models.OpenPracticeLapStatus.Invalid,
+            OpenPracticeLapStatus.Completed => Models.OpenPracticeLapStatus.Completed,
+            _ => throw new NotImplementedException()
+        };
+
+        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
+    }
 }

@@ -42,6 +42,10 @@
                         @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):mm\\:ss\\:fff}")
                     </td>
                     <td>
+                        @if (lap.Status == Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed)
+                        {
+                            <Button Size=Size.ExtraSmall Color=ButtonColor.Danger @onclick="() => Dispute(lap.Id,lap.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
+                        }
                         <Button Size=Size.ExtraSmall Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>
                     </td>
                 </tr>

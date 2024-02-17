@@ -89,6 +89,7 @@ public class OpenPracticeSessionManager : ISubscriber
     }
     public async Task When(LapCompleted lapCompleted)
     {
+
         var sessionResponse = await _publishSubscribe.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(lapCompleted.SessionId)).ConfigureAwait(false);
 
         if (sessionResponse == null)
@@ -105,6 +106,7 @@ public class OpenPracticeSessionManager : ISubscriber
         var newLapId = Guid.NewGuid();
 
         await _publishSubscribe.Dispatch(new OpenPracticeLapCompleted(newLapId, lapCompleted.SessionId, pilotLane.PilotId, lapCompleted.StartedUtcTime, lapCompleted.FinishedUtcTime, lapCompleted.TotalTime)).ConfigureAwait(false);
+
 
         var singleLapLeaderboards = BuildSingleLapLeaderboards(sessionResponse.SingleLapLeaderboards);
         var consecutiveLapLeaderboards = BuildConsecutiveLapLeaderboard(sessionResponse.ConsecutiveLapLeaderboards);
@@ -131,20 +133,22 @@ public class OpenPracticeSessionManager : ISubscriber
             }
         }
     }
-    public async Task When(OpenPracticeLapRemoved removed)
+    public Task When(OpenPracticeLapRemoved removed) => HandleLapRemoved(removed.SessionId, removed.LapId, removed.PilotId);
+    private async Task HandleLapRemoved(Guid sessionId, Guid lapId, Guid pilotId)
     {
-        var sessionResponse = await _publishSubscribe.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(removed.SessionId)).ConfigureAwait(false);
+        var sessionResponse = await _publishSubscribe.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(sessionId)).ConfigureAwait(false);
 
         if (sessionResponse == null)
         {
             return;
         }
+
         var singleLapLeaderboards = BuildSingleLapLeaderboards(sessionResponse.SingleLapLeaderboards);
         var consecutiveLapLeaderboards = BuildConsecutiveLapLeaderboard(sessionResponse.ConsecutiveLapLeaderboards);
 
         if (singleLapLeaderboards.Any() || consecutiveLapLeaderboards.Any())
         {
-            var pilotLaps = sessionResponse.Laps.Where(x => x.PilotId == removed.PilotId && x.Id != removed.LapId).Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
+            var pilotLaps = sessionResponse.Laps.Where(x => x.PilotId == pilotId && x.Id != lapId).Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
                 x.Status switch
                 {
                     OpenPracticeSessionResponse.LapStatus.Invalid => LapStatus.Invalid,
@@ -155,14 +159,20 @@ public class OpenPracticeSessionManager : ISubscriber
 
             foreach (var singlelapLeaderboard in singleLapLeaderboards)
             {
-                await UpdateSingleLapLeaderboard(sessionResponse.SessionId, removed.PilotId, singlelapLeaderboard, pilotLaps).ConfigureAwait(false);
+                await UpdateSingleLapLeaderboard(sessionResponse.SessionId, pilotId, singlelapLeaderboard, pilotLaps).ConfigureAwait(false);
             }
             foreach (var consecutiveLapLeaderboard in consecutiveLapLeaderboards)
             {
-                await UpdateConsecutiveLapLeaderboards(sessionResponse.SessionId, removed.PilotId, consecutiveLapLeaderboard, pilotLaps).ConfigureAwait(false);
+                await UpdateConsecutiveLapLeaderboards(sessionResponse.SessionId, pilotId, consecutiveLapLeaderboard, pilotLaps).ConfigureAwait(false);
             }
         }
     }
+
+    public Task When(OpenPracticeLapDisputed lap) => lap.ActualStatus switch
+    {
+        OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid => HandleLapRemoved(lap.SessionId, lap.LapId, lap.PilotId),
+        _ => throw new NotImplementedException(),
+    };
     public async Task When(LapInvalidated lapInvalidated)
     {
         var sessionResponse = await _publishSubscribe.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(lapInvalidated.SessionId));

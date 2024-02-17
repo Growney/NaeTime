@@ -19,5 +19,17 @@ public partial class LapList : ComponentBase
     public IDispatcher Dispatch { get; set; } = null!;
 
     public Task Remove(Guid lapId, Guid pilotId) => Dispatch.Dispatch(new OpenPracticeLapRemoved(SessionId, lapId, pilotId));
+    public Task Dispute(Guid lapId, Guid pilotId)
+    {
+        var lap = Laps.FirstOrDefault(l => l.Id == lapId);
 
+        if (lap == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        lap.Status = OpenPracticeLapStatus.Invalid;
+
+        return Dispatch.Dispatch(new OpenPracticeLapDisputed(SessionId, lapId, pilotId, OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid));
+    }
 }

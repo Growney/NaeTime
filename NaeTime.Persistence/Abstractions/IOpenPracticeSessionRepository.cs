@@ -15,4 +15,5 @@ public interface IOpenPracticeSessionRepository
     public Task AddOrUpdateSingleLapLeaderboard(Guid sessionId, Guid leaderboardId);
     public Task RemoveLeaderboard(Guid sessionId, Guid leaderboardId);
     public Task RemoveLap(Guid sessionId, Guid lapId);
+    public Task SetLapStatus(Guid lapId, OpenPracticeLapStatus status);
 }

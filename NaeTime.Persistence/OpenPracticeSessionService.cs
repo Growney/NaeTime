@@ -12,6 +12,22 @@ public class OpenPracticeSessionService : ISubscriber
     {
         _repositoryFactory = repositoryFactory;
     }
+    public async Task When(OpenPracticeLapDisputed lap)
+    {
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
+
+        switch (lap.ActualStatus)
+        {
+            case OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid:
+                await repository.SetLapStatus(lap.LapId, Models.OpenPracticeLapStatus.Invalid);
+                break;
+            case OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed:
+                await repository.SetLapStatus(lap.LapId, Models.OpenPracticeLapStatus.Completed);
+                break;
+            default:
+                break;
+        }
+    }
     public async Task When(OpenPracticeLapRemoved removed)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
