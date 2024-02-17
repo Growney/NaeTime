@@ -12,6 +12,8 @@ public class FastestConsecutiveLapCalculator
 
         var lapsList = laps.ToList();
 
+        lapsList.Sort((x, y) => x.FinishedUtc.CompareTo(y.FinishedUtc));
+
         long totalTime = 0;
         int startLapNumber = 0;
         int endLapNumber = 0;

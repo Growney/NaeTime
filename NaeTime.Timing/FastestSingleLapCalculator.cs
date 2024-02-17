@@ -9,6 +9,7 @@ public class FastestSingleLapCalculator
         {
             return null;
         }
+
         Guid lapId = Guid.Empty;
         long lapMilliseconds = long.MaxValue;
         DateTime finishedUtc = DateTime.MinValue;

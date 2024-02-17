@@ -129,12 +129,44 @@ public class OpenPracticeSessionManager : ISubscriber
             }
             foreach (var consecutiveLapLeaderboard in consecutiveLapLeaderboards)
             {
-                await CheckConsecutiveLapLeaderboards(sessionResponse.SessionId, pilotLane.PilotId, consecutiveLapLeaderboard, pilotLaps).ConfigureAwait(false);
+                await CheckConsecutiveLapLeaderboard(sessionResponse.SessionId, pilotLane.PilotId, consecutiveLapLeaderboard, pilotLaps).ConfigureAwait(false);
             }
         }
     }
-    public Task When(OpenPracticeLapRemoved removed) => HandleLapRemoved(removed.SessionId, removed.LapId, removed.PilotId);
-    private async Task HandleLapRemoved(Guid sessionId, Guid lapId, Guid pilotId)
+    public async Task When(OpenPracticeLapRemoved removed)
+    {
+        var sessionResponse = await _publishSubscribe.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(removed.SessionId)).ConfigureAwait(false);
+
+        if (sessionResponse == null)
+        {
+            return;
+        }
+
+        var singleLapLeaderboards = BuildSingleLapLeaderboards(sessionResponse.SingleLapLeaderboards);
+        var consecutiveLapLeaderboards = BuildConsecutiveLapLeaderboard(sessionResponse.ConsecutiveLapLeaderboards);
+
+        if (singleLapLeaderboards.Any() || consecutiveLapLeaderboards.Any())
+        {
+            var pilotLaps = sessionResponse.Laps.Where(x => x.PilotId == removed.PilotId && x.Id != removed.LapId).Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
+                x.Status switch
+                {
+                    OpenPracticeSessionResponse.LapStatus.Invalid => LapStatus.Invalid,
+                    OpenPracticeSessionResponse.LapStatus.Completed => LapStatus.Completed,
+                    _ => throw new NotImplementedException()
+                }, x.TotalMilliseconds)).ToList();
+
+
+            foreach (var singlelapLeaderboard in singleLapLeaderboards)
+            {
+                await UpdateSingleLapLeaderboard(sessionResponse.SessionId, removed.PilotId, singlelapLeaderboard, pilotLaps).ConfigureAwait(false);
+            }
+            foreach (var consecutiveLapLeaderboard in consecutiveLapLeaderboards)
+            {
+                await UpdateConsecutiveLapLeaderboard(sessionResponse.SessionId, removed.PilotId, consecutiveLapLeaderboard, pilotLaps).ConfigureAwait(false);
+            }
+        }
+    }
+    private async Task HandleLapInvalidated(Guid sessionId, Guid lapId, Guid pilotId)
     {
         var sessionResponse = await _publishSubscribe.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(sessionId)).ConfigureAwait(false);
 
@@ -148,7 +180,7 @@ public class OpenPracticeSessionManager : ISubscriber
 
         if (singleLapLeaderboards.Any() || consecutiveLapLeaderboards.Any())
         {
-            var pilotLaps = sessionResponse.Laps.Where(x => x.PilotId == pilotId && x.Id != lapId).Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
+            var pilotLaps = sessionResponse.Laps.Where(x => x.PilotId == pilotId).Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
                 x.Status switch
                 {
                     OpenPracticeSessionResponse.LapStatus.Invalid => LapStatus.Invalid,
@@ -156,21 +188,76 @@ public class OpenPracticeSessionManager : ISubscriber
                     _ => throw new NotImplementedException()
                 }, x.TotalMilliseconds)).ToList();
 
+            var lap = pilotLaps.FirstOrDefault(x => x.LapId == lapId);
+
+            if (lap == null)
+            {
+                return;
+            }
+
+            pilotLaps.Remove(lap);
+
+            pilotLaps.Add(new Lap(lapId, lap.StartedUtc, lap.FinishedUtc, LapStatus.Invalid, lap.TotalMilliseconds));
 
             foreach (var singlelapLeaderboard in singleLapLeaderboards)
             {
                 await UpdateSingleLapLeaderboard(sessionResponse.SessionId, pilotId, singlelapLeaderboard, pilotLaps).ConfigureAwait(false);
             }
+
             foreach (var consecutiveLapLeaderboard in consecutiveLapLeaderboards)
             {
-                await UpdateConsecutiveLapLeaderboards(sessionResponse.SessionId, pilotId, consecutiveLapLeaderboard, pilotLaps).ConfigureAwait(false);
+                await UpdateConsecutiveLapLeaderboard(sessionResponse.SessionId, pilotId, consecutiveLapLeaderboard, pilotLaps).ConfigureAwait(false);
             }
         }
     }
+    public async Task HandleLapValidated(Guid sessionId, Guid lapId, Guid pilotId)
+    {
+        var sessionResponse = await _publishSubscribe.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(sessionId)).ConfigureAwait(false);
 
+        if (sessionResponse == null)
+        {
+            return;
+        }
+
+        var singleLapLeaderboards = BuildSingleLapLeaderboards(sessionResponse.SingleLapLeaderboards);
+        var consecutiveLapLeaderboards = BuildConsecutiveLapLeaderboard(sessionResponse.ConsecutiveLapLeaderboards);
+
+        if (singleLapLeaderboards.Any() || consecutiveLapLeaderboards.Any())
+        {
+            var pilotLaps = sessionResponse.Laps.Where(x => x.PilotId == pilotId).Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
+                x.Status switch
+                {
+                    OpenPracticeSessionResponse.LapStatus.Invalid => LapStatus.Invalid,
+                    OpenPracticeSessionResponse.LapStatus.Completed => LapStatus.Completed,
+                    _ => throw new NotImplementedException()
+                }, x.TotalMilliseconds)).ToList();
+
+            var lap = pilotLaps.FirstOrDefault(x => x.LapId == lapId);
+
+            if (lap == null)
+            {
+                return;
+            }
+
+            pilotLaps.Remove(lap);
+
+            pilotLaps.Add(new Lap(lapId, lap.StartedUtc, lap.FinishedUtc, LapStatus.Completed, lap.TotalMilliseconds));
+
+            foreach (var singlelapLeaderboard in singleLapLeaderboards)
+            {
+                await CheckSingleLapLeaderboard(sessionResponse.SessionId, pilotId, singlelapLeaderboard, pilotLaps).ConfigureAwait(false);
+            }
+
+            foreach (var consecutiveLapLeaderboard in consecutiveLapLeaderboards)
+            {
+                await CheckConsecutiveLapLeaderboard(sessionResponse.SessionId, pilotId, consecutiveLapLeaderboard, pilotLaps).ConfigureAwait(false);
+            }
+        }
+    }
     public Task When(OpenPracticeLapDisputed lap) => lap.ActualStatus switch
     {
-        OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid => HandleLapRemoved(lap.SessionId, lap.LapId, lap.PilotId),
+        OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid => HandleLapInvalidated(lap.SessionId, lap.LapId, lap.PilotId),
+        OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed => HandleLapValidated(lap.SessionId, lap.LapId, lap.PilotId),
         _ => throw new NotImplementedException(),
     };
     public async Task When(LapInvalidated lapInvalidated)
@@ -270,7 +357,7 @@ public class OpenPracticeSessionManager : ISubscriber
             oldPositions.Select(x => new OpenPracticeSingleLapLeaderboardPositionsChanged.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapId, x.LapMilliseconds, x.CompletionTime)),
             newPositions.Select(x => new OpenPracticeSingleLapLeaderboardPositionsChanged.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapId, x.LapMilliseconds, x.CompletionTime))));
     }
-    private Task CheckConsecutiveLapLeaderboards(Guid sessionId, Guid pilotId, ConsecutiveLapsLeaderboard leaderboard, IEnumerable<Lap> laps)
+    private Task CheckConsecutiveLapLeaderboard(Guid sessionId, Guid pilotId, ConsecutiveLapsLeaderboard leaderboard, IEnumerable<Lap> laps)
     {
         var calculator = new FastestConsecutiveLapCalculator();
         var consecutive = calculator.CalculateFastestConsecutiveLaps(leaderboard.LapCount, laps);
@@ -296,7 +383,7 @@ public class OpenPracticeSessionManager : ISubscriber
                            oldPositions.Select(x => new OpenPracticeConsecutiveLapLeaderboardPositionsChanged.OpenPracticeConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion, x.IncludedLaps)),
                            newPositions.Select(x => new OpenPracticeConsecutiveLapLeaderboardPositionsChanged.OpenPracticeConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion, x.IncludedLaps))));
     }
-    private Task UpdateConsecutiveLapLeaderboards(Guid sessionId, Guid pilotId, ConsecutiveLapsLeaderboard leaderboard, IEnumerable<Lap> laps)
+    private Task UpdateConsecutiveLapLeaderboard(Guid sessionId, Guid pilotId, ConsecutiveLapsLeaderboard leaderboard, IEnumerable<Lap> laps)
     {
         var calculator = new FastestConsecutiveLapCalculator();
         var consecutive = calculator.CalculateFastestConsecutiveLaps(leaderboard.LapCount, laps);
