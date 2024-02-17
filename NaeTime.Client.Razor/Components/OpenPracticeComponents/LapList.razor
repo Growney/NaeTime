@@ -15,7 +15,7 @@
         <th>
             Time
         </th>
-        <th>
+        <th style="width:5%">
 
         </th>
     </tr>
@@ -42,11 +42,17 @@
                         @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):mm\\:ss\\:fff}")
                     </td>
                     <td>
-                        @if (lap.Status == Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed)
-                        {
-                            <Button Size=Size.ExtraSmall Color=ButtonColor.Danger @onclick="() => Dispute(lap.Id,lap.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
-                        }
-                        <Button Size=Size.ExtraSmall Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>
+                        <div class="btn-group">
+                            @if (lap.Status == Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed)
+                            {
+                                <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Danger @onclick="() => Invalidate(lap.Id,lap.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
+                            }
+                            else
+                            {
+                                <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Success @onclick="() => Validate(lap.Id,lap.PilotId)"><i class="fa-solid fa-check"></i></Button>
+                            }
+                            <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>
+                        </div>
                     </td>
                 </tr>
             }
