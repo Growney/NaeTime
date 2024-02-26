@@ -1,5 +1,5 @@
-﻿using NaeTime.Messages.Events.Timing;
-using NaeTime.Messages.Requests;
+﻿using NaeTime.Messages.Events.OpenPractice;
+using NaeTime.Messages.Requests.OpenPractice;
 using NaeTime.Messages.Responses;
 using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub;
@@ -53,36 +53,6 @@ public class OpenPracticeSessionService : ISubscriber
 
         await repository.SetMinimumLap(configured.SessionId, configured.MinimumLapMilliseconds).ConfigureAwait(false);
     }
-    public async Task<OpenPracticeSessionResponse?> On(OpenPracticeSessionRequest request)
-    {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
-
-        var session = await repository.Get(request.SessionId).ConfigureAwait(false);
-
-        if (session == null)
-        {
-            return null;
-        }
-        var singleLapLeaderboards = session.SingleLapLeaderboards.Select(x => new OpenPracticeSessionResponse.SingleLapLeaderboard(x.LeaderboardId,
-            x.Positions.Select(y => new OpenPracticeSessionResponse.SingleLapLeaderboardPosition(y.Position, y.PilotId, y.LapId, y.LapMilliseconds, y.CompletionUtc))));
-        var consecutiveLapLeaderboards = session.ConsecutiveLapLeaderboards.Select(x => new OpenPracticeSessionResponse.ConsecutiveLapLeaderboard(x.LeaderboardId, x.ConsecutiveLaps,
-            x.Positions.Select(y => new OpenPracticeSessionResponse.ConsecutiveLapLeaderboardPosition(y.Position, y.PilotId, y.TotalLaps, y.TotalMilliseconds, y.LastLapCompletionUtc, y.IncludedLaps))));
-        var laps = session.Laps.Select(x => new OpenPracticeSessionResponse.Lap(x.LapId, x.PilotId, x.StartedUtc, x.FinishedUtc,
-            x.Status switch
-            {
-                Models.OpenPracticeLapStatus.Invalid => OpenPracticeSessionResponse.LapStatus.Invalid,
-                Models.OpenPracticeLapStatus.Completed => OpenPracticeSessionResponse.LapStatus.Completed,
-                _ => throw new NotImplementedException()
-            }, x.TotalMilliseconds));
-        var lanes = session.ActiveLanes.Select(x => new OpenPracticeSessionResponse.PilotLane(x.PilotId, x.Lane));
-
-        return new OpenPracticeSessionResponse(session.SessionId, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
-            laps,
-            lanes,
-            singleLapLeaderboards,
-            consecutiveLapLeaderboards);
-
-    }
     public async Task When(OpenPracticeLapCompleted openPracticeLapCompleted)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
@@ -122,66 +92,52 @@ public class OpenPracticeSessionService : ISubscriber
 
         await repository.SetSessionLanePilot(laneSet.SessionId, laneSet.Lane, laneSet.PilotId).ConfigureAwait(false);
     }
-    public async Task When(OpenPracticeConsecutiveLapLeaderboardPositionsChanged newPositions)
+    public async Task When(OpenPracticeConsecutiveLapCountTracked tracked)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var positions = newPositions.NewPositions.Select(x => new Models.ConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletion, x.IncludedLaps));
-
-        await repository.UpdateConsecutiveLapsLeaderboardPositions(newPositions.SessionId, newPositions.LeaderboardId, positions).ConfigureAwait(false);
+        await repository.AddTrackedConsecutiveLaps(tracked.SessionId, tracked.LapCap).ConfigureAwait(false);
     }
-    public async Task When(OpenPracticeSingleLapLeaderboardPositionsChanged newPositions)
+    public async Task When(OpenPracticeConsecutiveLapCountTrackingRemoved removed)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var session = await repository.Get(newPositions.SessionId).ConfigureAwait(false);
+        await repository.RemoveTrackedConsecutiveLaps(removed.SessionId, removed.LapCap).ConfigureAwait(false);
+
+    }
+
+    public async Task<OpenPracticeSessionResponse?> On(OpenPracticeSessionRequest request)
+    {
+        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
+
+        var session = await repository.Get(request.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
-            return;
+            return null;
         }
 
-        var positions = newPositions.NewPositions.Select(x => new Models.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.LapId, x.LapMilliseconds, x.CompletionUtc));
+        var laps = session.Laps.Select(x => new OpenPracticeSessionResponse.Lap(x.LapId, x.PilotId, x.StartedUtc, x.FinishedUtc,
+            x.Status switch
+            {
+                Models.OpenPracticeLapStatus.Invalid => OpenPracticeSessionResponse.LapStatus.Invalid,
+                Models.OpenPracticeLapStatus.Completed => OpenPracticeSessionResponse.LapStatus.Completed,
+                _ => throw new NotImplementedException()
+            }, x.TotalMilliseconds));
+        var lanes = session.ActiveLanes.Select(x => new OpenPracticeSessionResponse.PilotLane(x.PilotId, x.Lane));
 
-        await repository.UpdateSingleLapLeaderboard(newPositions.SessionId, newPositions.LeaderboardId, positions).ConfigureAwait(false);
+        return new OpenPracticeSessionResponse(session.SessionId, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
+            laps,
+            lanes,
+            session.TrackedConsecutiveLaps);
+
     }
-    public async Task When(OpenPracticeConsecutiveLapLeaderboardConfigured leaderboard)
+    public async Task<OpenPracticeSessionTrackedConsecutiveLapsResponse> On(OpenPracticeSessionTrackedConsecutiveLapsRequest request)
     {
         var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
 
-        var session = await repository.Get(leaderboard.SessionId).ConfigureAwait(false);
+        throw new NotImplementedException();
 
-        if (session == null)
-        {
-            return;
-        }
-
-        await repository.AddOrUpdateConsecutiveLapsLeaderboard(leaderboard.SessionId, leaderboard.LeaderboardId, leaderboard.ConsecutiveLaps).ConfigureAwait(false);
-    }
-    public async Task When(OpenPracticeSingleLapLeaderboardConfigured leaderboard)
-    {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
-
-        var session = await repository.Get(leaderboard.SessionId).ConfigureAwait(false);
-
-        if (session == null)
-        {
-            return;
-        }
-
-        await repository.AddOrUpdateSingleLapLeaderboard(leaderboard.SessionId, leaderboard.LeaderboardId).ConfigureAwait(false);
-    }
-    public async Task When(OpenPracticeLeaderboardRemoved removed)
-    {
-        var repository = await _repositoryFactory.CreateOpenPracticeSessionRepository().ConfigureAwait(false);
-
-        var session = await repository.Get(removed.SessionId).ConfigureAwait(false);
-
-        if (session == null)
-        {
-            return;
-        }
-        await repository.RemoveLeaderboard(removed.SessionId, removed.LeaderboardId).ConfigureAwait(false);
     }
 }
 

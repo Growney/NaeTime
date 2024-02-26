@@ -3,8 +3,9 @@ using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.Messages.Events.Activation;
 using NaeTime.Messages.Events.Entities;
-using NaeTime.Messages.Events.Timing;
+using NaeTime.Messages.Events.OpenPractice;
 using NaeTime.Messages.Requests;
+using NaeTime.Messages.Requests.OpenPractice;
 using NaeTime.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
 
@@ -26,8 +27,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
         PublishSubscribe.Subscribe<OpenPracticeLapInvalidated>(this, When);
         PublishSubscribe.Subscribe<OpenPracticeLapRemoved>(this, When);
         PublishSubscribe.Subscribe<OpenPracticeLapCompleted>(this, When);
-        PublishSubscribe.Subscribe<OpenPracticeSingleLapLeaderboardPositionsChanged>(this, When);
-        PublishSubscribe.Subscribe<OpenPracticeConsecutiveLapLeaderboardPositionsChanged>(this, When);
         PublishSubscribe.Subscribe<SessionActivated>(this, When);
         PublishSubscribe.Subscribe<SessionDeactivated>(this, When);
         var pilotsResponse = await PublishSubscribe.Request<PilotsRequest, PilotsResponse>();
@@ -171,59 +170,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
-    public async Task When(OpenPracticeSingleLapLeaderboardPositionsChanged changes)
-    {
-        if (_selectedSession?.Id != changes.SessionId)
-        {
-            return;
-        }
-
-        var leaderboard = _selectedSession.SingleLapLeaderboards.FirstOrDefault(x => x.Id == changes.LeaderboardId);
-
-        if (leaderboard == null)
-        {
-            return;
-        }
-
-        leaderboard.Positions = changes.NewPositions.Select(x => new SingleLapLeaderboardPosition()
-        {
-            Position = x.Position,
-            PilotId = x.PilotId,
-            LapId = x.LapId,
-            LapMilliseconds = x.LapMilliseconds,
-            CompletionUtc = x.CompletionUtc,
-            PilotName = _pilots.FirstOrDefault(y => y.Id == x.PilotId)?.CallSign
-        }).ToList();
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
-    public async Task When(OpenPracticeConsecutiveLapLeaderboardPositionsChanged changes)
-    {
-        if (_selectedSession?.Id != changes.SessionId)
-        {
-            return;
-        }
-
-        var leaderboard = _selectedSession.ConsecutiveLapLeaderboards.FirstOrDefault(x => x.Id == changes.LeaderboardId);
-
-        if (leaderboard == null)
-        {
-            return;
-        }
-
-        leaderboard.Positions = changes.NewPositions.Select(x => new ConsecutiveLapsLeaderboardPosition()
-        {
-            Position = x.Position,
-            PilotId = x.PilotId,
-            TotalLaps = x.TotalLaps,
-            TotalMilliseconds = x.TotalMilliseconds,
-            LastLapCompletionUtc = x.LastLapCompletion,
-            IncludedLaps = x.IncludedLaps,
-            PilotName = _pilots.FirstOrDefault(p => p.Id == x.PilotId)?.CallSign
-        }).ToList();
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
     private async Task SetupForSession(Guid sessionId)
     {
         _selectedSession = null;
@@ -270,36 +216,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
                     _ => throw new NotImplementedException()
                 }
             }).ToList(),
-            SingleLapLeaderboards = practiceSessionResponse.SingleLapLeaderboards.Select(x =>
-             new SingleLapLeaderboard()
-             {
-                 Id = x.LeaderboardId,
-                 Positions = x.Positions.Select(y => new SingleLapLeaderboardPosition()
-                 {
-                     Position = y.Position,
-                     PilotId = y.PilotId,
-                     LapId = y.LapId,
-                     LapMilliseconds = y.TotalMilliseconds,
-                     CompletionUtc = y.CompletionUtc,
-                     PilotName = _pilots.FirstOrDefault(x => x.Id == y.PilotId)?.CallSign
-                 }).ToList()
-             }).ToList(),
-            ConsecutiveLapLeaderboards = practiceSessionResponse.ConsecutiveLapLeaderboards.Select(x =>
-            new ConsecutiveLapsLeaderboard()
-            {
-                Id = x.LeaderboardId,
-                ConsecutiveLaps = x.ConsecutiveLaps,
-                Positions = x.Positions.Select(y => new ConsecutiveLapsLeaderboardPosition()
-                {
-                    Position = y.Position,
-                    PilotId = y.PilotId,
-                    TotalLaps = y.TotalLaps,
-                    TotalMilliseconds = y.TotalMilliseconds,
-                    LastLapCompletionUtc = y.LastLapCompletionUtc,
-                    IncludedLaps = y.IncludedLaps,
-                    PilotName = _pilots.FirstOrDefault(x => x.Id == y.PilotId)?.CallSign
-                }).ToList()
-            }).ToList()
+            TrackedConsecutiveLaps = practiceSessionResponse.TrackedConsecutiveLaps.ToList()
         };
 
     }
@@ -379,36 +296,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         await StartNewSessionOnTrack(sessionId, newTrackId, 0, null);
     }
-    public async Task AddSingleLapLeaderboard()
-    {
-        if (_selectedSession == null)
-        {
-            return;
-        }
-        var leaderboardId = Guid.NewGuid();
-        _selectedSession.SingleLapLeaderboards.Add(new SingleLapLeaderboard()
-        {
-            Id = leaderboardId,
-        });
-        await PublishSubscribe.Dispatch(new OpenPracticeSingleLapLeaderboardConfigured(_selectedSession.Id, leaderboardId));
-
-
-
-    }
-    public async Task AddConsecutiveLapsLeaderboard(uint lapCap)
-    {
-        if (_selectedSession == null)
-        {
-            return;
-        }
-        var leaderboardId = Guid.NewGuid();
-        _selectedSession.ConsecutiveLapLeaderboards.Add(new ConsecutiveLapsLeaderboard()
-        {
-            Id = leaderboardId,
-            ConsecutiveLaps = lapCap,
-        });
-        await PublishSubscribe.Dispatch(new OpenPracticeConsecutiveLapLeaderboardConfigured(_selectedSession!.Id, leaderboardId, lapCap));
-    }
     public Task SetSessionMinimumLapTime(long minimumLapMilliseconds)
     {
         if (_selectedSession == null)
@@ -441,6 +328,20 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         return PublishSubscribe.Dispatch(new OpenPracticeMaximumLapTimeConfigured(_selectedSession.Id, maximumLapMilliseconds));
     }
+    public Task TrackConsecutiveLaps(Guid sessionId, uint lapCap)
+    {
+        if (_selectedSession == null)
+        {
+            return Task.CompletedTask;
+        }
 
+        if (_selectedSession.TrackedConsecutiveLaps.Any(x => x == lapCap))
+        {
+            return Task.CompletedTask;
+        }
+
+        _selectedSession.TrackedConsecutiveLaps.Add(lapCap);
+        return PublishSubscribe.Dispatch(new OpenPracticeConsecutiveLapCountTracked(sessionId, lapCap));
+    }
     public void Dispose() => PublishSubscribe.Unsubscribe(this);
 }

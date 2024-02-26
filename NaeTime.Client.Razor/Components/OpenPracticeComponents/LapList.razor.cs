@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
-using NaeTime.Messages.Events.Timing;
+using NaeTime.Messages.Events.OpenPractice;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;

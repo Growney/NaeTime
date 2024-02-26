@@ -1,0 +1,2 @@
+﻿namespace NaeTime.Messages.Requests.OpenPractice;
+public record OpenPracticeSessionTrackedConsecutiveLapsRequest(Guid SessionId);

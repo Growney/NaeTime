@@ -8,6 +8,5 @@ public class OpenPracticeSession
     public long? MaximumLapMilliseconds { get; set; }
     public List<OpenPracticeLap> Laps { get; set; } = new List<OpenPracticeLap>();
     public List<OpenPracticeLaneConfiguration> Lanes { get; set; } = new List<OpenPracticeLaneConfiguration>();
-    public List<SingleLapLeaderboard> SingleLapLeaderboards { get; set; } = new List<SingleLapLeaderboard>();
-    public List<ConsecutiveLapsLeaderboard> ConsecutiveLapLeaderboards { get; set; } = new List<ConsecutiveLapsLeaderboard>();
+    public List<uint> TrackedConsecutiveLaps { get; set; } = new List<uint>();
 }

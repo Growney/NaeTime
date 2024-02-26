@@ -3,7 +3,7 @@
 namespace NaeTime.Timing;
 public class FastestConsecutiveLapCalculator
 {
-    public FastestConsecutiveLaps? CalculateFastestConsecutiveLaps(uint lapCount, IEnumerable<Lap> laps)
+    public FastestConsecutiveLaps? Calculate(uint lapCount, IEnumerable<Lap> laps)
     {
         if (!laps.Any(x => x.Status == LapStatus.Completed))
         {
@@ -11,8 +11,6 @@ public class FastestConsecutiveLapCalculator
         }
 
         var lapsList = laps.ToList();
-
-        lapsList.Sort((x, y) => x.FinishedUtc.CompareTo(y.FinishedUtc));
 
         long totalTime = 0;
         int startLapNumber = 0;

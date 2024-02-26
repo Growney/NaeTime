@@ -1,0 +1,2 @@
+﻿namespace NaeTime.Persistence.Models;
+public record ConsecutiveLapRecord(Guid SessionId, Guid PilotId, uint LapCap, uint TotalLaps, long TotalMilliseconds, DateTime LastLapCompletionUtc, IEnumerable<Guid> IncludedLaps);

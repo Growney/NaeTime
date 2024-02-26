@@ -39,7 +39,7 @@ public class FastestConsecutiveLapCalculatorTests
 
         var calculator = new FastestConsecutiveLapCalculator();
 
-        var position = calculator.CalculateFastestConsecutiveLaps(3, laps);
+        var position = calculator.Calculate(3, laps);
 
         Assert.NotNull(position);
         Assert.Equal(9000 + 8500 + 8000, position.TotalMilliseconds);
@@ -56,7 +56,7 @@ public class FastestConsecutiveLapCalculatorTests
 
         var calculator = new FastestConsecutiveLapCalculator();
 
-        var position = calculator.CalculateFastestConsecutiveLaps(5, laps);
+        var position = calculator.Calculate(5, laps);
 
         Assert.Equal(50 + 40 + 30 + 20 + 10, position.TotalMilliseconds);
         Assert.Equal((uint)5, position.TotalLaps);
@@ -76,7 +76,7 @@ public class FastestConsecutiveLapCalculatorTests
 
         var calculator = new FastestConsecutiveLapCalculator();
 
-        var position = calculator.CalculateFastestConsecutiveLaps(3, laps);
+        var position = calculator.Calculate(3, laps);
 
         Assert.Equal(10000 + 10000 + 10000, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
@@ -91,7 +91,7 @@ public class FastestConsecutiveLapCalculatorTests
 
         var calculator = new FastestConsecutiveLapCalculator();
 
-        var position = calculator.CalculateFastestConsecutiveLaps(3, laps);
+        var position = calculator.Calculate(3, laps);
 
         Assert.Equal(9000 + 8500 + 8000, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
@@ -106,7 +106,7 @@ public class FastestConsecutiveLapCalculatorTests
 
         var calculator = new FastestConsecutiveLapCalculator();
 
-        var position = calculator.CalculateFastestConsecutiveLaps(3, laps);
+        var position = calculator.Calculate(3, laps);
 
         Assert.Equal(9000 + 8500 + 8000, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
@@ -121,7 +121,7 @@ public class FastestConsecutiveLapCalculatorTests
 
         var calculator = new FastestConsecutiveLapCalculator();
 
-        var position = calculator.CalculateFastestConsecutiveLaps(3, laps);
+        var position = calculator.Calculate(3, laps);
 
         Assert.Equal(1000 + 1000 + 999, position.TotalMilliseconds);
         Assert.Equal((uint)3, position.TotalLaps);
@@ -136,7 +136,7 @@ public class FastestConsecutiveLapCalculatorTests
 
         var calculator = new FastestConsecutiveLapCalculator();
 
-        var position = calculator.CalculateFastestConsecutiveLaps(3, laps);
+        var position = calculator.Calculate(3, laps);
 
         Assert.Equal(1000, position.TotalMilliseconds);
         Assert.Equal((uint)1, position.TotalLaps);
@@ -153,7 +153,7 @@ public class FastestConsecutiveLapCalculatorTests
 
         var calculator = new FastestConsecutiveLapCalculator();
 
-        var position = calculator.CalculateFastestConsecutiveLaps(3, laps);
+        var position = calculator.Calculate(3, laps);
 
         Assert.Equal(500, position.TotalMilliseconds);
         Assert.Equal((uint)1, position.TotalLaps);

@@ -5,6 +5,7 @@ using NaeTime.Messages.Responses;
 using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Models;
+using NaeTime.Timing.OpenPractice;
 using NaeTime.Timing.Practice;
 
 namespace NaeTime.Timing;
@@ -57,13 +58,15 @@ public class SessionManager : ISubscriber
     public void DisableAllSubscribers()
     {
         _publishSubscribe.DisableSubscriber<OpenPracticeSessionManager>();
+        _publishSubscribe.DisableSubscriber<OpenPracticeConsecutiveLapsManager>();
     }
     public void ActivateSubsribersForSessionType(SessionType sessionType)
     {
         switch (sessionType)
         {
             case SessionType.OpenPractice:
-                _publishSubscribe.EnableSubscriber<SessionDetectionManager>();
+                _publishSubscribe.EnableSubscriber<OpenPracticeSessionManager>();
+                _publishSubscribe.EnableSubscriber<OpenPracticeConsecutiveLapsManager>();
                 break;
             default:
                 throw new NotImplementedException();

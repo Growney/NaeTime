@@ -9,4 +9,5 @@ public interface IRepositoryFactory
     Task<ILaneRepository> CreateLaneRepository();
     Task<IOpenPracticeSessionRepository> CreateOpenPracticeSessionRepository();
     Task<ISessionRepository> CreateSessionRepository();
+    Task<ILapRecordRepository> CreateLapRecordRepository();
 }

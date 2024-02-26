@@ -9,11 +9,8 @@ public interface IOpenPracticeSessionRepository
     public Task SetMaximumLap(Guid sessionId, long? maximumLapMilliseconds);
     public Task AddLapToSession(Guid sessionId, Guid lapId, Guid pilotId, OpenPracticeLapStatus status, DateTime startedUtc, DateTime finishedUtc, long totalMilliseconds);
     public Task SetSessionLanePilot(Guid sessionId, byte lane, Guid pilotId);
-    public Task UpdateSingleLapLeaderboard(Guid sessionId, Guid leaderboardId, IEnumerable<SingleLapLeaderboardPosition> positions);
-    public Task UpdateConsecutiveLapsLeaderboardPositions(Guid sessionId, Guid leaderboardId, IEnumerable<ConsecutiveLapLeaderboardPosition> positions);
-    public Task AddOrUpdateConsecutiveLapsLeaderboard(Guid sessionId, Guid leaderboardId, uint consecutiveLaps);
-    public Task AddOrUpdateSingleLapLeaderboard(Guid sessionId, Guid leaderboardId);
-    public Task RemoveLeaderboard(Guid sessionId, Guid leaderboardId);
     public Task RemoveLap(Guid sessionId, Guid lapId);
     public Task SetLapStatus(Guid lapId, OpenPracticeLapStatus status);
+    public Task AddTrackedConsecutiveLaps(Guid sessionId, uint lapCap);
+    public Task RemoveTrackedConsecutiveLaps(Guid sessionId, uint lapCap);
 }
