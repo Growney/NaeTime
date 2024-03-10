@@ -1,0 +1,2 @@
+﻿namespace NaeTime.OpenPractice.Messages.Events;
+public record OpenPracticeLapInvalidated(Guid LapId, Guid SessionId, Guid PilotId, uint LapNumber, DateTime StartedUtc, DateTime FinishedUtc, long TotalMilliseconds);

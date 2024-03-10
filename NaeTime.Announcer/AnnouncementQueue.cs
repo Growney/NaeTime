@@ -7,13 +7,7 @@ public class AnnouncementQueue : IAnnouncmentQueue
 {
     private readonly ConcurrentQueue<Announcement> _queue = new();
 
-    public void Enqueue(Announcement announcement)
-    {
-        _queue.Enqueue(announcement);
-    }
+    public void Enqueue(Announcement announcement) => _queue.Enqueue(announcement);
 
-    public bool TryDequeue(out Announcement? announcement)
-    {
-        return _queue.TryDequeue(out announcement);
-    }
+    public bool TryDequeue(out Announcement? announcement) => _queue.TryDequeue(out announcement);
 }

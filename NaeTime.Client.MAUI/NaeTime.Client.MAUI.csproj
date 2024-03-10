@@ -75,11 +75,17 @@
 
     <ItemGroup>
       <ProjectReference Include="..\NaeTime.Announcer\NaeTime.Announcer.csproj" />
+      <ProjectReference Include="..\NaeTime.Client.Configuration\NaeTime.Client.Configuration.csproj" />
       <ProjectReference Include="..\NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj" />
       <ProjectReference Include="..\NaeTime.Client.Razor\NaeTime.Client.Razor.csproj" />
-      <ProjectReference Include="..\NaeTime.Persistence.Client\NaeTime.Persistence.Client.csproj" />
+      <ProjectReference Include="..\NaeTime.Hardware.ImmersionRC\NaeTime.Hardware.ImmersionRC.csproj" />
+      <ProjectReference Include="..\NaeTime.Hardware.SQLite\NaeTime.Hardware.SQLite.csproj" />
+      <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
+      <ProjectReference Include="..\NaeTime.Management.SQLite\NaeTime.Management.SQLite.csproj" />
+      <ProjectReference Include="..\NaeTime.OpenPractice\NaeTime.OpenPractice.csproj" />
       <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
-      <ProjectReference Include="..\NaeTime.Timing.ImmersionRC\NaeTime.Timing.ImmersionRC.csproj" />
+      <ProjectReference Include="..\NaeTime.Timing.SQLite\NaeTime.Timing.SQLite.csproj" />
+      <ProjectReference Include="..\NaeTime.Timing\NaeTime.Timing.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ImmersionRC.LapRF\ImmersionRC.LapRF.csproj" />
+    <ProjectReference Include="..\NaeTime.Hardware.Messages\NaeTime.Hardware.Messages.csproj" />
+    <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
+    <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
+  </ItemGroup>
+
+</Project>

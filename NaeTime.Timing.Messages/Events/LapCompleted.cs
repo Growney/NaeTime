@@ -1,0 +1,2 @@
+﻿namespace NaeTime.Timing.Messages.Events;
+public record LapCompleted(Guid SessionId, byte Lane, uint LapNumber, long StartedSoftwareTime, DateTime StartedUtcTime, ulong? StartedHardwareTime, long FinishedSoftwareTime, DateTime FinishedUtcTime, ulong? FinishedHardwareTime, long TotalTime);

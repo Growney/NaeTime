@@ -3,11 +3,11 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using NaeTime.Persistence.SQLite.Context;
+using NaeTime.OpenPractice.SQLite.Context;
 
 #nullable disable
 
-namespace NaeTime.Persistence.SQLite.Migrations
+namespace NaeTime.OpenPractice.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
     partial class NaeTimeDbContextModelSnapshot : ModelSnapshot

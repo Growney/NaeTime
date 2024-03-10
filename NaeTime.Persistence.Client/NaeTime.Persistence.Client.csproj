@@ -11,4 +11,8 @@
     <ProjectReference Include="..\NaeTime.Persistence\NaeTime.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Abstractions\" />
+  </ItemGroup>
+
 </Project>

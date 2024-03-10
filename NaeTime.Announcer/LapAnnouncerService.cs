@@ -1,8 +1,8 @@
 ﻿using NaeTime.Announcer.Abstractions;
 using NaeTime.Announcer.Models;
-using NaeTime.Messages.Events.OpenPractice;
-using NaeTime.Messages.Requests;
-using NaeTime.Messages.Responses;
+using NaeTime.Management.Messages.Requests;
+using NaeTime.Management.Messages.Responses;
+using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
 

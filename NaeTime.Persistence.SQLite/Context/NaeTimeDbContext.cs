@@ -1,20 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using NaeTime.Persistence.SQLite.Models;
 
 namespace NaeTime.Persistence.SQLite.Context;
 public class NaeTimeDbContext : DbContext
 {
-    public DbSet<EthernetLapRF8Channel> EthernetLapRF8Channels { get; set; }
-    public DbSet<Lane> Lanes { get; set; }
-    public DbSet<Pilot> Pilots { get; set; }
-    public DbSet<TimerStatus> TimerStatuses { get; set; }
-    public DbSet<Track> Tracks { get; set; }
-    public DbSet<Detection> Detections { get; set; }
-    public DbSet<ActiveTimings> ActiveTimings { get; set; }
-    public DbSet<ActiveSession> ActiveSession { get; set; }
-    public DbSet<OpenPracticeSession> OpenPracticeSessions { get; set; }
-    public DbSet<ConsecutiveLapRecord> ConsecutiveLapRecords { get; set; }
-    public DbSet<OpenPracticeLap> OpenPracticeLaps { get; set; }
 
     public NaeTimeDbContext(DbContextOptions<NaeTimeDbContext> options) : base(options)
     {
