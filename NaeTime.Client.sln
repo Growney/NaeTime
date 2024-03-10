@@ -17,12 +17,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImmersionRC.LapRF", "Immers
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{11CB6C81-1F2C-48C9-8ADE-9A1E68E71141}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Persistence", "NaeTime.Persistence\NaeTime.Persistence.csproj", "{624A4473-EBA3-485A-809E-4326FA8FEE05}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Persistence.SQLite", "NaeTime.Persistence.SQLite\NaeTime.Persistence.SQLite.csproj", "{40C1C124-A882-48C1-819A-5D4B823F333D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Persistence.Client", "NaeTime.Persistence.Client\NaeTime.Persistence.Client.csproj", "{0A693974-B292-4B4E-8F9D-8D5261461692}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Timing.Tests", "NaeTime.Timing.Tests\NaeTime.Timing.Tests.csproj", "{1280CAF9-ADD3-4083-8ED9-EC4064BFDC98}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Announcer", "NaeTime.Announcer\NaeTime.Announcer.csproj", "{46F6388D-5178-4BE7-ACCA-F49075976DA1}"
@@ -63,9 +57,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Management.SQLite",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.OpenPractice.SQLite", "NaeTime.OpenPractice.SQLite\NaeTime.OpenPractice.SQLite.csproj", "{7561B8AC-BE7C-4611-8502-02D4B40DAF98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Timing.SQLite", "NaeTime.Timing.SQLite\NaeTime.Timing.SQLite.csproj", "{40F56E3F-E3A0-4893-A0CA-6F9F77E7D086}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.Timing.SQLite", "NaeTime.Timing.SQLite\NaeTime.Timing.SQLite.csproj", "{40F56E3F-E3A0-4893-A0CA-6F9F77E7D086}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.SQLite", "NaeTime.SQLite\NaeTime.SQLite.csproj", "{A171FB78-2315-4A3D-AA09-F36503B65408}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaeTime.SQLite", "NaeTime.SQLite\NaeTime.SQLite.csproj", "{A171FB78-2315-4A3D-AA09-F36503B65408}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "client", "client", "{03963406-DD21-4DF5-BC06-9FAAF080D8FE}"
 EndProject
@@ -101,18 +95,6 @@ Global
 		{11C550B1-F049-4F55-9AF1-B85086918549}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11C550B1-F049-4F55-9AF1-B85086918549}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11C550B1-F049-4F55-9AF1-B85086918549}.Release|Any CPU.Build.0 = Release|Any CPU
-		{624A4473-EBA3-485A-809E-4326FA8FEE05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{624A4473-EBA3-485A-809E-4326FA8FEE05}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{624A4473-EBA3-485A-809E-4326FA8FEE05}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{624A4473-EBA3-485A-809E-4326FA8FEE05}.Release|Any CPU.Build.0 = Release|Any CPU
-		{40C1C124-A882-48C1-819A-5D4B823F333D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{40C1C124-A882-48C1-819A-5D4B823F333D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{40C1C124-A882-48C1-819A-5D4B823F333D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{40C1C124-A882-48C1-819A-5D4B823F333D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0A693974-B292-4B4E-8F9D-8D5261461692}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0A693974-B292-4B4E-8F9D-8D5261461692}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0A693974-B292-4B4E-8F9D-8D5261461692}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0A693974-B292-4B4E-8F9D-8D5261461692}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1280CAF9-ADD3-4083-8ED9-EC4064BFDC98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1280CAF9-ADD3-4083-8ED9-EC4064BFDC98}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1280CAF9-ADD3-4083-8ED9-EC4064BFDC98}.Release|Any CPU.ActiveCfg = Release|Any CPU
