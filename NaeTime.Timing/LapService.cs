@@ -1,4 +1,6 @@
-﻿using NaeTime.PubSub;
+﻿using NaeTime.Management.Messages.Requests;
+using NaeTime.Management.Messages.Responses;
+using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;
 using NaeTime.Timing.Messages.Requests;
@@ -14,7 +16,27 @@ internal class LapService : ISubscriber
     {
         _publishSubscribe = publishSubscribe ?? throw new ArgumentNullException(nameof(publishSubscribe));
     }
-    public Task When(SessionDetectionOccured detection) => HandleDetection(detection.SessionId, detection.MinimumLapMilliseconds, detection.MaximumLapMilliseconds, detection.Lane, detection.Split, detection.TimerCount, detection.HardwareTime, detection.SoftwareTime, detection.UtcTime);
+    public async Task When(SessionDetectionOccured detection)
+    {
+        var track = await _publishSubscribe.Request<TrackRequest, TrackResponse>(new TrackRequest(detection.TrackId)).ConfigureAwait(false);
+
+        if (track == null)
+        {
+            return;
+        }
+
+        var activeTrack = new ActiveTrack(track.Timers);
+        var timerPosition = detection.TimerId == Guid.Empty ? 0 : activeTrack.GetTimerPosition(detection.TimerId);
+        var timerCount = activeTrack.Timers.Count();
+
+        if (timerPosition < 0 || timerPosition > byte.MaxValue || timerCount > byte.MaxValue)
+        {
+            //TODO dispatch timer detection discarded
+            return;
+        }
+        await HandleDetection(detection.SessionId, detection.MinimumLapMilliseconds, detection.MaximumLapMilliseconds, detection.Lane, (byte)timerPosition, (byte)timerCount, detection.HardwareTime, detection.SoftwareTime, detection.UtcTime);
+    }
+
 
     private async Task HandleDetection(Guid sessionId, long minimumLapMilliseconds, long? maximumLapMilliseconds, byte lane, byte split, byte timerCount, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {

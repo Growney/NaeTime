@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Timing.Messages.Events;
-public record SessionDetectionOccured(Guid SessionId, byte Lane, byte Split, long MinimumLapMilliseconds, long? MaximumLapMilliseconds, byte TimerCount, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);
+public record SessionDetectionOccured(Guid SessionId, Guid TimerId, byte Lane, Guid TrackId, long MinimumLapMilliseconds, long? MaximumLapMilliseconds, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);

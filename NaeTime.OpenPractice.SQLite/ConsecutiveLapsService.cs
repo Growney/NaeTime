@@ -9,7 +9,13 @@ internal class ConsecutiveLapsService : ISubscriber
     {
         _dbContext = dbContext;
     }
+    public async Task<PilotConsecutiveLapRecordsResponse> On(PilotConsecutiveLapRecordsRequest request)
+    {
+        var records = await _dbContext.ConsecutiveLapRecords.Where(x => x.SessionId == request.SessionId && x.PilotId == request.PilotId).ToListAsync().ConfigureAwait(false);
 
+        return new PilotConsecutiveLapRecordsResponse(
+            records.Select(x => new PilotConsecutiveLapRecordsResponse.ConsecutiveLapRecord(x.LapCap, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(y => y.LapId).ToList())));
+    }
     public async Task When(ConsecutiveLapRecordRemoved removed)
     {
         var record = await _dbContext.ConsecutiveLapRecords.FirstOrDefaultAsync(x => x.SessionId == removed.SessionId && x.PilotId == removed.PilotId && x.LapCap == removed.LapCap).ConfigureAwait(false);

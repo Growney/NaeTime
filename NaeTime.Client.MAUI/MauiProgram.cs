@@ -18,6 +18,13 @@ public static class MauiProgram
 
         builder.Services.AddNaeTimePublishSubscribe();
 
+
+        //Must add all the SQLite services first so that the service runner creates the databases before the other services start
+        builder.Services.AddSQLiteManagement();
+        builder.Services.AddSQLiteHardware();
+        builder.Services.AddSQLiteTiming();
+        builder.Services.AddSQLiteOpenPractice();
+
         //Add Client Configuration Services
         builder.Services.AddLocalClientConfiguration<LocalStorageProvider>();
 
@@ -27,18 +34,14 @@ public static class MauiProgram
         //Add Hardware Services
         builder.Services.AddHardwareCore();
         builder.Services.AddImmersionRCHardware();
-        builder.Services.AddSQLiteHardware();
 
         //Add Management Services
-        builder.Services.AddSQLiteManagement();
 
         //Add Open Practice Services
         builder.Services.AddOpenPracticeCore();
-        builder.Services.AddSQLiteOpenPractice();
 
         //Add Timing Services
         builder.Services.AddTimingCore();
-        builder.Services.AddSQLiteTiming();
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddNaeTimeComponents();

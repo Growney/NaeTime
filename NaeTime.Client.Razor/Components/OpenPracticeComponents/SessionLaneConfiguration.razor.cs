@@ -105,9 +105,9 @@ public partial class SessionLaneConfiguration : ComponentBase
     {
         int newFrequency = Configuration.FrequencyInMhz;
 
-        if (Band.Bands.Any(x => x.Id == Configuration.BandId))
+        if (Band.Bands.Any(x => x.Id == bandId))
         {
-            var band = Band.Bands.First(x => x.Id == Configuration.BandId);
+            var band = Band.Bands.First(x => x.Id == bandId);
 
             if (band.Frequencies.Any())
             {
@@ -127,6 +127,8 @@ public partial class SessionLaneConfiguration : ComponentBase
             return Task.CompletedTask;
         }
 
+        Configuration.BandId = bandId;
+        Configuration.FrequencyInMhz = frequencyInMhz;
         return PublishSubscribe.Dispatch(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, bandId, frequencyInMhz));
     }
     private string GetBandString()
@@ -175,9 +177,9 @@ public partial class SessionLaneConfiguration : ComponentBase
 
         return pilot.CallSign ?? $"{pilot.FirstName} {pilot.LastName}";
     }
-    private Task TriggerDetection(byte split) => PublishSubscribe.Dispatch(new SessionDetectionTriggered(SessionId, Configuration.LaneNumber, split));
+    private Task TriggerDetection(Guid timerId) => PublishSubscribe.Dispatch(new OpenPracticeSessionDetectionTriggered(SessionId, Configuration.LaneNumber, timerId));
 
-    private Task TriggerInvalidation(byte split) => PublishSubscribe.Dispatch(new SessionInvalidationTriggered(SessionId, Configuration.LaneNumber));
+    private Task TriggerInvalidation(Guid timerId) => PublishSubscribe.Dispatch(new OpenPracticeSessionInvalidationTriggered(SessionId, Configuration.LaneNumber));
 
 
 }

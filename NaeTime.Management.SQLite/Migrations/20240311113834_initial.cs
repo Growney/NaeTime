@@ -63,7 +63,7 @@ namespace NaeTime.Management.SQLite.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TrackTimer", x => x.Id);
+                    table.PrimaryKey("PK_TrackTimer", x => new { x.TrackId, x.Id });
                     table.ForeignKey(
                         name: "FK_TrackTimer_Tracks_TrackId",
                         column: x => x.TrackId,
@@ -71,11 +71,6 @@ namespace NaeTime.Management.SQLite.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TrackTimer_TrackId",
-                table: "TrackTimer",
-                column: "TrackId");
         }
 
         /// <inheritdoc />

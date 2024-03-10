@@ -1,5 +1,5 @@
 @using NaeTime.Hardware.Frequency
-<div class="shadow rounded p-2" style="width: 200px">
+<div class="shadow rounded p-2" style="width: 180px">
     <table class="w-100">
         <tbody>
             <tr>
@@ -86,10 +86,10 @@
         <tbody> 
             <tr>
                 <td class="w-50">
-                    <Button Class="w-100 rounded-0 rounded-start" Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="() => TriggerDetection(0)"><i class="fa-solid fa-stopwatch"></i></Button>
+                    <Button Class="w-100 rounded-0 rounded-start" Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="() => TriggerDetection(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></Button>
                 </td>
                 <td class="w-50">
-                    <Button Class="w-100 rounded-0 rounded-end" Type="ButtonType.Button" Color="ButtonColor.Danger" @onclick="() => TriggerInvalidation(0)"><i class="fa-solid fa-stopwatch"></i></Button>
+                    <Button Class="w-100 rounded-0 rounded-end" Type="ButtonType.Button" Color="ButtonColor.Danger" @onclick="() => TriggerInvalidation(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></Button>
                 </td>
             </tr>
         </tbody>

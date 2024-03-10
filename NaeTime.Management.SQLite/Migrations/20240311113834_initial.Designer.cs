@@ -11,7 +11,7 @@ using NaeTime.Management.SQLite;
 namespace NaeTime.Management.SQLite.Migrations
 {
     [DbContext(typeof(ManagementDbContext))]
-    [Migration("20240310211402_initial")]
+    [Migration("20240311113834_initial")]
     partial class initial
     {
         /// <inheritdoc />
@@ -81,36 +81,28 @@ namespace NaeTime.Management.SQLite.Migrations
                     b.ToTable("Tracks");
                 });
 
-            modelBuilder.Entity("NaeTime.Management.SQLite.Models.TrackTimer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("TimerId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("TrackId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TrackId");
-
-                    b.ToTable("TrackTimer");
-                });
-
-            modelBuilder.Entity("NaeTime.Management.SQLite.Models.TrackTimer", b =>
-                {
-                    b.HasOne("NaeTime.Management.SQLite.Models.Track", null)
-                        .WithMany("Timers")
-                        .HasForeignKey("TrackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("NaeTime.Management.SQLite.Models.Track", b =>
                 {
+                    b.OwnsMany("NaeTime.Management.SQLite.Models.TrackTimer", "Timers", b1 =>
+                        {
+                            b1.Property<Guid>("TrackId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("TimerId")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("TrackId", "Id");
+
+                            b1.ToTable("TrackTimer");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TrackId");
+                        });
+
                     b.Navigation("Timers");
                 });
 #pragma warning restore 612, 618

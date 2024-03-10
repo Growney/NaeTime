@@ -51,6 +51,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         {
             _tracks.AddRange(tracksResponse.Tracks.Select(x => new TrackDetails(x.Id, x.Name, x.MinimumLapTimeMilliseconds, x.MaximumLapTimeMilliseconds, x.Timers, x.AllowedLanes)));
         }
+
         var activeLaneConfigurations = await PublishSubscribe.Request<ActiveLanesConfigurationRequest, ActiveLanesConfigurationResponse>();
 
         if (activeLaneConfigurations != null)
@@ -64,18 +65,14 @@ public partial class OpenPractice : ComponentBase, IDisposable
             }));
         }
 
-        var sessions = await PublishSubscribe.Request<SessionsRequest, SessionsResponse>();
+        var sessions = await PublishSubscribe.Request<OpenPracticeSessionsRequest, OpenPracticeSessionsResponse>();
         if (sessions != null)
         {
-            _sessionDetails.AddRange(sessions.Sessions.Where(x => x.Type == SessionsResponse.SessionType.OpenPractice).Select(x => new SessionDetails
+            _sessionDetails.AddRange(sessions.Sessions.Select(x => new SessionDetails
             {
                 Id = x.Id,
                 Name = x.Name,
-                Type = x.Type switch
-                {
-                    SessionsResponse.SessionType.OpenPractice => SessionType.OpenPractice,
-                    _ => throw new NotSupportedException()
-                }
+                Type = SessionType.OpenPractice
             }));
         }
 
@@ -199,7 +196,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         _selectedSession = new OpenPracticeSession
         {
-            Id = practiceSessionResponse.SessionId,
+            Id = practiceSessionResponse.Id,
             TrackId = practiceSessionResponse.TrackId,
             Name = practiceSessionResponse.Name,
             MinimumLapMilliseconds = practiceSessionResponse.MinimumLapMilliseconds,

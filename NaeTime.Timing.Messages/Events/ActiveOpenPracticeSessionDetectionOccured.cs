@@ -1,0 +1,2 @@
+﻿namespace NaeTime.OpenPractice.Messages.Events;
+public record ActiveOpenPracticeSessionDetectionOccured(Guid SessionId, Guid TimerId, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);

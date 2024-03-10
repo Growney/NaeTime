@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NaeTime.Timing.SQLite;
 
@@ -10,9 +11,11 @@ using NaeTime.Timing.SQLite;
 namespace NaeTime.Timing.SQLite.Migrations
 {
     [DbContext(typeof(TimingDbContext))]
-    partial class TimingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240311113939_initial")]
+    partial class initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.1");

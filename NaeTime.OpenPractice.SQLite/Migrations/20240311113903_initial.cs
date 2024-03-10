@@ -65,17 +65,18 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    LapId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ConsecutiveLapRecordId = table.Column<Guid>(type: "TEXT", nullable: true)
+                    ConsecutiveLapRecordId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LapId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_IncludedLap", x => x.Id);
+                    table.PrimaryKey("PK_IncludedLap", x => new { x.ConsecutiveLapRecordId, x.Id });
                     table.ForeignKey(
                         name: "FK_IncludedLap_ConsecutiveLapRecords_ConsecutiveLapRecordId",
                         column: x => x.ConsecutiveLapRecordId,
                         principalTable: "ConsecutiveLapRecords",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -83,18 +84,19 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    OpenPracticeSessionId = table.Column<Guid>(type: "TEXT", nullable: false),
                     PilotId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Lane = table.Column<byte>(type: "INTEGER", nullable: false),
-                    OpenPracticeSessionId = table.Column<Guid>(type: "TEXT", nullable: true)
+                    Lane = table.Column<byte>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PilotLane", x => x.Id);
+                    table.PrimaryKey("PK_PilotLane", x => new { x.OpenPracticeSessionId, x.Id });
                     table.ForeignKey(
                         name: "FK_PilotLane_OpenPracticeSessions_OpenPracticeSessionId",
                         column: x => x.OpenPracticeSessionId,
                         principalTable: "OpenPracticeSessions",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -102,33 +104,19 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    LapCap = table.Column<uint>(type: "INTEGER", nullable: false),
-                    OpenPracticeSessionId = table.Column<Guid>(type: "TEXT", nullable: true)
+                    OpenPracticeSessionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LapCap = table.Column<uint>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TrackedConsecutiveLaps", x => x.Id);
+                    table.PrimaryKey("PK_TrackedConsecutiveLaps", x => new { x.OpenPracticeSessionId, x.Id });
                     table.ForeignKey(
                         name: "FK_TrackedConsecutiveLaps_OpenPracticeSessions_OpenPracticeSessionId",
                         column: x => x.OpenPracticeSessionId,
                         principalTable: "OpenPracticeSessions",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_IncludedLap_ConsecutiveLapRecordId",
-                table: "IncludedLap",
-                column: "ConsecutiveLapRecordId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PilotLane_OpenPracticeSessionId",
-                table: "PilotLane",
-                column: "OpenPracticeSessionId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TrackedConsecutiveLaps_OpenPracticeSessionId",
-                table: "TrackedConsecutiveLaps",
-                column: "OpenPracticeSessionId");
         }
 
         /// <inheritdoc />

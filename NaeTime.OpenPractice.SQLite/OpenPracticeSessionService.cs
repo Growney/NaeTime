@@ -183,7 +183,36 @@ internal class OpenPracticeSessionService : ISubscriber
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
 
     }
+    private OpenPracticeSessionsResponse.LapStatus GetSessionsResponseStatus(OpenPracticeLapStatus status) => status switch
+    {
+        OpenPracticeLapStatus.Invalid => OpenPracticeSessionsResponse.LapStatus.Invalid,
+        OpenPracticeLapStatus.Completed => OpenPracticeSessionsResponse.LapStatus.Completed,
+        _ => throw new NotImplementedException()
+    };
+    public async Task<OpenPracticeSessionsResponse> On(OpenPracticeSessionsRequest request)
+    {
+        var sessions = await _dbContext.OpenPracticeSessions.ToListAsync().ConfigureAwait(false);
 
+        var responseSessions = new List<OpenPracticeSessionsResponse.OpenPracticeSession>();
+        foreach (var session in sessions)
+        {
+            var laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == session.Id).ToListAsync().ConfigureAwait(false);
+
+            responseSessions.Add(new OpenPracticeSessionsResponse.OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
+                laps.Select(y => new OpenPracticeSessionsResponse.Lap(y.Id, y.PilotId, y.StartedUtc, y.FinishedUtc, GetSessionsResponseStatus(y.Status), y.TotalMilliseconds)),
+            session.ActiveLanes.Select(y => new OpenPracticeSessionsResponse.PilotLane(y.PilotId, y.Lane)),
+            session.TrackedConsecutiveLaps.Select(y => y.LapCap)));
+        }
+
+        return new OpenPracticeSessionsResponse(responseSessions);
+
+    }
+    private OpenPracticeSessionResponse.LapStatus GetSessionResponseStatus(OpenPracticeLapStatus status) => status switch
+    {
+        OpenPracticeLapStatus.Invalid => OpenPracticeSessionResponse.LapStatus.Invalid,
+        OpenPracticeLapStatus.Completed => OpenPracticeSessionResponse.LapStatus.Completed,
+        _ => throw new NotImplementedException()
+    };
     public async Task<OpenPracticeSessionResponse?> On(OpenPracticeSessionRequest request)
     {
         var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == request.SessionId).ConfigureAwait(false);
@@ -195,19 +224,10 @@ internal class OpenPracticeSessionService : ISubscriber
 
         var laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == request.SessionId).ToListAsync().ConfigureAwait(false);
 
-
-        return session == null ?
-            null : new OpenPracticeSessionResponse(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
-            laps.Select(x => new OpenPracticeSessionResponse.Lap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc,
-            x.Status switch
-            {
-                OpenPracticeLapStatus.Invalid => OpenPracticeSessionResponse.LapStatus.Invalid,
-                OpenPracticeLapStatus.Completed => OpenPracticeSessionResponse.LapStatus.Completed,
-                _ => throw new NotImplementedException()
-            }, x.TotalMilliseconds)),
-            session.ActiveLanes.Select(x => new OpenPracticeSessionResponse.PilotLane(x.PilotId, x.Lane)),
-            session.TrackedConsecutiveLaps.Select(x => x.LapCap));
-
+        return new OpenPracticeSessionResponse(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
+                       laps.Select(x => new OpenPracticeSessionResponse.Lap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc, GetSessionResponseStatus(x.Status), x.TotalMilliseconds)),
+                                  session.ActiveLanes.Select(x => new OpenPracticeSessionResponse.PilotLane(x.PilotId, x.Lane)),
+                                             session.TrackedConsecutiveLaps.Select(x => x.LapCap));
     }
     public async Task<TrackedConsecutiveLapsResponse> On(TrackedConsecutiveLapsRequest request)
     {
@@ -223,6 +243,18 @@ internal class OpenPracticeSessionService : ISubscriber
         tracked = session.TrackedConsecutiveLaps.Select(x => x.LapCap).ToList();
 
         return new TrackedConsecutiveLapsResponse(request.SessionId, tracked);
+    }
+    public async Task<PilotLapsResponse> On(PilotLapsRequest request)
+    {
+        var laps = await _dbContext.OpenPracticeLaps.Where(x => x.PilotId == request.PilotId && x.SessionId == request.SessionId).ToListAsync();
+
+        return new PilotLapsResponse(
+            laps.Select(x => new PilotLapsResponse.Lap(x.Id, x.StartedUtc, x.FinishedUtc, x.Status switch
+            {
+                OpenPracticeLapStatus.Invalid => PilotLapsResponse.LapStatus.Invalid,
+                OpenPracticeLapStatus.Completed => PilotLapsResponse.LapStatus.Completed,
+                _ => throw new NotImplementedException()
+            }, x.TotalMilliseconds)));
     }
 }
 

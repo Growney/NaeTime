@@ -11,7 +11,7 @@ using NaeTime.OpenPractice.SQLite;
 namespace NaeTime.OpenPractice.SQLite.Migrations
 {
     [DbContext(typeof(OpenPracticeDbContext))]
-    [Migration("20240310211258_initial")]
+    [Migration("20240311113903_initial")]
     partial class initial
     {
         /// <inheritdoc />
@@ -47,25 +47,6 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ConsecutiveLapRecords");
-                });
-
-            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.IncludedLap", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ConsecutiveLapRecordId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("LapId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConsecutiveLapRecordId");
-
-                    b.ToTable("IncludedLap");
                 });
 
             modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.OpenPracticeLap", b =>
@@ -120,75 +101,76 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                     b.ToTable("OpenPracticeSessions");
                 });
 
-            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.PilotLane", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<byte>("Lane")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid?>("OpenPracticeSessionId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("PilotId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OpenPracticeSessionId");
-
-                    b.ToTable("PilotLane");
-                });
-
-            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.TrackedConsecutiveLaps", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<uint>("LapCap")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid?>("OpenPracticeSessionId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OpenPracticeSessionId");
-
-                    b.ToTable("TrackedConsecutiveLaps");
-                });
-
-            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.IncludedLap", b =>
-                {
-                    b.HasOne("NaeTime.OpenPractice.SQLite.Models.ConsecutiveLapRecord", null)
-                        .WithMany("IncludedLaps")
-                        .HasForeignKey("ConsecutiveLapRecordId");
-                });
-
-            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.PilotLane", b =>
-                {
-                    b.HasOne("NaeTime.OpenPractice.SQLite.Models.OpenPracticeSession", null)
-                        .WithMany("ActiveLanes")
-                        .HasForeignKey("OpenPracticeSessionId");
-                });
-
-            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.TrackedConsecutiveLaps", b =>
-                {
-                    b.HasOne("NaeTime.OpenPractice.SQLite.Models.OpenPracticeSession", null)
-                        .WithMany("TrackedConsecutiveLaps")
-                        .HasForeignKey("OpenPracticeSessionId");
-                });
-
             modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.ConsecutiveLapRecord", b =>
                 {
+                    b.OwnsMany("NaeTime.OpenPractice.SQLite.Models.IncludedLap", "IncludedLaps", b1 =>
+                        {
+                            b1.Property<Guid>("ConsecutiveLapRecordId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("LapId")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("ConsecutiveLapRecordId", "Id");
+
+                            b1.ToTable("IncludedLap");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ConsecutiveLapRecordId");
+                        });
+
                     b.Navigation("IncludedLaps");
                 });
 
             modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.OpenPracticeSession", b =>
                 {
+                    b.OwnsMany("NaeTime.OpenPractice.SQLite.Models.PilotLane", "ActiveLanes", b1 =>
+                        {
+                            b1.Property<Guid>("OpenPracticeSessionId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<byte>("Lane")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid>("PilotId")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("OpenPracticeSessionId", "Id");
+
+                            b1.ToTable("PilotLane");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OpenPracticeSessionId");
+                        });
+
+                    b.OwnsMany("NaeTime.OpenPractice.SQLite.Models.TrackedConsecutiveLaps", "TrackedConsecutiveLaps", b1 =>
+                        {
+                            b1.Property<Guid>("OpenPracticeSessionId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<uint>("LapCap")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("OpenPracticeSessionId", "Id");
+
+                            b1.ToTable("TrackedConsecutiveLaps");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OpenPracticeSessionId");
+                        });
+
                     b.Navigation("ActiveLanes");
 
                     b.Navigation("TrackedConsecutiveLaps");

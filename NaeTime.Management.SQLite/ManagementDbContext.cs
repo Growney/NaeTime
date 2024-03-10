@@ -8,4 +8,12 @@ internal class ManagementDbContext : DbContext
     public ManagementDbContext(DbContextOptions<ManagementDbContext> options) : base(options)
     {
     }
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        var tracks = modelBuilder.Entity<Track>();
+        tracks.OwnsMany(t => t.Timers).WithOwner().HasForeignKey(x => x.TrackId);
+
+    }
 }

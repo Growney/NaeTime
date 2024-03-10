@@ -159,13 +159,13 @@ public class OpenPracticeConsecutiveLapsManager : ISubscriber
             }
             else if (newRecord != null && existingRecord != null)
             {
-                var comparison = newRecord.CompareTo(existingRecord);
+                var comparison = existingRecord.CompareTo(newRecord);
 
                 if (comparison > 0)
                 {
                     await _publishSubscribe.Dispatch(new ConsecutiveLapRecordImproved(sessionId, pilotId, trackedLaps, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps));
                 }
-                else
+                else if (comparison < 0)
                 {
                     await _publishSubscribe.Dispatch(new ConsecutiveLapRecordReduced(sessionId, pilotId, trackedLaps, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps));
                 }

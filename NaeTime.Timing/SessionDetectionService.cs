@@ -1,10 +1,9 @@
 ﻿using NaeTime.Hardware.Messages.Messages;
 using NaeTime.Management.Messages.Requests;
 using NaeTime.Management.Messages.Responses;
+using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
-using NaeTime.Timing.Messages.Events;
-using NaeTime.Timing.Models;
 
 namespace NaeTime.Timing;
 internal class SessionDetectionService : ISubscriber
@@ -29,16 +28,9 @@ internal class SessionDetectionService : ISubscriber
             return;
         }
 
-        ActiveTrack activeTrack = new(activeSessionResponse.ActiveTrack.Timers);
-
-        var timerPosition = activeTrack.GetTimerPosition(timerId);
-        var timerCount = activeTrack.Timers.Count();
-        if (timerPosition < 0 || timerPosition > byte.MaxValue || timerCount > byte.MaxValue)
+        if (activeSessionResponse.Type == ActiveSessionResponse.SessionType.OpenPractice)
         {
-            //TODO dispatch timer detection discarded
-            return;
+            await _publishSubscribe.Dispatch(new ActiveOpenPracticeSessionDetectionOccured(activeSessionResponse.SessionId, timerId, lane, hardwareTime, softwareTime, utcTime));
         }
-
-        await _publishSubscribe.Dispatch(new SessionDetectionOccured(activeSessionResponse.SessionId, lane, (byte)timerPosition, activeSessionResponse.MinimumLapMilliseconds, activeSessionResponse.MaximumLapMilliseconds, (byte)timerCount, hardwareTime, softwareTime, utcTime)).ConfigureAwait(false);
     }
 }

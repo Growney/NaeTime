@@ -1,54 +1,40 @@
 ﻿using NaeTime.Hardware.Abstractions;
-using NaeTime.Management.Messages.Requests;
-using NaeTime.Management.Messages.Responses;
+using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.OpenPractice.Messages.Requests;
+using NaeTime.OpenPractice.Messages.Responses;
 using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;
 using NaeTime.Timing.Messages.Requests;
 using NaeTime.Timing.Messages.Responses;
 
-namespace NaeTime.Timing;
-internal class ManualDetectionService : ISubscriber
+namespace NaeTime.OpenPractice;
+internal class DetectionService : ISubscriber
 {
     private readonly IDispatcher _dispatcher;
     private readonly ISoftwareTimer _softwareTimer;
 
-    public ManualDetectionService(IDispatcher dispatcher, ISoftwareTimer softwareTimer)
+    public DetectionService(IDispatcher dispatcher, ISoftwareTimer softwareTimer)
     {
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
     }
 
-    public async Task When(SessionDetectionTriggered triggered)
+    public async Task When(OpenPracticeSessionDetectionTriggered triggered)
     {
-        var session = await _dispatcher.Request<SessionRequest, SessionResponse>(new SessionRequest(triggered.SessionId)).ConfigureAwait(false);
+        var session = await _dispatcher.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(triggered.SessionId)).ConfigureAwait(false);
 
         if (session == null)
         {
             return;
         }
 
-        var track = await _dispatcher.Request<TrackRequest, TrackResponse>(new TrackRequest(session.TrackId)).ConfigureAwait(false);
-
-        if (track == null)
-        {
-            return;
-        }
-
-        var timerCount = track.Timers.Count();
-
-        if (timerCount > byte.MaxValue)
-        {
-            return;
-        }
-
-
-        await _dispatcher.Dispatch(new SessionDetectionOccured(session.Id, triggered.Lane, triggered.Split, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, (byte)timerCount, null, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
+        await _dispatcher.Dispatch(new SessionDetectionOccured(session.Id, triggered.TimerId, triggered.Lane, session.TrackId, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, null, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
     }
 
-    public async Task When(SessionInvalidationTriggered triggered)
+    public async Task When(OpenPracticeSessionInvalidationTriggered triggered)
     {
-        var session = await _dispatcher.Request<SessionRequest, SessionResponse>(new SessionRequest(triggered.SessionId)).ConfigureAwait(false);
+        var session = await _dispatcher.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(triggered.SessionId)).ConfigureAwait(false);
 
         if (session == null)
         {
@@ -85,5 +71,16 @@ internal class ManualDetectionService : ISubscriber
         {
             return softwareDifference;
         }
+    }
+    public async Task When(ActiveOpenPracticeSessionDetectionOccured detection)
+    {
+        var session = await _dispatcher.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(detection.SessionId)).ConfigureAwait(false);
+
+        if (session == null)
+        {
+            return;
+        }
+
+        await _dispatcher.Dispatch(new SessionDetectionOccured(session.Id, detection.TimerId, detection.Lane, session.TrackId, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, detection.HardwareTime, detection.SoftwareTime, detection.UtcTime));
     }
 }
