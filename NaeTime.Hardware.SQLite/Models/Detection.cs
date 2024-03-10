@@ -1,4 +1,4 @@
-﻿namespace NaeTime.Persistence.SQLite.Models;
+﻿namespace NaeTime.Hardware.SQLite.Models;
 public class Detection
 {
     public Guid Id { get; set; }

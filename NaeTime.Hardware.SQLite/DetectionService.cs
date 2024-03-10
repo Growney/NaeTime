@@ -1,6 +1,4 @@
-﻿using NaeTime.Hardware.Messages.Messages;
-
-namespace NaeTime.Persistence;
+﻿namespace NaeTime.Hardware.SQLite;
 internal class DetectionService : ISubscriber
 {
     private readonly HardwareDbContext _dbContext;
@@ -11,7 +9,7 @@ internal class DetectionService : ISubscriber
 
     public async Task When(TimerDetectionOccured timerDetection)
     {
-        _dbContext.Detections.Add(new SQLite.Models.Detection
+        _dbContext.Detections.Add(new Detection
         {
             TimerId = timerDetection.TimerId,
             Lane = timerDetection.Lane,
@@ -26,7 +24,7 @@ internal class DetectionService : ISubscriber
     }
     public async Task When(TimerDetectionTriggered timerDetection)
     {
-        _dbContext.Detections.Add(new SQLite.Models.Detection
+        _dbContext.Detections.Add(new Detection
         {
             TimerId = timerDetection.TimerId,
             Lane = timerDetection.Lane,

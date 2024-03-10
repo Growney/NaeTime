@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 
-namespace NaeTime.Persistence;
+namespace NaeTime.Hardware.SQLite;
 internal class HardwareService : ISubscriber
 {
     private readonly HardwareDbContext _dbcontext;

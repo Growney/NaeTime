@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using NaeTime.Persistence.SQLite.Models;
 
 namespace NaeTime.Hardware.SQLite;
 internal class HardwareDbContext : DbContext

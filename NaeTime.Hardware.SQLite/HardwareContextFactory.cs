@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace NaeTime.Persistence.SQLite.Context;
+namespace NaeTime.Hardware.SQLite;
 internal class HardwareContextFactory : IDesignTimeDbContextFactory<HardwareDbContext>
 {
     public HardwareDbContext CreateDbContext(string[] args)
