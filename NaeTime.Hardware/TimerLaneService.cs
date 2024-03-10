@@ -7,7 +7,7 @@ using NaeTime.Timing.Messages.Events;
 using NaeTime.Timing.Messages.Requests;
 using NaeTime.Timing.Messages.Responses;
 
-namespace NaeTime.Timing;
+namespace NaeTime.Hardware;
 public class TimerLaneService : ISubscriber
 {
     private readonly IPublishSubscribe _publisher;

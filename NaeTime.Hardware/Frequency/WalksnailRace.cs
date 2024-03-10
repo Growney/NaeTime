@@ -1,8 +1,8 @@
-﻿namespace NaeTime.Messages.Frequency;
-public enum RaceBandR
+﻿namespace NaeTime.Hardware.Frequency;
+public enum WalksnailRace
 {
     R1 = 5658,
-    R2 = 5695,
+    R2 = 5659,
     R3 = 5732,
     R4 = 5769,
     R5 = 5806,

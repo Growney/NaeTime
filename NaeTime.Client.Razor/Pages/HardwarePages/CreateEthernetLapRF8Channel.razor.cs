@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Messages.Events.Hardware;
+using NaeTime.Hardware.Messages.Messages;
 using NaeTime.PubSub.Abstractions;
 using System.Net;
 

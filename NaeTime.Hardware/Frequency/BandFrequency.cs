@@ -1,4 +1,4 @@
-﻿namespace NaeTime.Messages.Frequency;
+﻿namespace NaeTime.Hardware.Frequency;
 public struct BandFrequency
 {
     public BandFrequency(string name, int frequency)

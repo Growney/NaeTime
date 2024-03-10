@@ -21,8 +21,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NaeTime.Client.Configuration\NaeTime.Client.Configuration.csproj" />
     <ProjectReference Include="..\NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj" />
+    <ProjectReference Include="..\NaeTime.Hardware.Messages\NaeTime.Hardware.Messages.csproj" />
+    <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
+    <ProjectReference Include="..\NaeTime.Management.Messages\NaeTime.Management.Messages.csproj" />
+    <ProjectReference Include="..\NaeTime.OpenPractice.Messages\NaeTime.OpenPractice.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
+    <ProjectReference Include="..\NaeTime.Timing.Messages\NaeTime.Timing.Messages.csproj" />
   </ItemGroup>
 
   <ItemGroup>

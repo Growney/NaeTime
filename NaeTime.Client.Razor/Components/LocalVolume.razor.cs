@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
-using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Persistence.Client.Abstractions;
+using NaeTime.Client.Configuration.Abstractions;
+using NaeTime.Client.Configuration.Models;
 
 namespace NaeTime.Client.Razor.Components;
 public partial class LocalVolume : ComponentBase

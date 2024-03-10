@@ -1,4 +1,4 @@
-﻿namespace NaeTime.Messages.Frequency;
+﻿namespace NaeTime.Hardware.Frequency;
 public enum RaceBandB
 {
     B1 = 5733,

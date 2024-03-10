@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.Management.Messages\NaeTime.Management.Messages.csproj" />
+    <ProjectReference Include="..\NaeTime.OpenPractice.Messages\NaeTime.OpenPractice.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
     <ProjectReference Include="..\NaeTime.SQLite\NaeTime.SQLite.csproj" />
     <ProjectReference Include="..\NaeTime.Timing.Messages\NaeTime.Timing.Messages.csproj" />

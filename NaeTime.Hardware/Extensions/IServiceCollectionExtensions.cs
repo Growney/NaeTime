@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection.Extensions;
+using NaeTime.Hardware;
 using NaeTime.Hardware.Abstractions;
-using NaeTime.Timing;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions
@@ -9,7 +9,7 @@ public static class IServiceCollectionExtensions
     {
         services.TryAddSingleton<ISoftwareTimer, SoftwareTimer>();
 
-        services.AddSubscriberAssembly(typeof(ISoftwareTimer).Assembly);
+        services.AddSubscriberAssembly(typeof(SoftwareTimer).Assembly);
 
         return services;
     }

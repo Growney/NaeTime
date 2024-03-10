@@ -1,7 +1,7 @@
 ﻿using NaeTime.Hardware.Abstractions;
 using System.Diagnostics;
 
-namespace NaeTime.Timing;
+namespace NaeTime.Hardware;
 public class SoftwareTimer : IDisposable, ISoftwareTimer
 {
     private readonly Stopwatch _stopwatch;

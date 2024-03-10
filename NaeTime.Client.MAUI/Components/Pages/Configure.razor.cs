@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components;
-using NaeTime.Persistence.Client.Messages.Events;
 
 namespace NaeTime.Client.MAUI.Components.Pages;
 public partial class Configure : ComponentBase
@@ -12,7 +11,6 @@ public partial class Configure : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        await Dispatcher.Dispatch(new ClientModeConfigured(Persistence.Client.ClientMode.Local));
         await base.OnInitializedAsync();
 
         NavigationManager.NavigateTo("/overview");

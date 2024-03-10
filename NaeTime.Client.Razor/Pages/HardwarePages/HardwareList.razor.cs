@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Messages.Requests;
-using NaeTime.Messages.Responses;
+using NaeTime.Hardware.Messages.Requests;
+using NaeTime.Hardware.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
@@ -31,7 +31,7 @@ public partial class HardwareList : ComponentBase
             {
                 TimerDetailsResponse.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
                 _ => throw new NotImplementedException()
-            })));
+            }, x.MaxLanes)));
 
     }
 

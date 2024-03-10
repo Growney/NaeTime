@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
-using NaeTime.Messages.Events.Hardware;
-using NaeTime.Messages.Events.OpenPractice;
-using NaeTime.Messages.Events.Timing;
+using NaeTime.Hardware.Frequency;
+using NaeTime.Hardware.Messages.Messages;
+using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.PubSub.Abstractions;
+using NaeTime.Timing.Messages.Events;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
 public partial class SessionLaneConfiguration : ComponentBase
@@ -104,9 +105,9 @@ public partial class SessionLaneConfiguration : ComponentBase
     {
         int newFrequency = Configuration.FrequencyInMhz;
 
-        if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
+        if (Band.Bands.Any(x => x.Id == Configuration.BandId))
         {
-            var band = Messages.Frequency.Band.Bands.First(x => x.Id == Configuration.BandId);
+            var band = Band.Bands.First(x => x.Id == Configuration.BandId);
 
             if (band.Frequencies.Any())
             {
@@ -130,9 +131,9 @@ public partial class SessionLaneConfiguration : ComponentBase
     }
     private string GetBandString()
     {
-        if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
+        if (Band.Bands.Any(x => x.Id == Configuration.BandId))
         {
-            var band = Messages.Frequency.Band.Bands.First(x => x.Id == Configuration.BandId);
+            var band = Band.Bands.First(x => x.Id == Configuration.BandId);
 
             return band.ShortName;
         }
@@ -141,9 +142,9 @@ public partial class SessionLaneConfiguration : ComponentBase
     }
     private string GetFrequencyString()
     {
-        if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
+        if (Band.Bands.Any(x => x.Id == Configuration.BandId))
         {
-            var band = Messages.Frequency.Band.Bands.First(x => x.Id == Configuration.BandId);
+            var band = Band.Bands.First(x => x.Id == Configuration.BandId);
 
             if (band.Frequencies.Any(x => x.FrequencyInMhz == Configuration.FrequencyInMhz))
             {

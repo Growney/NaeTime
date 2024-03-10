@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Messages.Requests;
-using NaeTime.Messages.Responses;
+using NaeTime.Management.Messages.Requests;
+using NaeTime.Management.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.PilotPages;

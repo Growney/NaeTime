@@ -34,6 +34,7 @@ public static class MauiProgram
 
         //Add Open Practice Services
         builder.Services.AddOpenPracticeCore();
+        builder.Services.AddSQLiteOpenPractice();
 
         //Add Timing Services
         builder.Services.AddTimingCore();

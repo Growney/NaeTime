@@ -1,13 +1,17 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
-using NaeTime.Messages.Events.Activation;
-using NaeTime.Messages.Events.Entities;
-using NaeTime.Messages.Events.OpenPractice;
-using NaeTime.Messages.Requests;
-using NaeTime.Messages.Requests.OpenPractice;
-using NaeTime.Messages.Responses;
+using NaeTime.Hardware.Messages.Requests;
+using NaeTime.Hardware.Messages.Responses;
+using NaeTime.Management.Messages.Messages;
+using NaeTime.Management.Messages.Requests;
+using NaeTime.Management.Messages.Responses;
+using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.OpenPractice.Messages.Requests;
+using NaeTime.OpenPractice.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
+using NaeTime.Timing.Messages.Requests;
+using NaeTime.Timing.Messages.Responses;
 
 namespace NaeTime.Client.Razor.Pages.SessionsPages;
 public partial class OpenPractice : ComponentBase, IDisposable
@@ -279,9 +283,11 @@ public partial class OpenPractice : ComponentBase, IDisposable
         }
 
         var newTrackId = Guid.NewGuid();
-        var trackTimers = timersResponse.Timers.Take(1).Select(x => x.Id);
+        var trackTimers = timersResponse.Timers.Take(1);
+        var maxLanes = trackTimers.Max(x => x.MaxLanes);
+        var timerIds = trackTimers.Select(x => x.Id);
 
-        await PublishSubscribe.Dispatch(new TrackCreated(newTrackId, $"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, trackTimers));
+        await PublishSubscribe.Dispatch(new TrackCreated(newTrackId, $"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds, maxLanes));
 
         var track = await PublishSubscribe.Request<TrackRequest, TrackResponse>(new TrackRequest(newTrackId)).ConfigureAwait(false);
 
@@ -341,7 +347,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         }
 
         _selectedSession.TrackedConsecutiveLaps.Add(lapCap);
-        return PublishSubscribe.Dispatch(new OpenPracticeConsecutiveLapCountTracked(sessionId, lapCap));
+        return PublishSubscribe.Dispatch(new ConsecutiveLapCountTracked(sessionId, lapCap));
     }
     public void Dispose() => PublishSubscribe.Unsubscribe(this);
 }

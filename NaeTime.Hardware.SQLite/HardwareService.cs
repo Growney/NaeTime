@@ -1,8 +1,5 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
-using NaeTime.Hardware.Messages.Messages;
-using NaeTime.Hardware.Messages.Requests;
-using NaeTime.Hardware.Messages.Responses;
 using System.Net;
 
 namespace NaeTime.Persistence;
@@ -72,7 +69,7 @@ internal class HardwareService : ISubscriber
     public async Task<TimerDetailsResponse> On(TimerDetailsRequest request)
     {
         var lapRF8Channels = await _dbcontext.EthernetLapRF8Channels
-            .Select(x => new TimerDetailsResponse.TimerDetails(x.Id, x.Name, TimerDetailsResponse.TimerType.EthernetLapRF8Channel))
+            .Select(x => new TimerDetailsResponse.TimerDetails(x.Id, x.Name, TimerDetailsResponse.TimerType.EthernetLapRF8Channel, 8))
             .ToListAsync().ConfigureAwait(false);
 
         return new TimerDetailsResponse(lapRF8Channels);

@@ -1,5 +1,5 @@
 ﻿using NaeTime.Announcer.Abstractions;
-using NaeTime.Persistence.Client.Abstractions;
+using NaeTime.Client.Configuration.Abstractions;
 
 namespace NaeTime.Client.MAUI.Lib;
 public class MauiSpeechProvider : ISpeechProvider

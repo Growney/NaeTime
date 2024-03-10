@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection.Extensions;
-using NaeTime.Persistence.Client;
-using NaeTime.Persistence.Client.Abstractions;
+using NaeTime.Client.Configuration;
+using NaeTime.Client.Configuration.Abstractions;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions

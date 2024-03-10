@@ -1,7 +1,7 @@
-﻿using NaeTime.Client.Configuration.Models;
-using NaeTime.Persistence.Client.Abstractions;
+﻿using NaeTime.Client.Configuration.Abstractions;
+using NaeTime.Client.Configuration.Models;
 
-namespace NaeTime.Persistence.Client;
+namespace NaeTime.Client.Configuration;
 public class SimpleStorageConfigurationRepository : ILocalConfigurationRepository
 {
     private readonly ISimpleStorageProvider _simpleStorageProvider;

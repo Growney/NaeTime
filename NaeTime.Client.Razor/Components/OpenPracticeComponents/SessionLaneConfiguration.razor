@@ -1,3 +1,4 @@
+@using NaeTime.Hardware.Frequency
 <div class="shadow rounded p-2" style="width: 200px">
     <table class="w-100">
         <tbody>
@@ -37,7 +38,7 @@
                         <Dropdown Class="w-100">
                             <DropdownToggleButton Class="rounded-0 rounded-start" Color="ButtonColor.Secondary">@GetBandString()</DropdownToggleButton>
                                 <DropdownMenu>
-                                    @foreach (var band in Messages.Frequency.Band.Bands)
+                                    @foreach (var band in Band.Bands)
                                 {
                                     <DropdownItem Type="ButtonType.Button" @onclick="() => GoToBand(band.Id)">@band.Name</DropdownItem>
                                 }
@@ -45,13 +46,13 @@
                         </Dropdown>
                     </td>
                     <td class="w-50">
-                        @if (Messages.Frequency.Band.Bands.Any(x => x.Id == Configuration.BandId))
+                        @if (Band.Bands.Any(x => x.Id == Configuration.BandId))
                         {
                             <Dropdown Class="w-100">
                                 <DropdownToggleButton Class="rounded-0 rounded-end" Color="ButtonColor.Primary">@GetFrequencyString()</DropdownToggleButton>
                                     <DropdownMenu>
                                         @{
-                                        var band = Messages.Frequency.Band.Bands.First(b => b.Id == Configuration.BandId);
+                                        var band = Band.Bands.First(b => b.Id == Configuration.BandId);
                                         foreach (var frequency in band.Frequencies)
                                         {
                                             <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(frequency.FrequencyInMhz)">@frequency.Name</DropdownItem>

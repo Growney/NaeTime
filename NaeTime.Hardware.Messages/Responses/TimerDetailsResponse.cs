@@ -5,5 +5,5 @@ public record TimerDetailsResponse(IEnumerable<TimerDetailsResponse.TimerDetails
     {
         EthernetLapRF8Channel,
     }
-    public record TimerDetails(Guid Id, string? Name, TimerType Type);
+    public record TimerDetails(Guid Id, string? Name, TimerType Type, byte MaxLanes);
 }

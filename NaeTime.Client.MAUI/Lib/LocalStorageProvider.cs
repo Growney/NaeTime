@@ -1,4 +1,4 @@
-﻿using NaeTime.Persistence.Client.Abstractions;
+﻿using NaeTime.Client.Configuration.Abstractions;
 
 namespace NaeTime.Client.MAUI.Lib;
 public class LocalStorageProvider : ISimpleStorageProvider

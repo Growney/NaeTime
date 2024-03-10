@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Messages.Events.Entities;
-using NaeTime.Messages.Requests;
-using NaeTime.Messages.Responses;
+using NaeTime.Hardware.Messages.Requests;
+using NaeTime.Hardware.Messages.Responses;
+using NaeTime.Management.Messages.Messages;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
@@ -41,13 +41,15 @@ public partial class CreateTrack
             {
                 TimerDetailsResponse.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
                 _ => throw new NotImplementedException()
-            })));
+            }, x.MaxLanes)));
 
     }
 
     private async Task HandleValidSubmit(Track track)
     {
-        await Dispatcher.Dispatch(new TrackCreated(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers));
+        var maxLanes = _timers.Where(x => track.Timers.Contains(x.Id)).Max(x => x.MaxLanes);
+
+        await Dispatcher.Dispatch(new TrackCreated(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, maxLanes));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/track/list");
     }

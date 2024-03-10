@@ -1,6 +1,5 @@
 ﻿@page "/"
 @using NaeTime.Client.MAUI.Lib
-@using NaeTime.Messages.Events.System
 
 @layout NaeTime.Client.Razor.Layouts.BlankLayout
 
@@ -17,8 +16,6 @@
     protected override async Task OnInitializedAsync()
     {
         await Runner.Start();
-
-        await Dispatcher.Dispatch(new SystemStarted());
 
         await Task.Delay(1000);
 
