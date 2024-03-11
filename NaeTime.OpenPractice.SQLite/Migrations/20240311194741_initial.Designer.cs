@@ -11,7 +11,7 @@ using NaeTime.OpenPractice.SQLite;
 namespace NaeTime.OpenPractice.SQLite.Migrations
 {
     [DbContext(typeof(OpenPracticeDbContext))]
-    [Migration("20240311113903_initial")]
+    [Migration("20240311194741_initial")]
     partial class initial
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.1");
 
-            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.ConsecutiveLapRecord", b =>
+            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.ConsecutiveLapLeaderboardPosition", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -35,6 +35,9 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                     b.Property<Guid>("PilotId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("SessionId")
                         .HasColumnType("TEXT");
 
@@ -46,7 +49,7 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ConsecutiveLapRecords");
+                    b.ToTable("ConsecutiveLapLeaderboardPositions");
                 });
 
             modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.OpenPracticeLap", b =>
@@ -101,11 +104,11 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                     b.ToTable("OpenPracticeSessions");
                 });
 
-            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.ConsecutiveLapRecord", b =>
+            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.ConsecutiveLapLeaderboardPosition", b =>
                 {
                     b.OwnsMany("NaeTime.OpenPractice.SQLite.Models.IncludedLap", "IncludedLaps", b1 =>
                         {
-                            b1.Property<Guid>("ConsecutiveLapRecordId")
+                            b1.Property<Guid>("ConsecutiveLapLeaderboardPositionId")
                                 .HasColumnType("TEXT");
 
                             b1.Property<Guid>("Id")
@@ -115,12 +118,12 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                             b1.Property<Guid>("LapId")
                                 .HasColumnType("TEXT");
 
-                            b1.HasKey("ConsecutiveLapRecordId", "Id");
+                            b1.HasKey("ConsecutiveLapLeaderboardPositionId", "Id");
 
                             b1.ToTable("IncludedLap");
 
                             b1.WithOwner()
-                                .HasForeignKey("ConsecutiveLapRecordId");
+                                .HasForeignKey("ConsecutiveLapLeaderboardPositionId");
                         });
 
                     b.Navigation("IncludedLaps");

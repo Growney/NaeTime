@@ -3,7 +3,6 @@
 internal class OpenPracticeDbContext : DbContext
 {
     public DbSet<OpenPracticeSession> OpenPracticeSessions { get; set; }
-    public DbSet<ConsecutiveLapRecord> ConsecutiveLapRecords { get; set; }
     public DbSet<OpenPracticeLap> OpenPracticeLaps { get; set; }
     public DbSet<ConsecutiveLapLeaderboardPosition> ConsecutiveLapLeaderboardPositions { get; set; }
     public OpenPracticeDbContext(DbContextOptions<OpenPracticeDbContext> options) : base(options)
@@ -16,9 +15,6 @@ internal class OpenPracticeDbContext : DbContext
         var sessions = modelBuilder.Entity<OpenPracticeSession>();
         sessions.OwnsMany(s => s.ActiveLanes);
         sessions.OwnsMany(s => s.TrackedConsecutiveLaps);
-
-        var lapRecords = modelBuilder.Entity<ConsecutiveLapRecord>();
-        lapRecords.OwnsMany(x => x.IncludedLaps);
 
         var leaderboards = modelBuilder.Entity<ConsecutiveLapLeaderboardPosition>();
         leaderboards.OwnsMany(x => x.IncludedLaps);

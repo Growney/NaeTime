@@ -9,10 +9,15 @@ internal class ConsecutiveLapsLeaderboardService : ISubscriber
     {
         _dbContext = dbContext;
     }
+    public async Task<PilotConsecutiveLapRecordsResponse> On(PilotConsecutiveLapRecordsRequest request)
+    {
+        var positions = await _dbContext.ConsecutiveLapLeaderboardPositions.Where(x => x.SessionId == request.SessionId && x.PilotId == request.PilotId).ToListAsync();
 
+        return new PilotConsecutiveLapRecordsResponse(positions.Select(x => new PilotConsecutiveLapRecordsResponse.ConsecutiveLapRecord(x.LapCap, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(x => x.LapId))));
+    }
     public async Task<ConsecutiveLapLeaderboardReponse> On(ConsecutiveLapLeaderboardRequest request)
     {
-        var positions = await _dbContext.ConsecutiveLapLeaderboardPositions.Where(x => x.SessionId == request.SessionId).ToListAsync();
+        var positions = await _dbContext.ConsecutiveLapLeaderboardPositions.Where(x => x.SessionId == request.SessionId && x.LapCap == request.LapCap).ToListAsync();
 
         return new ConsecutiveLapLeaderboardReponse(positions.Select(x => new ConsecutiveLapLeaderboardReponse.LeadboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(x => x.LapId))));
     }

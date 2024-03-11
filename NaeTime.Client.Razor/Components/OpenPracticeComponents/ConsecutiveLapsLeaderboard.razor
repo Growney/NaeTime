@@ -15,8 +15,24 @@
         </th>
     </tr>
     <tbody>
+        @foreach (var position in _positions.OrderBy(x => x.Position))
+        {
+
+            <tr>
+                <td>
+                    @position.Position
+                </td>
+                <td>
+                    @GetPilotName(position.PilotId)
+                </td>
+                <td>
+                    @position.TotalLaps
+                </td>
+                <td>
+                    @($"{TimeSpan.FromMilliseconds(position.TotalMilliseconds):m\\:ss\\:fff}")
+
+                </td>
+            </tr>
+        }
     </tbody>
-    
-    
-   
 </table>

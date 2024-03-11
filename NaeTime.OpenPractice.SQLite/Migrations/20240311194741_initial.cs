@@ -12,10 +12,11 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "ConsecutiveLapRecords",
+                name: "ConsecutiveLapLeaderboardPositions",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Position = table.Column<int>(type: "INTEGER", nullable: false),
                     SessionId = table.Column<Guid>(type: "TEXT", nullable: false),
                     PilotId = table.Column<Guid>(type: "TEXT", nullable: false),
                     LapCap = table.Column<uint>(type: "INTEGER", nullable: false),
@@ -25,7 +26,7 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ConsecutiveLapRecords", x => x.Id);
+                    table.PrimaryKey("PK_ConsecutiveLapLeaderboardPositions", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -65,16 +66,16 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ConsecutiveLapRecordId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ConsecutiveLapLeaderboardPositionId = table.Column<Guid>(type: "TEXT", nullable: false),
                     LapId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_IncludedLap", x => new { x.ConsecutiveLapRecordId, x.Id });
+                    table.PrimaryKey("PK_IncludedLap", x => new { x.ConsecutiveLapLeaderboardPositionId, x.Id });
                     table.ForeignKey(
-                        name: "FK_IncludedLap_ConsecutiveLapRecords_ConsecutiveLapRecordId",
-                        column: x => x.ConsecutiveLapRecordId,
-                        principalTable: "ConsecutiveLapRecords",
+                        name: "FK_IncludedLap_ConsecutiveLapLeaderboardPositions_ConsecutiveLapLeaderboardPositionId",
+                        column: x => x.ConsecutiveLapLeaderboardPositionId,
+                        principalTable: "ConsecutiveLapLeaderboardPositions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -135,7 +136,7 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                 name: "TrackedConsecutiveLaps");
 
             migrationBuilder.DropTable(
-                name: "ConsecutiveLapRecords");
+                name: "ConsecutiveLapLeaderboardPositions");
 
             migrationBuilder.DropTable(
                 name: "OpenPracticeSessions");

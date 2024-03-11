@@ -49,35 +49,6 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
                     b.ToTable("ConsecutiveLapLeaderboardPositions");
                 });
 
-            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.ConsecutiveLapRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<uint>("LapCap")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("LastLapCompletionUtc")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("PilotId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<uint>("TotalLaps")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("TotalMilliseconds")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ConsecutiveLapRecords");
-                });
-
             modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.OpenPracticeLap", b =>
                 {
                     b.Property<Guid>("Id")
@@ -146,35 +117,10 @@ namespace NaeTime.OpenPractice.SQLite.Migrations
 
                             b1.HasKey("ConsecutiveLapLeaderboardPositionId", "Id");
 
-                            b1.ToTable("ConsecutiveLapLeaderboardPositions_IncludedLaps");
+                            b1.ToTable("IncludedLap");
 
                             b1.WithOwner()
                                 .HasForeignKey("ConsecutiveLapLeaderboardPositionId");
-                        });
-
-                    b.Navigation("IncludedLaps");
-                });
-
-            modelBuilder.Entity("NaeTime.OpenPractice.SQLite.Models.ConsecutiveLapRecord", b =>
-                {
-                    b.OwnsMany("NaeTime.OpenPractice.SQLite.Models.IncludedLap", "IncludedLaps", b1 =>
-                        {
-                            b1.Property<Guid>("ConsecutiveLapRecordId")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<Guid>("LapId")
-                                .HasColumnType("TEXT");
-
-                            b1.HasKey("ConsecutiveLapRecordId", "Id");
-
-                            b1.ToTable("ConsecutiveLapRecords_IncludedLaps");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ConsecutiveLapRecordId");
                         });
 
                     b.Navigation("IncludedLaps");
