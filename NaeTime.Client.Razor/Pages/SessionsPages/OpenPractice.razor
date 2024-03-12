@@ -28,6 +28,24 @@
                                 }
                             </DropdownMenu>
                         </Dropdown>
+                        @if(_selectedSession != null)
+                        {
+                            <Dropdown Class="mx-1">
+                                <DropdownToggleButton Color="ButtonColor.Primary">Add Consecutive Laps</DropdownToggleButton>
+                                <DropdownMenu>
+                                    @{
+                                        uint[] laps = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+                                        foreach (var lap in laps)
+                                        {
+                                            if (!_selectedSession.TrackedConsecutiveLaps.Any(x => x == lap))
+                                            {
+                                                <DropdownItem Type="ButtonType.Button" @onclick="() => TrackConsecutiveLaps(_selectedSession.Id,lap)">@lap</DropdownItem>
+                                            }
+                                        }
+                                    }
+                                </DropdownMenu>
+                            </Dropdown>
+                        }
                     </td>
                     @if (_selectedSession != null)
                     {
@@ -96,23 +114,6 @@
         </div>
         
         <div>
-            <h3>Leaderboards</h3>
-            <hr />
-            <Dropdown>
-                <DropdownToggleButton Color="ButtonColor.Primary">Add Consecutive Laps</DropdownToggleButton>
-                <DropdownMenu>
-                    @{
-                        uint[] laps = [2, 3, 4, 5, 6, 7, 8, 9, 10];
-                        foreach (var lap in laps)
-                        {
-                            if (!_selectedSession.TrackedConsecutiveLaps.Any(x => x == lap))
-                            {
-                                <DropdownItem Type="ButtonType.Button" @onclick="() => TrackConsecutiveLaps(_selectedSession.Id,lap)">@lap</DropdownItem>
-                            }
-                        }
-                    }
-                </DropdownMenu>
-            </Dropdown>
             <div class="lane-container">
 
                 <div class="shadow-sm p-3">
@@ -129,9 +130,6 @@
         </div>
         
         <div>
-            <h3>Laps</h3>
-            <hr />
-
             <div class="lane-container" style="max-height:100%;">
                 @foreach (var pilotGrouping in _selectedSession.Laps.GroupBy(x => x.PilotName))
                 {
@@ -141,6 +139,5 @@
                 }
             </div>
         </div>
-
     }
 </div>
