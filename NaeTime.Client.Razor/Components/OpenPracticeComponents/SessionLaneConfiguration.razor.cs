@@ -26,7 +26,10 @@ public partial class SessionLaneConfiguration : ComponentBase
     public Func<byte, Task>? OnDetectionTriggered { get; set; }
     [Parameter]
     public Func<byte, Task>? OnInvalidateTriggered { get; set; }
-
+    [Parameter]
+    public bool IsCollapsed { get; set; }
+    [Parameter]
+    public long? MaximumLapMilliseconds { get; set; }
     [Inject]
     public IPublishSubscribe PublishSubscribe { get; set; } = null!;
 

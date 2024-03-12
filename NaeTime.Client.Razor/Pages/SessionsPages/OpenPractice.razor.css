@@ -2,7 +2,23 @@
     width: 100%;
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: self-start;
     justify-content: center;
     gap: 1rem;
+}
+
+.open-practice-grid {
+    display: grid;
+    max-height: 100%;
+    grid-template-rows:  auto auto minmax(0,1fr);
+    min-width: 0;
+    min-height: 0;
+}
+
+.lane-child{    
+    flex:  1;
+    flex-shrink: 0;
+    height:100%;
+    min-height: 0;
+    max-height:100%;
 }

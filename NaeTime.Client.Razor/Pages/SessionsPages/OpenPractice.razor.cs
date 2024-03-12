@@ -26,6 +26,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
     private OpenPracticeSession? _selectedSession;
     private Guid? _activeSessionId;
+    private bool _isLaneConfigCollapsed = false;
     protected override async Task OnInitializedAsync()
     {
         PublishSubscribe.Subscribe<OpenPracticeLapInvalidated>(this, When);

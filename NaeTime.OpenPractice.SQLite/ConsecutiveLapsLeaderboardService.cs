@@ -28,7 +28,6 @@ internal class ConsecutiveLapsLeaderboardService : ISubscriber
 
     public Task When(ConsecutiveLapLeaderboardPositionImproved improved)
         => UpdateLapPosition(improved.SessionId, improved.LapCap, improved.NewPosition, improved.PilotId, improved.TotalLaps, improved.TotalMilliseconds, improved.LastLapCompletionUtc, improved.IncludedLaps);
-
     public Task When(ConsecutiveLapLeaderboardPositionReduced reduced)
         => UpdateLapPosition(reduced.SessionId, reduced.LapCap, reduced.NewPosition, reduced.PilotId, reduced.TotalLaps, reduced.TotalMilliseconds, reduced.LastLapCompletionUtc, reduced.IncludedLaps);
     public async Task When(ConsecutiveLapLeaderboardPositionRemoved removed)

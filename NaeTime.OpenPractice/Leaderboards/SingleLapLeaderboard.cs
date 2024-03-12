@@ -4,34 +4,11 @@ namespace NaeTime.OpenPractice.Leaderboards;
 public class SingleLapLeaderboard
 {
     private readonly Dictionary<Guid, FastestSingleLap> _pilotLaps = new();
-    public Guid LeaderboardId { get; }
 
-    public SingleLapLeaderboard(Guid leaderboardId)
+    public SingleLapLeaderboard()
     {
-        LeaderboardId = leaderboardId;
     }
 
-    public bool UpdateIfFaster(Guid pilotId, Guid lapId, long totalMilliseconds, DateTime completionUtc)
-    {
-        if (!_pilotLaps.ContainsKey(pilotId))
-        {
-            _pilotLaps.Add(pilotId, new FastestSingleLap(lapId, totalMilliseconds, completionUtc));
-            return true;
-        }
-        else
-        {
-            if (_pilotLaps[pilotId].LapMilliseconds > totalMilliseconds)
-            {
-                _pilotLaps[pilotId] = new FastestSingleLap(lapId, totalMilliseconds, completionUtc);
-                return true;
-            }
-        }
-        return false;
-    }
-    public void RemovePilot(Guid pilotId)
-    {
-        _pilotLaps.Remove(pilotId);
-    }
     public bool SetFastest(Guid pilotId, Guid lapId, long totalMilliseconds, DateTime completionUtc)
     {
         var newFastest = new FastestSingleLap(lapId, totalMilliseconds, completionUtc);
@@ -50,19 +27,21 @@ public class SingleLapLeaderboard
                 return true;
             }
         }
+
         return false;
     }
 
-    public IEnumerable<SingleLapLeaderboardPosition> GetPositions()
+    public IDictionary<Guid, SingleLapLeaderboardPosition> GetPositions()
     {
         var laps = _pilotLaps.ToList();
         laps.Sort((x, y) => CompareLaps(x.Value, y.Value));
-        var positions = new List<SingleLapLeaderboardPosition>();
+        var positions = new Dictionary<Guid, SingleLapLeaderboardPosition>();
         for (int i = 0; i < laps.Count; i++)
         {
             var lap = laps[i];
-            positions.Add(new SingleLapLeaderboardPosition((uint)i, lap.Key, lap.Value.LapId, lap.Value.LapMilliseconds, lap.Value.CompletionUtc));
+            positions.Add(lap.Key, new SingleLapLeaderboardPosition(i, lap.Key, lap.Value.LapId, lap.Value.LapMilliseconds, lap.Value.CompletionUtc));
         }
+
         return positions;
     }
 

@@ -1,109 +1,146 @@
 @page "/openpractice"
 @layout MainLayout
-<table class="w-100 mb-2">
-    <tr>
-        <td>
-
-            <h1>Open Practice</h1>
-            <Dropdown>
-                <DropdownToggleButton Color="ButtonColor.Primary">Start Session On</DropdownToggleButton>
-                <DropdownMenu>
-                    @foreach (var track in _tracks)
-                    {
-                        <DropdownItem Type="ButtonType.Button" @onclick="() => StartNewSessionOnTrack(Guid.NewGuid(),track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)">@track.Name</DropdownItem>
-                    }
-                    <DropdownItem Type="ButtonType.Button" @onclick="() => StartSessionOnNewTrack()">[New Track]</DropdownItem>
-                </DropdownMenu>
-            </Dropdown>
-            <Dropdown>
-                <DropdownToggleButton Color="ButtonColor.Primary">@GetActiveSessionName()</DropdownToggleButton>
-                    <DropdownMenu>
-                        @foreach (var session in _sessionDetails)
-                    {
-                        <DropdownItem Type="ButtonType.Button" @onclick="() => SetupForSession(session.Id)">@session.Name</DropdownItem>
-                    }
-                </DropdownMenu>
-            </Dropdown>
-        </td>
-        @if (_selectedSession != null)
-        {
-            <td class="content-end">
-                <table style="float:right;">
-                    <th>
-                        Lap Times (ms)
-                    </th>
-                    <tr>
-                        <th>
-                            Minimum
-                        </th>
-                        <th>
-                            Maximum
-                        </th>
-                    </tr>
-                    <tr>
-                        <td>
-                            <NumberInput Class="rounded-0 rounded-end" TValue=long ValueChanged="SetSessionMinimumLapTime" Value="_selectedSession.MinimumLapMilliseconds" ValueExpression="() => _selectedSession.MinimumLapMilliseconds"></NumberInput>
-                        </td>
-                        <td>
-                            <NumberInput Class="rounded-0 rounded-end" TValue=long? ValueChanged="SetSessionMaximumLapTime" Value="_selectedSession.MaximumLapMilliseconds" ValueExpression="() => _selectedSession.MaximumLapMilliseconds"></NumberInput>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-                
-        }
-    </tr>
-</table>
-
-@if(_selectedSession == null)
-{
-    <h3>No active session</h3>
-}
-else
-{
-    @if(_selectedSession.Id == _activeSessionId)
+<div class="open-practice-grid">
+    @if (!_isLaneConfigCollapsed)
     {
-        <div class="lane-container">
-            @foreach (var laneConfiguration in _selectedSession.Lanes)
-            {
-                <SessionLaneConfiguration 
-                    Pilots="_pilots"
-                    Configuration="laneConfiguration"
-                    SessionId = "_selectedSession.Id">
-                </SessionLaneConfiguration>
-            }
+        <div>
+            <table class="w-100 mb-2">
+                <tr>
+                    <td>
+
+                        <h1>Open Practice</h1>
+                        <Dropdown>
+                            <DropdownToggleButton Color="ButtonColor.Primary">Start Session On</DropdownToggleButton>
+                            <DropdownMenu>
+                                @foreach (var track in _tracks)
+                                {
+                                    <DropdownItem Type="ButtonType.Button" @onclick="() => StartNewSessionOnTrack(Guid.NewGuid(),track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)">@track.Name</DropdownItem>
+                                }
+                                <DropdownItem Type="ButtonType.Button" @onclick="() => StartSessionOnNewTrack()">[New Track]</DropdownItem>
+                            </DropdownMenu>
+                        </Dropdown>
+                        <Dropdown>
+                            <DropdownToggleButton Color="ButtonColor.Primary">@GetActiveSessionName()</DropdownToggleButton>
+                            <DropdownMenu>
+                                @foreach (var session in _sessionDetails)
+                                {
+                                    <DropdownItem Type="ButtonType.Button" @onclick="() => SetupForSession(session.Id)">@session.Name</DropdownItem>
+                                }
+                            </DropdownMenu>
+                        </Dropdown>
+                    </td>
+                    @if (_selectedSession != null)
+                    {
+                        <td class="content-end">
+                            <table style="float:right;">
+                                <th>
+                                    Lap Times (ms)
+                                </th>
+                                <tr>
+                                    <th>
+                                        Minimum
+                                    </th>
+                                    <th>
+                                        Maximum
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <NumberInput Class="rounded-0 rounded-end" TValue=long ValueChanged="SetSessionMinimumLapTime" Value="_selectedSession.MinimumLapMilliseconds" ValueExpression="() => _selectedSession.MinimumLapMilliseconds"></NumberInput>
+                                    </td>
+                                    <td>
+                                        <NumberInput Class="rounded-0 rounded-end" TValue=long? ValueChanged="SetSessionMaximumLapTime" Value="_selectedSession.MaximumLapMilliseconds" ValueExpression="() => _selectedSession.MaximumLapMilliseconds"></NumberInput>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+
+                    }
+                </tr>
+            </table>
+        
         </div>
     }
-   <h3>Leaderboards</h3>
-    <hr />
-    <Dropdown>
-        <DropdownToggleButton Color="ButtonColor.Primary">Add Consecutive Laps</DropdownToggleButton>
-        <DropdownMenu>
-            @{
-                uint[] laps = [2,3,4,5,6,7,8,9,10];
-                foreach(var lap in laps)
-                {
-                    if (!_selectedSession.TrackedConsecutiveLaps.Any(x => x == lap))
+    @if (_selectedSession == null)
+    {
+        <h3>No active session</h3>
+    }
+    else
+    {
+        <div>
+            @if (_selectedSession.Id == _activeSessionId)
+            {
+                <div class="lane-container">
+                    @foreach (var laneConfiguration in _selectedSession.Lanes)
                     {
-                        <DropdownItem Type="ButtonType.Button" @onclick="() => TrackConsecutiveLaps(_selectedSession.Id,lap)">@lap</DropdownItem>
+                        <SessionLaneConfiguration Pilots="_pilots"
+                                                  Configuration="laneConfiguration"
+                                                  SessionId="_selectedSession.Id"
+                                                  IsCollapsed="_isLaneConfigCollapsed"
+                                                  MaximumLapMilliseconds="_selectedSession.MaximumLapMilliseconds">
+                        </SessionLaneConfiguration>
                     }
-                }
+                </div>
+
+                <div>
+                    @if (_isLaneConfigCollapsed)
+                    {
+                        <Button Class="w-100 p-0" Style="height:15px;font-size:small" Color="ButtonColor.Light" @onclick="@(()=>_isLaneConfigCollapsed = false)"><i class="fa-solid fa-caret-down"></i></Button>
+                    }
+                    else
+                    {
+                        <Button Class="w-100 p-0" Style="height:15px;font-size:small" Color="ButtonColor.Light" @onclick="@(()=>_isLaneConfigCollapsed = true)"><i class="fa-solid fa-caret-up"></i></Button>
+                    }
+                </div>
             }
-        </DropdownMenu>
-    </Dropdown>
-    <div class="lane-container">
-        <OpenPracticeSingleLapLeaderboard SessionId="_selectedSession.Id"></OpenPracticeSingleLapLeaderboard>
-        @foreach (var trackedLapCaps in _selectedSession.TrackedConsecutiveLaps.OrderBy(x=>x))
-        {
-            <div class="shadow-sm p-3">
-                <ConsecutiveLapsLeaderboard SessionId="_selectedSession.Id" LapCap="trackedLapCaps"></ConsecutiveLapsLeaderboard>
+        </div>
+        
+        <div>
+            <h3>Leaderboards</h3>
+            <hr />
+            <Dropdown>
+                <DropdownToggleButton Color="ButtonColor.Primary">Add Consecutive Laps</DropdownToggleButton>
+                <DropdownMenu>
+                    @{
+                        uint[] laps = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+                        foreach (var lap in laps)
+                        {
+                            if (!_selectedSession.TrackedConsecutiveLaps.Any(x => x == lap))
+                            {
+                                <DropdownItem Type="ButtonType.Button" @onclick="() => TrackConsecutiveLaps(_selectedSession.Id,lap)">@lap</DropdownItem>
+                            }
+                        }
+                    }
+                </DropdownMenu>
+            </Dropdown>
+            <div class="lane-container">
+
+                <div class="shadow-sm p-3">
+                    <SingleLapLeaderboard SessionId="_selectedSession.Id"></SingleLapLeaderboard>
+                </div>
+
+                @foreach (var trackedLapCaps in _selectedSession.TrackedConsecutiveLaps.OrderBy(x => x))
+                {
+                    <div class="shadow-sm p-3">
+                        <ConsecutiveLapsLeaderboard SessionId="_selectedSession.Id" LapCap="trackedLapCaps"></ConsecutiveLapsLeaderboard>
+                    </div>
+                }
             </div>
-        }
-    </div>
-    
-    <h3>Laps</h3>
-    <hr />
-    <LapList SessionId="_selectedSession.Id" Laps="_selectedSession.Laps" IncludePilot=true></LapList>
+        </div>
+        
+        <div>
+            <h3>Laps</h3>
+            <hr />
 
-}
+            <div class="lane-container" style="max-height:100%;">
+                @foreach (var pilotGrouping in _selectedSession.Laps.GroupBy(x => x.PilotName))
+                {
+                    <div class="lane-child shadow-sm p-3">
+                        <LapList SessionId="_selectedSession.Id" Laps="pilotGrouping" IncludePilot=false Header="@pilotGrouping.Key"></LapList>
+                    </div>
+                }
+            </div>
+        </div>
 
+    }
+</div>

@@ -1,61 +1,68 @@
-﻿<table class="table table-striped">
-    <tr>
-        <th>
-            #
-        </th>
-        @if (IncludePilot)
-        {
-            <th>
-                Pilot
-            </th>
-        }
-        <th>
-            Completed
-        </th>
-        <th>
-            Time
-        </th>
-        <th style="width:5%">
+﻿<div style="width:300px; height:100%;" class="overflow-auto">
+    @if (!string.IsNullOrWhiteSpace(Header))
+    {
+        <h5 class="w-100 text-center">@Header</h5>
+    }
 
-        </th>
-    </tr>
-    <tbody>
-        @{
-            int lapNumber = Laps.Count();
-        
-            @foreach (var lap in Laps.OrderByDescending(x=>x.FinishedUtc))
+    <table class="table table-striped">
+        <tr>
+            <th>
+                #
+            </th>
+            @if (IncludePilot)
             {
-                <tr>
-                    <td>
-                        @(lapNumber--)
-                    </td>
-                    @if (IncludePilot)
-                    {
-                        <td>
-                            @lap.PilotName
-                        </td>
-                    }
-                    <td>
-                        @lap.FinishedUtc
-                    </td>
-                    <td class="@(lap.Status != Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed ?"text-danger" :"")">
-                        @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):mm\\:ss\\:fff}")
-                    </td>
-                    <td>
-                        <div class="btn-group">
-                            @if (lap.Status == Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed)
-                            {
-                                <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Danger @onclick="() => Invalidate(lap.Id,lap.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
-                            }
-                            else
-                            {
-                                <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Success @onclick="() => Validate(lap.Id,lap.PilotId)"><i class="fa-solid fa-check"></i></Button>
-                            }
-                            <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>
-                        </div>
-                    </td>
-                </tr>
+                <th>
+                    Pilot
+                </th>
             }
-        }
-    </tbody>
-</table>
+            <th>
+                Completed
+            </th>
+            <th>
+                Time
+            </th>
+            <th style="width:5%">
+
+            </th>
+        </tr>
+        <tbody>
+            @{
+                int lapNumber = Laps.Count();
+
+                @foreach (var lap in Laps.OrderByDescending(x => x.FinishedUtc))
+                {
+                    <tr>
+                        <td>
+                            @(lapNumber--)
+                        </td>
+                        @if (IncludePilot)
+                        {
+                            <td>
+                                @lap.PilotName
+                            </td>
+                        }
+                        <td>
+                            @lap.FinishedUtc.ToString("HH:mm:ss")
+                        </td>
+                        <td class="@(lap.Status != Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed ?"text-danger" :"")">
+                            @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):mm\\:ss\\:fff}")
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                @if (lap.Status == Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed)
+                                {
+                                    <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Danger @onclick="() => Invalidate(lap.Id,lap.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
+                                }
+                                else
+                                {
+                                    <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Success @onclick="() => Validate(lap.Id,lap.PilotId)"><i class="fa-solid fa-check"></i></Button>
+                                }
+                                <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

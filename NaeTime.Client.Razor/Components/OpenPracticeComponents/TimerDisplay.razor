@@ -12,12 +12,14 @@
                 }
                 else
                 {
-
                     var timeSinceStart = DateTime.UtcNow - Start.Value;
-                    <td class="h2 align-bottom" style="font-variant-numeric: tabular-nums">
+
+                    string colour = MaxMilliseconds.HasValue && timeSinceStart.TotalMilliseconds > MaxMilliseconds ? "text-danger" : "";
+
+                    <td class="h2 align-bottom @colour" style="font-variant-numeric: tabular-nums">
                         @timeSinceStart.ToString("mm\\:ss\\:")
                     </td>
-                    <td class="align-bottom h4" style="font-variant-numeric: tabular-nums">
+                    <td class="align-bottom h4 @colour" style="font-variant-numeric: tabular-nums">
 
                         @timeSinceStart.Milliseconds.ToString("000")
                     </td>
@@ -31,6 +33,8 @@
 
     [Parameter]
     public DateTime? Start { get; set; }
+    [Parameter]
+    public long? MaxMilliseconds { get; set; }
 
     private Timer? _timer;
 

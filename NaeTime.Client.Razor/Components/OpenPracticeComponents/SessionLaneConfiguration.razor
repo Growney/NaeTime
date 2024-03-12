@@ -1,24 +1,27 @@
 @using NaeTime.Hardware.Frequency
 <div class="shadow rounded p-2" style="width: 180px">
-    <table class="w-100">
-        <tbody>
-            <tr>
-                <td class="align-start" style="width:10px">
-                    <Switch ValueChanged="EnabledChanged" Value=Configuration.IsEnabled ValueExpression="()=>Configuration.IsEnabled"></Switch>
-                </td>
-                <td >
-                    <div class="h4 text-start">
-                        @Configuration.LaneNumber
-                    </div>
-                </td>
-                <td>
-                    <div class="h5 text-end">
-                        @Configuration.FrequencyInMhz <sup style="font-size:0.5em">MHz</sup>
-                    </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    @if (!IsCollapsed)
+    {
+        <table class="w-100">
+            <tbody>
+                <tr>
+                    <td class="align-start" style="width:10px">
+                        <Switch ValueChanged="EnabledChanged" Value=Configuration.IsEnabled ValueExpression="()=>Configuration.IsEnabled"></Switch>
+                    </td>
+                    <td>
+                        <div class="h4 text-start">
+                            @Configuration.LaneNumber
+                        </div>
+                    </td>
+                    <td>
+                        <div class="h5 text-end">
+                            @Configuration.FrequencyInMhz <sup style="font-size:0.5em">MHz</sup>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    }
     <div>
         <Dropdown Class="w-100">
             <DropdownToggleButton Color="ButtonColor.Primary">@GetPilotString(Configuration.PilotId)</DropdownToggleButton>
@@ -30,46 +33,50 @@
             </DropdownMenu>
         </Dropdown>
     </div>
-    <div>
-        <table class="w-100 mx-auto">
-            <tbody>
-                <tr>
-                    <td class="w-50">
-                        <Dropdown Class="w-100">
-                            <DropdownToggleButton Class="rounded-0 rounded-start" Color="ButtonColor.Secondary">@GetBandString()</DropdownToggleButton>
+    @if (!IsCollapsed)
+    {
+        <div>
+            <table class="w-100 mx-auto">
+                <tbody>
+                    <tr>
+                        <td class="w-50">
+                            <Dropdown Class="w-100">
+                                <DropdownToggleButton Class="rounded-0 rounded-start" Color="ButtonColor.Secondary">@GetBandString()</DropdownToggleButton>
                                 <DropdownMenu>
                                     @foreach (var band in Band.Bands)
-                                {
-                                    <DropdownItem Type="ButtonType.Button" @onclick="() => GoToBand(band.Id)">@band.Name</DropdownItem>
-                                }
-                            </DropdownMenu>
-                        </Dropdown>
-                    </td>
-                    <td class="w-50">
-                        @if (Band.Bands.Any(x => x.Id == Configuration.BandId))
-                        {
-                            <Dropdown Class="w-100">
-                                <DropdownToggleButton Class="rounded-0 rounded-end" Color="ButtonColor.Primary">@GetFrequencyString()</DropdownToggleButton>
-                                    <DropdownMenu>
-                                        @{
-                                        var band = Band.Bands.First(b => b.Id == Configuration.BandId);
-                                        foreach (var frequency in band.Frequencies)
-                                        {
-                                            <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(frequency.FrequencyInMhz)">@frequency.Name</DropdownItem>
-                                        }
+                                    {
+                                        <DropdownItem Type="ButtonType.Button" @onclick="() => GoToBand(band.Id)">@band.Name</DropdownItem>
                                     }
                                 </DropdownMenu>
                             </Dropdown>
-                        }
-                        else
-                        {
-                            <NumberInput Class="rounded-0 rounded-end" TValue=int ValueChanged="GoToFrequency" Value="Configuration.FrequencyInMhz" ValueExpression="() => Configuration.FrequencyInMhz"></NumberInput>
-                        }
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+                        </td>
+                        <td class="w-50">
+                            @if (Band.Bands.Any(x => x.Id == Configuration.BandId))
+                            {
+                                <Dropdown Class="w-100">
+                                    <DropdownToggleButton Class="rounded-0 rounded-end" Color="ButtonColor.Primary">@GetFrequencyString()</DropdownToggleButton>
+                                    <DropdownMenu>
+                                        @{
+                                            var band = Band.Bands.First(b => b.Id == Configuration.BandId);
+                                            foreach (var frequency in band.Frequencies)
+                                            {
+                                                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(frequency.FrequencyInMhz)">@frequency.Name</DropdownItem>
+                                            }
+                                        }
+                                    </DropdownMenu>
+                                </Dropdown>
+                            }
+                            else
+                            {
+                                <NumberInput Class="rounded-0 rounded-end" TValue=int ValueChanged="GoToFrequency" Value="Configuration.FrequencyInMhz" ValueExpression="() => Configuration.FrequencyInMhz"></NumberInput>
+                            }
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    }
+    
     <div class="progress mt-1" style="height: 10px">
         @if (Configuration.MaxRssiValue > 0)
         {
@@ -81,17 +88,20 @@
             <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
         }
     </div>
-    <TimerDisplay Start="Configuration.LapStarted"></TimerDisplay>
-    <table class="w-100">
-        <tbody> 
-            <tr>
-                <td class="w-50">
-                    <Button Class="w-100 rounded-0 rounded-start" Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="() => TriggerDetection(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></Button>
-                </td>
-                <td class="w-50">
-                    <Button Class="w-100 rounded-0 rounded-end" Type="ButtonType.Button" Color="ButtonColor.Danger" @onclick="() => TriggerInvalidation(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></Button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <TimerDisplay MaxMilliseconds=MaximumLapMilliseconds Start="Configuration.LapStarted"></TimerDisplay>
+    @if (!IsCollapsed)
+    {
+        <table class="w-100">
+            <tbody>
+                <tr>
+                    <td class="w-50">
+                        <Button Class="w-100 rounded-0 rounded-start" Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="() => TriggerDetection(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></Button>
+                    </td>
+                    <td class="w-50">
+                        <Button Class="w-100 rounded-0 rounded-end" Type="ButtonType.Button" Color="ButtonColor.Danger" @onclick="() => TriggerInvalidation(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></Button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    }
 </div>

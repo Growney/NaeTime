@@ -9,7 +9,7 @@ using NaeTime.OpenPractice.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
-public partial class ConsecutiveLapsLeaderboard : IDisposable
+public partial class ConsecutiveLapsLeaderboard : ComponentBase, IDisposable
 {
     [Parameter]
     [EditorRequired]

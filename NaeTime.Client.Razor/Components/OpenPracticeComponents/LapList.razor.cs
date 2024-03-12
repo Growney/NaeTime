@@ -14,6 +14,8 @@ public partial class LapList : ComponentBase
     public bool IncludePilot { get; set; }
     [Parameter]
     public Guid SessionId { get; set; }
+    [Parameter]
+    public string? Header { get; set; }
 
     [Inject]
     public IDispatcher Dispatch { get; set; } = null!;
