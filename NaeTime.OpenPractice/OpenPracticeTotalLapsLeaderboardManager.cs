@@ -33,17 +33,9 @@ internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<Tota
         var pilotLaps = await _publishSubscribe.Request<PilotLapsRequest, PilotLapsResponse>(new PilotLapsRequest(disputed.SessionId, disputed.PilotId));
 
         var lap = pilotLaps?.Laps.FirstOrDefault(x => x.Id == disputed.LapId);
-        var validLaps = pilotLaps?.Laps.Where(x => x.Status == PilotLapsResponse.LapStatus.Completed && x.Id != lap?.Id);
+        var validLaps = pilotLaps?.Laps.Where(x => x.Status == PilotLapsResponse.LapStatus.Completed
+        && (x.Id != disputed.LapId || disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed));
         var lapCount = validLaps?.Count() ?? 0;
-
-        if (disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed)
-        {
-            lapCount++;
-        }
-        else
-        {
-            lapCount--;
-        }
 
         var firstLap = validLaps?.FirstOrDefault();
         var firstLapCompletionUtc = firstLap?.FinishedUtc ?? lap?.StartedUtc;

@@ -8,7 +8,7 @@ public record TotalLapRecord(int TotalLaps, DateTime FirstLapCompletionUtc) : IC
             return 1;
         }
 
-        int comparison = TotalLaps.CompareTo(other.TotalLaps);
+        int comparison = other.TotalLaps.CompareTo(TotalLaps);
         if (comparison != 0)
         {
             return comparison;

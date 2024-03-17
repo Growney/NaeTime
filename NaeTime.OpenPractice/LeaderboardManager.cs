@@ -16,25 +16,24 @@ public abstract class LeaderboardManager<TRecord> where TRecord : IComparable<TR
         var existingPositions = existingLeaderboard.GetPositions();
         var newPositions = newLeaderboard.GetPositions();
 
-        foreach (var existingPosition in existingPositions)
+        foreach (var existingPosition in existingPositions.Values)
         {
-            var existingRecord = existingPosition.Value;
-            if (newPositions.TryGetValue(existingPosition.Key, out var newPosition))
+            if (newPositions.TryGetValue(existingPosition.PilotId, out var newPosition))
             {
-                var positionMovement = existingRecord.Position.CompareTo(newPosition.Position);
+                var positionMovement = existingPosition.Position.CompareTo(newPosition.Position);
 
                 if (positionMovement > 0)
                 {
-                    await OnPositionImproved(sessionId, pilotId, existingPosition.Value.Position, newPosition.Position, newPosition.Record);
+                    await OnPositionImproved(sessionId, newPosition.PilotId, newPosition.Position, existingPosition.Position, newPosition.Record);
                 }
                 else if (positionMovement < 0)
                 {
-                    await OnPositionReduced(sessionId, pilotId, newPosition.Position, existingPosition.Value.Position, newPosition.Record);
+                    await OnPositionReduced(sessionId, newPosition.PilotId, newPosition.Position, existingPosition.Position, newPosition.Record);
                 }
                 //We only need to check the pilot we updates record as the rest should not have changed
-                else if (existingRecord.PilotId == pilotId)
+                else if (existingPosition.PilotId == pilotId)
                 {
-                    var recordComparison = existingRecord.Record.CompareTo(newPosition.Record);
+                    var recordComparison = existingPosition.Record.CompareTo(newPosition.Record);
                     if (recordComparison > 0)
                     {
                         await OnRecordImproved(sessionId, pilotId, newPosition.Record);
@@ -48,7 +47,7 @@ public abstract class LeaderboardManager<TRecord> where TRecord : IComparable<TR
             //We a removed position
             else
             {
-                await OnPositionRemoved(sessionId, existingRecord.PilotId);
+                await OnPositionRemoved(sessionId, existingPosition.PilotId);
             }
         }
 

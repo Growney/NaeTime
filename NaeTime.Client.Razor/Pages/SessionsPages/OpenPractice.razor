@@ -119,7 +119,9 @@
                 <div class="shadow-sm p-3">
                     <SingleLapLeaderboard SessionId="_selectedSession.Id"></SingleLapLeaderboard>
                 </div>
-
+                <div class="shadow-sm p-3">
+                    <TotalLapsLeaderboard SessionId="_selectedSession.Id"></TotalLapsLeaderboard>
+                </div>
                 @foreach (var trackedLapCaps in _selectedSession.TrackedConsecutiveLaps.OrderBy(x => x))
                 {
                     <div class="shadow-sm p-3">
