@@ -1,0 +1,2 @@
+﻿namespace NaeTime.OpenPractice.Messages.Events;
+public record TotalLapLeaderboardPositionReduced(Guid SessionId, int NewPosition, int OldPosition, Guid PilotId, int TotalLaps, DateTime FirstLapCompletionUtc);
