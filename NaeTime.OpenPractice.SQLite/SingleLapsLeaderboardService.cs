@@ -23,7 +23,7 @@ internal class SingleLapsLeaderboardService : ISubscriber
 
         return position == null
             ? null
-            : new PilotSingleLapRecordResponse(position.PilotId, position.TotalMilliseconds, position.CompletionUtc, position.LapId);
+            : new PilotSingleLapRecordResponse(position.TotalMilliseconds, position.CompletionUtc, position.LapId);
     }
     public async Task When(SingleLapLeaderboardPositionRemoved removed)
     {
@@ -40,9 +40,9 @@ internal class SingleLapsLeaderboardService : ISubscriber
     }
 
     public Task When(SingleLapLeaderboardRecordReduced reduced)
-        => UpdateLapPosition(reduced.SessionId, reduced.NewPosition, reduced.PilotId, reduced.TotalMilliseconds, reduced.CompletionUtc, reduced.LapId);
+        => UpdateLapPosition(reduced.SessionId, null, reduced.PilotId, reduced.TotalMilliseconds, reduced.CompletionUtc, reduced.LapId);
     public Task When(SingleLapLeaderboardRecordImproved improved)
-        => UpdateLapPosition(improved.SessionId, improved.NewPosition, improved.PilotId, improved.TotalMilliseconds, improved.CompletionUtc, improved.LapId);
+        => UpdateLapPosition(improved.SessionId, null, improved.PilotId, improved.TotalMilliseconds, improved.CompletionUtc, improved.LapId);
     public Task When(SingleLapLeaderboardPositionImproved improved)
         => UpdateLapPosition(improved.SessionId, improved.NewPosition, improved.PilotId, improved.TotalMilliseconds, improved.CompletionUtc, improved.LapId);
     public Task When(SingleLapLeaderboardPositionReduced reduced)

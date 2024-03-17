@@ -201,11 +201,11 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
                     var recordComparison = ComparePositions(existingRecord.LapMilliseconds, existingRecord.CompletionTime, newRecord.LapMilliseconds, newRecord.CompletionTime);
                     if (recordComparison > 0)
                     {
-                        await _publishSubscribe.Dispatch(new SingleLapLeaderboardRecordImproved(sessionId, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                        await _publishSubscribe.Dispatch(new SingleLapLeaderboardRecordImproved(sessionId, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
                     }
                     else if (recordComparison < 0)
                     {
-                        await _publishSubscribe.Dispatch(new SingleLapLeaderboardRecordReduced(sessionId, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                        await _publishSubscribe.Dispatch(new SingleLapLeaderboardRecordReduced(sessionId, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
                     }
                 }
             }

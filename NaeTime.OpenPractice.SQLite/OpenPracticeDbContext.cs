@@ -6,6 +6,7 @@ internal class OpenPracticeDbContext : DbContext
     public DbSet<OpenPracticeLap> OpenPracticeLaps { get; set; }
     public DbSet<ConsecutiveLapLeaderboardPosition> ConsecutiveLapLeaderboardPositions { get; set; }
     public DbSet<SingleLapLeaderboardPosition> SingleLapLeaderboardPositions { get; set; }
+    public DbSet<TotalLapsLeaderboardPosition> TotalLapsLeaderboardPositions { get; set; }
     public OpenPracticeDbContext(DbContextOptions<OpenPracticeDbContext> options) : base(options)
     {
     }
