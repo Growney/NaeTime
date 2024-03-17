@@ -1,9 +1,10 @@
-﻿using NaeTime.Timing.Models;
+﻿using NaeTime.OpenPractice.Leaderboards;
+using NaeTime.OpenPractice.Models;
 
 namespace NaeTime.Timing;
 public class FastestSingleLapCalculator
 {
-    public FastestSingleLap? Calculate(IEnumerable<Lap> laps)
+    public SingleLapRecord? Calculate(IEnumerable<Lap> laps)
     {
         if (!laps.Any(x => x.Status == LapStatus.Completed))
         {
@@ -27,6 +28,6 @@ public class FastestSingleLapCalculator
                 finishedUtc = lap.FinishedUtc;
             }
         }
-        return new FastestSingleLap(lapId, lapMilliseconds, finishedUtc);
+        return new SingleLapRecord(lapId, lapMilliseconds, finishedUtc);
     }
 }

@@ -9,8 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.OpenPractice.Messages\NaeTime.OpenPractice.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
-    <ProjectReference Include="..\NaeTime.Timing.Messages\NaeTime.Timing.Messages.csproj" />
-    <ProjectReference Include="..\NaeTime.Timing\NaeTime.Timing.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,10 +2,9 @@
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.OpenPractice.Messages.Requests;
 using NaeTime.OpenPractice.Messages.Responses;
+using NaeTime.OpenPractice.Models;
 using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
-using NaeTime.Timing;
-using NaeTime.Timing.Models;
 namespace NaeTime.OpenPractice;
 public class OpenPracticeConsecutiveLapsLeaderboardManager : ISubscriber
 {
@@ -139,10 +138,10 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager : ISubscriber
         {
             var pilotsExistingRecord = pilotLapRecords?.Records.FirstOrDefault(x => x.LapCap == trackedLaps);
 
-            FastestConsecutiveLaps? existingRecord = null;
+            ConsecutiveLapRecord? existingRecord = null;
             if (pilotsExistingRecord != null)
             {
-                existingRecord = new FastestConsecutiveLaps(pilotsExistingRecord.TotalLaps, pilotsExistingRecord.TotalMilliseconds, pilotsExistingRecord.LastLapCompletionUtc, pilotsExistingRecord.IncludedLaps);
+                existingRecord = new ConsecutiveLapRecord(pilotsExistingRecord.TotalLaps, pilotsExistingRecord.TotalMilliseconds, pilotsExistingRecord.LastLapCompletionUtc, pilotsExistingRecord.IncludedLaps);
             }
 
             var newRecord = calculator.Calculate(trackedLaps, laps);
@@ -201,17 +200,17 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager : ISubscriber
             foreach (var existingLeaderboardPosition in existingLeaderboardPositions.Positions)
             {
                 existingLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
-                    new FastestConsecutiveLaps(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
+                    new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
 
                 if (existingLeaderboardPosition.PilotId != pilotId)
                 {
                     newLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
-                    new FastestConsecutiveLaps(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
+                    new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
                 }
             }
         }
 
-        newLeaderboard.SetFastest(pilotId, new FastestConsecutiveLaps(totalLaps, totalMilliseconds, lastLapCompletionUtc, includedLaps));
+        newLeaderboard.SetFastest(pilotId, new ConsecutiveLapRecord(totalLaps, totalMilliseconds, lastLapCompletionUtc, includedLaps));
 
         await CheckLeaderboards(sessionId, lapCap, pilotId, existingLeaderboard, newLeaderboard);
     }
@@ -226,12 +225,12 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager : ISubscriber
             foreach (var existingLeaderboardPosition in existingLeaderboardPositions.Positions)
             {
                 existingLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
-                    new FastestConsecutiveLaps(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
+                    new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
 
                 if (existingLeaderboardPosition.PilotId != pilotId)
                 {
                     newLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
-                    new FastestConsecutiveLaps(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
+                    new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
                 }
             }
         }

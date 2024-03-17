@@ -1,11 +1,10 @@
-﻿using NaeTime.Timing.Models;
-
+﻿
 namespace NaeTime.OpenPractice.Leaderboards;
 public class ConsecutiveLapsLeaderboard
 {
-    private readonly Dictionary<Guid, FastestConsecutiveLaps> _pilotLaps = new();
+    private readonly Dictionary<Guid, ConsecutiveLapRecord> _pilotLaps = new();
 
-    public bool SetFastest(Guid pilotId, FastestConsecutiveLaps laps)
+    public bool SetFastest(Guid pilotId, ConsecutiveLapRecord laps)
     {
         if (!_pilotLaps.ContainsKey(pilotId))
         {
@@ -37,7 +36,7 @@ public class ConsecutiveLapsLeaderboard
         return positions;
     }
 
-    private int CompareLaps(FastestConsecutiveLaps a, FastestConsecutiveLaps b)
+    private int CompareLaps(ConsecutiveLapRecord a, ConsecutiveLapRecord b)
     {
         //B is compared to A here to provide a decending result where more laps is better
         var lapCompare = b.TotalLaps.CompareTo(a.TotalLaps);

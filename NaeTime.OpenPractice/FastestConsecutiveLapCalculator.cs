@@ -1,9 +1,10 @@
-﻿using NaeTime.Timing.Models;
+﻿using NaeTime.OpenPractice.Leaderboards;
+using NaeTime.OpenPractice.Models;
 
-namespace NaeTime.Timing;
+namespace NaeTime.OpenPractice;
 public class FastestConsecutiveLapCalculator
 {
-    public FastestConsecutiveLaps? Calculate(uint lapCount, IEnumerable<Lap> laps)
+    public ConsecutiveLapRecord? Calculate(uint lapCount, IEnumerable<Lap> laps)
     {
         if (!laps.Any(x => x.Status == LapStatus.Completed))
         {
@@ -23,7 +24,7 @@ public class FastestConsecutiveLapCalculator
 
         for (int currentLapIndex = 0; currentLapIndex < lapsList.Count; currentLapIndex++)
         {
-            var startLap = lapsList[(int)currentLapIndex];
+            var startLap = lapsList[currentLapIndex];
             totalTime = startLap.TotalMilliseconds;
             //skip the checking of not completed laps
             if (startLap.Status != LapStatus.Completed)
@@ -54,7 +55,7 @@ public class FastestConsecutiveLapCalculator
 
             for (int currentCheckingLapIndex = currentLapIndex + 1; currentCheckingLapIndex < lapsList.Count; currentCheckingLapIndex++)
             {
-                currentConsecutiveLaps = (currentCheckingLapIndex - currentLapIndex) + 1;
+                currentConsecutiveLaps = currentCheckingLapIndex - currentLapIndex + 1;
 
                 //The laps are too separate so we can break
                 if (currentConsecutiveLaps > lapCount)
@@ -62,7 +63,7 @@ public class FastestConsecutiveLapCalculator
                     break;
                 }
 
-                var currentCheckingLap = lapsList[(int)currentCheckingLapIndex];
+                var currentCheckingLap = lapsList[currentCheckingLapIndex];
                 if (currentCheckingLap.Status != LapStatus.Completed)
                 {
                     break;
@@ -94,6 +95,6 @@ public class FastestConsecutiveLapCalculator
             }
         }
 
-        return new FastestConsecutiveLaps((uint)maxConsecutiveLaps, minTotalTime, lastLapCompletion, laps.Skip(startLapNumber).Take(maxConsecutiveLaps).Select(x => x.LapId));
+        return new ConsecutiveLapRecord((uint)maxConsecutiveLaps, minTotalTime, lastLapCompletion, laps.Skip(startLapNumber).Take(maxConsecutiveLaps).Select(x => x.LapId));
     }
 }

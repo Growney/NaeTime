@@ -1,9 +1,7 @@
-﻿using NaeTime.Timing.Models;
-
-namespace NaeTime.OpenPractice.Leaderboards;
+﻿namespace NaeTime.OpenPractice.Leaderboards;
 public class SingleLapLeaderboard
 {
-    private readonly Dictionary<Guid, FastestSingleLap> _pilotLaps = new();
+    private readonly Dictionary<Guid, SingleLapRecord> _pilotLaps = new();
 
     public SingleLapLeaderboard()
     {
@@ -11,7 +9,7 @@ public class SingleLapLeaderboard
 
     public bool SetFastest(Guid pilotId, Guid lapId, long totalMilliseconds, DateTime completionUtc)
     {
-        var newFastest = new FastestSingleLap(lapId, totalMilliseconds, completionUtc);
+        var newFastest = new SingleLapRecord(lapId, totalMilliseconds, completionUtc);
 
         if (!_pilotLaps.ContainsKey(pilotId))
         {
@@ -23,7 +21,7 @@ public class SingleLapLeaderboard
             var existing = _pilotLaps[pilotId];
             if (existing != newFastest)
             {
-                _pilotLaps[pilotId] = new FastestSingleLap(lapId, totalMilliseconds, completionUtc);
+                _pilotLaps[pilotId] = new SingleLapRecord(lapId, totalMilliseconds, completionUtc);
                 return true;
             }
         }
@@ -45,7 +43,7 @@ public class SingleLapLeaderboard
         return positions;
     }
 
-    private int CompareLaps(FastestSingleLap a, FastestSingleLap b)
+    private int CompareLaps(SingleLapRecord a, SingleLapRecord b)
     {
         int timeCompare = a.LapMilliseconds.CompareTo(b.LapMilliseconds);
         if (timeCompare != 0)

@@ -2,10 +2,10 @@
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.OpenPractice.Messages.Requests;
 using NaeTime.OpenPractice.Messages.Responses;
+using NaeTime.OpenPractice.Models;
 using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing;
-using NaeTime.Timing.Models;
 
 namespace NaeTime.OpenPractice;
 public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
@@ -137,7 +137,7 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
             }, lap.TotalMilliseconds);
         }
     }
-    private async Task<FastestSingleLap?> CalculatePilotsFastestSingle(Guid sessionId, Guid pilotId, Guid? excludedLapId)
+    private async Task<SingleLapRecord?> CalculatePilotsFastestSingle(Guid sessionId, Guid pilotId, Guid? excludedLapId)
     {
         var pilotLaps = await _publishSubscribe.Request<PilotLapsRequest, PilotLapsResponse>(new PilotLapsRequest(sessionId, pilotId));
 
@@ -174,7 +174,6 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
 
         await CheckLeaderboards(sessionId, pilotId, existingLeaderboard, newLeaderboard);
     }
-
     public async Task CheckLeaderboards(Guid sessionId, Guid pilotId, SingleLapLeaderboard existingLeaderboard, SingleLapLeaderboard newLeaderboard)
     {
         var existingPositions = existingLeaderboard.GetPositions();
