@@ -1,11 +1,21 @@
 @page "/pilot/list"
 @layout WithReturn
-<button @onclick="NavigateToCreatePilot" class="btn btn-primary"><i class=" fas fa-user-plus"></i></button>
+<div>
 
-@foreach(var pilot in _pilots)
-{
-    <div @onclick="() => NavigateToPilot(pilot)">
-        <PilotDetails Details="pilot"></PilotDetails>
-    </div>
-    
-}
+    <button @onclick="NavigateToCreatePilot" class="btn btn-primary"><i class=" fas fa-user-plus"></i></button>
+</div>
+
+<div class="d-flex flow-row flex-wrap">
+    @foreach (var pilot in _pilots)
+    {
+        <div class="flex-fill card col-sm-5 m-2 hover-shadow" @onclick="() => NavigateToPilot(pilot)">
+            <img src="" class="card-img-top" alt="">
+            <div class="card-body">
+                <div class="card-title">
+                    @pilot.FirstName @pilot.LastName (@pilot.CallSign)
+                <a class="float-right btn btn-primary btn-sm stretched-link" @onclick="() =>  NavigateToPilot(pilot)"><i class="fa-solid fa-pen-to-square"></i></a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
