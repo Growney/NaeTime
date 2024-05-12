@@ -1,8 +1,7 @@
 ﻿using NaeTime.Management.Messages.Messages;
-using NaeTime.Management.Messages.Responses;
 
 namespace NaeTime.Management.SQLite;
-internal class TrackService : ISubscriber
+internal class TrackService
 {
     private readonly ManagementDbContext _dbContext;
 
@@ -31,20 +30,20 @@ internal class TrackService : ISubscriber
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
-    public async Task<TracksResponse> On(TracksRequest request)
+    public async Task<IEnumerable<Messages.Models.Track>> GetTracks()
     {
-        var tracks = await _dbContext.Tracks.Select(x => new TracksResponse.Track(x.Id, x.Name, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds, x.Timers.Select(y => y.TimerId).ToList(), x.AllowedLanes))
+        var tracks = await _dbContext.Tracks.Select(x => new Messages.Models.Track(x.Id, x.Name, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds, x.Timers.Select(y => y.TimerId).ToList(), x.AllowedLanes))
             .ToListAsync().ConfigureAwait(false);
 
-        return new TracksResponse(tracks);
+        return tracks;
     }
 
-    public async Task<TrackResponse?> On(TrackRequest request)
+    public async Task<Messages.Models.Track?> GetTrack(Guid trackId)
     {
-        var track = await _dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == request.Id).ConfigureAwait(false);
+        var track = await _dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == trackId).ConfigureAwait(false);
 
         return track == null
             ? null
-            : new TrackResponse(track.Id, track.Name, track.MinimumLapMilliseconds, track.MaximumLapMilliseconds, track.Timers.Select(x => x.TimerId).ToList(), track.AllowedLanes);
+            : new Messages.Models.Track(track.Id, track.Name, track.MinimumLapMilliseconds, track.MaximumLapMilliseconds, track.Timers.Select(x => x.TimerId).ToList(), track.AllowedLanes);
     }
 }

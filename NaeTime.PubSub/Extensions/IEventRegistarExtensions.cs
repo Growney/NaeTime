@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using NaeTime.PubSub.Abstractions;
 
-namespace NaeTime.PubSub.Extensions;
+namespace NaeTime.PubSub.Abstractions;
 public static class IEventRegistarExtensions
 {
     public static void RegisterHandler<THandler>(this IEventRegistrar registrar, Func<THandler, Task> handler) => registrar.RegisterHandler(typeof(THandler), obj => handler((THandler)obj));

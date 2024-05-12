@@ -1,0 +1,2 @@
+﻿namespace NaeTime.OpenPractice.Messages.Models;
+public record ConsecutiveLapLeaderboardPosition(int Position, Guid PilotId, uint TotalLaps, long TotalMilliseconds, DateTime LastLapCompletionUtc, IEnumerable<Guid> IncludedLaps);

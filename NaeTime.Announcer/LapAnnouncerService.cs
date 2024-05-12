@@ -1,25 +1,22 @@
 ﻿using NaeTime.Announcer.Abstractions;
 using NaeTime.Announcer.Models;
-using NaeTime.Management.Messages.Requests;
-using NaeTime.Management.Messages.Responses;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Announcer;
-public class LapAnnouncerService : ISubscriber
+public class LapAnnouncerService
 {
     private readonly IAnnouncmentQueue _queue;
-    private readonly IDispatcher _dispatcher;
-    public LapAnnouncerService(IAnnouncmentQueue queue, IDispatcher dispatcher)
+    private readonly IRemoteProcedureCallClient _rpcClient;
+    public LapAnnouncerService(IAnnouncmentQueue queue, IRemoteProcedureCallClient rpcClient)
     {
         _queue = queue ?? throw new ArgumentNullException(nameof(queue));
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
     }
 
     public async Task When(OpenPracticeLapCompleted lapCompleted)
     {
-        var pilot = await _dispatcher.Request<PilotRequest, PilotResponse>(new PilotRequest(lapCompleted.PilotId));
+        var pilot = await _rpcClient.InvokeAsync<Management.Messages.Models.Pilot>("GetPilot", lapCompleted.PilotId);
 
         if (pilot == null)
         {

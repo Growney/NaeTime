@@ -1,24 +1,24 @@
 ﻿using NaeTime.OpenPractice.Leaderboards;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.OpenPractice.Messages.Requests;
-using NaeTime.OpenPractice.Messages.Responses;
 using NaeTime.OpenPractice.Models;
-using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing;
 
 namespace NaeTime.OpenPractice;
-public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
+public class OpenPracticeSingleLapLeaderboardManager
 {
-    private readonly IPublishSubscribe _publishSubscribe;
+    private readonly IEventClient _eventClient;
+    private readonly IRemoteProcedureCallClient _rpcClient;
 
-    public OpenPracticeSingleLapLeaderboardManager(IPublishSubscribe publishSubscribe)
+    public OpenPracticeSingleLapLeaderboardManager(IEventClient eventClient, IRemoteProcedureCallClient rpcClient)
     {
-        _publishSubscribe = publishSubscribe ?? throw new ArgumentNullException(nameof(publishSubscribe));
+        _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
+        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
     }
+
     public async Task When(OpenPracticeLapCompleted completed)
     {
-        var existingRecord = await _publishSubscribe.Request<PilotSingleLapRecordRequest, PilotSingleLapRecordResponse>(new PilotSingleLapRecordRequest(completed.SessionId, completed.PilotId));
+        var existingRecord = await _rpcClient.InvokeAsync<Messages.Models.SingleLapLeaderboardPosition?>("GetPilotOpenPracticeSessionSingleLapRecord", completed.SessionId, completed.PilotId);
 
         if (existingRecord == null)
         {
@@ -34,14 +34,14 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
     }
     public async Task When(OpenPracticeLapDisputed disputed)
     {
-        var existingRecord = await _publishSubscribe.Request<PilotSingleLapRecordRequest, PilotSingleLapRecordResponse>(new PilotSingleLapRecordRequest(disputed.SessionId, disputed.PilotId));
+        var existingRecord = await _rpcClient.InvokeAsync<Messages.Models.SingleLapLeaderboardPosition?>("GetPilotOpenPracticeSessionSingleLapRecord", disputed.SessionId, disputed.PilotId);
 
         //When its changed to completed its like we have a new lap se we need to check it against the existing record
         if (disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed)
         {
-            var pilotLaps = await _publishSubscribe.Request<PilotLapsRequest, PilotLapsResponse>(new PilotLapsRequest(disputed.SessionId, disputed.PilotId));
+            var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", disputed.SessionId, disputed.PilotId);
 
-            var lap = pilotLaps?.Laps.FirstOrDefault(x => x.Id == disputed.LapId);
+            var lap = pilotLaps?.FirstOrDefault(x => x.Id == disputed.LapId);
             if (lap == null)
             {
                 return;
@@ -71,7 +71,7 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        var existingRecord = await _publishSubscribe.Request<PilotSingleLapRecordRequest, PilotSingleLapRecordResponse>(new PilotSingleLapRecordRequest(removed.SessionId, removed.PilotId));
+        var existingRecord = await _rpcClient.InvokeAsync<Messages.Models.SingleLapLeaderboardPosition?>("GetPilotOpenPracticeSessionSingleLapRecord", removed.SessionId, removed.PilotId);
 
         if (existingRecord == null)
         {
@@ -99,14 +99,14 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
 
 
         //The pilot no longer has a new fastest so we need to redo the leaderboard without them in it
-        var existingPositions = await _publishSubscribe.Request<SingleLapLeaderboardRequest, SingleLapLeaderboardResponse>(new SingleLapLeaderboardRequest(sessionId));
+        var existingPositions = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.SingleLapLeaderboardPosition>>("GetOpenPracticeSessionSingleLapLeaderboardPositions", sessionId);
 
         var existingLeaderboard = new SingleLapLeaderboard();
         var newLeaderboard = new SingleLapLeaderboard();
 
         if (existingPositions != null)
         {
-            foreach (var existingPosition in existingPositions.Positions)
+            foreach (var existingPosition in existingPositions)
             {
                 existingLeaderboard.SetFastest(existingPosition.PilotId, existingPosition.LapId, existingPosition.TotalMilliseconds, existingPosition.CompletionUtc);
 
@@ -120,9 +120,9 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
         await CheckLeaderboards(sessionId, pilotId, existingLeaderboard, newLeaderboard);
     }
 
-    private IEnumerable<Lap> GetLaps(PilotLapsResponse response, Guid? excludedLapId)
+    private IEnumerable<Lap> GetLaps(IEnumerable<Messages.Models.Lap> response, Guid? excludedLapId)
     {
-        foreach (var lap in response.Laps)
+        foreach (var lap in response)
         {
             if (excludedLapId.HasValue && lap.Id == excludedLapId)
             {
@@ -131,15 +131,15 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
 
             yield return new Lap(lap.Id, lap.StartedUtc, lap.FinishedUtc, lap.Status switch
             {
-                PilotLapsResponse.LapStatus.Invalid => LapStatus.Invalid,
-                PilotLapsResponse.LapStatus.Completed => LapStatus.Completed,
+                Messages.Models.LapStatus.Invalid => LapStatus.Invalid,
+                Messages.Models.LapStatus.Completed => LapStatus.Completed,
                 _ => throw new NotImplementedException()
             }, lap.TotalMilliseconds);
         }
     }
     private async Task<SingleLapRecord?> CalculatePilotsFastestSingle(Guid sessionId, Guid pilotId, Guid? excludedLapId)
     {
-        var pilotLaps = await _publishSubscribe.Request<PilotLapsRequest, PilotLapsResponse>(new PilotLapsRequest(sessionId, pilotId));
+        var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", sessionId, pilotId);
 
         if (pilotLaps == null)
         {
@@ -152,14 +152,14 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
     }
     public async Task HandleUpdatedRecord(Guid sessionId, Guid pilotId, long totalMilliseconds, DateTime completionUtc, Guid lapId)
     {
-        var existingPositions = await _publishSubscribe.Request<SingleLapLeaderboardRequest, SingleLapLeaderboardResponse>(new SingleLapLeaderboardRequest(sessionId));
+        var existingPositions = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.SingleLapLeaderboardPosition>>("GetOpenPracticeSessionSingleLapLeaderboardPositions", sessionId);
 
         var existingLeaderboard = new SingleLapLeaderboard();
         var newLeaderboard = new SingleLapLeaderboard();
 
         if (existingPositions != null)
         {
-            foreach (var existingPosition in existingPositions.Positions)
+            foreach (var existingPosition in existingPositions)
             {
                 existingLeaderboard.SetFastest(existingPosition.PilotId, existingPosition.LapId, existingPosition.TotalMilliseconds, existingPosition.CompletionUtc);
 
@@ -188,11 +188,11 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
 
                 if (positionMovement > 0)
                 {
-                    await _publishSubscribe.Dispatch(new SingleLapLeaderboardPositionImproved(sessionId, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                    await _eventClient.Publish(new SingleLapLeaderboardPositionImproved(sessionId, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
                 }
                 else if (positionMovement < 0)
                 {
-                    await _publishSubscribe.Dispatch(new SingleLapLeaderboardPositionReduced(sessionId, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                    await _eventClient.Publish(new SingleLapLeaderboardPositionReduced(sessionId, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
                 }
                 //We only need to check the pilot we updates record as the rest should not have changed
                 else if (existingRecord.PilotId == pilotId)
@@ -200,18 +200,18 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
                     var recordComparison = ComparePositions(existingRecord.LapMilliseconds, existingRecord.CompletionTime, newRecord.LapMilliseconds, newRecord.CompletionTime);
                     if (recordComparison > 0)
                     {
-                        await _publishSubscribe.Dispatch(new SingleLapLeaderboardRecordImproved(sessionId, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                        await _eventClient.Publish(new SingleLapLeaderboardRecordImproved(sessionId, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
                     }
                     else if (recordComparison < 0)
                     {
-                        await _publishSubscribe.Dispatch(new SingleLapLeaderboardRecordReduced(sessionId, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                        await _eventClient.Publish(new SingleLapLeaderboardRecordReduced(sessionId, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
                     }
                 }
             }
             //We a removed position
             else
             {
-                await _publishSubscribe.Dispatch(new SingleLapLeaderboardPositionRemoved(sessionId, existingRecord.PilotId));
+                await _eventClient.Publish(new SingleLapLeaderboardPositionRemoved(sessionId, existingRecord.PilotId));
             }
         }
 
@@ -220,7 +220,7 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
             var newRecord = newPosition.Value;
             if (!existingPositions.ContainsKey(newPosition.Key))
             {
-                await _publishSubscribe.Dispatch(new SingleLapLeaderboardPositionImproved(sessionId, newRecord.Position, null, newPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                await _eventClient.Publish(new SingleLapLeaderboardPositionImproved(sessionId, newRecord.Position, null, newPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
             }
         }
     }
@@ -235,6 +235,4 @@ public class OpenPracticeSingleLapLeaderboardManager : ISubscriber
 
         return xLastLapCompletionUtc.CompareTo(yLastLapCompletionUtc);
     }
-
-
 }

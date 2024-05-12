@@ -22,11 +22,10 @@ public class EventHubHandlerFactory
                 continue;
             }
 
-            if (method.Name.Equals("On", StringComparison.OrdinalIgnoreCase))
+            if (method.Name.Equals("When", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
-
 
             Type[] parameterTypes = method.GetParameters().Select(x => x.ParameterType).ToArray();
 

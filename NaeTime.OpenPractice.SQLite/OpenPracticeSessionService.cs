@@ -1,7 +1,7 @@
 ﻿using NaeTime.OpenPractice.Messages.Events;
 
 namespace NaeTime.OpenPractice.SQLite;
-internal class OpenPracticeSessionService : ISubscriber
+internal class OpenPracticeSessionService
 {
     private readonly OpenPracticeDbContext _dbContext;
     public OpenPracticeSessionService(OpenPracticeDbContext dbContext)
@@ -183,78 +183,61 @@ internal class OpenPracticeSessionService : ISubscriber
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
 
     }
-    private OpenPracticeSessionsResponse.LapStatus GetSessionsResponseStatus(OpenPracticeLapStatus status) => status switch
+    private Messages.Models.LapStatus GetSessionResponseStatus(OpenPracticeLapStatus status) => status switch
     {
-        OpenPracticeLapStatus.Invalid => OpenPracticeSessionsResponse.LapStatus.Invalid,
-        OpenPracticeLapStatus.Completed => OpenPracticeSessionsResponse.LapStatus.Completed,
+        OpenPracticeLapStatus.Invalid => Messages.Models.LapStatus.Invalid,
+        OpenPracticeLapStatus.Completed => Messages.Models.LapStatus.Completed,
         _ => throw new NotImplementedException()
     };
-    public async Task<OpenPracticeSessionsResponse> On(OpenPracticeSessionsRequest request)
+    public async Task<IEnumerable<Messages.Models.OpenPracticeSession>> GetOpenPracticeSessions()
     {
         var sessions = await _dbContext.OpenPracticeSessions.ToListAsync().ConfigureAwait(false);
 
-        var responseSessions = new List<OpenPracticeSessionsResponse.OpenPracticeSession>();
+        var responseSessions = new List<Messages.Models.OpenPracticeSession>();
         foreach (var session in sessions)
         {
             var laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == session.Id).ToListAsync().ConfigureAwait(false);
 
-            responseSessions.Add(new OpenPracticeSessionsResponse.OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
-                laps.Select(y => new OpenPracticeSessionsResponse.Lap(y.Id, y.PilotId, y.StartedUtc, y.FinishedUtc, GetSessionsResponseStatus(y.Status), y.TotalMilliseconds)),
-            session.ActiveLanes.Select(y => new OpenPracticeSessionsResponse.PilotLane(y.PilotId, y.Lane)),
+            responseSessions.Add(new Messages.Models.OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
+                laps.Select(y => new Messages.Models.Lap(y.Id, y.PilotId, y.StartedUtc, y.FinishedUtc, GetSessionResponseStatus(y.Status), y.TotalMilliseconds)),
+            session.ActiveLanes.Select(y => new Messages.Models.PilotLane(y.PilotId, y.Lane)),
             session.TrackedConsecutiveLaps.Select(y => y.LapCap)));
         }
 
-        return new OpenPracticeSessionsResponse(responseSessions);
-
+        return responseSessions;
     }
-    private OpenPracticeSessionResponse.LapStatus GetSessionResponseStatus(OpenPracticeLapStatus status) => status switch
+    public async Task<Messages.Models.OpenPracticeSession?> GetOpenPracticeSession(Guid sessionId)
     {
-        OpenPracticeLapStatus.Invalid => OpenPracticeSessionResponse.LapStatus.Invalid,
-        OpenPracticeLapStatus.Completed => OpenPracticeSessionResponse.LapStatus.Completed,
-        _ => throw new NotImplementedException()
-    };
-    public async Task<OpenPracticeSessionResponse?> On(OpenPracticeSessionRequest request)
-    {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == request.SessionId).ConfigureAwait(false);
+        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
 
         if (session == null)
         {
             return null;
         }
 
-        var laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == request.SessionId).ToListAsync().ConfigureAwait(false);
+        var laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == sessionId).ToListAsync().ConfigureAwait(false);
 
-        return new OpenPracticeSessionResponse(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
-                       laps.Select(x => new OpenPracticeSessionResponse.Lap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc, GetSessionResponseStatus(x.Status), x.TotalMilliseconds)),
-                                  session.ActiveLanes.Select(x => new OpenPracticeSessionResponse.PilotLane(x.PilotId, x.Lane)),
+        return new Messages.Models.OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
+                       laps.Select(x => new Messages.Models.Lap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc, GetSessionResponseStatus(x.Status), x.TotalMilliseconds)),
+                                  session.ActiveLanes.Select(x => new Messages.Models.PilotLane(x.PilotId, x.Lane)),
                                              session.TrackedConsecutiveLaps.Select(x => x.LapCap));
     }
-    public async Task<TrackedConsecutiveLapsResponse> On(TrackedConsecutiveLapsRequest request)
+    public async Task<IEnumerable<uint>> GetOpenPracticeSessionTrackedConsecutiveLaps(Guid sessionId)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == request.SessionId).ConfigureAwait(false);
+        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
 
-        List<uint> tracked = new();
-
-        if (session == null)
-        {
-            return new TrackedConsecutiveLapsResponse(request.SessionId, tracked);
-        }
-
-        tracked = session.TrackedConsecutiveLaps.Select(x => x.LapCap).ToList();
-
-        return new TrackedConsecutiveLapsResponse(request.SessionId, tracked);
+        return session == null ? Enumerable.Empty<uint>() : session.TrackedConsecutiveLaps.Select(x => x.LapCap).ToList();
     }
-    public async Task<PilotLapsResponse> On(PilotLapsRequest request)
+    public async Task<IEnumerable<Messages.Models.Lap>> GetPilotOpenPracticeSessionLaps(Guid sessionId, Guid pilotId)
     {
-        var laps = await _dbContext.OpenPracticeLaps.Where(x => x.PilotId == request.PilotId && x.SessionId == request.SessionId).ToListAsync();
+        var laps = await _dbContext.OpenPracticeLaps.Where(x => x.PilotId == pilotId && x.SessionId == sessionId).ToListAsync();
 
-        return new PilotLapsResponse(
-            laps.Select(x => new PilotLapsResponse.Lap(x.Id, x.StartedUtc, x.FinishedUtc, x.Status switch
-            {
-                OpenPracticeLapStatus.Invalid => PilotLapsResponse.LapStatus.Invalid,
-                OpenPracticeLapStatus.Completed => PilotLapsResponse.LapStatus.Completed,
-                _ => throw new NotImplementedException()
-            }, x.TotalMilliseconds)));
+        return laps.Select(x => new Messages.Models.Lap(x.Id, pilotId, x.StartedUtc, x.FinishedUtc, x.Status switch
+        {
+            OpenPracticeLapStatus.Invalid => Messages.Models.LapStatus.Invalid,
+            OpenPracticeLapStatus.Completed => Messages.Models.LapStatus.Completed,
+            _ => throw new NotImplementedException()
+        }, x.TotalMilliseconds));
     }
 }
 

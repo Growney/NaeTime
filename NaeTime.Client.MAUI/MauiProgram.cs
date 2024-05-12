@@ -16,8 +16,8 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<ServiceRunner>();
 
-        builder.Services.AddNaeTimePublishSubscribe();
-
+        builder.Services.AddNaeTimeEventing();
+        builder.Services.AddNaeTimeRemoteProcedureCall();
 
         //Must add all the SQLite services first so that the service runner creates the databases before the other services start
         builder.Services.AddSQLiteManagement();

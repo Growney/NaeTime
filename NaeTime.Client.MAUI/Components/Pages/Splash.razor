@@ -9,8 +9,6 @@
     public NavigationManager NavigationManager { get; set; } = null!;
     [Inject]
     public ServiceRunner Runner { get; set; } = null!;
-    [Inject]
-    public PubSub.Abstractions.IDispatcher Dispatcher { get; set; } = null!;
 
 
     protected override async Task OnInitializedAsync()

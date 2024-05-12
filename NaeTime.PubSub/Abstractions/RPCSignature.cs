@@ -1,7 +1,7 @@
 ﻿namespace NaeTime.PubSub.Abstractions;
 public struct RPCSignature
 {
-    public RPCSignature(string name, Type returnType, Type[] parameterTypes)
+    public RPCSignature(string name, Type returnType, params Type[] parameterTypes)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         ReturnType = returnType ?? throw new ArgumentNullException(nameof(returnType));

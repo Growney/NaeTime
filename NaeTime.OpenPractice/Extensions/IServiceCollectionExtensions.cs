@@ -5,7 +5,12 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddOpenPracticeCore(this IServiceCollection services)
     {
-        services.AddSubscriberAssembly(typeof(OpenPracticeSessionManager).Assembly);
+        services.AddEventAndRemoteProcedureCallHub<DetectionService>();
+        services.AddEventAndRemoteProcedureCallHub<OpenPracticeConsecutiveLapsLeaderboardManager>();
+        services.AddEventAndRemoteProcedureCallHub<OpenPracticeSessionManager>();
+        services.AddEventAndRemoteProcedureCallHub<OpenPracticeSingleLapLeaderboardManager>();
+        services.AddEventAndRemoteProcedureCallHub<OpenPracticeTotalLapsLeaderboardManager>();
+
         return services;
     }
 }

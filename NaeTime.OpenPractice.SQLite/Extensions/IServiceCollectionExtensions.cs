@@ -6,7 +6,11 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddSQLiteOpenPractice(this IServiceCollection services)
     {
-        services.AddSubscriberAssembly(typeof(OpenPracticeDbContext).Assembly);
+        services.AddEventAndRemoteProcedureCallHub<ConsecutiveLapsLeaderboardService>();
+        services.AddEventAndRemoteProcedureCallHub<OpenPracticeSessionService>();
+        services.AddEventAndRemoteProcedureCallHub<SingleLapsLeaderboardService>();
+        services.AddEventAndRemoteProcedureCallHub<TotalLapLeaderboardService>();
+
         services.AddHostedService<SQLiteDatabaseManager<OpenPracticeDbContext>>();
         services.AddDbContext<OpenPracticeDbContext>(options => options.UseSqlite($"Data Source=naetime.openpractice.db"), contextLifetime: ServiceLifetime.Transient);
 

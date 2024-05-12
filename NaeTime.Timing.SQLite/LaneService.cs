@@ -1,18 +1,15 @@
-﻿namespace NaeTime.OpenPractice.SQLite;
-internal class LaneService : ISubscriber
+﻿using NaeTime.Timing.Messages.Models;
+
+namespace NaeTime.OpenPractice.SQLite;
+internal class LaneService
 {
     private readonly TimingDbContext _dbContext;
     public LaneService(TimingDbContext dbContext)
     {
         _dbContext = dbContext;
     }
-    public async Task<ActiveLanesConfigurationResponse?> On(ActiveLanesConfigurationRequest request)
-    {
-        var lanes = await _dbContext.Lanes.Select(x => new ActiveLanesConfigurationResponse.LaneConfiguration(x.Id, x.BandId, x.FrequencyInMhz, x.IsEnabled))
-            .ToListAsync().ConfigureAwait(false);
-
-        return new ActiveLanesConfigurationResponse(lanes);
-    }
+    public async Task<IEnumerable<ActiveLaneConfiguration>> GetActiveLaneConfigurations() =>
+        await _dbContext.Lanes.Select(x => new ActiveLaneConfiguration(x.Id, x.BandId, x.FrequencyInMhz, x.IsEnabled)).ToListAsync();
     public async Task When(LaneRadioFrequencyConfigured laneRadioFrequencyConfigured)
     {
         var existing = await _dbContext.Lanes.FindAsync(laneRadioFrequencyConfigured.LaneNumber).ConfigureAwait(false);

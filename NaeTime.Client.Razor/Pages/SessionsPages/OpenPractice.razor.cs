@@ -1,44 +1,39 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
-using NaeTime.Hardware.Messages.Requests;
-using NaeTime.Hardware.Messages.Responses;
 using NaeTime.Management.Messages.Messages;
-using NaeTime.Management.Messages.Requests;
-using NaeTime.Management.Messages.Responses;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.OpenPractice.Messages.Requests;
-using NaeTime.OpenPractice.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
-using NaeTime.Timing.Messages.Requests;
-using NaeTime.Timing.Messages.Responses;
 
 namespace NaeTime.Client.Razor.Pages.SessionsPages;
 public partial class OpenPractice : ComponentBase, IDisposable
 {
     [Inject]
-    public IPublishSubscribe PublishSubscribe { get; set; } = default!;
+    public IRemoteProcedureCallClient RpcClient { get; set; } = default!;
+    [Inject]
+    public IEventClient EventClient { get; set; } = default!;
+    [Inject]
+    public IEventRegistrar EventRegistrar { get; set; } = default!;
 
     private readonly List<LaneConfiguration> _laneConfigurations = new();
     private readonly List<TrackDetails> _tracks = new();
     private readonly List<Pilot> _pilots = new();
     private readonly List<SessionDetails> _sessionDetails = new();
+    private IEventRegistrarScope? _registrarScope;
 
     private OpenPracticeSession? _selectedSession;
     private Guid? _activeSessionId;
     private bool _isLaneConfigCollapsed = false;
     protected override async Task OnInitializedAsync()
     {
-        PublishSubscribe.Subscribe<OpenPracticeLapInvalidated>(this, When);
-        PublishSubscribe.Subscribe<OpenPracticeLapRemoved>(this, When);
-        PublishSubscribe.Subscribe<OpenPracticeLapCompleted>(this, When);
-        PublishSubscribe.Subscribe<SessionActivated>(this, When);
-        PublishSubscribe.Subscribe<SessionDeactivated>(this, When);
-        var pilotsResponse = await PublishSubscribe.Request<PilotsRequest, PilotsResponse>();
+        _registrarScope = EventRegistrar.CreateScope();
+        _registrarScope.RegisterHub(this);
+
+        var pilotsResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
 
         if (pilotsResponse != null)
         {
-            _pilots.AddRange(pilotsResponse.Pilots.Select(x => new Pilot()
+            _pilots.AddRange(pilotsResponse.Select(x => new Pilot()
             {
                 Id = x.Id,
                 FirstName = x.FirstName,
@@ -46,18 +41,18 @@ public partial class OpenPractice : ComponentBase, IDisposable
                 CallSign = x.CallSign
             }));
         }
-        var tracksResponse = await PublishSubscribe.Request<TracksRequest, TracksResponse>();
+        var tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Track>>("GetTracks");
 
         if (tracksResponse != null)
         {
-            _tracks.AddRange(tracksResponse.Tracks.Select(x => new TrackDetails(x.Id, x.Name, x.MinimumLapTimeMilliseconds, x.MaximumLapTimeMilliseconds, x.Timers, x.AllowedLanes)));
+            _tracks.AddRange(tracksResponse.Select(x => new TrackDetails(x.Id, x.Name, x.MinimumLapTimeMilliseconds, x.MaximumLapTimeMilliseconds, x.Timers, x.AllowedLanes)));
         }
 
-        var activeLaneConfigurations = await PublishSubscribe.Request<ActiveLanesConfigurationRequest, ActiveLanesConfigurationResponse>();
+        var activeLaneConfigurations = await RpcClient.InvokeAsync<IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>>("GetActiveLaneConfigurations");
 
         if (activeLaneConfigurations != null)
         {
-            _laneConfigurations.AddRange(activeLaneConfigurations.Lanes.Select(x => new LaneConfiguration()
+            _laneConfigurations.AddRange(activeLaneConfigurations.Select(x => new LaneConfiguration()
             {
                 LaneNumber = x.Lane,
                 BandId = x.BandId,
@@ -66,10 +61,10 @@ public partial class OpenPractice : ComponentBase, IDisposable
             }));
         }
 
-        var sessions = await PublishSubscribe.Request<OpenPracticeSessionsRequest, OpenPracticeSessionsResponse>();
+        var sessions = await RpcClient.InvokeAsync<IEnumerable<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession>>("GetOpenPracticeSessions");
         if (sessions != null)
         {
-            _sessionDetails.AddRange(sessions.Sessions.Select(x => new SessionDetails
+            _sessionDetails.AddRange(sessions.Select(x => new SessionDetails
             {
                 Id = x.Id,
                 Name = x.Name,
@@ -78,7 +73,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         }
 
 
-        var activeSessionReponse = await PublishSubscribe.Request<ActiveSessionRequest, ActiveSessionResponse>();
+        var activeSessionReponse = await RpcClient.InvokeAsync<Management.Messages.Models.ActiveSession?>("GetActiveSession");
 
         if (activeSessionReponse != null)
         {
@@ -87,7 +82,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
         }
 
     }
-
     public async Task When(OpenPracticeLapRemoved removed)
     {
         if (_selectedSession == null)
@@ -176,22 +170,20 @@ public partial class OpenPractice : ComponentBase, IDisposable
     {
         _selectedSession = null;
 
-        var practiceSessionResponse = await PublishSubscribe.Request<OpenPracticeSessionRequest, OpenPracticeSessionResponse>(new OpenPracticeSessionRequest(sessionId)).ConfigureAwait(false);
+        var practiceSessionResponse = await RpcClient.InvokeAsync<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", sessionId);
         if (practiceSessionResponse == null)
         {
             return;
         }
 
-        var track = await PublishSubscribe.Request<TrackRequest, TrackResponse>(new TrackRequest(practiceSessionResponse.TrackId)).ConfigureAwait(false);
+        var track = await RpcClient.InvokeAsync<Management.Messages.Models.Track?>("GetTrack", practiceSessionResponse.TrackId);
 
         if (track == null)
         {
             return;
         }
 
-
-        var timings = await PublishSubscribe.Request<ActiveTimingsRequest, ActiveTimingsResponse>(new ActiveTimingsRequest(sessionId)).ConfigureAwait(false);
-
+        var timings = await RpcClient.InvokeAsync<IEnumerable<Timing.Messages.Models.LaneActiveTimings>>("GetSessionActiveTimings", sessionId);
 
         var allowedLanes = track.AllowedLanes;
 
@@ -202,7 +194,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
             Name = practiceSessionResponse.Name,
             MinimumLapMilliseconds = practiceSessionResponse.MinimumLapMilliseconds,
             MaximumLapMilliseconds = practiceSessionResponse.MaximumLapMilliseconds,
-            Lanes = GetLaneConfigurations(allowedLanes, practiceSessionResponse.ActiveLanes, timings?.Timings).ToList(),
+            Lanes = GetLaneConfigurations(allowedLanes, practiceSessionResponse.ActiveLanes, timings).ToList(),
             Laps = practiceSessionResponse.Laps.Select(x => new OpenPracticeLap()
             {
                 Id = x.Id,
@@ -213,8 +205,8 @@ public partial class OpenPractice : ComponentBase, IDisposable
                 TotalMilliseconds = x.TotalMilliseconds,
                 Status = x.Status switch
                 {
-                    OpenPracticeSessionResponse.LapStatus.Completed => OpenPracticeLapStatus.Completed,
-                    OpenPracticeSessionResponse.LapStatus.Invalid => OpenPracticeLapStatus.Invalid,
+                    NaeTime.OpenPractice.Messages.Models.LapStatus.Completed => OpenPracticeLapStatus.Completed,
+                    NaeTime.OpenPractice.Messages.Models.LapStatus.Invalid => OpenPracticeLapStatus.Invalid,
                     _ => throw new NotImplementedException()
                 }
             }).ToList(),
@@ -222,7 +214,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         };
 
     }
-    private IEnumerable<OpenPracticeLaneConfiguration> GetLaneConfigurations(byte allowedLanes, IEnumerable<OpenPracticeSessionResponse.PilotLane> lanes, IEnumerable<ActiveTimingsResponse.ActiveTimings>? timings)
+    private IEnumerable<OpenPracticeLaneConfiguration> GetLaneConfigurations(byte allowedLanes, IEnumerable<NaeTime.OpenPractice.Messages.Models.PilotLane> lanes, IEnumerable<Timing.Messages.Models.LaneActiveTimings>? timings)
     {
         for (byte lane = 1; lane <= allowedLanes; lane++)
         {
@@ -253,9 +245,9 @@ public partial class OpenPractice : ComponentBase, IDisposable
     {
 
         var sessionName = $"Quick Session - {DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}";
-        await PublishSubscribe.Dispatch(new OpenPracticeSessionConfigured(sessionId, sessionName, trackId, minimumLapMilliseconds, maximumLapMilliseconds));
+        await EventClient.Publish(new OpenPracticeSessionConfigured(sessionId, sessionName, trackId, minimumLapMilliseconds, maximumLapMilliseconds));
 
-        await PublishSubscribe.Dispatch(new SessionActivated(sessionId, SessionActivated.SessionType.OpenPractice));
+        await EventClient.Publish(new SessionActivated(sessionId, SessionActivated.SessionType.OpenPractice));
 
         _sessionDetails.Add(new SessionDetails
         {
@@ -268,26 +260,26 @@ public partial class OpenPractice : ComponentBase, IDisposable
     }
     public async Task StartSessionOnNewTrack()
     {
-        var timersResponse = await PublishSubscribe.Request<TimerDetailsRequest, TimerDetailsResponse>();
+        var timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
 
         if (timersResponse == null)
         {
             return;
         }
 
-        if (!timersResponse.Timers.Any())
+        if (!timersResponse.Any())
         {
             return;
         }
 
         var newTrackId = Guid.NewGuid();
-        var trackTimers = timersResponse.Timers.Take(1);
+        var trackTimers = timersResponse.Take(1);
         var maxLanes = trackTimers.Max(x => x.MaxLanes);
         var timerIds = trackTimers.Select(x => x.Id);
 
-        await PublishSubscribe.Dispatch(new TrackCreated(newTrackId, $"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds, maxLanes));
+        await EventClient.Publish(new TrackCreated(newTrackId, $"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds, maxLanes));
 
-        var track = await PublishSubscribe.Request<TrackRequest, TrackResponse>(new TrackRequest(newTrackId)).ConfigureAwait(false);
+        var track = await RpcClient.InvokeAsync<Management.Messages.Models.Track?>("GetTrack", newTrackId);
 
         if (track == null)
         {
@@ -314,7 +306,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         _selectedSession.MinimumLapMilliseconds = minimumLapMilliseconds;
 
-        return PublishSubscribe.Dispatch(new OpenPracticeMinimumLapTimeConfigured(_selectedSession.Id, minimumLapMilliseconds));
+        return EventClient.Publish(new OpenPracticeMinimumLapTimeConfigured(_selectedSession.Id, minimumLapMilliseconds));
     }
     public Task SetSessionMaximumLapTime(long? maximumLapMilliseconds)
     {
@@ -330,7 +322,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         _selectedSession.MaximumLapMilliseconds = maximumLapMilliseconds;
 
-        return PublishSubscribe.Dispatch(new OpenPracticeMaximumLapTimeConfigured(_selectedSession.Id, maximumLapMilliseconds));
+        return EventClient.Publish(new OpenPracticeMaximumLapTimeConfigured(_selectedSession.Id, maximumLapMilliseconds));
     }
     public Task TrackConsecutiveLaps(Guid sessionId, uint lapCap)
     {
@@ -345,7 +337,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         }
 
         _selectedSession.TrackedConsecutiveLaps.Add(lapCap);
-        return PublishSubscribe.Dispatch(new ConsecutiveLapCountTracked(sessionId, lapCap));
+        return EventClient.Publish(new ConsecutiveLapCountTracked(sessionId, lapCap));
     }
-    public void Dispose() => PublishSubscribe.Unsubscribe(this);
+    public void Dispose() => _registrarScope?.Dispose();
 }

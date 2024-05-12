@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace NaeTime.Hardware.SQLite;
-internal class HardwareService : ISubscriber
+internal class HardwareService
 {
     private readonly HardwareDbContext _dbcontext;
 
@@ -66,26 +66,28 @@ internal class HardwareService : ISubscriber
         await _dbcontext.SaveChangesAsync().ConfigureAwait(false);
     }
 
-    public async Task<TimerDetailsResponse> On(TimerDetailsRequest request)
+    public async Task<IEnumerable<Messages.Models.TimerDetails>> GetAllTimerDetails()
     {
         var lapRF8Channels = await _dbcontext.EthernetLapRF8Channels
-            .Select(x => new TimerDetailsResponse.TimerDetails(x.Id, x.Name, TimerDetailsResponse.TimerType.EthernetLapRF8Channel, 8))
+            .Select(x => new Messages.Models.TimerDetails(x.Id, x.Name, Messages.Models.TimerType.EthernetLapRF8Channel, 8))
             .ToListAsync().ConfigureAwait(false);
 
-        return new TimerDetailsResponse(lapRF8Channels);
+        //when there are more timer types will need to add them all to a larger list
+
+        return lapRF8Channels;
     }
-    public async Task<EthernetLapRF8ChannelTimersResponse> On(EthernetLapRF8ChannelTimersRequest request)
+    public async Task<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>> GetAllEthernetLapRF8ChannelTimers()
     {
         var timerDetails = await _dbcontext.EthernetLapRF8Channels
-            .Select(x => new EthernetLapRF8ChannelTimersResponse.EthernetLapRF8Channel(x.Id, new IPAddress(x.IpAddress), x.Port))
+            .Select(x => new Messages.Models.EthernetLapRF8ChannelTimer(x.Id, x.Name, new IPAddress(x.IpAddress), x.Port))
             .ToListAsync().ConfigureAwait(false);
 
-        return new EthernetLapRF8ChannelTimersResponse(timerDetails);
+        return timerDetails;
     }
-    public async Task<EthernetLapRF8ChannelResponse?> On(EthernetLapRF8ChannelRequest request)
+    public async Task<Messages.Models.EthernetLapRF8ChannelTimer?> GetEthernetLapRF8ChannelTimer(Guid timerId)
     {
-        var timer = await _dbcontext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == request.TimerId).ConfigureAwait(false);
+        var timer = await _dbcontext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == timerId).ConfigureAwait(false);
 
-        return timer == null ? null : new EthernetLapRF8ChannelResponse(timer.Id, timer.Name, new IPAddress(timer.IpAddress), timer.Port);
+        return timer == null ? null : new Messages.Models.EthernetLapRF8ChannelTimer(timer.Id, timer.Name, new IPAddress(timer.IpAddress), timer.Port);
     }
 }

@@ -1,18 +1,18 @@
 ﻿using NaeTime.Hardware.Messages.Messages;
-using NaeTime.Management.Messages.Requests;
-using NaeTime.Management.Messages.Responses;
+using NaeTime.Management.Messages.Models;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Timing;
-internal class SessionDetectionService : ISubscriber
+internal class SessionDetectionService
 {
-    private readonly IPublishSubscribe _publishSubscribe;
+    private readonly IEventClient _eventClient;
+    private readonly IRemoteProcedureCallClient _rpcClient;
 
-    public SessionDetectionService(IPublishSubscribe dispatcher)
+    public SessionDetectionService(IEventClient eventClient, IRemoteProcedureCallClient rpcClient)
     {
-        _publishSubscribe = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
+        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
     }
 
     public Task When(TimerDetectionTriggered triggered) => TriggerTrackDetection(triggered.TimerId, triggered.Lane, null, triggered.SoftwareTime, triggered.UtcTime);
@@ -21,16 +21,16 @@ internal class SessionDetectionService : ISubscriber
 
     private async Task TriggerTrackDetection(Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        var activeSessionResponse = await _publishSubscribe.Request<ActiveSessionRequest, ActiveSessionResponse>().ConfigureAwait(false);
+        var activeSessionResponse = await _rpcClient.InvokeAsync<ActiveSession?>("GetActiveSession");
 
         if (activeSessionResponse == null)
         {
             return;
         }
 
-        if (activeSessionResponse.Type == ActiveSessionResponse.SessionType.OpenPractice)
+        if (activeSessionResponse.Type == ActiveSession.SessionType.OpenPractice)
         {
-            await _publishSubscribe.Dispatch(new ActiveOpenPracticeSessionDetectionOccured(activeSessionResponse.SessionId, timerId, lane, hardwareTime, softwareTime, utcTime));
+            await _eventClient.Publish(new ActiveOpenPracticeSessionDetectionOccured(activeSessionResponse.SessionId, timerId, lane, hardwareTime, softwareTime, utcTime));
         }
     }
 }

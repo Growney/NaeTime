@@ -1,15 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Management.Messages.Messages;
-using NaeTime.Management.Messages.Requests;
-using NaeTime.Management.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.PilotPages;
 public partial class UpdatePilot : ComponentBase
 {
     [Inject]
-    private IDispatcher Dispatcher { get; set; } = null!;
+    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    [Inject]
+    private IEventClient EventClient { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -23,7 +23,7 @@ public partial class UpdatePilot : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        var response = await Dispatcher.Request<PilotRequest, PilotResponse>(new(PilotId));
+        var response = await RpcClient.InvokeAsync<Management.Messages.Models.Pilot>("GetPilot", PilotId);
 
         if (response == null)
         {
@@ -48,7 +48,7 @@ public partial class UpdatePilot : ComponentBase
             return;
         }
 
-        await Dispatcher.Dispatch(new PilotDetailsChanged(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
+        await EventClient.Publish(new PilotDetailsChanged(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/pilot/list");
     }

@@ -1,24 +1,23 @@
 ﻿using NaeTime.OpenPractice.Leaderboards;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.OpenPractice.Messages.Requests;
-using NaeTime.OpenPractice.Messages.Responses;
-using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.OpenPractice;
-internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<TotalLapRecord>, ISubscriber
+internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<TotalLapRecord>
 {
-    private readonly IPublishSubscribe _publishSubscribe;
+    private readonly IEventClient _eventClient;
+    private readonly IRemoteProcedureCallClient _rpcClient;
 
-    public OpenPracticeTotalLapsLeaderboardManager(IPublishSubscribe publishSubscribe)
+    public OpenPracticeTotalLapsLeaderboardManager(IEventClient eventClient, IRemoteProcedureCallClient rpcClient)
     {
-        _publishSubscribe = publishSubscribe ?? throw new ArgumentNullException(nameof(publishSubscribe));
+        _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
+        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
     }
     public async Task When(OpenPracticeLapCompleted completed)
     {
-        var pilotLaps = await _publishSubscribe.Request<PilotLapsRequest, PilotLapsResponse>(new PilotLapsRequest(completed.SessionId, completed.PilotId));
+        var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", completed.SessionId, completed.PilotId);
 
-        var validLaps = pilotLaps?.Laps.Where(x => x.Status == PilotLapsResponse.LapStatus.Completed && x.Id != completed.LapId);
+        var validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed && x.Id != completed.LapId);
         var lapCount = validLaps?.Count() ?? 0;
 
         lapCount++;
@@ -30,10 +29,10 @@ internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<Tota
     }
     public async Task When(OpenPracticeLapDisputed disputed)
     {
-        var pilotLaps = await _publishSubscribe.Request<PilotLapsRequest, PilotLapsResponse>(new PilotLapsRequest(disputed.SessionId, disputed.PilotId));
+        var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", disputed.SessionId, disputed.PilotId);
 
-        var lap = pilotLaps?.Laps.FirstOrDefault(x => x.Id == disputed.LapId);
-        var validLaps = pilotLaps?.Laps.Where(x => x.Status == PilotLapsResponse.LapStatus.Completed
+        var lap = pilotLaps?.FirstOrDefault(x => x.Id == disputed.LapId);
+        var validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed
         && (x.Id != disputed.LapId || disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed));
         var lapCount = validLaps?.Count() ?? 0;
 
@@ -51,10 +50,10 @@ internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<Tota
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        var pilotLaps = await _publishSubscribe.Request<PilotLapsRequest, PilotLapsResponse>(new PilotLapsRequest(removed.SessionId, removed.PilotId));
+        var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", removed.SessionId, removed.PilotId);
 
-        var lap = pilotLaps?.Laps.FirstOrDefault(x => x.Id == removed.LapId);
-        var validLaps = pilotLaps?.Laps.Where(x => x.Status == PilotLapsResponse.LapStatus.Completed && x.Id != lap?.Id);
+        var lap = pilotLaps?.FirstOrDefault(x => x.Id == removed.LapId);
+        var validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed && x.Id != lap?.Id);
         var lapCount = validLaps?.Count() ?? 0;
 
         var firstLap = validLaps?.FirstOrDefault();
@@ -72,18 +71,18 @@ internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<Tota
 
     protected override async Task<IEnumerable<LeaderboardPosition<TotalLapRecord>>> GetExistingPositions(Guid sessionId)
     {
-        var response = await _publishSubscribe.Request<TotalLapsLeaderboardRequest, TotalLapsLeaderboardResponse>(new TotalLapsLeaderboardRequest(sessionId));
+        var response = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.TotalLapLeaderboardPosition>>("GetOpenPracticeSessionTotalLapLeaderboardPositions", sessionId);
 
-        return response?.Positions.Select(x => new LeaderboardPosition<TotalLapRecord>(x.PilotId, x.Position, new TotalLapRecord(x.TotalLaps, x.FirstLapCompletionUtc))) ?? Enumerable.Empty<LeaderboardPosition<TotalLapRecord>>();
+        return response?.Select(x => new LeaderboardPosition<TotalLapRecord>(x.PilotId, x.Position, new TotalLapRecord(x.TotalLaps, x.FirstLapCompletionUtc))) ?? Enumerable.Empty<LeaderboardPosition<TotalLapRecord>>();
     }
     protected override Task OnPositionImproved(Guid sessionId, Guid pilotId, int newPosition, int? oldPosition, TotalLapRecord newRecord)
-        => _publishSubscribe.Dispatch(new TotalLapsLeaderboardPositionImproved(sessionId, newPosition, oldPosition, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
+        => _eventClient.Publish(new TotalLapsLeaderboardPositionImproved(sessionId, newPosition, oldPosition, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
     protected override Task OnPositionReduced(Guid sessionId, Guid pilotId, int newPosition, int oldPosition, TotalLapRecord newRecord)
-        => _publishSubscribe.Dispatch(new TotalLapsLeaderboardPositionReduced(sessionId, newPosition, oldPosition, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
+        => _eventClient.Publish(new TotalLapsLeaderboardPositionReduced(sessionId, newPosition, oldPosition, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
     protected override Task OnPositionRemoved(Guid sessionId, Guid pilotId)
-        => _publishSubscribe.Dispatch(new TotalLapsLeaderboardPositionRemoved(sessionId, pilotId));
+        => _eventClient.Publish(new TotalLapsLeaderboardPositionRemoved(sessionId, pilotId));
     protected override Task OnRecordImproved(Guid sessionId, Guid pilotId, TotalLapRecord newRecord)
-        => _publishSubscribe.Dispatch(new TotalLapsLeaderboardRecordImproved(sessionId, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
+        => _eventClient.Publish(new TotalLapsLeaderboardRecordImproved(sessionId, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
     protected override Task OnRecordReduced(Guid sessionId, Guid pilotId, TotalLapRecord newRecord)
-        => _publishSubscribe.Dispatch(new TotalLapsLeaderboardRecordReduced(sessionId, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
+        => _eventClient.Publish(new TotalLapsLeaderboardRecordReduced(sessionId, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
 }

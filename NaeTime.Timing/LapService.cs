@@ -1,24 +1,22 @@
-﻿using NaeTime.Management.Messages.Requests;
-using NaeTime.Management.Messages.Responses;
-using NaeTime.PubSub;
-using NaeTime.PubSub.Abstractions;
+﻿using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;
-using NaeTime.Timing.Messages.Requests;
-using NaeTime.Timing.Messages.Responses;
 using NaeTime.Timing.Models;
 
 namespace NaeTime.Timing;
-internal class LapService : ISubscriber
+internal class LapService
 {
-    private readonly IPublishSubscribe _publishSubscribe;
+    private readonly IEventClient _eventClient;
+    private readonly IRemoteProcedureCallClient _rpcClient;
 
-    public LapService(IPublishSubscribe publishSubscribe)
+    public LapService(IEventClient eventClient, IRemoteProcedureCallClient rpcClient)
     {
-        _publishSubscribe = publishSubscribe ?? throw new ArgumentNullException(nameof(publishSubscribe));
+        _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
+        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
     }
+
     public async Task When(SessionDetectionOccured detection)
     {
-        var track = await _publishSubscribe.Request<TrackRequest, TrackResponse>(new TrackRequest(detection.TrackId)).ConfigureAwait(false);
+        var track = await _rpcClient.InvokeAsync<Management.Messages.Models.Track?>("GetTrack", detection.TrackId);
 
         if (track == null)
         {
@@ -40,7 +38,7 @@ internal class LapService : ISubscriber
 
     private async Task HandleDetection(Guid sessionId, long minimumLapMilliseconds, long? maximumLapMilliseconds, byte lane, byte split, byte timerCount, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        var activeTimingsResponse = await _publishSubscribe.Request<ActiveTimingRequest, ActiveTimingResponse>(new ActiveTimingRequest(sessionId, lane)).ConfigureAwait(false);
+        var activeTimingsResponse = await _rpcClient.InvokeAsync<Messages.Models.LaneActiveTimings>("GetLaneActiveTimings").ConfigureAwait(false);
 
         ActiveLap? activeLap = null;
         if (activeTimingsResponse?.Lap != null)
@@ -125,13 +123,13 @@ internal class LapService : ISubscriber
             _ => throw new NotImplementedException()
         });
 
-        await _publishSubscribe.Dispatch(completedLap).ConfigureAwait(false);
+        await _eventClient.Publish(completedLap).ConfigureAwait(false);
     }
     private async Task CompleteLap(Guid sessionId, byte lane, ulong? startedHardwareTime, long startedSoftwareTime, DateTime startedUtcTime, ulong? finishedHardwareTime, long finishedSoftwareTime, DateTime finishedUtcTime, ActiveLap activeLap, long totalTime)
     {
         var completedLap = new LapCompleted(sessionId, lane, activeLap.LapNumber, startedSoftwareTime, startedUtcTime, startedHardwareTime, finishedSoftwareTime, finishedUtcTime, finishedHardwareTime, totalTime);
 
-        await _publishSubscribe.Dispatch(completedLap).ConfigureAwait(false);
+        await _eventClient.Publish(completedLap).ConfigureAwait(false);
     }
     private long CalculateTotalTime(ulong? startHardwareTime, long startSoftwareTime, DateTime startUtcTime, ulong? endHardwareTime, long endSoftwareTime, DateTime endUtcTime)
     {
@@ -198,7 +196,7 @@ internal class LapService : ISubscriber
     {
         var splitEnded = new SplitCompleted(sessionId, lane, lapNumber, (byte)currentSplitNumber, softwareTime, utcTime, totalTime);
 
-        await _publishSubscribe.Dispatch(splitEnded).ConfigureAwait(false);
+        await _eventClient.Publish(splitEnded).ConfigureAwait(false);
     }
     private long CalculateTotalTime(long startSoftwareTime, DateTime startUtcTime, long endSoftwareTime, DateTime endUtcTime)
     {
@@ -211,19 +209,19 @@ internal class LapService : ISubscriber
         {
             var skippedSplit = new SplitSkipped(sessionId, lane, lapNumber, splitNumber);
 
-            await _publishSubscribe.Dispatch(skippedSplit).ConfigureAwait(false);
+            await _eventClient.Publish(skippedSplit).ConfigureAwait(false);
         }
     }
     private async Task StartSplit(Guid sessionId, uint lapNumber, byte lane, long softwareTime, DateTime utcTime, int timerPosition)
     {
         var splitStarted = new SplitStarted(sessionId, lane, lapNumber, (byte)timerPosition, softwareTime, utcTime);
 
-        await _publishSubscribe.Dispatch(splitStarted).ConfigureAwait(false);
+        await _eventClient.Publish(splitStarted).ConfigureAwait(false);
     }
     private async Task StartLap(Guid sessionId, byte lane, uint lapNumber, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
         var lapStarted = new LapStarted(sessionId, lane, lapNumber, softwareTime, utcTime, hardwareTime);
 
-        await _publishSubscribe.Dispatch(lapStarted).ConfigureAwait(false);
+        await _eventClient.Publish(lapStarted).ConfigureAwait(false);
     }
 }

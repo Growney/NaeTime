@@ -7,7 +7,7 @@ namespace NaeTime.Client.Razor.Pages.PilotPages;
 public partial class CreatePilot : ComponentBase
 {
     [Inject]
-    private IDispatcher Dispatcher { get; set; } = null!;
+    private IEventClient EventClient { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -29,7 +29,7 @@ public partial class CreatePilot : ComponentBase
 
     private async Task HandleValidSubmit(Pilot pilot)
     {
-        await Dispatcher.Dispatch(new PilotCreated(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
+        await EventClient.Publish(new PilotCreated(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/pilot/list");
     }

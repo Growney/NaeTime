@@ -1,11 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
-using NaeTime.Management.Messages.Requests;
-using NaeTime.Management.Messages.Responses;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.OpenPractice.Messages.Requests;
-using NaeTime.OpenPractice.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
@@ -14,24 +10,24 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
     [Parameter]
     public Guid SessionId { get; set; }
     [Inject]
-    public IPublishSubscribe PublishSubscribe { get; set; } = null!;
+    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    [Inject]
+    private IEventRegistrar EventRegistrar { get; set; } = null!;
 
+    private IEventRegistrarScope? _registrarScope;
     private readonly List<SingleLapLeaderboardPosition> _positions = new();
     private readonly List<Pilot> _pilots = new();
 
     protected override async Task OnInitializedAsync()
     {
-        PublishSubscribe.Subscribe<SingleLapLeaderboardPositionReduced>(this, When);
-        PublishSubscribe.Subscribe<SingleLapLeaderboardPositionImproved>(this, When);
-        PublishSubscribe.Subscribe<SingleLapLeaderboardRecordImproved>(this, When);
-        PublishSubscribe.Subscribe<SingleLapLeaderboardRecordReduced>(this, When);
-        PublishSubscribe.Subscribe<SingleLapLeaderboardPositionRemoved>(this, When);
+        _registrarScope = EventRegistrar.CreateScope();
+        _registrarScope.RegisterHub(this);
 
-        var initialPositions = await PublishSubscribe.Request<SingleLapLeaderboardRequest, SingleLapLeaderboardResponse>(new SingleLapLeaderboardRequest(SessionId));
+        var initialPositions = await RpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.SingleLapLeaderboardPosition>>("GetOpenPracticeSessionSingleLapLeaderboardPositions", SessionId);
 
         if (initialPositions != null)
         {
-            foreach (var position in initialPositions.Positions)
+            foreach (var position in initialPositions)
             {
                 _positions.Add(new SingleLapLeaderboardPosition()
                 {
@@ -44,11 +40,11 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
             }
         }
 
-        var initialPilots = await PublishSubscribe.Request<PilotsRequest, PilotsResponse>();
+        var initialPilots = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
 
         if (initialPilots != null)
         {
-            _pilots.AddRange(initialPilots.Pilots.Select(x => new Pilot()
+            _pilots.AddRange(initialPilots.Select(x => new Pilot()
             {
                 Id = x.Id,
                 FirstName = x.FirstName,
@@ -112,5 +108,5 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
 
     private string GetPilotName(Guid pilotId) => _pilots.FirstOrDefault(x => x.Id == pilotId)?.CallSign ?? "Unknown";
 
-    public void Dispose() => PublishSubscribe.Unsubscribe(this);
+    public void Dispose() => _registrarScope?.Dispose();
 }

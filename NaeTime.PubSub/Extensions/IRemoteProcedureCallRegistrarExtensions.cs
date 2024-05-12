@@ -1,9 +1,61 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using NaeTime.PubSub.Abstractions;
 
-namespace NaeTime.PubSub.Extensions;
+namespace NaeTime.PubSub.Abstractions;
 public static class IRemoteProcedureCallRegistrarExtensions
 {
+    public static void RegisterHandler<TResponse>(this IRemoteProcedureCallRegistrar manager, string name, Func<Task<TResponse>> handler)
+    {
+        RPCSignature signature = new(name, typeof(TResponse));
+
+        manager.RegisterHandler(signature, async parameters =>
+        {
+            object? result = await handler();
+
+            return result == null ? null : (TResponse)result;
+        });
+    }
+    public static void RegisterHandler<T1, TResponse>(this IRemoteProcedureCallRegistrar manager, string name, Func<T1, Task<TResponse>> handler)
+    {
+        RPCSignature signature = new(name, typeof(TResponse), typeof(T1));
+
+        manager.RegisterHandler(signature, async parameters =>
+        {
+            T1 parameter = (T1)parameters[0]!;
+
+            object? result = await handler(parameter);
+
+            return result == null ? null : (TResponse)result;
+        });
+    }
+    public static void RegisterHandler<T1, T2, TResponse>(this IRemoteProcedureCallRegistrar manager, string name, Func<T1, T2, Task<TResponse>> handler)
+    {
+        RPCSignature signature = new(name, typeof(TResponse), typeof(T1));
+
+        manager.RegisterHandler(signature, async parameters =>
+        {
+            T1 arg1 = (T1)parameters[0]!;
+            T2 arg2 = (T2)parameters[1]!;
+
+            object? result = await handler(arg1, arg2);
+
+            return result == null ? null : (TResponse)result;
+        });
+    }
+    public static void RegisterHandler<T1, T2, T3, TResponse>(this IRemoteProcedureCallRegistrar manager, string name, Func<T1, T2, T3, Task<TResponse>> handler)
+    {
+        RPCSignature signature = new(name, typeof(TResponse), typeof(T1));
+
+        manager.RegisterHandler(signature, async parameters =>
+        {
+            T1 arg1 = (T1)parameters[0]!;
+            T2 arg2 = (T2)parameters[1]!;
+            T3 arg3 = (T3)parameters[2]!;
+
+            object? result = await handler(arg1, arg2, arg3);
+
+            return result == null ? null : (TResponse)result;
+        });
+    }
     public static void RegisterHub(this IRemoteProcedureCallRegistrar manager, object hub)
     {
         RPCHubHandlerFactory handlerFactory = new();

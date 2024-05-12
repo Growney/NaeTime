@@ -18,9 +18,9 @@ public partial class LapList : ComponentBase
     public string? Header { get; set; }
 
     [Inject]
-    public IDispatcher Dispatch { get; set; } = null!;
+    private IEventClient EventClient { get; set; } = null!;
 
-    public Task Remove(Guid lapId, Guid pilotId) => Dispatch.Dispatch(new OpenPracticeLapRemoved(SessionId, lapId, pilotId));
+    public Task Remove(Guid lapId, Guid pilotId) => EventClient.Publish(new OpenPracticeLapRemoved(SessionId, lapId, pilotId));
     public Task Invalidate(Guid lapId, Guid pilotId)
     {
 
@@ -33,7 +33,7 @@ public partial class LapList : ComponentBase
 
         lap.Status = OpenPracticeLapStatus.Invalid;
 
-        return Dispatch.Dispatch(new OpenPracticeLapDisputed(SessionId, lapId, pilotId, OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid));
+        return EventClient.Publish(new OpenPracticeLapDisputed(SessionId, lapId, pilotId, OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid));
     }
     public Task Validate(Guid lapId, Guid pilotId)
     {
@@ -46,6 +46,6 @@ public partial class LapList : ComponentBase
 
         lap.Status = OpenPracticeLapStatus.Completed;
 
-        return Dispatch.Dispatch(new OpenPracticeLapDisputed(SessionId, lapId, pilotId, OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed));
+        return EventClient.Publish(new OpenPracticeLapDisputed(SessionId, lapId, pilotId, OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed));
     }
 }

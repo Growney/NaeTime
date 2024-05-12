@@ -11,7 +11,7 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<ISpeechProvider, TSpeechProvider>();
         services.AddHostedService<Announcer>();
 
-        services.AddSubscriberAssembly(typeof(Announcer).Assembly);
+        services.AddEventAndRemoteProcedureCallHub<LapAnnouncerService>();
 
         return services;
     }

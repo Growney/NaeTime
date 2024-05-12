@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection.Extensions;
 using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
-using NaeTime.PubSub.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions
@@ -18,16 +17,16 @@ public static class IServiceCollectionExtensions
             {
                 switch (hubRegistration.Lifetime)
                 {
-                    case RemoteProcedureCallHubLifetime.Service:
+                    case HubLifetime.Service:
                         manager.RegisterServiceHub(hubRegistration.HubType, serviceProvider);
                         break;
-                    case RemoteProcedureCallHubLifetime.Scoped:
+                    case HubLifetime.Scoped:
                         manager.RegisterScopedHub(hubRegistration.HubType, serviceProvider);
                         break;
-                    case RemoteProcedureCallHubLifetime.Transient:
+                    case HubLifetime.Transient:
                         manager.RegisterTransientHub(hubRegistration.HubType, serviceProvider);
                         break;
-                    case RemoteProcedureCallHubLifetime.Singleton:
+                    case HubLifetime.Singleton:
                         object handler = hubRegistration.Instance ?? ActivatorUtilities.CreateInstance(serviceProvider, hubRegistration.HubType) ?? throw new InvalidOperationException($"Could not create an instance of {hubRegistration.HubType.Name}");
                         manager.RegisterHub(handler);
                         break;
@@ -43,9 +42,14 @@ public static class IServiceCollectionExtensions
 
         return services;
     }
-    public static IServiceCollection AddRemoteProcedureCallHub(this IServiceCollection services, Type hubType, RemoteProcedureCallHubLifetime lifeTime = RemoteProcedureCallHubLifetime.Transient, object? instance = null)
+    public static IServiceCollection AddRemoteProcedureCallHub(this IServiceCollection services, Type hubType, HubLifetime lifeTime = HubLifetime.Transient, object? instance = null)
     {
         services.AddSingleton(new RemoteProcedureCallHubRegistration(hubType, lifeTime, instance));
+        return services;
+    }
+    public static IServiceCollection AddRemoteProcedureCallHub<THub>(this IServiceCollection services, HubLifetime lifeTime = HubLifetime.Transient, THub? instance = default)
+    {
+        services.AddSingleton(new RemoteProcedureCallHubRegistration(typeof(THub), lifeTime, instance));
         return services;
     }
     public static IServiceCollection AddNaeTimeEventing(this IServiceCollection services)
@@ -60,16 +64,16 @@ public static class IServiceCollectionExtensions
             {
                 switch (hubRegistration.Lifetime)
                 {
-                    case EventHubLifetime.Service:
+                    case HubLifetime.Service:
                         manager.RegisterServiceHub(hubRegistration.HubType, serviceProvider);
                         break;
-                    case EventHubLifetime.Scoped:
+                    case HubLifetime.Scoped:
                         manager.RegisterScopedHub(hubRegistration.HubType, serviceProvider);
                         break;
-                    case EventHubLifetime.Transient:
+                    case HubLifetime.Transient:
                         manager.RegisterTransientHub(hubRegistration.HubType, serviceProvider);
                         break;
-                    case EventHubLifetime.Singleton:
+                    case HubLifetime.Singleton:
                         object handler = hubRegistration.Instance ?? ActivatorUtilities.CreateInstance(serviceProvider, hubRegistration.HubType) ?? throw new InvalidOperationException($"Could not create an instance of {hubRegistration.HubType.Name}");
                         manager.RegisterHub(handler);
                         break;
@@ -85,9 +89,28 @@ public static class IServiceCollectionExtensions
 
         return services;
     }
-    public static IServiceCollection AddEventHub(this IServiceCollection services, Type hubType, EventHubLifetime lifeTime = EventHubLifetime.Transient, object? instance = null)
+    public static IServiceCollection AddEventHub(this IServiceCollection services, Type hubType, HubLifetime lifeTime = HubLifetime.Transient, object? instance = null)
     {
         services.AddSingleton(new EventHubRegistration(hubType, lifeTime, instance));
+        return services;
+    }
+    public static IServiceCollection AddEventHub<THub>(this IServiceCollection services, HubLifetime lifeTime = HubLifetime.Transient, THub? instance = default)
+    {
+        services.AddSingleton(new EventHubRegistration(typeof(THub), lifeTime, instance));
+        return services;
+    }
+
+    public static IServiceCollection AddEventAndRemoteProcedureCallHub(this IServiceCollection services, Type hubType, HubLifetime lifeTime = HubLifetime.Transient, object? instance = null)
+    {
+        services.AddSingleton(new RemoteProcedureCallHubRegistration(hubType, lifeTime, instance));
+        services.AddSingleton(new EventHubRegistration(hubType, lifeTime, instance));
+        return services;
+    }
+
+    public static IServiceCollection AddEventAndRemoteProcedureCallHub<THub>(this IServiceCollection services, HubLifetime lifeTime = HubLifetime.Transient, object? instance = null)
+    {
+        services.AddSingleton(new RemoteProcedureCallHubRegistration(typeof(THub), lifeTime, instance));
+        services.AddSingleton(new EventHubRegistration(typeof(THub), lifeTime, instance));
         return services;
     }
 }

@@ -1,14 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Management.Messages.Requests;
-using NaeTime.Management.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
-public partial class TrackList : IDisposable
+public partial class TrackList
 {
     [Inject]
-    private IPublishSubscribe PublishSubscribe { get; set; } = null!;
+    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -16,16 +14,14 @@ public partial class TrackList : IDisposable
 
     protected override async Task OnInitializedAsync()
     {
-
-
-        var tracksResponse = await PublishSubscribe.Request<TracksRequest, TracksResponse>();
+        var tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Track>>("GetTracks");
 
         if (tracksResponse == null)
         {
             return;
         }
 
-        foreach (var track in tracksResponse.Tracks)
+        foreach (var track in tracksResponse)
         {
             var domainTrack = new Track()
             {
@@ -49,10 +45,5 @@ public partial class TrackList : IDisposable
     private void NavigateToCreateTrack()
     {
         NavigationManager.NavigateTo($"/track/create");
-    }
-
-    public void Dispose()
-    {
-        PublishSubscribe.Unsubscribe(this);
     }
 }

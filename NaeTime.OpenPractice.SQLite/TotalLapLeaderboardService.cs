@@ -1,7 +1,7 @@
 ﻿using NaeTime.OpenPractice.Messages.Events;
 
 namespace NaeTime.OpenPractice.SQLite;
-internal class TotalLapLeaderboardService : ISubscriber
+internal class TotalLapLeaderboardService
 {
     private readonly OpenPracticeDbContext _dbContext;
 
@@ -10,20 +10,20 @@ internal class TotalLapLeaderboardService : ISubscriber
         _dbContext = dbContext;
     }
 
-    public async Task<TotalLapsLeaderboardResponse> On(TotalLapsLeaderboardRequest request)
+    public async Task<IEnumerable<Messages.Models.TotalLapLeaderboardPosition>> GetOpenPracticeSessionTotalLapLeaderboardPositions(Guid sessionId)
     {
-        var positions = await _dbContext.TotalLapsLeaderboardPositions.Where(x => x.SessionId == request.SessionId).ToListAsync();
+        var positions = await _dbContext.TotalLapsLeaderboardPositions.Where(x => x.SessionId == sessionId).ToListAsync();
 
-        return new TotalLapsLeaderboardResponse(positions.Select(x => new TotalLapsLeaderboardResponse.LeadboardPosition(x.Position, x.PilotId, x.TotalLaps, x.FirstLapCompletionUtc)));
+        return positions.Select(x => new Messages.Models.TotalLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.FirstLapCompletionUtc));
     }
 
-    public async Task<PilotsLapsTotalResponse?> On(PilotLapsRequest request)
+    public async Task<Messages.Models.TotalLapRecord?> GetPilotOpenPracticeSessionTotalLapRecord(Guid sessionId, Guid pilotId)
     {
-        var position = await _dbContext.TotalLapsLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == request.SessionId && x.PilotId == request.PilotId);
+        var position = await _dbContext.TotalLapsLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.PilotId == pilotId);
 
         return position == null
             ? null
-            : new PilotsLapsTotalResponse(position.TotalLaps, position.FirstLapCompletionUtc);
+            : new Messages.Models.TotalLapRecord(position.TotalLaps, position.FirstLapCompletionUtc);
     }
     public async Task When(TotalLapsLeaderboardPositionRemoved removed)
     {

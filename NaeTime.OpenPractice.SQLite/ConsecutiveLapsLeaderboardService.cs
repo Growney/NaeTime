@@ -1,7 +1,7 @@
 ﻿using NaeTime.OpenPractice.Messages.Events;
 
 namespace NaeTime.OpenPractice.SQLite;
-internal class ConsecutiveLapsLeaderboardService : ISubscriber
+internal class ConsecutiveLapsLeaderboardService
 {
     private readonly OpenPracticeDbContext _dbContext;
 
@@ -9,17 +9,17 @@ internal class ConsecutiveLapsLeaderboardService : ISubscriber
     {
         _dbContext = dbContext;
     }
-    public async Task<PilotConsecutiveLapRecordsResponse> On(PilotConsecutiveLapRecordsRequest request)
+    public async Task<IEnumerable<Messages.Models.ConsecutiveLapRecord>> GetPilotOpenPracticeSessionConsecutiveLapRecords(Guid sessionId, Guid pilotId)
     {
-        var positions = await _dbContext.ConsecutiveLapLeaderboardPositions.Where(x => x.SessionId == request.SessionId && x.PilotId == request.PilotId).ToListAsync();
+        var positions = await _dbContext.ConsecutiveLapLeaderboardPositions.Where(x => x.SessionId == sessionId && x.PilotId == pilotId).ToListAsync();
 
-        return new PilotConsecutiveLapRecordsResponse(positions.Select(x => new PilotConsecutiveLapRecordsResponse.ConsecutiveLapRecord(x.LapCap, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(x => x.LapId))));
+        return positions.Select(x => new Messages.Models.ConsecutiveLapRecord(x.LapCap, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(x => x.LapId)));
     }
-    public async Task<ConsecutiveLapLeaderboardReponse> On(ConsecutiveLapLeaderboardRequest request)
+    public async Task<IEnumerable<Messages.Models.ConsecutiveLapLeaderboardPosition>> GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions(Guid sessionId, uint lapCap)
     {
-        var positions = await _dbContext.ConsecutiveLapLeaderboardPositions.Where(x => x.SessionId == request.SessionId && x.LapCap == request.LapCap).ToListAsync();
+        var positions = await _dbContext.ConsecutiveLapLeaderboardPositions.Where(x => x.SessionId == sessionId && x.LapCap == lapCap).ToListAsync();
 
-        return new ConsecutiveLapLeaderboardReponse(positions.Select(x => new ConsecutiveLapLeaderboardReponse.LeadboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(x => x.LapId))));
+        return positions.Select(x => new Messages.Models.ConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(x => x.LapId)));
     }
     public Task When(ConsecutiveLapLeaderboardRecordReduced reduced)
         => UpdateLapPosition(reduced.SessionId, reduced.LapCap, null, reduced.PilotId, reduced.TotalLaps, reduced.TotalMilliseconds, reduced.LastLapCompletionUtc, reduced.IncludedLaps);

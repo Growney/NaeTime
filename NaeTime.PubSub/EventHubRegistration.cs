@@ -1,7 +1,7 @@
 ﻿namespace NaeTime.PubSub;
 internal class EventHubRegistration
 {
-    public EventHubRegistration(Type hubType, EventHubLifetime lifetime, object? instance)
+    public EventHubRegistration(Type hubType, HubLifetime lifetime, object? instance)
     {
         HubType = hubType ?? throw new ArgumentNullException(nameof(hubType));
         Lifetime = lifetime;
@@ -9,6 +9,6 @@ internal class EventHubRegistration
     }
 
     public Type HubType { get; }
-    public EventHubLifetime Lifetime { get; }
+    public HubLifetime Lifetime { get; }
     public object? Instance { get; }
 }
