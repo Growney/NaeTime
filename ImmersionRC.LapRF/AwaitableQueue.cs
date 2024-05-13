@@ -23,6 +23,7 @@ public class AwaitableQueue<T> : IDisposable
         {
             _queue.TryDequeue(out _);
         }
+
         _signal.Release();
     }
 

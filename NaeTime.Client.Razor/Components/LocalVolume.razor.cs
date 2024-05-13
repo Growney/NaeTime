@@ -25,6 +25,7 @@ public partial class LocalVolume : ComponentBase
             _isMuted = false;
             _volume = 100;
         }
+
         await base.OnInitializedAsync();
     }
 

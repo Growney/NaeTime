@@ -12,6 +12,7 @@ public record ActiveTrack(IEnumerable<Guid> Timers)
                 return position;
             }
         }
+
         return -1;
     }
 }

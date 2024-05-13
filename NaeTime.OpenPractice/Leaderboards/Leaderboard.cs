@@ -32,6 +32,7 @@ public class Leaderboard<TRecord> where TRecord : IComparable<TRecord>
             LeaderboardPosition<TRecord> position = new(record.Key, i, record.Value);
             positions[record.Key] = position;
         }
+
         return positions;
     }
 }

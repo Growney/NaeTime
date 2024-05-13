@@ -50,6 +50,7 @@ public class SingleLapLeaderboard
         {
             return timeCompare;
         }
+
         return a.CompletionUtc.CompareTo(b.CompletionUtc);
     }
 }

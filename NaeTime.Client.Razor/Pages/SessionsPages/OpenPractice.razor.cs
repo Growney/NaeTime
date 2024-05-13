@@ -39,6 +39,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
                 CallSign = x.CallSign
             }));
         }
+
         IEnumerable<Management.Messages.Models.Track>? tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Track>>("GetTracks");
 
         if (tracksResponse != null)

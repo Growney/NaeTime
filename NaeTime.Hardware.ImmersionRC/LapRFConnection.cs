@@ -54,11 +54,13 @@ internal class LapRFConnection
             {
                 await Task.Delay(1000).ConfigureAwait(false);
             }
+
             if (IsConnected)
             {
                 IsConnected = false;
                 await _eventClient.Publish(new TimerDisconnected(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
             }
+
             await _communication.DisconnectAsync(token).ConfigureAwait(false);
         }
 
@@ -130,6 +132,7 @@ internal class LapRFConnection
             {
                 continue;
             }
+
             channels.Add(new LapRF8ChannelLaneConfiguration(setup.TransponderId, null, (int)setup.Frequency.Value, setup.IsEnabled));
         }
 
@@ -143,6 +146,7 @@ internal class LapRFConnection
         {
             return;
         }
+
         await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, isEnabled: isEnabled).ConfigureAwait(false);
     }
     public async Task SetLaneRadioFrequency(byte Lane, int frequencyInMhz)
@@ -151,6 +155,7 @@ internal class LapRFConnection
         {
             return;
         }
+
         await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, frequencyInMHz: (ushort)frequencyInMhz).ConfigureAwait(false);
     }
     public Task Stop()

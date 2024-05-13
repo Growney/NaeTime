@@ -63,6 +63,7 @@ internal class StatusProtocol : IStatusProtocol, IDisposable
                         AddReceivedSignalStrengthIndicator(new ReceivedSignalStrengthIndicator(currentTransponderId.Value, receivedSignalStrengthIndicator, currentTimestamp));
                         currentTransponderId = null;
                     }
+
                     break;
                 case StatusField.GateState:
                     gateState = recordReader.ReadByte();
@@ -94,6 +95,7 @@ internal class StatusProtocol : IStatusProtocol, IDisposable
         {
             return receivedSignalStrengthIndicator;
         }
+
         return null;
     }
 

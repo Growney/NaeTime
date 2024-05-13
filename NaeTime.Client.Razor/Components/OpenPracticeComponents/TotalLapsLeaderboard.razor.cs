@@ -75,6 +75,7 @@ public partial class TotalLapsLeaderboard : ComponentBase, IDisposable
         {
             existingPosition.Position = position.Value;
         }
+
         existingPosition.TotalLaps = totalLaps;
         existingPosition.FirstLapCompletionUtc = firstLapCompletionUtc;
 

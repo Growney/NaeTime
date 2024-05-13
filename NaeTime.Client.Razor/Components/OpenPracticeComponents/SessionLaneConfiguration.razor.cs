@@ -55,6 +55,7 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
         {
             Configuration.MaxRssiValue = rssiLevelRecorded.Level;
         }
+
         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
     public async Task When(LapStarted started)
@@ -96,6 +97,7 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
         {
             return Task.CompletedTask;
         }
+
         Configuration.IsEnabled = value;
         if (value)
         {
@@ -120,6 +122,7 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
                 newFrequency = firstFrequency.FrequencyInMhz;
             }
         }
+
         return ChangeFrequency(bandId, newFrequency);
 
     }
@@ -168,6 +171,7 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
         {
             return Task.CompletedTask;
         }
+
         Configuration.PilotId = pilotId;
         return EventClient.Publish(new OpenPracticeLanePilotSet(SessionId, pilotId, Configuration.LaneNumber));
     }

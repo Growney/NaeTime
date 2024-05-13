@@ -32,6 +32,7 @@ internal class LapService
             //TODO dispatch timer detection discarded
             return;
         }
+
         await HandleDetection(detection.SessionId, detection.MinimumLapMilliseconds, detection.MaximumLapMilliseconds, detection.Lane, (byte)timerPosition, (byte)timerCount, detection.HardwareTime, detection.SoftwareTime, detection.UtcTime);
     }
 

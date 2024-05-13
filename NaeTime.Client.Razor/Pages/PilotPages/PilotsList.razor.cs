@@ -20,6 +20,7 @@ public partial class PilotsList : ComponentBase
         {
             return;
         }
+
         _pilots.AddRange(pilotsResponse.Select(x => new Pilot()
         {
             Id = x.Id,

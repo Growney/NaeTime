@@ -28,6 +28,7 @@ public class FastestSingleLapCalculator
                 finishedUtc = lap.FinishedUtc;
             }
         }
+
         return new SingleLapRecord(lapId, lapMilliseconds, finishedUtc);
     }
 }

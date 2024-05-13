@@ -23,6 +23,7 @@ public class Track
         {
             return false;
         }
+
         return true;
     }
     public void MoveTimerUp(Guid timerId)
@@ -32,6 +33,7 @@ public class Track
         {
             return;
         }
+
         _timers.RemoveAt(index);
         _timers.Insert(index - 1, timerId);
     }
@@ -42,6 +44,7 @@ public class Track
         {
             return false;
         }
+
         return true;
     }
     public void MoveTimerDown(Guid timerId)
@@ -51,6 +54,7 @@ public class Track
         {
             return;
         }
+
         _timers.RemoveAt(index);
         _timers.Insert(index + 1, timerId);
     }

@@ -20,6 +20,7 @@ public class ConsecutiveLapsLeaderboard
                 return true;
             }
         }
+
         return false;
     }
     public IDictionary<Guid, ConsecutiveLapsLeaderboardPosition> GetPositions()
@@ -44,11 +45,13 @@ public class ConsecutiveLapsLeaderboard
         {
             return lapCompare;
         }
+
         int timeCompare = a.TotalMilliseconds.CompareTo(b.TotalMilliseconds);
         if (timeCompare != 0)
         {
             return timeCompare;
         }
+
         return a.LastLapCompletionUtc.CompareTo(b.LastLapCompletionUtc);
     }
 }

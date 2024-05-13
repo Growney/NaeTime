@@ -31,6 +31,7 @@ public class FastestConsecutiveLapCalculator
             {
                 continue;
             }
+
             int remainingLaps = lapsList.Count - currentLapIndex;
 
             //We have less remaining laps than the lap count and less than our max consecutive laps so we know we aren't gonna find a new record
@@ -38,6 +39,7 @@ public class FastestConsecutiveLapCalculator
             {
                 break;
             }
+
             int currentConsecutiveLaps = 1;
 
             if (currentConsecutiveLaps >= maxConsecutiveLaps)

@@ -79,6 +79,7 @@ public partial class ConsecutiveLapsLeaderboard : ComponentBase, IDisposable
         {
             existingPosition.Position = position.Value;
         }
+
         existingPosition.TotalLaps = totalLaps;
         existingPosition.TotalMilliseconds = totalMilliseconds;
         existingPosition.LastLapCompletionUtc = lastLapCompletionUtc;
