@@ -34,13 +34,10 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     private IEventClient EventClient { get; set; } = null!;
 
     [Inject]
-    private IEventRegistrar EventRegistrar { get; set; } = null!;
-
-    private IEventRegistrarScope? RegistrarScope;
+    private IEventRegistrarScope RegistrarScope { get; set; } = null!;
 
     protected override Task OnInitializedAsync()
     {
-        RegistrarScope = EventRegistrar.CreateScope();
         RegistrarScope.RegisterHub(this);
 
         return base.OnInitializedAsync();

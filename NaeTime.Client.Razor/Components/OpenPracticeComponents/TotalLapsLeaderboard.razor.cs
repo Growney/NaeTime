@@ -13,18 +13,14 @@ public partial class TotalLapsLeaderboard : ComponentBase, IDisposable
     [Inject]
     private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
     [Inject]
-    private IEventRegistrar EventRegistrar { get; set; } = null!;
-
-    private IEventRegistrarScope? _registrarScope;
+    private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
 
     private readonly List<TotalLapLeaderboardPosition> _positions = new();
     private readonly List<Pilot> _pilots = new();
 
     protected override async Task OnInitializedAsync()
     {
-
-        _registrarScope = EventRegistrar.CreateScope();
-        _registrarScope.RegisterHub(this);
+        EventRegistrarScope.RegisterHub(this);
 
         var initialPositions = await RpcClient.InvokeAsync<IEnumerable<NaeTime.OpenPractice.Messages.Models.TotalLapLeaderboardPosition>>("GetOpenPracticeSessionTotalLapLeaderboardPositions", SessionId);
 
@@ -104,7 +100,7 @@ public partial class TotalLapsLeaderboard : ComponentBase, IDisposable
 
         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
-    public void Dispose() => _registrarScope?.Dispose();
+    public void Dispose() => EventRegistrarScope?.Dispose();
 
     private string GetPilotName(Guid pilotId) => _pilots.FirstOrDefault(x => x.Id == pilotId)?.CallSign ?? "Unknown";
 }

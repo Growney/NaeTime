@@ -9,24 +9,20 @@ namespace NaeTime.Timing.ImmersionRC.Hardware;
 internal class LapRFManager : IHostedService
 {
     private readonly IRemoteProcedureCallClient _rpcClient;
-    private readonly IEventRegistrar _eventRegistrar;
+    private readonly IEventRegistrarScope _eventRegistrarScope;
     private readonly IRemoteProcedureCallRegistrar _rpcRegistrar;
     private readonly ILapRFConnectionFactory _connectionFactory;
 
-    private readonly IEventRegistrarScope _eventScope;
-
     private readonly ConcurrentDictionary<Guid, LapRFConnection> _hardwareProcesses = new();
 
-    public LapRFManager(IRemoteProcedureCallClient rpcClient, IEventRegistrar eventRegistrar, IRemoteProcedureCallRegistrar rpcRegistrar, ILapRFConnectionFactory connectionFactory)
+    public LapRFManager(IRemoteProcedureCallClient rpcClient, IEventRegistrarScope eventRegistrarScope, IRemoteProcedureCallRegistrar rpcRegistrar, ILapRFConnectionFactory connectionFactory)
     {
         _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
-        _eventRegistrar = eventRegistrar ?? throw new ArgumentNullException(nameof(eventRegistrar));
+        _eventRegistrarScope = eventRegistrarScope ?? throw new ArgumentNullException(nameof(eventRegistrarScope));
         _rpcRegistrar = rpcRegistrar ?? throw new ArgumentNullException(nameof(rpcRegistrar));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
-        _eventScope = _eventRegistrar.CreateScope();
-
-        _eventScope.RegisterHub(this);
+        _eventRegistrarScope.RegisterHub(this);
 
         _rpcRegistrar.RegisterHandler<Guid, IEnumerable<EthernetLapRF8ChannelTimerLaneConfiguration>>("GetEthernetLapRF8ChannelTimerLaneConfigurations", GetEthernetLapRF8ChannelTimerLaneConfigurations);
         _rpcRegistrar.RegisterHandler<Guid, byte, EthernetLapRF8ChannelTimerLaneConfiguration?>("GetEthernetLapRF8ChannelTimerLaneConfiguration", GetEthernetLapRF8ChannelTimerLaneConfiguration);
@@ -54,7 +50,7 @@ internal class LapRFManager : IHostedService
             await device.Value.Stop().ConfigureAwait(false);
         }
 
-        _eventScope.Dispose();
+        _eventRegistrarScope.Dispose();
     }
 
     private async Task<IEnumerable<EthernetLapRF8ChannelTimerLaneConfiguration>> GetEthernetLapRF8ChannelTimerLaneConfigurations(Guid timerId)

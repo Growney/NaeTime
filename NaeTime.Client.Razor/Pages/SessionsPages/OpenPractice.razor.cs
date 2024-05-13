@@ -13,21 +13,19 @@ public partial class OpenPractice : ComponentBase, IDisposable
     [Inject]
     public IEventClient EventClient { get; set; } = default!;
     [Inject]
-    public IEventRegistrar EventRegistrar { get; set; } = default!;
+    public IEventRegistrarScope EventRegistrarScope { get; set; } = default!;
 
     private readonly List<LaneConfiguration> _laneConfigurations = new();
     private readonly List<TrackDetails> _tracks = new();
     private readonly List<Pilot> _pilots = new();
     private readonly List<SessionDetails> _sessionDetails = new();
-    private IEventRegistrarScope? _registrarScope;
 
     private OpenPracticeSession? _selectedSession;
     private Guid? _activeSessionId;
     private bool _isLaneConfigCollapsed = false;
     protected override async Task OnInitializedAsync()
     {
-        _registrarScope = EventRegistrar.CreateScope();
-        _registrarScope.RegisterHub(this);
+        EventRegistrarScope.RegisterHub(this);
 
         var pilotsResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
 
@@ -339,5 +337,5 @@ public partial class OpenPractice : ComponentBase, IDisposable
         _selectedSession.TrackedConsecutiveLaps.Add(lapCap);
         return EventClient.Publish(new ConsecutiveLapCountTracked(sessionId, lapCap));
     }
-    public void Dispose() => _registrarScope?.Dispose();
+    public void Dispose() => EventRegistrarScope?.Dispose();
 }

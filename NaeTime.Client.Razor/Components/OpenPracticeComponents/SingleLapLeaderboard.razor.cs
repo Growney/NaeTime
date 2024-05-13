@@ -12,16 +12,14 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
     [Inject]
     private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
     [Inject]
-    private IEventRegistrar EventRegistrar { get; set; } = null!;
+    private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
 
-    private IEventRegistrarScope? _registrarScope;
     private readonly List<SingleLapLeaderboardPosition> _positions = new();
     private readonly List<Pilot> _pilots = new();
 
     protected override async Task OnInitializedAsync()
     {
-        _registrarScope = EventRegistrar.CreateScope();
-        _registrarScope.RegisterHub(this);
+        EventRegistrarScope.RegisterHub(this);
 
         var initialPositions = await RpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.SingleLapLeaderboardPosition>>("GetOpenPracticeSessionSingleLapLeaderboardPositions", SessionId);
 
@@ -108,5 +106,5 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
 
     private string GetPilotName(Guid pilotId) => _pilots.FirstOrDefault(x => x.Id == pilotId)?.CallSign ?? "Unknown";
 
-    public void Dispose() => _registrarScope?.Dispose();
+    public void Dispose() => EventRegistrarScope?.Dispose();
 }
