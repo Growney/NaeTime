@@ -17,13 +17,12 @@ internal class LapRFManager : IHostedService
 
     private readonly ConcurrentDictionary<Guid, LapRFConnection> _hardwareProcesses = new();
 
-    public LapRFManager(IRemoteProcedureCallClient rpcClient, IEventRegistrar eventRegistrar, IRemoteProcedureCallRegistrar rpcRegistrar, ILapRFConnectionFactory connectionFactory, ConcurrentDictionary<Guid, LapRFConnection> hardwareProcesses)
+    public LapRFManager(IRemoteProcedureCallClient rpcClient, IEventRegistrar eventRegistrar, IRemoteProcedureCallRegistrar rpcRegistrar, ILapRFConnectionFactory connectionFactory)
     {
         _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
         _eventRegistrar = eventRegistrar ?? throw new ArgumentNullException(nameof(eventRegistrar));
         _rpcRegistrar = rpcRegistrar ?? throw new ArgumentNullException(nameof(rpcRegistrar));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        _hardwareProcesses = hardwareProcesses ?? throw new ArgumentNullException(nameof(hardwareProcesses));
 
         _eventScope = _eventRegistrar.CreateScope();
 

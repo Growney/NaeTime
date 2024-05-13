@@ -1,4 +1,5 @@
-﻿using NaeTime.Persistence.SQLite;
+﻿using NaeTime.Persistence;
+using NaeTime.Persistence.SQLite;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions
@@ -7,7 +8,7 @@ public static class IServiceCollectionExtensions
     {
         services.AddEventAndRemoteProcedureCallHub<PilotService>();
         services.AddEventAndRemoteProcedureCallHub<TrackService>();
-        services.AddEventAndRemoteProcedureCallHub<ActiveSession>();
+        services.AddEventAndRemoteProcedureCallHub<ActiveService>();
         services.AddHostedService<SQLiteDatabaseManager<ManagementDbContext>>();
         services.AddDbContext<ManagementDbContext>(options => options.UseSqlite($"Data Source=naetime.management.db"), contextLifetime: ServiceLifetime.Transient);
         return services;

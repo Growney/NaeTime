@@ -38,7 +38,7 @@ internal class LapService
 
     private async Task HandleDetection(Guid sessionId, long minimumLapMilliseconds, long? maximumLapMilliseconds, byte lane, byte split, byte timerCount, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        var activeTimingsResponse = await _rpcClient.InvokeAsync<Messages.Models.LaneActiveTimings>("GetLaneActiveTimings").ConfigureAwait(false);
+        var activeTimingsResponse = await _rpcClient.InvokeAsync<Messages.Models.LaneActiveTimings>("GetLaneActiveTimings", sessionId, lane).ConfigureAwait(false);
 
         ActiveLap? activeLap = null;
         if (activeTimingsResponse?.Lap != null)

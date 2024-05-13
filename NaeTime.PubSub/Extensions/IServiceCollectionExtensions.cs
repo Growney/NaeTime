@@ -86,6 +86,7 @@ public static class IServiceCollectionExtensions
         });
         services.TryAddSingleton<IEventRegistrar>(x => x.GetRequiredService<EventManager>());
         services.TryAddSingleton<IEventClient>(x => x.GetRequiredService<EventManager>());
+        services.TryAddTransient<IEventRegistrarScope>(x => x.GetRequiredService<EventManager>().CreateScope());
 
         return services;
     }

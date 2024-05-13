@@ -22,7 +22,7 @@ public class EventHubHandlerFactory
                 continue;
             }
 
-            if (method.Name.Equals("When", StringComparison.OrdinalIgnoreCase))
+            if (!method.Name.Equals("When", StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }

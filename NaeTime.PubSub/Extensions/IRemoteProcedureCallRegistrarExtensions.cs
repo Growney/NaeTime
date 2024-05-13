@@ -29,7 +29,7 @@ public static class IRemoteProcedureCallRegistrarExtensions
     }
     public static void RegisterHandler<T1, T2, TResponse>(this IRemoteProcedureCallRegistrar manager, string name, Func<T1, T2, Task<TResponse>> handler)
     {
-        RPCSignature signature = new(name, typeof(TResponse), typeof(T1));
+        RPCSignature signature = new(name, typeof(TResponse), typeof(T1), typeof(T2));
 
         manager.RegisterHandler(signature, async parameters =>
         {
@@ -43,7 +43,7 @@ public static class IRemoteProcedureCallRegistrarExtensions
     }
     public static void RegisterHandler<T1, T2, T3, TResponse>(this IRemoteProcedureCallRegistrar manager, string name, Func<T1, T2, T3, Task<TResponse>> handler)
     {
-        RPCSignature signature = new(name, typeof(TResponse), typeof(T1));
+        RPCSignature signature = new(name, typeof(TResponse), typeof(T1), typeof(T2));
 
         manager.RegisterHandler(signature, async parameters =>
         {

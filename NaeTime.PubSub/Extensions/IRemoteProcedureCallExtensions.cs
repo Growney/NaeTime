@@ -5,7 +5,7 @@ public static class IRemoteProcedureCallExtensions
     {
         RPCSignature signature = new(methodName, typeof(TResult), parameters.Select(x => x.GetType()).ToArray());
 
-        Func<object?[], Task<object?>> handler = manager.GetHandler(signature) ?? throw new InvalidOperationException($"No handler found for {signature}");
+        Func<object?[], Task<object?>> handler = manager.GetHandler(signature) ?? throw new InvalidOperationException($"No handler found for {methodName}");
 
         object? result = await handler(parameters);
 

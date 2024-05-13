@@ -14,6 +14,7 @@ public class EventManager : IEventClient, IEventRegistrar
 
         public EventManagerScope(Guid scopeId, EventManager eventManager)
         {
+            _scopeId = scopeId;
             _eventManager = eventManager ?? throw new ArgumentNullException(nameof(eventManager));
         }
 

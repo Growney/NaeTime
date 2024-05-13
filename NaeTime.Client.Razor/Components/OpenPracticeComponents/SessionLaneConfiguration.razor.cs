@@ -36,12 +36,12 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     [Inject]
     private IEventRegistrar EventRegistrar { get; set; } = null!;
 
-    private IEventRegistrarScope? _registrarScope;
+    private IEventRegistrarScope? RegistrarScope;
 
     protected override Task OnInitializedAsync()
     {
-        _registrarScope = EventRegistrar.CreateScope();
-        _registrarScope.RegisterHub(this);
+        RegistrarScope = EventRegistrar.CreateScope();
+        RegistrarScope.RegisterHub(this);
 
         return base.OnInitializedAsync();
     }
@@ -188,5 +188,5 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     private Task TriggerDetection(Guid timerId) => EventClient.Publish(new OpenPracticeSessionDetectionTriggered(SessionId, Configuration.LaneNumber, timerId));
 
     private Task TriggerInvalidation(Guid timerId) => EventClient.Publish(new OpenPracticeSessionInvalidationTriggered(SessionId, Configuration.LaneNumber));
-    public void Dispose() => _registrarScope?.Dispose();
+    public void Dispose() => RegistrarScope?.Dispose();
 }

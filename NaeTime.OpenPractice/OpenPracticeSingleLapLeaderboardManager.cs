@@ -18,7 +18,7 @@ public class OpenPracticeSingleLapLeaderboardManager
 
     public async Task When(OpenPracticeLapCompleted completed)
     {
-        var existingRecord = await _rpcClient.InvokeAsync<Messages.Models.SingleLapLeaderboardPosition?>("GetPilotOpenPracticeSessionSingleLapRecord", completed.SessionId, completed.PilotId);
+        var existingRecord = await _rpcClient.InvokeAsync<Messages.Models.SingleLapRecord?>("GetPilotOpenPracticeSessionSingleLapRecord", completed.SessionId, completed.PilotId);
 
         if (existingRecord == null)
         {
@@ -34,7 +34,7 @@ public class OpenPracticeSingleLapLeaderboardManager
     }
     public async Task When(OpenPracticeLapDisputed disputed)
     {
-        var existingRecord = await _rpcClient.InvokeAsync<Messages.Models.SingleLapLeaderboardPosition?>("GetPilotOpenPracticeSessionSingleLapRecord", disputed.SessionId, disputed.PilotId);
+        var existingRecord = await _rpcClient.InvokeAsync<Messages.Models.SingleLapRecord?>("GetPilotOpenPracticeSessionSingleLapRecord", disputed.SessionId, disputed.PilotId);
 
         //When its changed to completed its like we have a new lap se we need to check it against the existing record
         if (disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed)
@@ -71,7 +71,7 @@ public class OpenPracticeSingleLapLeaderboardManager
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        var existingRecord = await _rpcClient.InvokeAsync<Messages.Models.SingleLapLeaderboardPosition?>("GetPilotOpenPracticeSessionSingleLapRecord", removed.SessionId, removed.PilotId);
+        var existingRecord = await _rpcClient.InvokeAsync<Messages.Models.SingleLapRecord?>("GetPilotOpenPracticeSessionSingleLapRecord", removed.SessionId, removed.PilotId);
 
         if (existingRecord == null)
         {
