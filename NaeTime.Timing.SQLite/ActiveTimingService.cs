@@ -1,63 +1,63 @@
 ﻿namespace NaeTime.Timing.SQLite;
-internal class ActiveTimingService : ISubscriber
+internal class ActiveTimingService
 {
     private readonly TimingDbContext _dbContext;
     public ActiveTimingService(TimingDbContext dbContext)
     {
         _dbContext = dbContext;
     }
-    public async Task<ActiveTimingResponse?> On(ActiveTimingRequest request)
+    public async Task<Messages.Models.LaneActiveTimings?> GetLaneActiveTimings(Guid sessionId, byte lane)
     {
-        var activeTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == request.SessionId && x.Lane == request.Lane);
+        ActiveTimings? activeTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.Lane == lane);
         if (activeTimings == null)
         {
             return null;
         }
 
-        ActiveTimingResponse.ActiveLap? lap = null;
+        Messages.Models.ActiveLap? lap = null;
         if (activeTimings.ActiveLap != null)
         {
-            lap = new ActiveTimingResponse.ActiveLap(activeTimings.ActiveLap.StartedSoftwareTime, activeTimings.ActiveLap.StartedUtcTime, activeTimings.ActiveLap.StartedHardwareTime);
+            lap = new Messages.Models.ActiveLap(activeTimings.ActiveLap.StartedSoftwareTime, activeTimings.ActiveLap.StartedUtcTime, activeTimings.ActiveLap.StartedHardwareTime);
         }
 
-        ActiveTimingResponse.ActiveSplit? split = null;
+        Messages.Models.ActiveSplit? split = null;
         if (activeTimings.ActiveSplit != null)
         {
-            split = new ActiveTimingResponse.ActiveSplit(activeTimings.ActiveSplit.SplitNumber, activeTimings.ActiveSplit.StartedSoftwareTime, activeTimings.ActiveSplit.StartedUtcTime);
+            split = new Messages.Models.ActiveSplit(activeTimings.ActiveSplit.SplitNumber, activeTimings.ActiveSplit.StartedSoftwareTime, activeTimings.ActiveSplit.StartedUtcTime);
         }
 
-        return new ActiveTimingResponse(activeTimings.SessionId, activeTimings.Lane, activeTimings.LapNumber, lap, split);
+        return new Messages.Models.LaneActiveTimings(activeTimings.Lane, activeTimings.LapNumber, lap, split);
     }
 
-    public async Task<ActiveTimingsResponse> On(ActiveTimingsRequest request)
+    public async Task<IEnumerable<Messages.Models.LaneActiveTimings>> GetSessionActiveTimings(Guid sessionId)
     {
-        var timings = await _dbContext.ActiveTimings.Where(x => x.SessionId == request.SessionId).ToListAsync();
+        List<ActiveTimings> timings = await _dbContext.ActiveTimings.Where(x => x.SessionId == sessionId).ToListAsync();
 
-        var responseData = new List<ActiveTimingsResponse.ActiveTimings>();
+        List<Messages.Models.LaneActiveTimings> responseData = new();
 
-        foreach (var timing in timings)
+        foreach (ActiveTimings? timing in timings)
         {
-            ActiveTimingsResponse.ActiveLap? lap = null;
+            Messages.Models.ActiveLap? lap = null;
             if (timing.ActiveLap != null)
             {
-                lap = new ActiveTimingsResponse.ActiveLap(timing.ActiveLap.StartedSoftwareTime, timing.ActiveLap.StartedUtcTime, timing.ActiveLap.StartedHardwareTime);
+                lap = new Messages.Models.ActiveLap((long)timing.ActiveLap.StartedSoftwareTime, (DateTime)timing.ActiveLap.StartedUtcTime, (ulong?)timing.ActiveLap.StartedHardwareTime);
             }
 
-            ActiveTimingsResponse.ActiveSplit? split = null;
+            Messages.Models.ActiveSplit? split = null;
             if (timing.ActiveSplit != null)
             {
-                split = new ActiveTimingsResponse.ActiveSplit(timing.ActiveSplit.SplitNumber, timing.ActiveSplit.StartedSoftwareTime, timing.ActiveSplit.StartedUtcTime);
+                split = new Messages.Models.ActiveSplit((byte)timing.ActiveSplit.SplitNumber, (long)timing.ActiveSplit.StartedSoftwareTime, (DateTime)timing.ActiveSplit.StartedUtcTime);
             }
 
-            responseData.Add(new ActiveTimingsResponse.ActiveTimings(timing.Lane, timing.LapNumber, lap, split));
+            responseData.Add(new Messages.Models.LaneActiveTimings(timing.Lane, timing.LapNumber, lap, split));
         }
 
-        return new ActiveTimingsResponse(request.SessionId, responseData);
+        return responseData;
     }
 
     public async Task When(LapCompleted completed)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == completed.SessionId && x.Lane == completed.Lane).ConfigureAwait(false);
+        ActiveTimings? existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == completed.SessionId && x.Lane == completed.Lane).ConfigureAwait(false);
 
         if (existingTimings == null)
         {
@@ -72,7 +72,7 @@ internal class ActiveTimingService : ISubscriber
     }
     public async Task When(LapInvalidated invalidated)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == invalidated.SessionId && x.Lane == invalidated.Lane).ConfigureAwait(false);
+        ActiveTimings? existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == invalidated.SessionId && x.Lane == invalidated.Lane).ConfigureAwait(false);
 
         if (existingTimings == null)
         {
@@ -87,11 +87,11 @@ internal class ActiveTimingService : ISubscriber
     }
     public async Task When(LapStarted started)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == started.SessionId && x.Lane == started.Lane).ConfigureAwait(false);
+        ActiveTimings? existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == started.SessionId && x.Lane == started.Lane).ConfigureAwait(false);
 
         if (existingTimings == null)
         {
-            existingTimings = new Models.ActiveTimings()
+            existingTimings = new ActiveTimings()
             {
                 Id = Guid.NewGuid(),
                 Lane = started.Lane,
@@ -102,7 +102,7 @@ internal class ActiveTimingService : ISubscriber
 
         existingTimings.LapNumber = started.LapNumber;
 
-        var activeLap = new Models.ActiveLap
+        ActiveLap activeLap = new()
         {
             Id = Guid.NewGuid(),
             ActiveTimingsId = existingTimings.Id,
@@ -117,7 +117,7 @@ internal class ActiveTimingService : ISubscriber
     }
     public async Task When(SplitCompleted completed)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == completed.SessionId && x.Lane == completed.Lane).ConfigureAwait(false);
+        ActiveTimings? existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == completed.SessionId && x.Lane == completed.Lane).ConfigureAwait(false);
 
         if (existingTimings == null)
         {
@@ -130,11 +130,11 @@ internal class ActiveTimingService : ISubscriber
     }
     public async Task When(SplitStarted started)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == started.SessionId && x.Lane == started.Lane).ConfigureAwait(false);
+        ActiveTimings? existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == started.SessionId && x.Lane == started.Lane).ConfigureAwait(false);
 
         if (existingTimings == null)
         {
-            existingTimings = new Models.ActiveTimings()
+            existingTimings = new ActiveTimings()
             {
                 Id = Guid.NewGuid(),
                 Lane = started.Lane,
@@ -145,7 +145,7 @@ internal class ActiveTimingService : ISubscriber
 
         existingTimings.LapNumber = started.LapNumber;
 
-        var activeSplit = new Models.ActiveSplit
+        ActiveSplit activeSplit = new()
         {
             Id = Guid.NewGuid(),
             ActiveTimingsId = existingTimings.Id,
@@ -160,7 +160,7 @@ internal class ActiveTimingService : ISubscriber
     }
     public async Task When(SplitSkipped skipped)
     {
-        var existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == skipped.SessionId && x.Lane == skipped.Lane).ConfigureAwait(false);
+        ActiveTimings? existingTimings = await _dbContext.ActiveTimings.FirstOrDefaultAsync(x => x.SessionId == skipped.SessionId && x.Lane == skipped.Lane).ConfigureAwait(false);
 
         if (existingTimings == null)
         {

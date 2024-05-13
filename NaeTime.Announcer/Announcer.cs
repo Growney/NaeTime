@@ -16,12 +16,12 @@ public class Announcer : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(250));
+        using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(250));
 
         while (!stoppingToken.IsCancellationRequested)
         {
             await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false);
-            if (_queue.TryDequeue(out var announcement))
+            if (_queue.TryDequeue(out Announcement? announcement))
             {
                 if (announcement is not null)
                 {

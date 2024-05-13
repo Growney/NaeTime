@@ -32,7 +32,7 @@ internal class StatusProtocol : IStatusProtocol, IDisposable
 
         while (recordReader.HasData())
         {
-            var fieldSignature = recordReader.ReadByte();
+            byte fieldSignature = recordReader.ReadByte();
 
             if (fieldSignature == LapRFProtocol.END_OF_RECORD)
             {
@@ -57,7 +57,7 @@ internal class StatusProtocol : IStatusProtocol, IDisposable
                     inputVoltage = recordReader.ReadUInt16();
                     break;
                 case StatusField.ReceivedSignalStrengthIndicator:
-                    var receivedSignalStrengthIndicator = recordReader.ReadSingle();
+                    float receivedSignalStrengthIndicator = recordReader.ReadSingle();
                     if (currentTransponderId != null)
                     {
                         AddReceivedSignalStrengthIndicator(new ReceivedSignalStrengthIndicator(currentTransponderId.Value, receivedSignalStrengthIndicator, currentTimestamp));
@@ -90,7 +90,7 @@ internal class StatusProtocol : IStatusProtocol, IDisposable
     }
     public ReceivedSignalStrengthIndicator? GetLastReceivedSignalStrengthIndicator(byte transponderId)
     {
-        if (_lastReceivedSignalStrengthIndicators.TryGetValue(transponderId, out var receivedSignalStrengthIndicator))
+        if (_lastReceivedSignalStrengthIndicators.TryGetValue(transponderId, out ReceivedSignalStrengthIndicator receivedSignalStrengthIndicator))
         {
             return receivedSignalStrengthIndicator;
         }

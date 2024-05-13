@@ -1,8 +1,7 @@
 ﻿using NaeTime.Management.Messages.Messages;
-using NaeTime.Management.Messages.Responses;
 
 namespace NaeTime.Management.SQLite;
-internal class PilotService : ISubscriber
+internal class PilotService
 {
     private readonly ManagementDbContext _dbContext;
 
@@ -24,7 +23,7 @@ internal class PilotService : ISubscriber
     }
     public async Task When(PilotDetailsChanged pilot)
     {
-        var existing = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == pilot.PilotId).ConfigureAwait(false);
+        Pilot? existing = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == pilot.PilotId).ConfigureAwait(false);
         if (existing == null)
         {
             return;
@@ -37,18 +36,18 @@ internal class PilotService : ISubscriber
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
-    public async Task<PilotsResponse> On(PilotsRequest request)
+    public async Task<IEnumerable<Messages.Models.Pilot>> GetPilots()
     {
-        var pilots = await _dbContext.Pilots.Select(x => new PilotsResponse.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign))
+        List<Messages.Models.Pilot> pilots = await _dbContext.Pilots.Select(x => new Messages.Models.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign))
             .ToListAsync().ConfigureAwait(false);
 
-        return new PilotsResponse(pilots);
+        return pilots;
     }
 
-    public async Task<PilotResponse?> On(PilotRequest request)
+    public async Task<Messages.Models.Pilot?> GetPilot(Guid pilotId)
     {
-        var pilot = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == request.PilotId).ConfigureAwait(false);
+        Pilot? pilot = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == pilotId).ConfigureAwait(false);
 
-        return pilot == null ? null : new PilotResponse(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign);
+        return pilot == null ? null : new Messages.Models.Pilot(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign);
     }
 }

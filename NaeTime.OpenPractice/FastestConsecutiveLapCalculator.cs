@@ -11,7 +11,7 @@ public class FastestConsecutiveLapCalculator
             return null;
         }
 
-        var lapsList = laps.ToList();
+        List<Lap> lapsList = laps.ToList();
 
         long totalTime = 0;
         int startLapNumber = 0;
@@ -19,19 +19,19 @@ public class FastestConsecutiveLapCalculator
 
         long minTotalTime = long.MaxValue;
         int maxConsecutiveLaps = 0;
-        var lapQueue = new Queue<Guid>();
+        Queue<Guid> lapQueue = new();
         DateTime lastLapCompletion = DateTime.MinValue;
 
         for (int currentLapIndex = 0; currentLapIndex < lapsList.Count; currentLapIndex++)
         {
-            var startLap = lapsList[currentLapIndex];
+            Lap startLap = lapsList[currentLapIndex];
             totalTime = startLap.TotalMilliseconds;
             //skip the checking of not completed laps
             if (startLap.Status != LapStatus.Completed)
             {
                 continue;
             }
-            var remainingLaps = lapsList.Count - currentLapIndex;
+            int remainingLaps = lapsList.Count - currentLapIndex;
 
             //We have less remaining laps than the lap count and less than our max consecutive laps so we know we aren't gonna find a new record
             if (remainingLaps < lapCount && remainingLaps < maxConsecutiveLaps)
@@ -63,7 +63,7 @@ public class FastestConsecutiveLapCalculator
                     break;
                 }
 
-                var currentCheckingLap = lapsList[currentCheckingLapIndex];
+                Lap currentCheckingLap = lapsList[currentCheckingLapIndex];
                 if (currentCheckingLap.Status != LapStatus.Completed)
                 {
                     break;

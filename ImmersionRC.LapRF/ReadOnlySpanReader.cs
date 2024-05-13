@@ -16,7 +16,7 @@ public ref struct ReadOnlySpanReader<T>
     }
     public ReadOnlySpan<T> Read(int length)
     {
-        var span = _data.Slice(_position, length);
+        ReadOnlySpan<T> span = _data.Slice(_position, length);
         _position += length;
         return span;
     }

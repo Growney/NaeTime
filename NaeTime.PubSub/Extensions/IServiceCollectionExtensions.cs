@@ -1,138 +1,117 @@
 ﻿using Microsoft.Extensions.DependencyInjection.Extensions;
 using NaeTime.PubSub;
 using NaeTime.PubSub.Abstractions;
-using System.Reflection;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions
 {
-    public static IServiceCollection AddNaeTimePublishSubscribe(this IServiceCollection services)
+    public static IServiceCollection AddNaeTimeRemoteProcedureCall(this IServiceCollection services)
     {
-        services.TryAddSingleton<PublishSubscribe>();
-        services.TryAddSingleton<IPublishSubscribe>(x => x.GetRequiredService<PublishSubscribe>());
-        services.TryAddSingleton<IDispatcher>(x => x.GetRequiredService<PublishSubscribe>());
-        services.TryAddSingleton<IPublisher>(x => x.GetRequiredService<PublishSubscribe>());
-
-        return services;
-    }
-
-    public static IServiceCollection AddSubscriber<TSubscriber, TMessage>(this IServiceCollection services, ServiceLifetime lifeTime = ServiceLifetime.Transient)
-        where TSubscriber : ISubscriber
-    {
-        services.AddSingleton<ISubscriberRegistration>(new SubscriberRegistration(typeof(TSubscriber), typeof(TMessage), lifeTime));
-        return services;
-    }
-    public static IServiceCollection AddSubscriber<TSubscriber, TRequest, TResponse>(this IServiceCollection services, ServiceLifetime lifeTime = ServiceLifetime.Transient)
-        where TSubscriber : ISubscriber
-    {
-        services.AddSingleton<IHandlerRegistration>(new HandlerRegistration(typeof(TSubscriber), typeof(TRequest), typeof(TResponse), lifeTime));
-        return services;
-    }
-    public static IServiceCollection AddSubscriber(this IServiceCollection services, Type subscriberType)
-    {
-        if (!subscriberType.IsClass)
+        services.TryAddSingleton(serviceProvider =>
         {
-            return services;
-        }
+            IEnumerable<RemoteProcedureCallHubRegistration> hubRegistrations = serviceProvider.GetServices<RemoteProcedureCallHubRegistration>();
 
-        if (subscriberType.IsAbstract)
-        {
-            return services;
-        }
+            RemoteProcedureCallManager manager = ActivatorUtilities.CreateInstance<RemoteProcedureCallManager>(serviceProvider);
 
-        if (!subscriberType.IsAssignableTo(typeof(ISubscriber)))
-        {
-            return services;
-        }
-
-        var messageTypes = GetMessageTypes(subscriberType);
-        foreach (var messageType in messageTypes)
-        {
-            services.AddSingleton<ISubscriberRegistration>(new SubscriberRegistration(subscriberType, messageType, ServiceLifetime.Scoped));
-        }
-
-        var handlerTypes = GetHandlerTypes(subscriberType);
-        foreach (var (requestType, responseType) in handlerTypes)
-        {
-            services.AddSingleton<IHandlerRegistration>(new HandlerRegistration(subscriberType, requestType, responseType, ServiceLifetime.Scoped));
-        }
-
-        return services;
-    }
-
-    private static IEnumerable<(Type requestType, Type responseType)> GetHandlerTypes(Type handlerType)
-    {
-        var methods = handlerType.GetMethods();
-
-        foreach (var method in methods)
-        {
-            if (method.Name != "On")
+            foreach (RemoteProcedureCallHubRegistration hubRegistration in hubRegistrations)
             {
-                continue;
-            }
-
-            var parameters = method.GetParameters();
-
-            if (parameters.Length != 1)
-            {
-                continue;
-            }
-
-            var requestType = parameters[0].ParameterType;
-
-            var returnType = method.ReturnType;
-
-            Type responseType;
-            if (returnType.IsGenericType)
-            {
-                if (returnType.GetGenericTypeDefinition() != typeof(Task<>))
+                switch (hubRegistration.Lifetime)
                 {
-                    continue;
+                    case HubLifetime.Service:
+                        manager.RegisterServiceHub(hubRegistration.HubType, serviceProvider);
+                        break;
+                    case HubLifetime.Scoped:
+                        manager.RegisterScopedHub(hubRegistration.HubType, serviceProvider);
+                        break;
+                    case HubLifetime.Transient:
+                        manager.RegisterTransientHub(hubRegistration.HubType, serviceProvider);
+                        break;
+                    case HubLifetime.Singleton:
+                        object handler = hubRegistration.Instance ?? ActivatorUtilities.CreateInstance(serviceProvider, hubRegistration.HubType) ?? throw new InvalidOperationException($"Could not create an instance of {hubRegistration.HubType.Name}");
+                        manager.RegisterHub(handler);
+                        break;
+                    default:
+                        break;
                 }
-
-                responseType = returnType.GetGenericArguments().First();
-            }
-            else
-            {
-                responseType = returnType;
             }
 
-            yield return (requestType, responseType);
+            return manager;
+        });
+        services.TryAddSingleton<IRemoteProcedureCallRegistrar>(serviceProvider => serviceProvider.GetRequiredService<RemoteProcedureCallManager>());
+        services.TryAddSingleton<IRemoteProcedureCallClient>(serviceProvider => serviceProvider.GetRequiredService<RemoteProcedureCallManager>());
 
-        }
+        return services;
     }
-    private static IEnumerable<Type> GetMessageTypes(Type subscriberType)
+    public static IServiceCollection AddRemoteProcedureCallHub(this IServiceCollection services, Type hubType, HubLifetime lifeTime = HubLifetime.Transient, object? instance = null)
     {
-        var methods = subscriberType.GetMethods();
-
-        foreach (var method in methods)
-        {
-            if (method.Name != "When")
-            {
-                continue;
-            }
-
-            var parameters = method.GetParameters();
-
-            if (parameters.Length != 1)
-            {
-                continue;
-            }
-
-            var parameter = parameters[0];
-
-            yield return parameter.ParameterType;
-        }
+        services.AddSingleton(new RemoteProcedureCallHubRegistration(hubType, lifeTime, instance));
+        return services;
     }
-    public static IServiceCollection AddSubscriberAssembly(this IServiceCollection services, Assembly assembly)
+    public static IServiceCollection AddRemoteProcedureCallHub<THub>(this IServiceCollection services, HubLifetime lifeTime = HubLifetime.Transient, THub? instance = default)
     {
-        var assemblyTypes = assembly.GetTypes();
-
-        foreach (var potentialSubscriberType in assemblyTypes)
+        services.AddSingleton(new RemoteProcedureCallHubRegistration(typeof(THub), lifeTime, instance));
+        return services;
+    }
+    public static IServiceCollection AddNaeTimeEventing(this IServiceCollection services)
+    {
+        services.TryAddSingleton(serviceProvider =>
         {
-            services.AddSubscriber(potentialSubscriberType);
-        }
+            IEnumerable<EventHubRegistration> hubRegistrations = serviceProvider.GetServices<EventHubRegistration>();
 
+            EventManager manager = ActivatorUtilities.CreateInstance<EventManager>(serviceProvider);
+
+            foreach (EventHubRegistration hubRegistration in hubRegistrations)
+            {
+                switch (hubRegistration.Lifetime)
+                {
+                    case HubLifetime.Service:
+                        manager.RegisterServiceHub(hubRegistration.HubType, serviceProvider);
+                        break;
+                    case HubLifetime.Scoped:
+                        manager.RegisterScopedHub(hubRegistration.HubType, serviceProvider);
+                        break;
+                    case HubLifetime.Transient:
+                        manager.RegisterTransientHub(hubRegistration.HubType, serviceProvider);
+                        break;
+                    case HubLifetime.Singleton:
+                        object handler = hubRegistration.Instance ?? ActivatorUtilities.CreateInstance(serviceProvider, hubRegistration.HubType) ?? throw new InvalidOperationException($"Could not create an instance of {hubRegistration.HubType.Name}");
+                        manager.RegisterHub(handler);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return manager;
+        });
+        services.TryAddSingleton<IEventRegistrar>(x => x.GetRequiredService<EventManager>());
+        services.TryAddSingleton<IEventClient>(x => x.GetRequiredService<EventManager>());
+        services.TryAddTransient<IEventRegistrarScope>(x => x.GetRequiredService<EventManager>().CreateScope());
+
+        return services;
+    }
+    public static IServiceCollection AddEventHub(this IServiceCollection services, Type hubType, HubLifetime lifeTime = HubLifetime.Transient, object? instance = null)
+    {
+        services.AddSingleton(new EventHubRegistration(hubType, lifeTime, instance));
+        return services;
+    }
+    public static IServiceCollection AddEventHub<THub>(this IServiceCollection services, HubLifetime lifeTime = HubLifetime.Transient, THub? instance = default)
+    {
+        services.AddSingleton(new EventHubRegistration(typeof(THub), lifeTime, instance));
+        return services;
+    }
+
+    public static IServiceCollection AddEventAndRemoteProcedureCallHub(this IServiceCollection services, Type hubType, HubLifetime lifeTime = HubLifetime.Transient, object? instance = null)
+    {
+        services.AddSingleton(new RemoteProcedureCallHubRegistration(hubType, lifeTime, instance));
+        services.AddSingleton(new EventHubRegistration(hubType, lifeTime, instance));
+        return services;
+    }
+
+    public static IServiceCollection AddEventAndRemoteProcedureCallHub<THub>(this IServiceCollection services, HubLifetime lifeTime = HubLifetime.Transient, object? instance = null)
+    {
+        services.AddSingleton(new RemoteProcedureCallHubRegistration(typeof(THub), lifeTime, instance));
+        services.AddSingleton(new EventHubRegistration(typeof(THub), lifeTime, instance));
         return services;
     }
 }

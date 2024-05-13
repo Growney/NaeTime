@@ -8,7 +8,7 @@ using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
-public partial class SessionLaneConfiguration : ComponentBase
+public partial class SessionLaneConfiguration : ComponentBase, IDisposable
 {
     [Parameter]
     public IEnumerable<Pilot> Pilots { get; set; } = Enumerable.Empty<Pilot>();
@@ -31,13 +31,15 @@ public partial class SessionLaneConfiguration : ComponentBase
     [Parameter]
     public long? MaximumLapMilliseconds { get; set; }
     [Inject]
-    public IPublishSubscribe PublishSubscribe { get; set; } = null!;
+    private IEventClient EventClient { get; set; } = null!;
+
+    [Inject]
+    private IEventRegistrarScope RegistrarScope { get; set; } = null!;
 
     protected override Task OnInitializedAsync()
     {
-        PublishSubscribe.Subscribe<RssiLevelRecorded>(this, When);
-        PublishSubscribe.Subscribe<LapStarted>(this, When);
-        PublishSubscribe.Subscribe<LapInvalidated>(this, When);
+        RegistrarScope.RegisterHub(this);
+
         return base.OnInitializedAsync();
     }
 
@@ -97,11 +99,11 @@ public partial class SessionLaneConfiguration : ComponentBase
         Configuration.IsEnabled = value;
         if (value)
         {
-            return PublishSubscribe.Dispatch(new LaneEnabled(Configuration.LaneNumber));
+            return EventClient.Publish(new LaneEnabled(Configuration.LaneNumber));
         }
         else
         {
-            return PublishSubscribe.Dispatch(new LaneDisabled(Configuration.LaneNumber));
+            return EventClient.Publish(new LaneDisabled(Configuration.LaneNumber));
         }
     }
     public Task GoToBand(byte? bandId)
@@ -110,11 +112,11 @@ public partial class SessionLaneConfiguration : ComponentBase
 
         if (Band.Bands.Any(x => x.Id == bandId))
         {
-            var band = Band.Bands.First(x => x.Id == bandId);
+            Band band = Band.Bands.First(x => x.Id == bandId);
 
             if (band.Frequencies.Any())
             {
-                var firstFrequency = band.Frequencies.First();
+                BandFrequency firstFrequency = band.Frequencies.First();
                 newFrequency = firstFrequency.FrequencyInMhz;
             }
         }
@@ -132,13 +134,13 @@ public partial class SessionLaneConfiguration : ComponentBase
 
         Configuration.BandId = bandId;
         Configuration.FrequencyInMhz = frequencyInMhz;
-        return PublishSubscribe.Dispatch(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, bandId, frequencyInMhz));
+        return EventClient.Publish(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, bandId, frequencyInMhz));
     }
     private string GetBandString()
     {
         if (Band.Bands.Any(x => x.Id == Configuration.BandId))
         {
-            var band = Band.Bands.First(x => x.Id == Configuration.BandId);
+            Band band = Band.Bands.First(x => x.Id == Configuration.BandId);
 
             return band.ShortName;
         }
@@ -149,11 +151,11 @@ public partial class SessionLaneConfiguration : ComponentBase
     {
         if (Band.Bands.Any(x => x.Id == Configuration.BandId))
         {
-            var band = Band.Bands.First(x => x.Id == Configuration.BandId);
+            Band band = Band.Bands.First(x => x.Id == Configuration.BandId);
 
             if (band.Frequencies.Any(x => x.FrequencyInMhz == Configuration.FrequencyInMhz))
             {
-                var frequency = band.Frequencies.First(x => x.FrequencyInMhz == Configuration.FrequencyInMhz);
+                BandFrequency frequency = band.Frequencies.First(x => x.FrequencyInMhz == Configuration.FrequencyInMhz);
                 return frequency.Name;
             }
         }
@@ -167,11 +169,11 @@ public partial class SessionLaneConfiguration : ComponentBase
             return Task.CompletedTask;
         }
         Configuration.PilotId = pilotId;
-        return PublishSubscribe.Dispatch(new OpenPracticeLanePilotSet(SessionId, pilotId, Configuration.LaneNumber));
+        return EventClient.Publish(new OpenPracticeLanePilotSet(SessionId, pilotId, Configuration.LaneNumber));
     }
     private string GetPilotString(Guid? pilotId)
     {
-        var pilot = Pilots.FirstOrDefault(x => x.Id == pilotId);
+        Pilot? pilot = Pilots.FirstOrDefault(x => x.Id == pilotId);
 
         if (pilot == null)
         {
@@ -180,9 +182,8 @@ public partial class SessionLaneConfiguration : ComponentBase
 
         return pilot.CallSign ?? $"{pilot.FirstName} {pilot.LastName}";
     }
-    private Task TriggerDetection(Guid timerId) => PublishSubscribe.Dispatch(new OpenPracticeSessionDetectionTriggered(SessionId, Configuration.LaneNumber, timerId));
+    private Task TriggerDetection(Guid timerId) => EventClient.Publish(new OpenPracticeSessionDetectionTriggered(SessionId, Configuration.LaneNumber, timerId));
 
-    private Task TriggerInvalidation(Guid timerId) => PublishSubscribe.Dispatch(new OpenPracticeSessionInvalidationTriggered(SessionId, Configuration.LaneNumber));
-
-
+    private Task TriggerInvalidation(Guid timerId) => EventClient.Publish(new OpenPracticeSessionInvalidationTriggered(SessionId, Configuration.LaneNumber));
+    public void Dispose() => RegistrarScope?.Dispose();
 }

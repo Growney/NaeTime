@@ -6,7 +6,7 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        var builder = MauiApp.CreateBuilder();
+        MauiAppBuilder builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
             .ConfigureFonts(fonts =>
@@ -16,8 +16,8 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<ServiceRunner>();
 
-        builder.Services.AddNaeTimePublishSubscribe();
-
+        builder.Services.AddNaeTimeEventing();
+        builder.Services.AddNaeTimeRemoteProcedureCall();
 
         //Must add all the SQLite services first so that the service runner creates the databases before the other services start
         builder.Services.AddSQLiteManagement();

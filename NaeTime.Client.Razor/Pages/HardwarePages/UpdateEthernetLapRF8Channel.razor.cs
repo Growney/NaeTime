@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Hardware.Messages.Messages;
-using NaeTime.Hardware.Messages.Requests;
-using NaeTime.Hardware.Messages.Responses;
 using NaeTime.PubSub.Abstractions;
 using System.Net;
 
@@ -10,7 +8,9 @@ namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class UpdateEthernetLapRF8Channel : ComponentBase
 {
     [Inject]
-    private IDispatcher Dispatcher { get; set; } = null!;
+    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    [Inject]
+    private IEventClient EventClient { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -26,7 +26,7 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
     {
         await base.OnInitializedAsync();
 
-        var response = await Dispatcher.Request<EthernetLapRF8ChannelRequest, EthernetLapRF8ChannelResponse>(new(TimerId));
+        Hardware.Messages.Models.EthernetLapRF8ChannelTimer? response = await RpcClient.InvokeAsync<Hardware.Messages.Models.EthernetLapRF8ChannelTimer?>("GetEthernetLapRF8ChannelTimer", TimerId);
 
         if (response == null)
         {
@@ -35,7 +35,7 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
 
         _model = new EthernetLapRF8Channel
         {
-            Id = response.Id,
+            Id = response.TimerId,
             Name = response.Name,
             IpAddress = response.IpAddress.ToString(),
             Port = response.Port
@@ -54,13 +54,13 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
             return;
         }
 
-        if (!IPAddress.TryParse(timer.IpAddress, out var validIP))
+        if (!IPAddress.TryParse(timer.IpAddress, out IPAddress? validIP))
         {
             return;
         }
 
 
-        await Dispatcher.Dispatch(new EthernetLapRF8ChannelConfigured(timer.Id, timer.Name, validIP, timer.Port));
+        await EventClient.Publish(new EthernetLapRF8ChannelConfigured(timer.Id, timer.Name, validIP, timer.Port));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/hardware/list");
     }

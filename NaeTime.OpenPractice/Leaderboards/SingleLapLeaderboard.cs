@@ -9,7 +9,7 @@ public class SingleLapLeaderboard
 
     public bool SetFastest(Guid pilotId, Guid lapId, long totalMilliseconds, DateTime completionUtc)
     {
-        var newFastest = new SingleLapRecord(lapId, totalMilliseconds, completionUtc);
+        SingleLapRecord newFastest = new(lapId, totalMilliseconds, completionUtc);
 
         if (!_pilotLaps.ContainsKey(pilotId))
         {
@@ -18,7 +18,7 @@ public class SingleLapLeaderboard
         }
         else
         {
-            var existing = _pilotLaps[pilotId];
+            SingleLapRecord existing = _pilotLaps[pilotId];
             if (existing != newFastest)
             {
                 _pilotLaps[pilotId] = new SingleLapRecord(lapId, totalMilliseconds, completionUtc);
@@ -31,12 +31,12 @@ public class SingleLapLeaderboard
 
     public IDictionary<Guid, SingleLapLeaderboardPosition> GetPositions()
     {
-        var laps = _pilotLaps.ToList();
+        List<KeyValuePair<Guid, SingleLapRecord>> laps = _pilotLaps.ToList();
         laps.Sort((x, y) => CompareLaps(x.Value, y.Value));
-        var positions = new Dictionary<Guid, SingleLapLeaderboardPosition>();
+        Dictionary<Guid, SingleLapLeaderboardPosition> positions = new();
         for (int i = 0; i < laps.Count; i++)
         {
-            var lap = laps[i];
+            KeyValuePair<Guid, SingleLapRecord> lap = laps[i];
             positions.Add(lap.Key, new SingleLapLeaderboardPosition(i, lap.Key, lap.Value.LapId, lap.Value.LapMilliseconds, lap.Value.CompletionUtc));
         }
 

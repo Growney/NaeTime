@@ -1,5 +1,5 @@
 ﻿namespace NaeTime.Hardware.SQLite;
-internal class DetectionService : ISubscriber
+internal class DetectionService
 {
     private readonly HardwareDbContext _dbContext;
     public DetectionService(HardwareDbContext dbContext)

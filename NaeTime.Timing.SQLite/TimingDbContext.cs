@@ -11,7 +11,7 @@ internal class TimingDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        var timings = modelBuilder.Entity<ActiveTimings>();
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<ActiveTimings> timings = modelBuilder.Entity<ActiveTimings>();
 
         timings.OwnsOne(t => t.ActiveLap).WithOwner().HasForeignKey(x => x.ActiveTimingsId);
         timings.OwnsOne(t => t.ActiveSplit).WithOwner().HasForeignKey(x => x.ActiveTimingsId);

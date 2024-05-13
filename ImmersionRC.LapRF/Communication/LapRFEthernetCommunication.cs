@@ -46,7 +46,7 @@ internal class LapRFEthernetCommunication : ILapRFCommunication
             throw new InvalidOperationException("Not connected");
         }
 
-        var stream = _client.GetStream();
+        NetworkStream stream = _client.GetStream();
 
         int readBytes = await stream.ReadAsync(_rxBuffer, 0, _rxBuffer.Length).ConfigureAwait(false);
 
@@ -60,7 +60,7 @@ internal class LapRFEthernetCommunication : ILapRFCommunication
             throw new InvalidOperationException("Not connected");
         }
 
-        var stream = _client.GetStream();
+        NetworkStream stream = _client.GetStream();
 
         return stream.WriteAsync(data, token);
     }

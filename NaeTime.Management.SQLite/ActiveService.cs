@@ -1,20 +1,18 @@
 ﻿
 using NaeTime.Management.Messages.Messages;
-using NaeTime.Management.Messages.Responses;
-using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Persistence;
-internal class ActiveService : ISubscriber
+internal class ActiveService
 {
     private readonly ManagementDbContext _dbContext;
 
-    public ActiveService(ManagementDbContext dbContext, IDispatcher dispatcher)
+    public ActiveService(ManagementDbContext dbContext)
     {
         _dbContext = dbContext;
     }
     public async Task When(SessionActivated activated)
     {
-        var active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
+        ActiveSession? active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
 
         if (active == null)
         {
@@ -42,17 +40,17 @@ internal class ActiveService : ISubscriber
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<ActiveSessionResponse?> On(ActiveSessionRequest _)
+    public async Task<Management.Messages.Models.ActiveSession?> GetActiveSession()
     {
-        var active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
+        ActiveSession? active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
         if (active == null)
         {
             return null;
         }
 
-        return new ActiveSessionResponse(active.SessionId, active.SessionType switch
+        return new Management.Messages.Models.ActiveSession(active.SessionId, active.SessionType switch
         {
-            SessionType.OpenPractice => ActiveSessionResponse.SessionType.OpenPractice,
+            SessionType.OpenPractice => Management.Messages.Models.ActiveSession.SessionType.OpenPractice,
             _ => throw new NotImplementedException()
         });
     }

@@ -8,9 +8,6 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddHardwareCore(this IServiceCollection services)
     {
         services.TryAddSingleton<ISoftwareTimer, SoftwareTimer>();
-
-        services.AddSubscriberAssembly(typeof(SoftwareTimer).Assembly);
-
         return services;
     }
 }

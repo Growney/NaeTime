@@ -12,7 +12,7 @@ public class ServiceRunner : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        foreach (var service in _services)
+        foreach (IHostedService service in _services)
         {
             await service.StopAsync(CancellationToken.None).ConfigureAwait(false);
         }
@@ -20,7 +20,7 @@ public class ServiceRunner : IAsyncDisposable
 
     public async Task Start()
     {
-        foreach (var service in _services)
+        foreach (IHostedService service in _services)
         {
             await service.StartAsync(CancellationToken.None).ConfigureAwait(false);
         }

@@ -13,14 +13,14 @@ public abstract class LeaderboardManager<TRecord> where TRecord : IComparable<TR
 
     protected async Task CheckLeaderboards(Guid sessionId, Guid pilotId, Leaderboard<TRecord> existingLeaderboard, Leaderboard<TRecord> newLeaderboard)
     {
-        var existingPositions = existingLeaderboard.GetPositions();
-        var newPositions = newLeaderboard.GetPositions();
+        IDictionary<Guid, LeaderboardPosition<TRecord>> existingPositions = existingLeaderboard.GetPositions();
+        IDictionary<Guid, LeaderboardPosition<TRecord>> newPositions = newLeaderboard.GetPositions();
 
-        foreach (var existingPosition in existingPositions.Values)
+        foreach (LeaderboardPosition<TRecord> existingPosition in existingPositions.Values)
         {
-            if (newPositions.TryGetValue(existingPosition.PilotId, out var newPosition))
+            if (newPositions.TryGetValue(existingPosition.PilotId, out LeaderboardPosition<TRecord>? newPosition))
             {
-                var positionMovement = existingPosition.Position.CompareTo(newPosition.Position);
+                int positionMovement = existingPosition.Position.CompareTo(newPosition.Position);
 
                 if (positionMovement > 0)
                 {
@@ -33,7 +33,7 @@ public abstract class LeaderboardManager<TRecord> where TRecord : IComparable<TR
                 //We only need to check the pilot we updates record as the rest should not have changed
                 else if (existingPosition.PilotId == pilotId)
                 {
-                    var recordComparison = existingPosition.Record.CompareTo(newPosition.Record);
+                    int recordComparison = existingPosition.Record.CompareTo(newPosition.Record);
                     if (recordComparison > 0)
                     {
                         await OnRecordImproved(sessionId, pilotId, newPosition.Record);
@@ -51,9 +51,9 @@ public abstract class LeaderboardManager<TRecord> where TRecord : IComparable<TR
             }
         }
 
-        foreach (var newPosition in newPositions)
+        foreach (KeyValuePair<Guid, LeaderboardPosition<TRecord>> newPosition in newPositions)
         {
-            var newRecord = newPosition.Value;
+            LeaderboardPosition<TRecord> newRecord = newPosition.Value;
             if (!existingPositions.ContainsKey(newPosition.Key))
             {
                 await OnPositionImproved(sessionId, newRecord.PilotId, newRecord.Position, null, newRecord.Record);
@@ -62,14 +62,14 @@ public abstract class LeaderboardManager<TRecord> where TRecord : IComparable<TR
     }
     protected async Task HandleUpdatedRecord(Guid sessionId, Guid pilotId, TRecord? newRecord)
     {
-        var existingPositions = await GetExistingPositions(sessionId);
+        IEnumerable<LeaderboardPosition<TRecord>> existingPositions = await GetExistingPositions(sessionId);
 
-        var existingLeaderboard = new Leaderboard<TRecord>();
-        var newLeaderboard = new Leaderboard<TRecord>();
+        Leaderboard<TRecord> existingLeaderboard = new();
+        Leaderboard<TRecord> newLeaderboard = new();
 
         if (existingPositions != null)
         {
-            foreach (var existingPosition in existingPositions)
+            foreach (LeaderboardPosition<TRecord> existingPosition in existingPositions)
             {
                 existingLeaderboard.SetFastest(existingPosition.PilotId, existingPosition.Record);
 

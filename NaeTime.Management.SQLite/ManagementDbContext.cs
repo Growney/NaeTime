@@ -12,7 +12,7 @@ internal class ManagementDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        var tracks = modelBuilder.Entity<Track>();
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<Track> tracks = modelBuilder.Entity<Track>();
         tracks.OwnsMany(t => t.Timers).WithOwner().HasForeignKey(x => x.TrackId);
 
     }
