@@ -12,7 +12,7 @@ internal class LaneService
         await _dbContext.Lanes.Select(x => new ActiveLaneConfiguration(x.Id, x.BandId, x.FrequencyInMhz, x.IsEnabled)).ToListAsync();
     public async Task When(LaneRadioFrequencyConfigured laneRadioFrequencyConfigured)
     {
-        var existing = await _dbContext.Lanes.FindAsync(laneRadioFrequencyConfigured.LaneNumber).ConfigureAwait(false);
+        Lane? existing = await _dbContext.Lanes.FindAsync(laneRadioFrequencyConfigured.LaneNumber).ConfigureAwait(false);
         if (existing == null)
         {
             existing = new Lane
@@ -31,7 +31,7 @@ internal class LaneService
     }
     public async Task When(LaneEnabled laneEnabled)
     {
-        var existing = await _dbContext.Lanes.FindAsync(laneEnabled.LaneNumber).ConfigureAwait(false);
+        Lane? existing = await _dbContext.Lanes.FindAsync(laneEnabled.LaneNumber).ConfigureAwait(false);
         if (existing == null)
         {
             existing = new Lane
@@ -49,7 +49,7 @@ internal class LaneService
     }
     public async Task When(LaneDisabled laneDisabled)
     {
-        var existing = await _dbContext.Lanes.FindAsync(laneDisabled.LaneNumber).ConfigureAwait(false);
+        Lane? existing = await _dbContext.Lanes.FindAsync(laneDisabled.LaneNumber).ConfigureAwait(false);
         if (existing == null)
         {
             existing = new Lane

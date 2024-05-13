@@ -19,7 +19,7 @@ internal class DetectionService
 
     public async Task When(OpenPracticeSessionDetectionTriggered triggered)
     {
-        var session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", triggered.SessionId);
+        Messages.Models.OpenPracticeSession? session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", triggered.SessionId);
 
         if (session == null)
         {
@@ -30,14 +30,14 @@ internal class DetectionService
     }
     public async Task When(OpenPracticeSessionInvalidationTriggered triggered)
     {
-        var session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", triggered.SessionId);
+        Messages.Models.OpenPracticeSession? session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", triggered.SessionId);
 
         if (session == null)
         {
             return;
         }
 
-        var activeTimings = await _rpcClient.InvokeAsync<Timing.Messages.Models.LaneActiveTimings>("GetLaneActiveTimings", triggered.SessionId, triggered.Lane);
+        Timing.Messages.Models.LaneActiveTimings? activeTimings = await _rpcClient.InvokeAsync<Timing.Messages.Models.LaneActiveTimings>("GetLaneActiveTimings", triggered.SessionId, triggered.Lane);
 
 
         if (activeTimings == null)
@@ -50,16 +50,16 @@ internal class DetectionService
             return;
         }
 
-        var finishedSoftwareTime = _softwareTimer.ElapsedMilliseconds;
-        var finishedUtcTime = DateTime.UtcNow;
+        long finishedSoftwareTime = _softwareTimer.ElapsedMilliseconds;
+        DateTime finishedUtcTime = DateTime.UtcNow;
 
-        var totalTime = CalculateTotalTime(activeTimings.Lap.StartedSoftwareTime, activeTimings.Lap.StartedUtcTime, finishedSoftwareTime, finishedUtcTime);
+        long totalTime = CalculateTotalTime(activeTimings.Lap.StartedSoftwareTime, activeTimings.Lap.StartedUtcTime, finishedSoftwareTime, finishedUtcTime);
 
         await _eventClient.Publish(new LapInvalidated(session.Id, triggered.Lane, activeTimings.LapNumber, activeTimings.Lap.StartedSoftwareTime, activeTimings.Lap.StartedUtcTime, activeTimings.Lap.StartedHardwareTime, finishedSoftwareTime, finishedUtcTime, null, totalTime, LapInvalidated.LapInvalidReason.Cancelled)).ConfigureAwait(false);
     }
     private long CalculateTotalTime(long startSoftwareTime, DateTime startUtcTime, long endSoftwareTime, DateTime endUtcTime)
     {
-        var softwareDifference = endSoftwareTime - startSoftwareTime;
+        long softwareDifference = endSoftwareTime - startSoftwareTime;
         if (softwareDifference < 0)
         {
             return (long)endUtcTime.Subtract(startUtcTime).TotalMilliseconds;
@@ -71,7 +71,7 @@ internal class DetectionService
     }
     public async Task When(ActiveOpenPracticeSessionDetectionOccured detection)
     {
-        var session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", detection.SessionId);
+        Messages.Models.OpenPracticeSession? session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", detection.SessionId);
 
         if (session == null)
         {

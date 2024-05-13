@@ -23,7 +23,7 @@ internal class PilotService
     }
     public async Task When(PilotDetailsChanged pilot)
     {
-        var existing = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == pilot.PilotId).ConfigureAwait(false);
+        Pilot? existing = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == pilot.PilotId).ConfigureAwait(false);
         if (existing == null)
         {
             return;
@@ -38,7 +38,7 @@ internal class PilotService
 
     public async Task<IEnumerable<Messages.Models.Pilot>> GetPilots()
     {
-        var pilots = await _dbContext.Pilots.Select(x => new Messages.Models.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign))
+        List<Messages.Models.Pilot> pilots = await _dbContext.Pilots.Select(x => new Messages.Models.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign))
             .ToListAsync().ConfigureAwait(false);
 
         return pilots;
@@ -46,7 +46,7 @@ internal class PilotService
 
     public async Task<Messages.Models.Pilot?> GetPilot(Guid pilotId)
     {
-        var pilot = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == pilotId).ConfigureAwait(false);
+        Pilot? pilot = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == pilotId).ConfigureAwait(false);
 
         return pilot == null ? null : new Messages.Models.Pilot(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign);
     }

@@ -16,17 +16,17 @@ public class LapAnnouncerService
 
     public async Task When(OpenPracticeLapCompleted lapCompleted)
     {
-        var pilot = await _rpcClient.InvokeAsync<Management.Messages.Models.Pilot>("GetPilot", lapCompleted.PilotId);
+        Management.Messages.Models.Pilot? pilot = await _rpcClient.InvokeAsync<Management.Messages.Models.Pilot>("GetPilot", lapCompleted.PilotId);
 
         if (pilot == null)
         {
             return;
         }
 
-        var identifier = pilot.CallSign ?? pilot.FirstName ?? pilot.LastName;
-        var lapTime = TimeSpan.FromMilliseconds(lapCompleted.TotalMilliseconds);
+        string identifier = pilot.CallSign ?? pilot.FirstName ?? pilot.LastName;
+        TimeSpan lapTime = TimeSpan.FromMilliseconds(lapCompleted.TotalMilliseconds);
 
-        var announcementText = $"{identifier} {lapTime.TotalSeconds}";
+        string announcementText = $"{identifier} {lapTime.TotalSeconds}";
 
         _queue.Enqueue(new Announcement(announcementText));
     }

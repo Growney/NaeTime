@@ -20,7 +20,7 @@ internal struct RecordHeader
 
     public static int GetDataStartLocation() => DATA_START_INDEX;
     public static RecordHeader Read(byte[] buffer)
-        => new RecordHeader(
+        => new(
             BitConverter.ToUInt16(buffer, LENGTH_START_INDEX),
             BitConverter.ToUInt16(buffer, CRC_START_INDEX),
             BitConverter.ToUInt16(buffer, TYPE_START_INDEX)

@@ -13,7 +13,7 @@ internal class Crc16
     private UInt16[] InitCRC16Table()
     {
         UInt16 remainder = 0;
-        var table = new UInt16[256];
+        ushort[] table = new UInt16[256];
 
         for (UInt16 i = 0; i < 256; i += 1)
         {

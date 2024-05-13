@@ -4,7 +4,7 @@ public record ActiveTrack(IEnumerable<Guid> Timers)
     public int GetTimerPosition(Guid timerId)
     {
         int position = -1;
-        foreach (var timer in Timers)
+        foreach (Guid timer in Timers)
         {
             position++;
             if (timer == timerId)

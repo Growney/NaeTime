@@ -14,11 +14,11 @@ internal class OpenPracticeDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        var sessions = modelBuilder.Entity<OpenPracticeSession>();
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<OpenPracticeSession> sessions = modelBuilder.Entity<OpenPracticeSession>();
         sessions.OwnsMany(s => s.ActiveLanes);
         sessions.OwnsMany(s => s.TrackedConsecutiveLaps);
 
-        var leaderboards = modelBuilder.Entity<ConsecutiveLapLeaderboardPosition>();
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<ConsecutiveLapLeaderboardPosition> leaderboards = modelBuilder.Entity<ConsecutiveLapLeaderboardPosition>();
         leaderboards.OwnsMany(x => x.IncludedLaps);
 
     }

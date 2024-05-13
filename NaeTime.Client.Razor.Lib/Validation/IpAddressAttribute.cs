@@ -14,7 +14,7 @@ public class IpAddressAttribute : ValidationAttribute
         }
 
         const string regexPattern = @"^([\d]{1,3}\.){3}[\d]{1,3}$";
-        var regex = new Regex(regexPattern);
+        Regex regex = new(regexPattern);
         if (!regex.IsMatch(valueString) || valueString.Split('.').SingleOrDefault(s => int.Parse(s) > 255) != null)
         {
             return new ValidationResult("Invalid IP Address");

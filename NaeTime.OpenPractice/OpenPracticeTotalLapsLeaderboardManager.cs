@@ -15,29 +15,29 @@ internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<Tota
     }
     public async Task When(OpenPracticeLapCompleted completed)
     {
-        var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", completed.SessionId, completed.PilotId);
+        IEnumerable<Messages.Models.Lap>? pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", completed.SessionId, completed.PilotId);
 
-        var validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed && x.Id != completed.LapId);
-        var lapCount = validLaps?.Count() ?? 0;
+        IEnumerable<Messages.Models.Lap>? validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed && x.Id != completed.LapId);
+        int lapCount = validLaps?.Count() ?? 0;
 
         lapCount++;
 
-        var firstLap = validLaps?.FirstOrDefault();
-        var firstLapCompletionUtc = firstLap?.FinishedUtc ?? completed.StartedUtc;
+        Messages.Models.Lap? firstLap = validLaps?.FirstOrDefault();
+        DateTime firstLapCompletionUtc = firstLap?.FinishedUtc ?? completed.StartedUtc;
 
         await HandleUpdatedRecord(completed.SessionId, completed.PilotId, new TotalLapRecord(lapCount, firstLapCompletionUtc));
     }
     public async Task When(OpenPracticeLapDisputed disputed)
     {
-        var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", disputed.SessionId, disputed.PilotId);
+        IEnumerable<Messages.Models.Lap>? pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", disputed.SessionId, disputed.PilotId);
 
-        var lap = pilotLaps?.FirstOrDefault(x => x.Id == disputed.LapId);
-        var validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed
+        Messages.Models.Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == disputed.LapId);
+        IEnumerable<Messages.Models.Lap>? validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed
         && (x.Id != disputed.LapId || disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed));
-        var lapCount = validLaps?.Count() ?? 0;
+        int lapCount = validLaps?.Count() ?? 0;
 
-        var firstLap = validLaps?.FirstOrDefault();
-        var firstLapCompletionUtc = firstLap?.FinishedUtc ?? lap?.StartedUtc;
+        Messages.Models.Lap? firstLap = validLaps?.FirstOrDefault();
+        DateTime? firstLapCompletionUtc = firstLap?.FinishedUtc ?? lap?.StartedUtc;
 
         if (firstLapCompletionUtc == null)
         {
@@ -50,14 +50,14 @@ internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<Tota
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", removed.SessionId, removed.PilotId);
+        IEnumerable<Messages.Models.Lap>? pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", removed.SessionId, removed.PilotId);
 
-        var lap = pilotLaps?.FirstOrDefault(x => x.Id == removed.LapId);
-        var validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed && x.Id != lap?.Id);
-        var lapCount = validLaps?.Count() ?? 0;
+        Messages.Models.Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == removed.LapId);
+        IEnumerable<Messages.Models.Lap>? validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed && x.Id != lap?.Id);
+        int lapCount = validLaps?.Count() ?? 0;
 
-        var firstLap = validLaps?.FirstOrDefault();
-        var firstLapCompletionUtc = firstLap?.FinishedUtc ?? lap?.StartedUtc;
+        Messages.Models.Lap? firstLap = validLaps?.FirstOrDefault();
+        DateTime? firstLapCompletionUtc = firstLap?.FinishedUtc ?? lap?.StartedUtc;
 
         if (firstLapCompletionUtc == null)
         {
@@ -71,7 +71,7 @@ internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<Tota
 
     protected override async Task<IEnumerable<LeaderboardPosition<TotalLapRecord>>> GetExistingPositions(Guid sessionId)
     {
-        var response = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.TotalLapLeaderboardPosition>>("GetOpenPracticeSessionTotalLapLeaderboardPositions", sessionId);
+        IEnumerable<Messages.Models.TotalLapLeaderboardPosition>? response = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.TotalLapLeaderboardPosition>>("GetOpenPracticeSessionTotalLapLeaderboardPositions", sessionId);
 
         return response?.Select(x => new LeaderboardPosition<TotalLapRecord>(x.PilotId, x.Position, new TotalLapRecord(x.TotalLaps, x.FirstLapCompletionUtc))) ?? Enumerable.Empty<LeaderboardPosition<TotalLapRecord>>();
     }

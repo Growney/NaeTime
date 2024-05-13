@@ -30,12 +30,12 @@ public class DataEscaper
 
     public byte[] UnEscape(ReadOnlySpan<byte> data)
     {
-        var unEscapedData = new List<byte>(data.Length);
+        List<byte> unEscapedData = new(data.Length);
 
         int readIndex = 0;
         while (readIndex < data.Length)
         {
-            var dataByte = data[readIndex];
+            byte dataByte = data[readIndex];
 
             if (dataByte == _escape)
             {
@@ -55,11 +55,11 @@ public class DataEscaper
 
     public byte[] Escape(ReadOnlySpan<byte> data)
     {
-        var escapedData = new List<byte>(data.Length);
+        List<byte> escapedData = new(data.Length);
 
         for (int dataIndex = 0; dataIndex < data.Length; dataIndex++)
         {
-            var currentData = data[dataIndex];
+            byte currentData = data[dataIndex];
 
             if (IsInEscapeBounds(dataIndex, data.Length) && _escapeCharacters.Contains(currentData))
             {

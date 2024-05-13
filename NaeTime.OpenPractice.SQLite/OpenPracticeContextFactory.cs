@@ -6,9 +6,9 @@ internal class OpenPracticeContextFactory : IDesignTimeDbContextFactory<OpenPrac
 {
     public OpenPracticeDbContext CreateDbContext(string[] args)
     {
-        var appDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "naetime.openpractice.db");
+        string appDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "naetime.openpractice.db");
 
-        var optionsBuilder = new DbContextOptionsBuilder<OpenPracticeDbContext>();
+        DbContextOptionsBuilder<OpenPracticeDbContext> optionsBuilder = new();
         optionsBuilder.UseSqlite($"Data Source={appDirectory}");
 
         return new OpenPracticeDbContext(optionsBuilder.Options);

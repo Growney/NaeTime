@@ -16,7 +16,7 @@ public partial class HardwareList : ComponentBase
     {
         await base.OnInitializedAsync();
 
-        var timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
+        IEnumerable<Hardware.Messages.Models.TimerDetails>? timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
 
         if (timersResponse == null)
         {

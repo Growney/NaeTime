@@ -27,7 +27,7 @@ public partial class CreateTrack
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        var timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
+        IEnumerable<Hardware.Messages.Models.TimerDetails>? timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
 
         if (timersResponse == null)
         {
@@ -45,7 +45,7 @@ public partial class CreateTrack
 
     private async Task HandleValidSubmit(Track track)
     {
-        var maxLanes = _timers.Where(x => track.Timers.Contains(x.Id)).Max(x => x.MaxLanes);
+        byte maxLanes = _timers.Where(x => track.Timers.Contains(x.Id)).Max(x => x.MaxLanes);
 
         await EventClient.Publish(new TrackCreated(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, maxLanes));
 

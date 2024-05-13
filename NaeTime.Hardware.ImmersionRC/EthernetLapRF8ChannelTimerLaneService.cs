@@ -16,23 +16,23 @@ public class EthernetLapRF8ChannelTimerLaneService
 
     public async Task When(TimerConnectionEstablished connectionEstablished)
     {
-        var laneConfigurations = await _rpcClient.InvokeAsync<IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>>("GetActiveLaneConfigurations");
+        IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>? laneConfigurations = await _rpcClient.InvokeAsync<IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>>("GetActiveLaneConfigurations");
 
-        var timerDetails = await _rpcClient.InvokeAsync<Messages.Models.TimerDetails>("GetTimerDetails", connectionEstablished.TimerId);
+        Messages.Models.TimerDetails? timerDetails = await _rpcClient.InvokeAsync<Messages.Models.TimerDetails>("GetTimerDetails", connectionEstablished.TimerId);
 
         if (timerDetails == null || timerDetails.Type != Messages.Models.TimerType.EthernetLapRF8Channel)
         {
             return;
         }
 
-        var timerLaneConfigurationReponse = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration>>("GetEthernetLapRF8ChannelTimerLaneConfigurations", connectionEstablished.TimerId);
+        IEnumerable<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration>? timerLaneConfigurationReponse = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration>>("GetEthernetLapRF8ChannelTimerLaneConfigurations", connectionEstablished.TimerId);
 
         //We have no lane configurations update the configurations with those from the timer
         if (laneConfigurations == null || !laneConfigurations.Any())
         {
             if (timerLaneConfigurationReponse != null && timerLaneConfigurationReponse.Any())
             {
-                foreach (var timerLane in timerLaneConfigurationReponse)
+                foreach (Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration timerLane in timerLaneConfigurationReponse)
                 {
                     await GenerateConfigurationEvents(timerLane).ConfigureAwait(false);
                 }
@@ -53,7 +53,7 @@ public class EthernetLapRF8ChannelTimerLaneService
 
     private async Task ReconfigurationLocalFromTimer(IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration> laneConfigurations, IEnumerable<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration> timerLaneConfigurationReponse)
     {
-        foreach (var timerLane in timerLaneConfigurationReponse)
+        foreach (Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration timerLane in timerLaneConfigurationReponse)
         {
             //The lane is not configured locally
             if (!laneConfigurations.Any(x => x.Lane == timerLane.Lane))
@@ -64,10 +64,10 @@ public class EthernetLapRF8ChannelTimerLaneService
     }
     private async Task ReconfigureTimerLanes(TimerConnectionEstablished connectionEstablished, IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration> laneConfigurations, IEnumerable<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration> timerLaneConfigurationReponse)
     {
-        var timerReconfigurations = new List<TimersLaneConfigured.LaneConfiguration>();
-        foreach (var lane in laneConfigurations)
+        List<TimersLaneConfigured.LaneConfiguration> timerReconfigurations = new();
+        foreach (Timing.Messages.Models.ActiveLaneConfiguration lane in laneConfigurations)
         {
-            var timerLane = timerLaneConfigurationReponse.FirstOrDefault(x => x.Lane == lane.Lane);
+            Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration? timerLane = timerLaneConfigurationReponse.FirstOrDefault(x => x.Lane == lane.Lane);
             if (timerLane != null)
             {
                 bool shouldChange =
@@ -104,16 +104,16 @@ public class EthernetLapRF8ChannelTimerLaneService
 
     public async Task When(LaneEnabled laneEnabled)
     {
-        var timers = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>>("GetAllEthernetLapRF8ChannelTimers");
+        IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>? timers = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>>("GetAllEthernetLapRF8ChannelTimers");
 
         if (timers == null)
         {
             return;
         }
 
-        foreach (var timer in timers)
+        foreach (Messages.Models.EthernetLapRF8ChannelTimer timer in timers)
         {
-            var timerLaneConfiguration = await _rpcClient.InvokeAsync<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration?>("GetEthernetLapRF8ChannelTimerLaneConfiguration", timer.TimerId, laneEnabled.LaneNumber).ConfigureAwait(false);
+            Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration? timerLaneConfiguration = await _rpcClient.InvokeAsync<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration?>("GetEthernetLapRF8ChannelTimerLaneConfiguration", timer.TimerId, laneEnabled.LaneNumber).ConfigureAwait(false);
 
             if (timerLaneConfiguration == null || !timerLaneConfiguration.IsEnabled)
             {
@@ -123,16 +123,16 @@ public class EthernetLapRF8ChannelTimerLaneService
     }
     public async Task When(LaneDisabled laneDisabled)
     {
-        var timers = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>>("GetAllEthernetLapRF8ChannelTimers");
+        IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>? timers = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>>("GetAllEthernetLapRF8ChannelTimers");
 
         if (timers == null)
         {
             return;
         }
 
-        foreach (var timer in timers)
+        foreach (Messages.Models.EthernetLapRF8ChannelTimer timer in timers)
         {
-            var timerLaneConfiguration = await _rpcClient.InvokeAsync<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration?>("GetEthernetLapRF8ChannelTimerLaneConfiguration", timer.TimerId, laneDisabled.LaneNumber).ConfigureAwait(false);
+            Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration? timerLaneConfiguration = await _rpcClient.InvokeAsync<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration?>("GetEthernetLapRF8ChannelTimerLaneConfiguration", timer.TimerId, laneDisabled.LaneNumber).ConfigureAwait(false);
 
             if (timerLaneConfiguration == null || timerLaneConfiguration.IsEnabled)
             {
@@ -142,16 +142,16 @@ public class EthernetLapRF8ChannelTimerLaneService
     }
     public async Task When(LaneRadioFrequencyConfigured frequencyChange)
     {
-        var timers = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>>("GetAllEthernetLapRF8ChannelTimers");
+        IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>? timers = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>>("GetAllEthernetLapRF8ChannelTimers");
 
         if (timers == null)
         {
             return;
         }
 
-        foreach (var timer in timers)
+        foreach (Messages.Models.EthernetLapRF8ChannelTimer timer in timers)
         {
-            var timerLaneConfiguration = await _rpcClient.InvokeAsync<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration?>("GetEthernetLapRF8ChannelTimerLaneConfiguration", timer.TimerId, frequencyChange.LaneNumber).ConfigureAwait(false);
+            Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration? timerLaneConfiguration = await _rpcClient.InvokeAsync<Messages.Models.EthernetLapRF8ChannelTimerLaneConfiguration?>("GetEthernetLapRF8ChannelTimerLaneConfiguration", timer.TimerId, frequencyChange.LaneNumber).ConfigureAwait(false);
 
             if (timerLaneConfiguration == null || timerLaneConfiguration.FrequencyInMhz != frequencyChange.FrequencyInMhz)
             {

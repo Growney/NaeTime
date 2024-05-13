@@ -16,33 +16,33 @@ public class OpenPracticeSessionManager
 
     public async Task When(LapCompleted lapCompleted)
     {
-        var sessionResponse = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", lapCompleted.SessionId);
+        Messages.Models.OpenPracticeSession? sessionResponse = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", lapCompleted.SessionId);
 
         if (sessionResponse == null)
         {
             return;
         }
 
-        var pilotLane = sessionResponse.ActiveLanes.FirstOrDefault(x => x.Lane == lapCompleted.Lane);
+        Messages.Models.PilotLane? pilotLane = sessionResponse.ActiveLanes.FirstOrDefault(x => x.Lane == lapCompleted.Lane);
         if (pilotLane == null)
         {
             return;
         }
 
-        var newLapId = Guid.NewGuid();
+        Guid newLapId = Guid.NewGuid();
 
         await _eventClient.Publish(new OpenPracticeLapCompleted(Guid.NewGuid(), lapCompleted.SessionId, pilotLane.PilotId, lapCompleted.StartedUtcTime, lapCompleted.FinishedUtcTime, lapCompleted.TotalTime)).ConfigureAwait(false);
     }
     public async Task When(LapInvalidated lapInvalidated)
     {
-        var sessionResponse = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", lapInvalidated.SessionId);
+        Messages.Models.OpenPracticeSession? sessionResponse = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", lapInvalidated.SessionId);
 
         if (sessionResponse == null)
         {
             return;
         }
 
-        var pilotLane = sessionResponse.ActiveLanes.FirstOrDefault(x => x.Lane == lapInvalidated.Lane);
+        Messages.Models.PilotLane? pilotLane = sessionResponse.ActiveLanes.FirstOrDefault(x => x.Lane == lapInvalidated.Lane);
         if (pilotLane == null)
         {
             return;

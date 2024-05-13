@@ -6,9 +6,9 @@ internal class HardwareContextFactory : IDesignTimeDbContextFactory<HardwareDbCo
 {
     public HardwareDbContext CreateDbContext(string[] args)
     {
-        var appDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "naetime.hardware.db");
+        string appDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "naetime.hardware.db");
 
-        var optionsBuilder = new DbContextOptionsBuilder<HardwareDbContext>();
+        DbContextOptionsBuilder<HardwareDbContext> optionsBuilder = new();
         optionsBuilder.UseSqlite($"Data Source={appDirectory}");
 
         return new HardwareDbContext(optionsBuilder.Options);

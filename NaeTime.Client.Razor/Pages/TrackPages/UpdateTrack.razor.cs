@@ -24,7 +24,7 @@ public partial class UpdateTrack
 
     protected override async Task OnInitializedAsync()
     {
-        var trackResponse = await RpcClient.InvokeAsync<Management.Messages.Models.Track>("GetTrack", TrackId);
+        Management.Messages.Models.Track? trackResponse = await RpcClient.InvokeAsync<Management.Messages.Models.Track>("GetTrack", TrackId);
 
         if (trackResponse == null)
         {
@@ -40,14 +40,14 @@ public partial class UpdateTrack
         };
         _model.AddTimers(trackResponse.Timers);
 
-        var timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
+        IEnumerable<Hardware.Messages.Models.TimerDetails>? timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
 
         if (timersResponse == null)
         {
             return;
         }
 
-        var maxLanes = timersResponse.Max(x => x.MaxLanes);
+        byte maxLanes = timersResponse.Max(x => x.MaxLanes);
 
         _timers.AddRange(timersResponse.Select(x => new TimerDetails(x.Id, x.Name,
             x.Type switch
@@ -61,11 +61,11 @@ public partial class UpdateTrack
 
     private async Task HandleValidSubmit(Track track)
     {
-        var maxLanes = _timers.Where(x => track.Timers.Contains(x.Id)).Max(x => x.MaxLanes);
+        byte maxLanes = _timers.Where(x => track.Timers.Contains(x.Id)).Max(x => x.MaxLanes);
 
         await EventClient.Publish(new TrackDetailsChanged(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, maxLanes));
 
-        var returnUrl = ReturnUrl ?? "/track/list";
+        string returnUrl = ReturnUrl ?? "/track/list";
 
         NavigationManager.NavigateTo(returnUrl);
     }

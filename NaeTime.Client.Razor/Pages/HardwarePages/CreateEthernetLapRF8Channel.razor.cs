@@ -36,7 +36,7 @@ public partial class CreateEthernetLapRF8Channel : ComponentBase
             return;
         }
 
-        if (!IPAddress.TryParse(timer.IpAddress, out var validIP))
+        if (!IPAddress.TryParse(timer.IpAddress, out IPAddress? validIP))
         {
             return;
         }

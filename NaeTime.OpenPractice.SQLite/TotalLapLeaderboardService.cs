@@ -12,14 +12,14 @@ internal class TotalLapLeaderboardService
 
     public async Task<IEnumerable<Messages.Models.TotalLapLeaderboardPosition>> GetOpenPracticeSessionTotalLapLeaderboardPositions(Guid sessionId)
     {
-        var positions = await _dbContext.TotalLapsLeaderboardPositions.Where(x => x.SessionId == sessionId).ToListAsync();
+        List<TotalLapsLeaderboardPosition> positions = await _dbContext.TotalLapsLeaderboardPositions.Where(x => x.SessionId == sessionId).ToListAsync();
 
         return positions.Select(x => new Messages.Models.TotalLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.FirstLapCompletionUtc));
     }
 
     public async Task<Messages.Models.TotalLapRecord?> GetPilotOpenPracticeSessionTotalLapRecord(Guid sessionId, Guid pilotId)
     {
-        var position = await _dbContext.TotalLapsLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.PilotId == pilotId);
+        TotalLapsLeaderboardPosition? position = await _dbContext.TotalLapsLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.PilotId == pilotId);
 
         return position == null
             ? null
@@ -27,7 +27,7 @@ internal class TotalLapLeaderboardService
     }
     public async Task When(TotalLapsLeaderboardPositionRemoved removed)
     {
-        var existing = await _dbContext.TotalLapsLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == removed.SessionId && x.PilotId == removed.PilotId);
+        TotalLapsLeaderboardPosition? existing = await _dbContext.TotalLapsLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == removed.SessionId && x.PilotId == removed.PilotId);
 
         if (existing == null)
         {
@@ -49,7 +49,7 @@ internal class TotalLapLeaderboardService
         => UpdateLapPosition(reduced.SessionId, reduced.NewPosition, reduced.PilotId, reduced.TotalLaps, reduced.FirstLapCompletionUtc);
     private async Task UpdateLapPosition(Guid sessionId, int? position, Guid pilotId, int totalLaps, DateTime firstLapCompletion)
     {
-        var existing = await _dbContext.TotalLapsLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.PilotId == pilotId);
+        TotalLapsLeaderboardPosition? existing = await _dbContext.TotalLapsLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.PilotId == pilotId);
 
         if (existing == null)
         {

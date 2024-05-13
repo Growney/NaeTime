@@ -5,11 +5,11 @@ public class LapRFProtocolFactory : ILapRFProtocolFactory
 {
     public ILapRFProtocol Create(ILapRFCommunication communication)
     {
-        var statusProtocol = new StatusProtocol();
-        var passingRecordProtocol = new PassingRecordProtocol();
-        var radioFrequencySetupProtocol = new RadioFrequencySetupProtocol(communication);
+        StatusProtocol statusProtocol = new();
+        PassingRecordProtocol passingRecordProtocol = new();
+        RadioFrequencySetupProtocol radioFrequencySetupProtocol = new(communication);
 
-        var protocol = new LapRFProtocol(communication, statusProtocol, passingRecordProtocol, radioFrequencySetupProtocol);
+        LapRFProtocol protocol = new(communication, statusProtocol, passingRecordProtocol, radioFrequencySetupProtocol);
 
         return protocol;
     }

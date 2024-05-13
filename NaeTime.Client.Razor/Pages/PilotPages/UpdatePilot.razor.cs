@@ -23,7 +23,7 @@ public partial class UpdatePilot : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        var response = await RpcClient.InvokeAsync<Management.Messages.Models.Pilot>("GetPilot", PilotId);
+        Management.Messages.Models.Pilot? response = await RpcClient.InvokeAsync<Management.Messages.Models.Pilot>("GetPilot", PilotId);
 
         if (response == null)
         {

@@ -24,7 +24,7 @@ public partial class LapList : ComponentBase
     public Task Invalidate(Guid lapId, Guid pilotId)
     {
 
-        var lap = Laps.FirstOrDefault(l => l.Id == lapId);
+        OpenPracticeLap? lap = Laps.FirstOrDefault(l => l.Id == lapId);
 
         if (lap == null)
         {
@@ -37,7 +37,7 @@ public partial class LapList : ComponentBase
     }
     public Task Validate(Guid lapId, Guid pilotId)
     {
-        var lap = Laps.FirstOrDefault(l => l.Id == lapId);
+        OpenPracticeLap? lap = Laps.FirstOrDefault(l => l.Id == lapId);
 
         if (lap == null)
         {

@@ -32,7 +32,7 @@ internal class TrackService
 
     public async Task<IEnumerable<Messages.Models.Track>> GetTracks()
     {
-        var tracks = await _dbContext.Tracks.Select(x => new Messages.Models.Track(x.Id, x.Name, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds, x.Timers.Select(y => y.TimerId).ToList(), x.AllowedLanes))
+        List<Messages.Models.Track> tracks = await _dbContext.Tracks.Select(x => new Messages.Models.Track(x.Id, x.Name, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds, x.Timers.Select(y => y.TimerId).ToList(), x.AllowedLanes))
             .ToListAsync().ConfigureAwait(false);
 
         return tracks;
@@ -40,7 +40,7 @@ internal class TrackService
 
     public async Task<Messages.Models.Track?> GetTrack(Guid trackId)
     {
-        var track = await _dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == trackId).ConfigureAwait(false);
+        Track? track = await _dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == trackId).ConfigureAwait(false);
 
         return track == null
             ? null

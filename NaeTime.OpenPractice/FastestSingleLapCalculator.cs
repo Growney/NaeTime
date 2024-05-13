@@ -14,7 +14,7 @@ public class FastestSingleLapCalculator
         Guid lapId = Guid.Empty;
         long lapMilliseconds = long.MaxValue;
         DateTime finishedUtc = DateTime.MinValue;
-        foreach (var lap in laps)
+        foreach (Lap lap in laps)
         {
             if (lap.Status != LapStatus.Completed)
             {

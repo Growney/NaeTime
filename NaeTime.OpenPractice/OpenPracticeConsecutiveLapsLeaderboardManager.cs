@@ -16,16 +16,16 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
 
     public async Task When(OpenPracticeLapCompleted completed)
     {
-        var sessionTrackedLaps = await _rpcClient.InvokeAsync<IEnumerable<uint>>("GetOpenPracticeSessionTrackedConsecutiveLaps", completed.SessionId);
+        IEnumerable<uint>? sessionTrackedLaps = await _rpcClient.InvokeAsync<IEnumerable<uint>>("GetOpenPracticeSessionTrackedConsecutiveLaps", completed.SessionId);
         if (sessionTrackedLaps == null || !sessionTrackedLaps.Any())
         {
             return;
         }
 
-        var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", completed.SessionId, completed.PilotId);
-        var pilotLapRecords = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapRecord>>("", completed.SessionId, completed.PilotId);
+        IEnumerable<Messages.Models.Lap>? pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", completed.SessionId, completed.PilotId);
+        IEnumerable<Messages.Models.ConsecutiveLapRecord>? pilotLapRecords = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapRecord>>("", completed.SessionId, completed.PilotId);
 
-        var laps = new List<Lap>();
+        List<Lap> laps = new();
 
         if (pilotLaps?.Any() ?? false)
         {
@@ -50,16 +50,16 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        var sessionTrackedLaps = await _rpcClient.InvokeAsync<IEnumerable<uint>>("GetOpenPracticeSessionTrackedConsecutiveLaps", removed.SessionId);
+        IEnumerable<uint>? sessionTrackedLaps = await _rpcClient.InvokeAsync<IEnumerable<uint>>("GetOpenPracticeSessionTrackedConsecutiveLaps", removed.SessionId);
         if (sessionTrackedLaps == null || !sessionTrackedLaps.Any())
         {
             return;
         }
 
-        var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", removed.SessionId, removed.PilotId);
-        var pilotLapRecords = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapRecord>>("", removed.SessionId, removed.PilotId);
+        IEnumerable<Messages.Models.Lap>? pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", removed.SessionId, removed.PilotId);
+        IEnumerable<Messages.Models.ConsecutiveLapRecord>? pilotLapRecords = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapRecord>>("", removed.SessionId, removed.PilotId);
 
-        var laps = new List<Lap>();
+        List<Lap> laps = new();
 
         if (pilotLaps?.Any() ?? false)
         {
@@ -73,7 +73,7 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
         }
 
         //Check that its not been removed already
-        var removeIndex = laps.FindIndex(x => x.LapId == removed.LapId);
+        int removeIndex = laps.FindIndex(x => x.LapId == removed.LapId);
         if (removeIndex != -1)
         {
             laps.RemoveAt(removeIndex);
@@ -83,16 +83,16 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
     }
     public async Task When(OpenPracticeLapDisputed disputed)
     {
-        var sessionTrackedLaps = await _rpcClient.InvokeAsync<IEnumerable<uint>>("GetOpenPracticeSessionTrackedConsecutiveLaps", disputed.SessionId);
+        IEnumerable<uint>? sessionTrackedLaps = await _rpcClient.InvokeAsync<IEnumerable<uint>>("GetOpenPracticeSessionTrackedConsecutiveLaps", disputed.SessionId);
         if (sessionTrackedLaps == null || !sessionTrackedLaps.Any())
         {
             return;
         }
 
-        var pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", disputed.SessionId, disputed.PilotId);
-        var pilotLapRecords = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapRecord>>("", disputed.SessionId, disputed.PilotId);
+        IEnumerable<Messages.Models.Lap>? pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", disputed.SessionId, disputed.PilotId);
+        IEnumerable<Messages.Models.ConsecutiveLapRecord>? pilotLapRecords = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapRecord>>("", disputed.SessionId, disputed.PilotId);
 
-        var laps = new List<Lap>();
+        List<Lap> laps = new();
 
         if (pilotLaps?.Any() ?? false)
         {
@@ -105,7 +105,7 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
                                }, x.TotalMilliseconds)));
         }
 
-        var existingLapIndex = laps.FindIndex(x => x.LapId == disputed.LapId);
+        int existingLapIndex = laps.FindIndex(x => x.LapId == disputed.LapId);
 
         //We have no record of this lap so we can't do anything
         if (existingLapIndex < 0)
@@ -113,14 +113,14 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             return;
         }
 
-        var desiredStatus = disputed.ActualStatus switch
+        LapStatus desiredStatus = disputed.ActualStatus switch
         {
             OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid => LapStatus.Invalid,
             OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed => LapStatus.Completed,
             _ => throw new NotImplementedException()
         };
 
-        var existingLap = laps[existingLapIndex];
+        Lap existingLap = laps[existingLapIndex];
         if (existingLap.Status != desiredStatus)
         {
             laps.RemoveAt(existingLapIndex);
@@ -132,10 +132,10 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
     private async Task FullTrackAndUpdateTrackedLaps(Guid sessionId, Guid pilotId, IEnumerable<uint> sessionTrackedLaps, IEnumerable<Messages.Models.ConsecutiveLapRecord>? pilotLapRecords, List<Lap> laps)
     {
         laps.Sort((x, y) => x.FinishedUtc.CompareTo(y.FinishedUtc));
-        var calculator = new FastestConsecutiveLapCalculator();
-        foreach (var trackedLaps in sessionTrackedLaps)
+        FastestConsecutiveLapCalculator calculator = new();
+        foreach (uint trackedLaps in sessionTrackedLaps)
         {
-            var pilotsExistingRecord = pilotLapRecords?.FirstOrDefault(x => x.LapCap == trackedLaps);
+            Messages.Models.ConsecutiveLapRecord? pilotsExistingRecord = pilotLapRecords?.FirstOrDefault(x => x.LapCap == trackedLaps);
 
             ConsecutiveLapRecord? existingRecord = null;
             if (pilotsExistingRecord != null)
@@ -143,7 +143,7 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
                 existingRecord = new ConsecutiveLapRecord(pilotsExistingRecord.TotalLaps, pilotsExistingRecord.TotalMilliseconds, pilotsExistingRecord.LastLapCompletionUtc, pilotsExistingRecord.IncludedLaps);
             }
 
-            var newRecord = calculator.Calculate(trackedLaps, laps);
+            ConsecutiveLapRecord? newRecord = calculator.Calculate(trackedLaps, laps);
 
             //We have no new record and the existing record existed we should issues a remove event
             if (newRecord == null && existingRecord != null)
@@ -158,7 +158,7 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             }
             else if (newRecord != null && existingRecord != null)
             {
-                var comparison = existingRecord.CompareTo(newRecord);
+                int comparison = existingRecord.CompareTo(newRecord);
 
                 if (comparison > 0)
                 {
@@ -190,13 +190,13 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
 
     private async Task HandleUpdatedRecord(Guid sessionId, Guid pilotId, uint lapCap, uint totalLaps, long totalMilliseconds, DateTime lastLapCompletionUtc, IEnumerable<Guid> includedLaps)
     {
-        var existingLeaderboardPositions = await _rpcClient.InvokeAsync<IEnumerable<ConsecutiveLapsLeaderboardPosition>>("GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions", sessionId, lapCap);
-        var existingLeaderboard = new ConsecutiveLapsLeaderboard();
-        var newLeaderboard = new ConsecutiveLapsLeaderboard();
+        IEnumerable<ConsecutiveLapsLeaderboardPosition>? existingLeaderboardPositions = await _rpcClient.InvokeAsync<IEnumerable<ConsecutiveLapsLeaderboardPosition>>("GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions", sessionId, lapCap);
+        ConsecutiveLapsLeaderboard existingLeaderboard = new();
+        ConsecutiveLapsLeaderboard newLeaderboard = new();
 
         if (existingLeaderboardPositions != null)
         {
-            foreach (var existingLeaderboardPosition in existingLeaderboardPositions)
+            foreach (ConsecutiveLapsLeaderboardPosition existingLeaderboardPosition in existingLeaderboardPositions)
             {
                 existingLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
                     new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
@@ -215,13 +215,13 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
     }
     private async Task HandleRemovedRecord(Guid sessionId, Guid pilotId, uint lapCap)
     {
-        var existingLeaderboardPositions = await _rpcClient.InvokeAsync<IEnumerable<ConsecutiveLapsLeaderboardPosition>>("GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions", sessionId, lapCap);
-        var existingLeaderboard = new ConsecutiveLapsLeaderboard();
-        var newLeaderboard = new ConsecutiveLapsLeaderboard();
+        IEnumerable<ConsecutiveLapsLeaderboardPosition>? existingLeaderboardPositions = await _rpcClient.InvokeAsync<IEnumerable<ConsecutiveLapsLeaderboardPosition>>("GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions", sessionId, lapCap);
+        ConsecutiveLapsLeaderboard existingLeaderboard = new();
+        ConsecutiveLapsLeaderboard newLeaderboard = new();
 
         if (existingLeaderboardPositions != null)
         {
-            foreach (var existingLeaderboardPosition in existingLeaderboardPositions)
+            foreach (ConsecutiveLapsLeaderboardPosition existingLeaderboardPosition in existingLeaderboardPositions)
             {
                 existingLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
                     new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
@@ -238,15 +238,15 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
     }
     private async Task CheckLeaderboards(Guid sessionId, uint lapCap, Guid pilotId, ConsecutiveLapsLeaderboard existingLeaderboard, ConsecutiveLapsLeaderboard newLeaderboard)
     {
-        var existingPositions = existingLeaderboard.GetPositions();
-        var newPositions = newLeaderboard.GetPositions();
+        IDictionary<Guid, ConsecutiveLapsLeaderboardPosition> existingPositions = existingLeaderboard.GetPositions();
+        IDictionary<Guid, ConsecutiveLapsLeaderboardPosition> newPositions = newLeaderboard.GetPositions();
 
-        foreach (var existingPosition in existingPositions)
+        foreach (KeyValuePair<Guid, ConsecutiveLapsLeaderboardPosition> existingPosition in existingPositions)
         {
-            var existingRecord = existingPosition.Value;
-            if (newPositions.TryGetValue(existingPosition.Key, out var newRecord))
+            ConsecutiveLapsLeaderboardPosition existingRecord = existingPosition.Value;
+            if (newPositions.TryGetValue(existingPosition.Key, out ConsecutiveLapsLeaderboardPosition? newRecord))
             {
-                var positionMovement = existingRecord.Position.CompareTo(newRecord.Position);
+                int positionMovement = existingRecord.Position.CompareTo(newRecord.Position);
 
                 if (positionMovement > 0)
                 {
@@ -259,7 +259,7 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
                 //We only need to check the pilot we updates record as the rest should not have changed
                 else if (existingRecord.PilotId == pilotId)
                 {
-                    var recordComparison = ComparePositions(existingRecord.TotalLaps, existingRecord.TotalMilliseconds, existingRecord.LastLapCompletionUtc, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc);
+                    int recordComparison = ComparePositions(existingRecord.TotalLaps, existingRecord.TotalMilliseconds, existingRecord.LastLapCompletionUtc, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc);
                     if (recordComparison > 0)
                     {
                         await _eventClient.Publish(new ConsecutiveLapLeaderboardRecordImproved(sessionId, lapCap, pilotId, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps));
@@ -277,9 +277,9 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             }
         }
 
-        foreach (var newPosition in newPositions)
+        foreach (KeyValuePair<Guid, ConsecutiveLapsLeaderboardPosition> newPosition in newPositions)
         {
-            var newRecord = newPosition.Value;
+            ConsecutiveLapsLeaderboardPosition newRecord = newPosition.Value;
             if (!existingPositions.ContainsKey(newPosition.Key))
             {
                 await _eventClient.Publish(new ConsecutiveLapLeaderboardPositionImproved(sessionId, lapCap, newRecord.Position, null, newPosition.Key, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps));

@@ -14,7 +14,7 @@ internal class HardwareService
 
     public async Task When(EthernetLapRF8ChannelConfigured configuredEvent)
     {
-        var existingTimer = await _dbcontext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == configuredEvent.TimerId).ConfigureAwait(false);
+        EthernetLapRF8Channel? existingTimer = await _dbcontext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == configuredEvent.TimerId).ConfigureAwait(false);
 
         if (existingTimer == null)
         {
@@ -33,7 +33,7 @@ internal class HardwareService
     }
     public async Task When(TimerConnectionEstablished connectionEstablishedEvent)
     {
-        var existingStatus = await _dbcontext.TimerStatuses.FirstOrDefaultAsync(x => x.Id == connectionEstablishedEvent.TimerId).ConfigureAwait(false);
+        TimerStatus? existingStatus = await _dbcontext.TimerStatuses.FirstOrDefaultAsync(x => x.Id == connectionEstablishedEvent.TimerId).ConfigureAwait(false);
         if (existingStatus == null)
         {
             existingStatus = new TimerStatus
@@ -50,7 +50,7 @@ internal class HardwareService
     }
     public async Task When(TimerDisconnected disconnectedEvent)
     {
-        var existingStatus = await _dbcontext.TimerStatuses.FirstOrDefaultAsync(x => x.Id == disconnectedEvent.TimerId).ConfigureAwait(false);
+        TimerStatus? existingStatus = await _dbcontext.TimerStatuses.FirstOrDefaultAsync(x => x.Id == disconnectedEvent.TimerId).ConfigureAwait(false);
         if (existingStatus == null)
         {
             existingStatus = new TimerStatus
@@ -68,7 +68,7 @@ internal class HardwareService
 
     public async Task<IEnumerable<Messages.Models.TimerDetails>> GetAllTimerDetails()
     {
-        var lapRF8Channels = await _dbcontext.EthernetLapRF8Channels
+        List<Messages.Models.TimerDetails> lapRF8Channels = await _dbcontext.EthernetLapRF8Channels
             .Select(x => new Messages.Models.TimerDetails(x.Id, x.Name, Messages.Models.TimerType.EthernetLapRF8Channel, 8))
             .ToListAsync().ConfigureAwait(false);
 
@@ -78,7 +78,7 @@ internal class HardwareService
     }
     public async Task<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>> GetAllEthernetLapRF8ChannelTimers()
     {
-        var timerDetails = await _dbcontext.EthernetLapRF8Channels
+        List<Messages.Models.EthernetLapRF8ChannelTimer> timerDetails = await _dbcontext.EthernetLapRF8Channels
             .Select(x => new Messages.Models.EthernetLapRF8ChannelTimer(x.Id, x.Name, new IPAddress(x.IpAddress), x.Port))
             .ToListAsync().ConfigureAwait(false);
 
@@ -86,7 +86,7 @@ internal class HardwareService
     }
     public async Task<Messages.Models.EthernetLapRF8ChannelTimer?> GetEthernetLapRF8ChannelTimer(Guid timerId)
     {
-        var timer = await _dbcontext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == timerId).ConfigureAwait(false);
+        EthernetLapRF8Channel? timer = await _dbcontext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == timerId).ConfigureAwait(false);
 
         return timer == null ? null : new Messages.Models.EthernetLapRF8ChannelTimer(timer.Id, timer.Name, new IPAddress(timer.IpAddress), timer.Port);
     }

@@ -21,11 +21,11 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
     {
         EventRegistrarScope.RegisterHub(this);
 
-        var initialPositions = await RpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.SingleLapLeaderboardPosition>>("GetOpenPracticeSessionSingleLapLeaderboardPositions", SessionId);
+        IEnumerable<OpenPractice.Messages.Models.SingleLapLeaderboardPosition>? initialPositions = await RpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.SingleLapLeaderboardPosition>>("GetOpenPracticeSessionSingleLapLeaderboardPositions", SessionId);
 
         if (initialPositions != null)
         {
-            foreach (var position in initialPositions)
+            foreach (OpenPractice.Messages.Models.SingleLapLeaderboardPosition position in initialPositions)
             {
                 _positions.Add(new SingleLapLeaderboardPosition()
                 {
@@ -38,7 +38,7 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
             }
         }
 
-        var initialPilots = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
+        IEnumerable<Management.Messages.Models.Pilot>? initialPilots = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
 
         if (initialPilots != null)
         {
@@ -61,7 +61,7 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
             return;
         }
 
-        var existingPosition = _positions.FirstOrDefault(x => x.PilotId == pilotId);
+        SingleLapLeaderboardPosition? existingPosition = _positions.FirstOrDefault(x => x.PilotId == pilotId);
 
         if (existingPosition == null)
         {
@@ -94,7 +94,7 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
             return;
         }
 
-        var existingPosition = _positions.FirstOrDefault(x => x.PilotId == removed.PilotId);
+        SingleLapLeaderboardPosition? existingPosition = _positions.FirstOrDefault(x => x.PilotId == removed.PilotId);
 
         if (existingPosition != null)
         {

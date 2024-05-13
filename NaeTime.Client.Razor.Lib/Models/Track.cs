@@ -18,7 +18,7 @@ public class Track
     }
     public bool CanTimerMoveUp(Guid timerId)
     {
-        var index = _timers.IndexOf(timerId);
+        int index = _timers.IndexOf(timerId);
         if (index == -1 || index == 0)
         {
             return false;
@@ -27,7 +27,7 @@ public class Track
     }
     public void MoveTimerUp(Guid timerId)
     {
-        var index = _timers.IndexOf(timerId);
+        int index = _timers.IndexOf(timerId);
         if (index == -1 || index == 0)
         {
             return;
@@ -37,7 +37,7 @@ public class Track
     }
     public bool CanTimerMoveDown(Guid timerId)
     {
-        var index = _timers.IndexOf(timerId);
+        int index = _timers.IndexOf(timerId);
         if (index == -1 || index == _timers.Count - 1)
         {
             return false;
@@ -46,7 +46,7 @@ public class Track
     }
     public void MoveTimerDown(Guid timerId)
     {
-        var index = _timers.IndexOf(timerId);
+        int index = _timers.IndexOf(timerId);
         if (index == -1 || index == _timers.Count - 1)
         {
             return;

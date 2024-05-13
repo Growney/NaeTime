@@ -14,16 +14,16 @@ public partial class TrackList
 
     protected override async Task OnInitializedAsync()
     {
-        var tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Track>>("GetTracks");
+        IEnumerable<Management.Messages.Models.Track>? tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Track>>("GetTracks");
 
         if (tracksResponse == null)
         {
             return;
         }
 
-        foreach (var track in tracksResponse)
+        foreach (Management.Messages.Models.Track track in tracksResponse)
         {
-            var domainTrack = new Track()
+            Track domainTrack = new()
             {
                 Id = track.Id,
                 Name = track.Name,

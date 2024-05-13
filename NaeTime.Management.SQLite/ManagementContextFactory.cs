@@ -5,9 +5,9 @@ internal class ManagementContextFactory : IDesignTimeDbContextFactory<Management
 {
     public ManagementDbContext CreateDbContext(string[] args)
     {
-        var appDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "naetime.management.db");
+        string appDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "naetime.management.db");
 
-        var optionsBuilder = new DbContextOptionsBuilder<ManagementDbContext>();
+        DbContextOptionsBuilder<ManagementDbContext> optionsBuilder = new();
         optionsBuilder.UseSqlite($"Data Source={appDirectory}");
 
         return new ManagementDbContext(optionsBuilder.Options);

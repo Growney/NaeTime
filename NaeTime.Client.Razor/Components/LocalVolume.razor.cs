@@ -14,7 +14,7 @@ public partial class LocalVolume : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        var currentConfiguration = await LocalConfiguration.GetSoundConfigurationAsync();
+        SoundConfiguration currentConfiguration = await LocalConfiguration.GetSoundConfigurationAsync();
         if (currentConfiguration != null)
         {
             _isMuted = currentConfiguration.IsMuted;

@@ -22,8 +22,8 @@ internal class LapRFConnectionFactory : ILapRFConnectionFactory
 
     public LapRFConnection CreateEthernetConnection(Guid timerId, IPAddress address, int port)
     {
-        var communication = _communicationFactory.CreateEthernetCommunication(address, port);
-        var protocol = _protocolFactory.Create(communication);
+        ILapRFCommunication communication = _communicationFactory.CreateEthernetCommunication(address, port);
+        ILapRFProtocol protocol = _protocolFactory.Create(communication);
         return new LapRFConnection(timerId, _softwareTimer, _eventClient, communication, protocol);
     }
 }

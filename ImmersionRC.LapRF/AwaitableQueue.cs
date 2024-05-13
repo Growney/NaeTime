@@ -3,8 +3,8 @@
 namespace ImmersionRC.LapRF;
 public class AwaitableQueue<T> : IDisposable
 {
-    private readonly ConcurrentQueue<T> _queue = new ConcurrentQueue<T>();
-    private readonly SemaphoreSlim _signal = new SemaphoreSlim(0);
+    private readonly ConcurrentQueue<T> _queue = new();
+    private readonly SemaphoreSlim _signal = new(0);
     private readonly int _maxSize;
     public AwaitableQueue(int maxSize)
     {
@@ -33,6 +33,6 @@ public class AwaitableQueue<T> : IDisposable
             await _signal.WaitAsync(cancellationToken);
         }
 
-        return _queue.TryDequeue(out var item) ? item : default;
+        return _queue.TryDequeue(out T? item) ? item : default;
     }
 }

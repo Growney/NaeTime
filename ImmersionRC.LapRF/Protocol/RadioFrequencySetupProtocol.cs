@@ -25,7 +25,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
 
         while (recordReader.HasData())
         {
-            var fieldSignature = recordReader.ReadByte();
+            byte fieldSignature = recordReader.ReadByte();
 
             if (fieldSignature == LapRFProtocol.END_OF_RECORD)
             {
@@ -61,7 +61,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
 
         if (transponderId.HasValue)
         {
-            var setup = new RFSetup(transponderId.Value, isEnabled == 1, channel, band, attenuation, frequency);
+            RFSetup setup = new(transponderId.Value, isEnabled == 1, channel, band, attenuation, frequency);
             HandleTransponderSetup(setup);
         }
     }
@@ -71,9 +71,9 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
         _latestSetup.AddOrUpdate(setup.TransponderId, setup,
                     (key, oldValue) => setup);
 
-        if (_responders.TryGetValue(setup.TransponderId, out var responders))
+        if (_responders.TryGetValue(setup.TransponderId, out List<TaskCompletionSource<RFSetup>>? responders))
         {
-            foreach (var responder in responders)
+            foreach (TaskCompletionSource<RFSetup> responder in responders)
             {
                 responder.SetResult(setup);
             }
@@ -83,8 +83,8 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
     }
     public ValueTask SetupTransponderSlot(byte transponderId, bool? isEnabled, ushort? channel = null, ushort? band = null, ushort? attenuation = null, ushort? frequencyInMHz = null, CancellationToken token = default)
     {
-        using var memoryStream = new MemoryStream();
-        using var writer = new BinaryWriter(memoryStream);
+        using MemoryStream memoryStream = new();
+        using BinaryWriter writer = new(memoryStream);
 
         writer.Write(LapRFProtocol.START_OF_RECORD);
         writer.WriteRecordType(RecordType.LAPRF_TOR_RFSETUP);
@@ -117,44 +117,44 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
 
         writer.Write(LapRFProtocol.END_OF_RECORD);
 
-        var finalisedData = memoryStream.FinalisePacketData();
+        byte[] finalisedData = memoryStream.FinalisePacketData();
 
         return _lapRFCommunication.SendAsync(finalisedData, token);
     }
     public async ValueTask<IEnumerable<RFSetup>> GetSetupAsync(IEnumerable<byte> transponderIds, CancellationToken cancellationToken = default)
     {
-        var responders = new List<TaskCompletionSource<RFSetup>>();
+        List<TaskCompletionSource<RFSetup>> responders = new();
 
-        foreach (var transponderId in transponderIds)
+        foreach (byte transponderId in transponderIds)
         {
-            var listner = AddListenerForTransponderId(transponderId, cancellationToken);
+            TaskCompletionSource<RFSetup> listner = AddListenerForTransponderId(transponderId, cancellationToken);
             responders.Add(listner);
         }
 
         //Build data
-        using var memoryStream = new MemoryStream();
-        using var writer = new BinaryWriter(memoryStream);
+        using MemoryStream memoryStream = new();
+        using BinaryWriter writer = new(memoryStream);
 
         writer.Write(LapRFProtocol.START_OF_RECORD);
         writer.WriteRecordType(RecordType.LAPRF_TOR_RFSETUP);
-        foreach (var transponderId in transponderIds)
+        foreach (byte transponderId in transponderIds)
         {
             writer.WriteField((byte)RadioFrequencySetupField.TransponderId, transponderId);
         }
 
         writer.Write(LapRFProtocol.END_OF_RECORD);
 
-        var finalisedData = memoryStream.FinalisePacketData();
+        byte[] finalisedData = memoryStream.FinalisePacketData();
 
         await _lapRFCommunication.SendAsync(finalisedData, cancellationToken).ConfigureAwait(false);
 
         await Task.WhenAll(responders.Select(x => x.Task)).ConfigureAwait(false);
 
-        var results = new List<RFSetup>();
+        List<RFSetup> results = new();
 
-        foreach (var responder in responders)
+        foreach (TaskCompletionSource<RFSetup> responder in responders)
         {
-            var result = await responder.Task;
+            RFSetup result = await responder.Task;
             results.Add(result);
         }
 
@@ -162,7 +162,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
     }
     private TaskCompletionSource<RFSetup> AddListenerForTransponderId(byte transponderId, CancellationToken cancellationToken)
     {
-        var responderCompletionSource = new TaskCompletionSource<RFSetup>(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<RFSetup> responderCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         cancellationToken.Register(() => responderCompletionSource.TrySetCanceled());
 

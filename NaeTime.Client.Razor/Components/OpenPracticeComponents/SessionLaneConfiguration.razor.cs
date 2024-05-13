@@ -112,11 +112,11 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
 
         if (Band.Bands.Any(x => x.Id == bandId))
         {
-            var band = Band.Bands.First(x => x.Id == bandId);
+            Band band = Band.Bands.First(x => x.Id == bandId);
 
             if (band.Frequencies.Any())
             {
-                var firstFrequency = band.Frequencies.First();
+                BandFrequency firstFrequency = band.Frequencies.First();
                 newFrequency = firstFrequency.FrequencyInMhz;
             }
         }
@@ -140,7 +140,7 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     {
         if (Band.Bands.Any(x => x.Id == Configuration.BandId))
         {
-            var band = Band.Bands.First(x => x.Id == Configuration.BandId);
+            Band band = Band.Bands.First(x => x.Id == Configuration.BandId);
 
             return band.ShortName;
         }
@@ -151,11 +151,11 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     {
         if (Band.Bands.Any(x => x.Id == Configuration.BandId))
         {
-            var band = Band.Bands.First(x => x.Id == Configuration.BandId);
+            Band band = Band.Bands.First(x => x.Id == Configuration.BandId);
 
             if (band.Frequencies.Any(x => x.FrequencyInMhz == Configuration.FrequencyInMhz))
             {
-                var frequency = band.Frequencies.First(x => x.FrequencyInMhz == Configuration.FrequencyInMhz);
+                BandFrequency frequency = band.Frequencies.First(x => x.FrequencyInMhz == Configuration.FrequencyInMhz);
                 return frequency.Name;
             }
         }
@@ -173,7 +173,7 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     }
     private string GetPilotString(Guid? pilotId)
     {
-        var pilot = Pilots.FirstOrDefault(x => x.Id == pilotId);
+        Pilot? pilot = Pilots.FirstOrDefault(x => x.Id == pilotId);
 
         if (pilot == null)
         {

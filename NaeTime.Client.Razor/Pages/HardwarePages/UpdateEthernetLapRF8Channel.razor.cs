@@ -26,7 +26,7 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
     {
         await base.OnInitializedAsync();
 
-        var response = await RpcClient.InvokeAsync<Hardware.Messages.Models.EthernetLapRF8ChannelTimer?>("GetEthernetLapRF8ChannelTimer", TimerId);
+        Hardware.Messages.Models.EthernetLapRF8ChannelTimer? response = await RpcClient.InvokeAsync<Hardware.Messages.Models.EthernetLapRF8ChannelTimer?>("GetEthernetLapRF8ChannelTimer", TimerId);
 
         if (response == null)
         {
@@ -54,7 +54,7 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
             return;
         }
 
-        if (!IPAddress.TryParse(timer.IpAddress, out var validIP))
+        if (!IPAddress.TryParse(timer.IpAddress, out IPAddress? validIP))
         {
             return;
         }

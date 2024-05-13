@@ -34,17 +34,17 @@ internal partial class LapRFProtocol : ILapRFProtocol
 
     public async Task RunAsync(CancellationToken token)
     {
-        var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(10));
+        PeriodicTimer timer = new(TimeSpan.FromMilliseconds(10));
 
         while (!token.IsCancellationRequested)
         {
             await timer.WaitForNextTickAsync(token).ConfigureAwait(false);
 
-            var data = await _communication.ReceiveAsync(token).ConfigureAwait(false);
+            ReadOnlyMemory<byte> data = await _communication.ReceiveAsync(token).ConfigureAwait(false);
 
             if (!token.IsCancellationRequested)
             {
-                for (var i = 0; i < data.Length; i++)
+                for (int i = 0; i < data.Length; i++)
                 {
                     ProcessByte(data.Span[i]);
                 }
@@ -70,7 +70,7 @@ internal partial class LapRFProtocol : ILapRFProtocol
 
     private void HandleStartOfRecord()
     {
-        if (_receivedStack.TryPeek(out var previousByte))
+        if (_receivedStack.TryPeek(out byte previousByte))
         {
             if (previousByte != ESCAPE)
             {
@@ -82,12 +82,12 @@ internal partial class LapRFProtocol : ILapRFProtocol
     }
     private void HandleEndOfRecord()
     {
-        if (_receivedStack.TryPeek(out var previousByte))
+        if (_receivedStack.TryPeek(out byte previousByte))
         {
             if (previousByte != ESCAPE)
             {
                 _receivedStack.Push(END_OF_RECORD);
-                var packetData = BuildRecord();
+                ReadOnlySpan<byte> packetData = BuildRecord();
                 HandleRecord(packetData);
             }
         }
@@ -109,7 +109,7 @@ internal partial class LapRFProtocol : ILapRFProtocol
 
     private void HandleRecord(ReadOnlySpan<byte> packetSpan)
     {
-        var packetData = DataEscaper.UnEscape(packetSpan);
+        byte[] packetData = DataEscaper.UnEscape(packetSpan);
 
         if (packetData[0] != START_OF_RECORD)
         {
@@ -123,10 +123,10 @@ internal partial class LapRFProtocol : ILapRFProtocol
             return;
         }
 
-        var recordHeader = RecordHeader.Read(packetData);
+        RecordHeader recordHeader = RecordHeader.Read(packetData);
         RecordHeader.SetRecordCRC(packetData, 0);
 
-        var recordCRC = _crc16.Compute(packetData, packetData.Length);
+        ushort recordCRC = _crc16.Compute(packetData, packetData.Length);
 
         if (recordCRC != recordHeader.RecordCRC)
         {
@@ -134,9 +134,9 @@ internal partial class LapRFProtocol : ILapRFProtocol
             return;
         }
 
-        var recordData = packetData.AsSpan()[RecordHeader.GetDataStartLocation()..];
+        Span<byte> recordData = packetData.AsSpan()[RecordHeader.GetDataStartLocation()..];
 
-        var recordReader = new ReadOnlySpanReader<byte>(recordData);
+        ReadOnlySpanReader<byte> recordReader = new(recordData);
 
         switch (recordHeader.RecordType)
         {

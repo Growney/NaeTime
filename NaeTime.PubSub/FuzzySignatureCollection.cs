@@ -9,13 +9,13 @@ public class FuzzySignatureCollection
 
     public void AddSignature(RPCSignature signature, Func<object?[], Task<object?>> handler)
     {
-        if (!_signatures.TryGetValue(signature.Name, out var returnTypeDictionary))
+        if (!_signatures.TryGetValue(signature.Name, out ConcurrentDictionary<Type, ConcurrentDictionary<RPCSignature, Func<object?[], Task<object?>>>>? returnTypeDictionary))
         {
             returnTypeDictionary = new ConcurrentDictionary<Type, ConcurrentDictionary<RPCSignature, Func<object?[], Task<object?>>>>();
             _signatures.TryAdd(signature.Name, returnTypeDictionary);
         }
 
-        if (!returnTypeDictionary.TryGetValue(signature.ReturnType, out var signatureDictionary))
+        if (!returnTypeDictionary.TryGetValue(signature.ReturnType, out ConcurrentDictionary<RPCSignature, Func<object?[], Task<object?>>>? signatureDictionary))
         {
             signatureDictionary = new ConcurrentDictionary<RPCSignature, Func<object?[], Task<object?>>>();
             returnTypeDictionary.TryAdd(signature.ReturnType, signatureDictionary);
@@ -32,9 +32,9 @@ public class FuzzySignatureCollection
             return false;
         }
 
-        if (!matchingNames.TryGetValue(signature.ReturnType, out var matchingReturnTypes))
+        if (!matchingNames.TryGetValue(signature.ReturnType, out ConcurrentDictionary<RPCSignature, Func<object?[], Task<object?>>>? matchingReturnTypes))
         {
-            foreach (var returnType in matchingNames.Keys)
+            foreach (Type returnType in matchingNames.Keys)
             {
                 if (signature.ReturnType.IsAssignableFrom(returnType))
                 {
@@ -51,10 +51,10 @@ public class FuzzySignatureCollection
 
         if (!matchingReturnTypes.TryGetValue(signature, out handler))
         {
-            var signatureParameters = signature.ParameterTypes;
-            foreach (var fuzzySignature in matchingReturnTypes.Keys)
+            Type[] signatureParameters = signature.ParameterTypes;
+            foreach (RPCSignature fuzzySignature in matchingReturnTypes.Keys)
             {
-                var checkParameters = fuzzySignature.ParameterTypes;
+                Type[] checkParameters = fuzzySignature.ParameterTypes;
 
                 if (signatureParameters.Length != checkParameters.Length)
                 {

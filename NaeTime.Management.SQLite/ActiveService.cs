@@ -12,7 +12,7 @@ internal class ActiveService
     }
     public async Task When(SessionActivated activated)
     {
-        var active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
+        ActiveSession? active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
 
         if (active == null)
         {
@@ -42,7 +42,7 @@ internal class ActiveService
 
     public async Task<Management.Messages.Models.ActiveSession?> GetActiveSession()
     {
-        var active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
+        ActiveSession? active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
         if (active == null)
         {
             return null;

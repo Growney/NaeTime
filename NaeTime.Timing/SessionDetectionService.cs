@@ -21,7 +21,7 @@ internal class SessionDetectionService
 
     private async Task TriggerTrackDetection(Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        var activeSessionResponse = await _rpcClient.InvokeAsync<ActiveSession?>("GetActiveSession");
+        ActiveSession? activeSessionResponse = await _rpcClient.InvokeAsync<ActiveSession?>("GetActiveSession");
 
         if (activeSessionResponse == null)
         {

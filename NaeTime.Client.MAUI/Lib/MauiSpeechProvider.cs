@@ -13,7 +13,7 @@ public class MauiSpeechProvider : ISpeechProvider
 
     public async Task SpeakAsync(string text)
     {
-        var soundConfiguration = await _localConfigurationRepository.GetSoundConfigurationAsync().ConfigureAwait(false);
+        Configuration.Models.SoundConfiguration soundConfiguration = await _localConfigurationRepository.GetSoundConfigurationAsync().ConfigureAwait(false);
 
         bool isMuted = false;
         float volume = 1.0f;

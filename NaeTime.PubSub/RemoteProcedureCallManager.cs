@@ -7,5 +7,5 @@ public class RemoteProcedureCallManager : IRemoteProcedureCallClient, IRemotePro
     private readonly FuzzySignatureCollection _signatures = new();
 
     public void RegisterHandler(RPCSignature signature, Func<object?[], Task<object?>> handler) => _signatures.AddSignature(signature, handler);
-    public Func<object?[], Task<object?>>? GetHandler(RPCSignature signature) => _signatures.TryFindHandler(signature, out var handler) ? handler : null;
+    public Func<object?[], Task<object?>>? GetHandler(RPCSignature signature) => _signatures.TryFindHandler(signature, out Func<object?[], Task<object?>>? handler) ? handler : null;
 }

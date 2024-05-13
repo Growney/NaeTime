@@ -10,7 +10,7 @@ internal class OpenPracticeSessionService
     }
     public async Task When(OpenPracticeLapDisputed lap)
     {
-        var existing = await _dbContext.OpenPracticeLaps.FirstOrDefaultAsync(x => x.Id == lap.LapId).ConfigureAwait(false);
+        OpenPracticeLap? existing = await _dbContext.OpenPracticeLaps.FirstOrDefaultAsync(x => x.Id == lap.LapId).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -28,7 +28,7 @@ internal class OpenPracticeSessionService
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        var existing = await _dbContext.OpenPracticeLaps.FirstOrDefaultAsync(x => x.Id == removed.LapId).ConfigureAwait(false);
+        OpenPracticeLap? existing = await _dbContext.OpenPracticeLaps.FirstOrDefaultAsync(x => x.Id == removed.LapId).ConfigureAwait(false);
         if (existing == null)
         {
             return;
@@ -40,7 +40,7 @@ internal class OpenPracticeSessionService
     }
     public async Task When(OpenPracticeSessionConfigured configured)
     {
-        var existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == configured.SessionId).ConfigureAwait(false);
+        OpenPracticeSession? existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == configured.SessionId).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -60,7 +60,7 @@ internal class OpenPracticeSessionService
     }
     public async Task When(OpenPracticeMaximumLapTimeConfigured configured)
     {
-        var existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == configured.SessionId).ConfigureAwait(false);
+        OpenPracticeSession? existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == configured.SessionId).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -73,7 +73,7 @@ internal class OpenPracticeSessionService
     }
     public async Task When(OpenPracticeMinimumLapTimeConfigured configured)
     {
-        var existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == configured.SessionId).ConfigureAwait(false);
+        OpenPracticeSession? existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == configured.SessionId).ConfigureAwait(false);
 
         if (existing == null)
         {
@@ -116,14 +116,14 @@ internal class OpenPracticeSessionService
     }
     public async Task When(OpenPracticeLanePilotSet laneSet)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == laneSet.SessionId).ConfigureAwait(false);
+        OpenPracticeSession? session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == laneSet.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
             return;
         }
 
-        var existingLane = session.ActiveLanes.FirstOrDefault(x => x.Lane == laneSet.Lane);
+        PilotLane? existingLane = session.ActiveLanes.FirstOrDefault(x => x.Lane == laneSet.Lane);
 
         if (existingLane == null)
         {
@@ -142,7 +142,7 @@ internal class OpenPracticeSessionService
     }
     public async Task When(ConsecutiveLapCountTracked tracked)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == tracked.SessionId).ConfigureAwait(false);
+        OpenPracticeSession? session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == tracked.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
@@ -164,14 +164,14 @@ internal class OpenPracticeSessionService
     }
     public async Task When(ConsecutiveLapCountTrackingRemoved removed)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == removed.SessionId).ConfigureAwait(false);
+        OpenPracticeSession? session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == removed.SessionId).ConfigureAwait(false);
 
         if (session == null)
         {
             return;
         }
 
-        var existing = session.TrackedConsecutiveLaps.FirstOrDefault(x => x.LapCap == removed.LapCap);
+        TrackedConsecutiveLaps? existing = session.TrackedConsecutiveLaps.FirstOrDefault(x => x.LapCap == removed.LapCap);
 
         if (existing == null)
         {
@@ -191,12 +191,12 @@ internal class OpenPracticeSessionService
     };
     public async Task<IEnumerable<Messages.Models.OpenPracticeSession>> GetOpenPracticeSessions()
     {
-        var sessions = await _dbContext.OpenPracticeSessions.ToListAsync().ConfigureAwait(false);
+        List<OpenPracticeSession> sessions = await _dbContext.OpenPracticeSessions.ToListAsync().ConfigureAwait(false);
 
-        var responseSessions = new List<Messages.Models.OpenPracticeSession>();
-        foreach (var session in sessions)
+        List<Messages.Models.OpenPracticeSession> responseSessions = new();
+        foreach (OpenPracticeSession? session in sessions)
         {
-            var laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == session.Id).ToListAsync().ConfigureAwait(false);
+            List<OpenPracticeLap> laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == session.Id).ToListAsync().ConfigureAwait(false);
 
             responseSessions.Add(new Messages.Models.OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
                 laps.Select(y => new Messages.Models.Lap(y.Id, y.PilotId, y.StartedUtc, y.FinishedUtc, GetSessionResponseStatus(y.Status), y.TotalMilliseconds)),
@@ -208,14 +208,14 @@ internal class OpenPracticeSessionService
     }
     public async Task<Messages.Models.OpenPracticeSession?> GetOpenPracticeSession(Guid sessionId)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
+        OpenPracticeSession? session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
 
         if (session == null)
         {
             return null;
         }
 
-        var laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == sessionId).ToListAsync().ConfigureAwait(false);
+        List<OpenPracticeLap> laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == sessionId).ToListAsync().ConfigureAwait(false);
 
         return new Messages.Models.OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
                        laps.Select(x => new Messages.Models.Lap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc, GetSessionResponseStatus(x.Status), x.TotalMilliseconds)),
@@ -224,13 +224,13 @@ internal class OpenPracticeSessionService
     }
     public async Task<IEnumerable<uint>> GetOpenPracticeSessionTrackedConsecutiveLaps(Guid sessionId)
     {
-        var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
+        OpenPracticeSession? session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
 
         return session == null ? Enumerable.Empty<uint>() : session.TrackedConsecutiveLaps.Select(x => x.LapCap).ToList();
     }
     public async Task<IEnumerable<Messages.Models.Lap>> GetPilotOpenPracticeSessionLaps(Guid sessionId, Guid pilotId)
     {
-        var laps = await _dbContext.OpenPracticeLaps.Where(x => x.PilotId == pilotId && x.SessionId == sessionId).ToListAsync();
+        List<OpenPracticeLap> laps = await _dbContext.OpenPracticeLaps.Where(x => x.PilotId == pilotId && x.SessionId == sessionId).ToListAsync();
 
         return laps.Select(x => new Messages.Models.Lap(x.Id, pilotId, x.StartedUtc, x.FinishedUtc, x.Status switch
         {

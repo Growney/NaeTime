@@ -9,7 +9,7 @@ public record ConsecutiveLapRecord(uint TotalLaps, long TotalMilliseconds, DateT
         }
 
         //We compare other first so that higher numbers are first
-        var comparsion = other.TotalLaps.CompareTo(TotalLaps);
+        int comparsion = other.TotalLaps.CompareTo(TotalLaps);
         if (comparsion != 0)
         {
             return comparsion;

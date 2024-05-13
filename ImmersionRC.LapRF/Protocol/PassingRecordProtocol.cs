@@ -15,7 +15,7 @@ internal class PassingRecordProtocol : IPassingRecordProtocol
 
         while (recordReader.HasData())
         {
-            var fieldSignature = recordReader.ReadByte();
+            byte fieldSignature = recordReader.ReadByte();
 
             if (fieldSignature == LapRFProtocol.END_OF_RECORD)
             {

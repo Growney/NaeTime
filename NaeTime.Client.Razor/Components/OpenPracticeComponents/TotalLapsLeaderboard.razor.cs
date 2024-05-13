@@ -22,11 +22,11 @@ public partial class TotalLapsLeaderboard : ComponentBase, IDisposable
     {
         EventRegistrarScope.RegisterHub(this);
 
-        var initialPositions = await RpcClient.InvokeAsync<IEnumerable<NaeTime.OpenPractice.Messages.Models.TotalLapLeaderboardPosition>>("GetOpenPracticeSessionTotalLapLeaderboardPositions", SessionId);
+        IEnumerable<OpenPractice.Messages.Models.TotalLapLeaderboardPosition>? initialPositions = await RpcClient.InvokeAsync<IEnumerable<NaeTime.OpenPractice.Messages.Models.TotalLapLeaderboardPosition>>("GetOpenPracticeSessionTotalLapLeaderboardPositions", SessionId);
 
         if (initialPositions != null)
         {
-            foreach (var position in initialPositions)
+            foreach (OpenPractice.Messages.Models.TotalLapLeaderboardPosition position in initialPositions)
             {
                 _positions.Add(new TotalLapLeaderboardPosition()
                 {
@@ -38,7 +38,7 @@ public partial class TotalLapsLeaderboard : ComponentBase, IDisposable
             }
         }
 
-        var initialPilots = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
+        IEnumerable<Management.Messages.Models.Pilot>? initialPilots = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
 
         if (initialPilots != null)
         {
@@ -60,7 +60,7 @@ public partial class TotalLapsLeaderboard : ComponentBase, IDisposable
             return;
         }
 
-        var existingPosition = _positions.FirstOrDefault(x => x.PilotId == pilotId);
+        TotalLapLeaderboardPosition? existingPosition = _positions.FirstOrDefault(x => x.PilotId == pilotId);
 
         if (existingPosition == null)
         {
@@ -91,7 +91,7 @@ public partial class TotalLapsLeaderboard : ComponentBase, IDisposable
             return;
         }
 
-        var existingPosition = _positions.FirstOrDefault(x => x.PilotId == removed.PilotId);
+        TotalLapLeaderboardPosition? existingPosition = _positions.FirstOrDefault(x => x.PilotId == removed.PilotId);
 
         if (existingPosition != null)
         {

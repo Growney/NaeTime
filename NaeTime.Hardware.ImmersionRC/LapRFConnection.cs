@@ -1,4 +1,5 @@
-﻿using ImmersionRC.LapRF.Abstractions;
+﻿using ImmersionRC.LapRF;
+using ImmersionRC.LapRF.Abstractions;
 using NaeTime.Hardware.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Models;
 using NaeTime.Hardware.Messages.Messages;
@@ -28,7 +29,7 @@ internal class LapRFConnection
 
         _cancellationTokenSource = new CancellationTokenSource();
 
-        var token = _cancellationTokenSource.Token;
+        CancellationToken token = _cancellationTokenSource.Token;
 
         _runningTasks = [MaintainConnectionAsync(token), WaitForDetectionsAsync(token), WaitForStatusAsync(token)];
     }
@@ -43,7 +44,7 @@ internal class LapRFConnection
                 IsConnected = true;
 
                 //We must start the run task before we dispatch the connection established as data may be requested when the connection is established
-                var runTask = _protocol.RunAsync(token).ConfigureAwait(false);
+                System.Runtime.CompilerServices.ConfiguredTaskAwaitable runTask = _protocol.RunAsync(token).ConfigureAwait(false);
 
                 await _eventClient.Publish(new TimerConnectionEstablished(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
 
@@ -68,16 +69,16 @@ internal class LapRFConnection
         {
             try
             {
-                var nullablePassingRecord = await _protocol.PassingRecordProtocol.WaitForNextPassAsync(token).ConfigureAwait(false);
+                Pass? nullablePassingRecord = await _protocol.PassingRecordProtocol.WaitForNextPassAsync(token).ConfigureAwait(false);
 
                 if (nullablePassingRecord == null)
                 {
                     continue;
                 }
 
-                var passingRecord = nullablePassingRecord.Value;
+                Pass passingRecord = nullablePassingRecord.Value;
 
-                var detection = new TimerDetectionOccured(_timerId, passingRecord.PilotId, passingRecord.RealTimeClockTime / 1000, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
+                TimerDetectionOccured detection = new(_timerId, passingRecord.PilotId, passingRecord.RealTimeClockTime / 1000, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
 
                 await _eventClient.Publish(detection).ConfigureAwait(false);
             }
@@ -93,16 +94,16 @@ internal class LapRFConnection
         {
             try
             {
-                var nullableStatus = await _protocol.StatusProtocol.WaitForNextReceivedSignalStrengthIndicatorAsync(token).ConfigureAwait(false);
+                ReceivedSignalStrengthIndicator? nullableStatus = await _protocol.StatusProtocol.WaitForNextReceivedSignalStrengthIndicatorAsync(token).ConfigureAwait(false);
 
                 if (nullableStatus == null)
                 {
                     continue;
                 }
 
-                var status = nullableStatus.Value;
+                ReceivedSignalStrengthIndicator status = nullableStatus.Value;
 
-                var level = new RssiLevelRecorded(_timerId, status.TransponderId, status.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow, status.Level);
+                RssiLevelRecorded level = new(_timerId, status.TransponderId, status.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow, status.Level);
 
                 await _eventClient.Publish(level).ConfigureAwait(false);
             }
@@ -119,11 +120,11 @@ internal class LapRFConnection
             return Enumerable.Empty<LapRF8ChannelLaneConfiguration>();
         }
 
-        var rfSetups = await _protocol.RadioFrequencySetupProtocol.GetSetupAsync(lanes, CancellationToken.None).ConfigureAwait(false);
+        IEnumerable<RFSetup> rfSetups = await _protocol.RadioFrequencySetupProtocol.GetSetupAsync(lanes, CancellationToken.None).ConfigureAwait(false);
 
-        var channels = new List<LapRF8ChannelLaneConfiguration>();
+        List<LapRF8ChannelLaneConfiguration> channels = new();
 
-        foreach (var setup in rfSetups)
+        foreach (RFSetup setup in rfSetups)
         {
             if (setup.Frequency == null)
             {

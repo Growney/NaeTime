@@ -14,7 +14,7 @@ public partial class PilotsList : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        var pilotsResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
+        IEnumerable<Management.Messages.Models.Pilot>? pilotsResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
 
         if (pilotsResponse == null)
         {

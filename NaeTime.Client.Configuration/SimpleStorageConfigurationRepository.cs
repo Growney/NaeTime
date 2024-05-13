@@ -13,15 +13,15 @@ public class SimpleStorageConfigurationRepository : ILocalConfigurationRepositor
 
     public async Task<SoundConfiguration> GetSoundConfigurationAsync()
     {
-        var volumeString = await _simpleStorageProvider.GetAsync("Volume").ConfigureAwait(false);
-        var isMutedString = await _simpleStorageProvider.GetAsync("IsMuted").ConfigureAwait(false);
+        string? volumeString = await _simpleStorageProvider.GetAsync("Volume").ConfigureAwait(false);
+        string? isMutedString = await _simpleStorageProvider.GetAsync("IsMuted").ConfigureAwait(false);
 
-        if (!float.TryParse(volumeString, out var volume))
+        if (!float.TryParse(volumeString, out float volume))
         {
             volume = 1.0f;
         }
 
-        if (!bool.TryParse(isMutedString, out var isMuted))
+        if (!bool.TryParse(isMutedString, out bool isMuted))
         {
             isMuted = false;
         }
