@@ -1,3 +1,8 @@
+@using NaeTime.PubSub.Abstractions
+@using Syncfusion.Blazor.Charts
+@using Syncfusion.Blazor
+@using System.Collections.Concurrent
+
 <Microsoft.AspNetCore.Components.Forms.EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
     <div>
@@ -28,9 +33,38 @@
         <button type="submit" class="btn btn-primary">Save</button>
     </div>
 
+    @foreach(var lane in _rssiReadings)
+    {
+        <SfChart Title="Annual Mean Rainfall in Australia">
+            <ChartArea><ChartAreaBorder Width="0"></ChartAreaBorder></ChartArea>
+            <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime" LabelFormat="yyyy" IntervalType="IntervalType.Years" EdgeLabelPlacement="EdgeLabelPlacement.Shift">
+                <ChartAxisMajorGridLines Width="0"></ChartAxisMajorGridLines>
+            </ChartPrimaryXAxis>
+            <ChartPrimaryYAxis LabelFormat="{value}mm" RangePadding="ChartRangePadding.None" Minimum="200" Maximum="800" Interval="100">
+                <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
+                <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
+            </ChartPrimaryYAxis>
+            <ChartTooltipSettings Header="<b>Rainfall</b>" Enable="true" Shared="true" EnableMarker="false" Format="${point.x} : <b>${point.y}</b>"></ChartTooltipSettings>
+
+            <ChartSeriesCollection>
+                <ChartSeries DataSource="@lane.Value" XName="SoftwareTime" Width="2"
+                             SegmentAxis="Segment.Y" YName="RssiLevel" Type="ChartSeriesType.MultiColoredLine">
+                    <ChartSegments>
+                        <ChartSegment Value="450" Color="red">
+                        </ChartSegment>
+                        <ChartSegment Value="500" Color="green"></ChartSegment>
+                        <ChartSegment Color="blue"></ChartSegment>
+                    </ChartSegments>
+                </ChartSeries>
+            </ChartSeriesCollection>
+        </SfChart>
+    }
+    
 </Microsoft.AspNetCore.Components.Forms.EditForm>
 
 @code {
+    [Inject]
+    public IEventRegistrarScope EventRegistrar { get; set; } = null!;
     [Parameter]
     [EditorRequired]
     public Func<EthernetLapRF8Channel, Task> OnValidSubmit { get; set; } = null!;
@@ -41,14 +75,53 @@
 
     private EditContext? _editContext;
 
+    private readonly ConcurrentDictionary<byte, List<RssiReading>> _rssiReadings = new();
+
+    protected override void OnInitialized()
+    {
+        EventRegistrar.RegisterHub(this);
+        base.OnInitialized();
+    }
+
     protected override void OnParametersSet()
     {
         _editContext = new EditContext(Details);
         base.OnParametersSet();
     }
 
+    public async Task When(Hardware.Messages.Messages.RssiLevelRecorded recorded)
+    {
+        if(Details.Id != recorded.TimerId)
+        {
+            return;
+        }
+
+        List<RssiReading> laneReadings = _rssiReadings.GetOrAdd(recorded.Lane, _ => new List<RssiReading>());
+
+        laneReadings.Add(new RssiReading()
+        {
+            RssiLevel = recorded.Level,
+            SoftwareTime = recorded.SoftwareTime
+        });
+
+        if (laneReadings.Count > 1000)
+        {
+            laneReadings.RemoveAt(0);
+        }
+
+
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+    }
+
     private Task HandleValidSubmit()
     {
         return OnValidSubmit?.Invoke(Details) ?? Task.CompletedTask;
+    }
+
+
+    public class RssiReading
+    {
+        public float RssiLevel { get; init; }
+        public long SoftwareTime { get; init; }
     }
 }

@@ -18,6 +18,7 @@
   <ItemGroup>
     <PackageReference Include="Blazor.Bootstrap" Version="1.11.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" />
+    <PackageReference Include="Syncfusion.Blazor.Charts" Version="25.2.4" />
   </ItemGroup>
 
   <ItemGroup>

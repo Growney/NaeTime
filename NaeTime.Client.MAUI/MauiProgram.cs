@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NaeTime.Client.MAUI.Lib;
+using Syncfusion.Blazor;
 
 namespace NaeTime.Client.MAUI;
 public static class MauiProgram
@@ -13,6 +14,8 @@ public static class MauiProgram
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
             });
+
+        builder.Services.AddSyncfusionBlazor();
 
         builder.Services.AddSingleton<ServiceRunner>();
 
