@@ -18,9 +18,9 @@ public class EthernetLapRF8ChannelTimerLaneService
     {
         IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>? laneConfigurations = await _rpcClient.InvokeAsync<IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>>("GetActiveLaneConfigurations");
 
-        Messages.Models.TimerDetails? timerDetails = await _rpcClient.InvokeAsync<Messages.Models.TimerDetails>("GetTimerDetails", connectionEstablished.TimerId);
+        Messages.Models.EthernetLapRF8ChannelTimer? timerDetails = await _rpcClient.InvokeAsync<Messages.Models.EthernetLapRF8ChannelTimer>("GetEthernetLapRF8ChannelTimer", connectionEstablished.TimerId);
 
-        if (timerDetails == null || timerDetails.Type != Messages.Models.TimerType.EthernetLapRF8Channel)
+        if (timerDetails == null)
         {
             return;
         }
