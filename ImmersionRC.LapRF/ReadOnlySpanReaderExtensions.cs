@@ -41,4 +41,9 @@ public static class ReadOnlySpanReaderExtensions
         ReadOnlySpan<byte> span = reader.Read(sizeof(float));
         return BitConverter.ToSingle(span);
     }
+    public static float ReadFloat(this ref ReadOnlySpanReader<byte> reader)
+    {
+        ReadOnlySpan<byte> span = reader.Read(sizeof(float));
+        return BitConverter.ToSingle(span);
+    }
 }

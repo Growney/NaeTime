@@ -21,6 +21,7 @@ internal enum RadioFrequencySetupField
     IsEnabled = 0x20,
     Channel = 0x21,
     Band = 0x22,
+    Threshold = 0x23,
     Attenuation = 0x24,
     Frequency = 0x25,
 }

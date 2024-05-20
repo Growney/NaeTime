@@ -133,7 +133,7 @@ internal class LapRFConnection
                 continue;
             }
 
-            channels.Add(new LapRF8ChannelLaneConfiguration(setup.TransponderId, null, (int)setup.Frequency.Value, setup.IsEnabled));
+            channels.Add(new LapRF8ChannelLaneConfiguration(setup.TransponderId, null, setup.Frequency ?? 0, setup.IsEnabled, setup.Attenuation ?? 0, setup.Threshold ?? 0));
         }
 
         return channels;

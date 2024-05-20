@@ -22,6 +22,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
         ushort? band = null;
         ushort? attenuation = null;
         ushort? frequency = null;
+        float? threshold = null;
 
         while (recordReader.HasData())
         {
@@ -54,6 +55,9 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
                 case RadioFrequencySetupField.Frequency:
                     frequency = recordReader.ReadUInt16();
                     break;
+                case RadioFrequencySetupField.Threshold:
+                    threshold = recordReader.ReadFloat();
+                    break;
                 default:
                     break;
             }
@@ -61,7 +65,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
 
         if (transponderId.HasValue)
         {
-            RFSetup setup = new(transponderId.Value, isEnabled == 1, channel, band, attenuation, frequency);
+            RFSetup setup = new(transponderId.Value, isEnabled == 1, channel, band, attenuation, frequency, threshold);
             HandleTransponderSetup(setup);
         }
     }

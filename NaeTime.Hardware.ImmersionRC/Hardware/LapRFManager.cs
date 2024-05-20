@@ -67,7 +67,7 @@ internal class LapRFManager : IHostedService
 
         IEnumerable<NaeTime.Hardware.ImmersionRC.Models.LapRF8ChannelLaneConfiguration> frequencies = await connection.GetAllLaneConfigurations().ConfigureAwait(false);
 
-        return frequencies.Select(x => new EthernetLapRF8ChannelTimerLaneConfiguration(x.Lane, x.BandId, x.FrequencyInMhz, x.IsEnabled));
+        return frequencies.Select(x => new EthernetLapRF8ChannelTimerLaneConfiguration(x.Lane, x.BandId, x.FrequencyInMhz, x.IsEnabled, x.Gain, x.Threshold));
     }
     private async Task<EthernetLapRF8ChannelTimerLaneConfiguration?> GetEthernetLapRF8ChannelTimerLaneConfiguration(Guid timerId, byte laneId)
     {
@@ -90,7 +90,7 @@ internal class LapRFManager : IHostedService
 
         NaeTime.Hardware.ImmersionRC.Models.LapRF8ChannelLaneConfiguration configuration = frequencies.First();
 
-        return new EthernetLapRF8ChannelTimerLaneConfiguration(laneId, configuration.BandId, configuration.FrequencyInMhz, configuration.IsEnabled);
+        return new EthernetLapRF8ChannelTimerLaneConfiguration(laneId, configuration.BandId, configuration.FrequencyInMhz, configuration.IsEnabled, configuration.Gain, configuration.Threshold);
     }
     public async Task When(EthernetLapRF8ChannelConfigured configured)
     {
