@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NaeTime.Hardware.Messages\NaeTime.Hardware.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.Management.Messages\NaeTime.Management.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.OpenPractice.Messages\NaeTime.OpenPractice.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
