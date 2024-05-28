@@ -1,2 +1,2 @@
-﻿namespace NaeTime.Hardware.Messages.Messages;
+﻿namespace NaeTime.Hardware.Messages;
 public record TimerConnectionEstablished(Guid TimerId, long SoftwareTime, DateTime UtcTime);

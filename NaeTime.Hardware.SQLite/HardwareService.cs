@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
+using NaeTime.Hardware.Messages;
 using System.Net;
 
 namespace NaeTime.Hardware.SQLite;

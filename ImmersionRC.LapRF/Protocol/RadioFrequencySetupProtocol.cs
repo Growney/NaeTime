@@ -85,7 +85,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
             responders.Clear();
         }
     }
-    public ValueTask SetupTransponderSlot(byte transponderId, bool? isEnabled, ushort? channel = null, ushort? band = null, ushort? attenuation = null, ushort? frequencyInMHz = null, CancellationToken token = default)
+    public ValueTask SetupTransponderSlot(byte transponderId, bool? isEnabled, ushort? channel = null, ushort? band = null, ushort? attenuation = null, ushort? frequencyInMHz = null, float? threshold = null, CancellationToken token = default)
     {
         using MemoryStream memoryStream = new();
         using BinaryWriter writer = new(memoryStream);
@@ -117,6 +117,11 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
         if (frequencyInMHz.HasValue)
         {
             writer.WriteField((byte)RadioFrequencySetupField.Frequency, frequencyInMHz.Value);
+        }
+
+        if (threshold.HasValue)
+        {
+            writer.WriteField((byte)RadioFrequencySetupField.Threshold, threshold.Value);
         }
 
         writer.Write(LapRFProtocol.END_OF_RECORD);

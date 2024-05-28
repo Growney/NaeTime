@@ -2,7 +2,7 @@
 using ImmersionRC.LapRF.Abstractions;
 using NaeTime.Hardware.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Models;
-using NaeTime.Hardware.Messages.Messages;
+using NaeTime.Hardware.Messages;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Timing.ImmersionRC;
@@ -157,6 +157,25 @@ internal class LapRFConnection
         }
 
         await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, frequencyInMHz: (ushort)frequencyInMhz).ConfigureAwait(false);
+    }
+    public async Task SetLaneThreshold(byte lane, float threshold)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+
+        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(lane, threshold: threshold).ConfigureAwait(false);
+    }
+
+    public async Task SetLaneGain(byte lane, ushort gain)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+
+        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(lane, attenuation: gain).ConfigureAwait(false);
     }
     public Task Stop()
     {

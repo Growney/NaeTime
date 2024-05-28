@@ -1,0 +1,58 @@
+﻿@using Syncfusion.Blazor.Charts
+@using Syncfusion.Blazor
+@using Syncfusion.Blazor.Inputs
+@using Syncfusion.Blazor.LinearGauge
+<div>
+    <table class="w-100 shadow">
+        <tbody>
+            <tr>
+                <td class="align-start px-2" style="width:10%">
+                    <Switch ValueChanged="EnabledChanged" Value="IsEnabled" ValueExpression="()=>IsEnabled"></Switch>
+                </td>
+                <td style="width:10%">
+                    <div class="h4 text-start px-2">
+                        @Lane
+                    </div>
+                </td>
+                <td class="text-right" style="width:10%">
+                    Threshold
+                </td>
+                <td class="m-2">
+                    <SfLinearGauge Orientation="Syncfusion.Blazor.LinearGauge.Orientation.Horizontal" Height="75px">
+                        <LinearGaugeEvents ValueChange="@UpdateThreshold"></LinearGaugeEvents>
+                        <LinearGaugeAxes>
+                            <LinearGaugeAxis Minimum="0" Maximum="_maxRssi">
+                                <LinearGaugeAxisLabelStyle Format="{value}"></LinearGaugeAxisLabelStyle>
+                                <LinearGaugePointers>
+                                    <LinearGaugePointer PointerValue="Threshold ?? 0" EnableDrag=true>
+                                    </LinearGaugePointer>
+                                </LinearGaugePointers>
+                                <LinearGaugeRanges>
+                                    <LinearGaugeRange Start="0" End="Math.Min(Threshold ?? 0,_currentRssi)" Color="#ff5985"></LinearGaugeRange>
+                                    <LinearGaugeRange Start="Math.Min(Threshold ?? 0,_currentRssi)" End="_currentRssi" Color="#00FF00"></LinearGaugeRange>
+                                    <LinearGaugeRange Start="_currentRssi" End="_maxRecordedRssi" Color="#0000FF"></LinearGaugeRange>
+                                </LinearGaugeRanges>
+                            </LinearGaugeAxis>
+                        </LinearGaugeAxes>
+                    </SfLinearGauge>
+                </td>
+            </tr>
+            <tr>
+                <td class="px-2" colspan="2" style="width:20%">
+                    <div class="h5">
+                        @Frequency <sup style="font-size:0.5em">MHz</sup>
+                    </div>
+                </td>
+                <td style="width:10%">
+                    Gain
+                </td>
+                <td class="px-2">
+                    <Syncfusion.Blazor.Inputs.SfSlider @bind-Value="@Gain" Type="SliderType.MinRange">
+                        <SliderEvents TValue="ushort?" ValueChange="@(e=> UpdateGain(e))"></SliderEvents>
+                    </Syncfusion.Blazor.Inputs.SfSlider>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+</div>

@@ -23,7 +23,6 @@ public partial class LapList : ComponentBase
     public Task Remove(Guid lapId, Guid pilotId) => EventClient.Publish(new OpenPracticeLapRemoved(SessionId, lapId, pilotId));
     public Task Invalidate(Guid lapId, Guid pilotId)
     {
-
         OpenPracticeLap? lap = Laps.FirstOrDefault(l => l.Id == lapId);
 
         if (lap == null)

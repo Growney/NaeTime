@@ -13,6 +13,8 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
     private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
     [Inject]
     private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
+    [Inject]
+    private IEventClient EventClient { get; set; } = null!;
 
     private readonly List<SingleLapLeaderboardPosition> _positions = new();
     private readonly List<Pilot> _pilots = new();
@@ -105,6 +107,6 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
     }
 
     private string GetPilotName(Guid pilotId) => _pilots.FirstOrDefault(x => x.Id == pilotId)?.CallSign ?? "Unknown";
-
+    public Task Invalidate(Guid lapId, Guid pilotId) => EventClient.Publish(new OpenPracticeLapDisputed(SessionId, lapId, pilotId, OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid));
     public void Dispose() => EventRegistrarScope?.Dispose();
 }

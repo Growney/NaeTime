@@ -10,6 +10,8 @@ public static class BinaryWriterExtensionMethods
         => WriteField(writer, fieldId, sizeof(byte), new byte[] { field });
     public static void WriteField(this BinaryWriter writer, byte fieldId, ushort field)
         => WriteField(writer, fieldId, sizeof(ushort), BitConverter.GetBytes(field));
+    public static void WriteField(this BinaryWriter writer, byte fieldId, float field)
+        => WriteField(writer, fieldId, sizeof(float), BitConverter.GetBytes(field));
 
     private static void WriteField(this BinaryWriter writer, byte fieldId, byte size, byte[] bytes)
     {

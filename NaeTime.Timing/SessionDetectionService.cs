@@ -1,4 +1,4 @@
-﻿using NaeTime.Hardware.Messages.Messages;
+﻿using NaeTime.Hardware.Messages;
 using NaeTime.Management.Messages.Models;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.PubSub.Abstractions;

@@ -18,7 +18,13 @@
   <ItemGroup>
     <PackageReference Include="Blazor.Bootstrap" Version="1.11.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" />
+    <PackageReference Include="Syncfusion.Blazor.Calendars" Version="25.2.5" />
     <PackageReference Include="Syncfusion.Blazor.Charts" Version="25.2.4" />
+    <PackageReference Include="Syncfusion.Blazor.Inputs" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.LinearGauge" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.Popups" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.RichTextEditor" Version="25.2.5" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="25.2.5" />
   </ItemGroup>
 
   <ItemGroup>

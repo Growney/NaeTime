@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Management.Messages.Messages;
+using NaeTime.Management.Messages;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;

@@ -2,7 +2,7 @@
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.Hardware.Frequency;
-using NaeTime.Hardware.Messages.Messages;
+using NaeTime.Hardware.Messages;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;

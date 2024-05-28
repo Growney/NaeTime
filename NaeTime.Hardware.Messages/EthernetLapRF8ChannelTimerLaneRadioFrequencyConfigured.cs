@@ -1,2 +1,2 @@
-﻿namespace NaeTime.Hardware.Messages.Messages;
+﻿namespace NaeTime.Hardware.Messages;
 public record EthernetLapRF8ChannelTimerLaneRadioFrequencyConfigured(Guid TimerId, byte Lane, int FrequencyInMhz);

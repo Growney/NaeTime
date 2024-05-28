@@ -1,4 +1,6 @@
-﻿namespace NaeTime.Hardware.SQLite;
+﻿using NaeTime.Hardware.Messages;
+
+namespace NaeTime.Hardware.SQLite;
 internal class DetectionService
 {
     private readonly HardwareDbContext _dbContext;

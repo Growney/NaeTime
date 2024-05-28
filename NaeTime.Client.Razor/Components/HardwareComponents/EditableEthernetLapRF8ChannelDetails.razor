@@ -1,127 +1,63 @@
+@using NaeTime.Hardware.Messages.Models
 @using NaeTime.PubSub.Abstractions
 @using Syncfusion.Blazor.Charts
 @using Syncfusion.Blazor
 @using System.Collections.Concurrent
+@using Syncfusion.Blazor.Popups
 
-<Microsoft.AspNetCore.Components.Forms.EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit">
-    <DataAnnotationsValidator />
-    <div>
-
-        <label>Name</label>
+@if(_editContext != null)
+{
+    <Microsoft.AspNetCore.Components.Forms.EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
         <div>
 
-            <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.Name" />
-            <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.Name)" />
+            <label>
+                <SfTooltip Position="Syncfusion.Blazor.Popups.Position.RightCenter" Content="@(_isConnected ? "Timer is connected." : "Timer disconnected")">
+                    Name
+                    <span><i class="@(_isConnected ? "text-success" : "text-danger") fa-solid fa-link"></i></span>
+                </SfTooltip>
+            </label>
+            <div>
+                <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.Name" />
+                <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.Name)" />
+            </div>
         </div>
-    </div>
-    <div class="mt-2">
-        <label>Ip Address</label>
-        <div>
-            <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.IpAddress" />
-            <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.IpAddress)" />
+        <div class="mt-2">
+            <label>Ip Address</label>
+            <div>
+                <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.IpAddress" />
+                <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.IpAddress)" />
+            </div>
         </div>
-    </div>
-    <div class="mt-2">
-        <label>Port</label>
-        <div>
-            <Microsoft.AspNetCore.Components.Forms.InputNumber @bind-Value="Details.Port" />
-            <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.Port)" />
+        <div class="mt-2">
+            <label>Port</label>
+            <div>
+                <Microsoft.AspNetCore.Components.Forms.InputNumber @bind-Value="Details.Port" />
+                <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.Port)" />
+            </div>
         </div>
-    </div>
 
-    <div class="mt-3">
-        <button type="submit" class="btn btn-primary">Save</button>
-    </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </Microsoft.AspNetCore.Components.Forms.EditForm>
 
-    @foreach(var lane in _rssiReadings)
+    @if (_isConnected)
     {
-        <SfChart Title="Annual Mean Rainfall in Australia">
-            <ChartArea><ChartAreaBorder Width="0"></ChartAreaBorder></ChartArea>
-            <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime" LabelFormat="yyyy" IntervalType="IntervalType.Years" EdgeLabelPlacement="EdgeLabelPlacement.Shift">
-                <ChartAxisMajorGridLines Width="0"></ChartAxisMajorGridLines>
-            </ChartPrimaryXAxis>
-            <ChartPrimaryYAxis LabelFormat="{value}mm" RangePadding="ChartRangePadding.None" Minimum="200" Maximum="800" Interval="100">
-                <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
-                <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
-            </ChartPrimaryYAxis>
-            <ChartTooltipSettings Header="<b>Rainfall</b>" Enable="true" Shared="true" EnableMarker="false" Format="${point.x} : <b>${point.y}</b>"></ChartTooltipSettings>
+        <div class="d-flex flow-row flex-wrap">
+            @for (byte i = 1; i <= 8; i++)
+            {
+                _laneConfigurations.TryGetValue(i, out LapRFLaneConfiguration? configuration);
 
-            <ChartSeriesCollection>
-                <ChartSeries DataSource="@lane.Value" XName="SoftwareTime" Width="2"
-                             SegmentAxis="Segment.Y" YName="RssiLevel" Type="ChartSeriesType.MultiColoredLine">
-                    <ChartSegments>
-                        <ChartSegment Value="450" Color="red">
-                        </ChartSegment>
-                        <ChartSegment Value="500" Color="green"></ChartSegment>
-                        <ChartSegment Color="blue"></ChartSegment>
-                    </ChartSegments>
-                </ChartSeries>
-            </ChartSeriesCollection>
-        </SfChart>
-    }
-    
-</Microsoft.AspNetCore.Components.Forms.EditForm>
-
-@code {
-    [Inject]
-    public IEventRegistrarScope EventRegistrar { get; set; } = null!;
-    [Parameter]
-    [EditorRequired]
-    public Func<EthernetLapRF8Channel, Task> OnValidSubmit { get; set; } = null!;
-
-    [Parameter]
-    [EditorRequired]
-    public EthernetLapRF8Channel Details { get; set; } = null!;
-
-    private EditContext? _editContext;
-
-    private readonly ConcurrentDictionary<byte, List<RssiReading>> _rssiReadings = new();
-
-    protected override void OnInitialized()
-    {
-        EventRegistrar.RegisterHub(this);
-        base.OnInitialized();
-    }
-
-    protected override void OnParametersSet()
-    {
-        _editContext = new EditContext(Details);
-        base.OnParametersSet();
-    }
-
-    public async Task When(Hardware.Messages.Messages.RssiLevelRecorded recorded)
-    {
-        if(Details.Id != recorded.TimerId)
-        {
-            return;
-        }
-
-        List<RssiReading> laneReadings = _rssiReadings.GetOrAdd(recorded.Lane, _ => new List<RssiReading>());
-
-        laneReadings.Add(new RssiReading()
-        {
-            RssiLevel = recorded.Level,
-            SoftwareTime = recorded.SoftwareTime
-        });
-
-        if (laneReadings.Count > 1000)
-        {
-            laneReadings.RemoveAt(0);
-        }
-
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
-
-    private Task HandleValidSubmit()
-    {
-        return OnValidSubmit?.Invoke(Details) ?? Task.CompletedTask;
-    }
-
-
-    public class RssiReading
-    {
-        public float RssiLevel { get; init; }
-        public long SoftwareTime { get; init; }
+                <div class="flex-fill col-sm-5 m-2">
+                    <LapRFChannelTuner TimerId="Details.Id" Lane="i"
+                                       BandId="configuration?.BandId"
+                                       Frequency="configuration?.FrequencyInMhz"
+                                       IsEnabled="configuration?.IsEnabled ?? false"
+                                       Gain="configuration?.Gain"
+                                       Threshold="configuration?.Threshold"></LapRFChannelTuner>
+                </div>
+            }
+        </div>
     }
 }

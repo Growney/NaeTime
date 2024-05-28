@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
-using NaeTime.Management.Messages.Messages;
+using NaeTime.Management.Messages;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.PubSub.Abstractions;
 
@@ -81,78 +81,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         }
 
     }
-    public async Task When(OpenPracticeLapRemoved removed)
-    {
-        if (_selectedSession == null)
-        {
-            return;
-        }
 
-        if (removed.SessionId != _selectedSession.Id)
-        {
-            return;
-        }
-
-        int lapIndex = _selectedSession.Laps.FindIndex(x => x.Id == removed.LapId);
-
-        if (lapIndex < 0)
-        {
-            return;
-        }
-
-        _selectedSession.Laps.RemoveAt(lapIndex);
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
-    public async Task When(OpenPracticeLapCompleted lap)
-    {
-        if (_selectedSession == null)
-        {
-            return;
-        }
-
-        if (lap.SessionId != _selectedSession.Id)
-        {
-            return;
-        }
-
-        _selectedSession.Laps.Add(new OpenPracticeLap()
-        {
-            Id = lap.LapId,
-            PilotId = lap.PilotId,
-            PilotName = _pilots.FirstOrDefault(x => x.Id == lap.PilotId)?.CallSign,
-            StartedUtc = lap.StartedUtc,
-            FinishedUtc = lap.FinishedUtc,
-            TotalMilliseconds = lap.TotalMilliseconds,
-            Status = OpenPracticeLapStatus.Completed
-        });
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
-    public async Task When(OpenPracticeLapInvalidated lap)
-    {
-        if (_selectedSession == null)
-        {
-            return;
-        }
-
-        if (lap.SessionId != _selectedSession.Id)
-        {
-            return;
-        }
-
-        _selectedSession.Laps.Add(new OpenPracticeLap()
-        {
-            Id = lap.LapId,
-            PilotId = lap.PilotId,
-            PilotName = _pilots.FirstOrDefault(x => x.Id == lap.PilotId)?.CallSign,
-            StartedUtc = lap.StartedUtc,
-            FinishedUtc = lap.FinishedUtc,
-            TotalMilliseconds = lap.TotalMilliseconds,
-            Status = OpenPracticeLapStatus.Invalid
-        });
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
     public async Task When(SessionActivated session)
     {
         _activeSessionId = session.SessionId;

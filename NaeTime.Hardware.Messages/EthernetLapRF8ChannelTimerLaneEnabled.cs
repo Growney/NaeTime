@@ -1,2 +1,2 @@
-﻿namespace NaeTime.Hardware.Messages.Messages;
+﻿namespace NaeTime.Hardware.Messages;
 public record EthernetLapRF8ChannelTimerLaneEnabled(Guid TimerId, byte Lane);

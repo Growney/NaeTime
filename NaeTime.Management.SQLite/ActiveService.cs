@@ -1,5 +1,5 @@
 ﻿
-using NaeTime.Management.Messages.Messages;
+using NaeTime.Management.Messages;
 
 namespace NaeTime.Persistence;
 internal class ActiveService

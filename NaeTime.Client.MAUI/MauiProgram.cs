@@ -53,6 +53,7 @@ public static class MauiProgram
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();
 #endif
+        Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("MzI4NjkwMUAzMjM1MmUzMDJlMzBtTkNoaDhDTUtwTlRNMU9sNDZEM0FYUFNxSnZ3Rm5oMDVROHhQb2tSZU5ZPQ==;MzI4NjkwMkAzMjM1MmUzMDJlMzBSNUIxZUxGQmdxS0RzaUp3VGNMTk8xTjFoL2pMS2toeDhROHZjMnVsaWRnPQ==");
 
         return builder.Build();
     }

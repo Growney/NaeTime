@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Hardware.Messages.Models;
-public record EthernetLapRF8ChannelTimerLaneConfiguration(byte Lane, byte? BandId, int? FrequencyInMhz, bool IsEnabled, ushort Gain, float Threshold);
+public record LapRFLaneConfiguration(byte Lane, byte? BandId, int? FrequencyInMhz, bool IsEnabled, ushort Gain, float Threshold);

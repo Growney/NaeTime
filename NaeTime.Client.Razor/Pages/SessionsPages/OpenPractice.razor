@@ -133,10 +133,10 @@
         
         <div>
             <div class="lane-container" style="max-height:100%;">
-                @foreach (var pilotGrouping in _selectedSession.Laps.GroupBy(x => x.PilotName))
+                @foreach(var pilot in _pilots)
                 {
                     <div class="lane-child shadow-sm p-3">
-                        <LapList SessionId="_selectedSession.Id" Laps="pilotGrouping" IncludePilot=false Header="@pilotGrouping.Key"></LapList>
+                        <PilotLapList SessionId="_selectedSession.Id" PilotId="pilot.Id" PilotName="@pilot.CallSign" ></PilotLapList>
                     </div>
                 }
             </div>
