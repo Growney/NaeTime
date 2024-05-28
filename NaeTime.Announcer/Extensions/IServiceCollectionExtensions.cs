@@ -12,6 +12,7 @@ public static class IServiceCollectionExtensions
         services.AddHostedService<Announcer>();
 
         services.AddEventAndRemoteProcedureCallHub<LapAnnouncerService>();
+        services.AddEventAndRemoteProcedureCallHub<HardwareAnnouncerService>();
 
         return services;
     }
