@@ -65,9 +65,11 @@ internal class OpenPracticeAverageLapLeaderboardManager : LeaderboardManager<Ave
 
         Messages.Models.Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == removed.LapId);
         IEnumerable<Messages.Models.Lap>? validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed && x.Id != lap?.Id);
-
-        double average = validLaps?.Average(x => x.TotalMilliseconds) ?? 0;
-
+        double average = 0;
+        if (validLaps?.Any() ?? false)
+        {
+            average = validLaps.Average(x => x.TotalMilliseconds);
+        }
         Messages.Models.Lap? firstLap = validLaps?.FirstOrDefault();
         DateTime? firstLapCompletionUtc = firstLap?.FinishedUtc ?? lap?.StartedUtc;
 

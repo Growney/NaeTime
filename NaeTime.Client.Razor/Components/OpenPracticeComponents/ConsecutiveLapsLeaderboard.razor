@@ -1,41 +1,43 @@
 ﻿
-<h5 class="w-100 text-center">@LapCap Consecutive Laps</h5>
-<div style="width:300px;">
-    <table class="table table-striped">
-        <tr>
-            <th>
-                #
-            </th>
-            <th>
-                Pilot
-            </th>
-            <th>
-                Laps
-            </th>
-            <th class="text-center">
-                Time
-            </th>
-        </tr>
-        <tbody>
-            @foreach (var position in _positions.OrderBy(x => x.Position))
-            {
+<div class="shadow-sm p-3">
+    <h5 class="w-100 text-center">@LapCap Consecutive Laps</h5>
+    <div style="width:300px;">
+        <table class="table table-striped">
+            <tr>
+                <th>
+                    #
+                </th>
+                <th>
+                    Pilot
+                </th>
+                <th>
+                    Laps
+                </th>
+                <th class="text-center">
+                    Time
+                </th>
+            </tr>
+            <tbody>
+                @foreach (var position in _positions.OrderBy(x => x.Position))
+                {
 
-                <tr>
-                    <td>
-                        @position.Position
-                    </td>
-                    <td>
-                        @GetPilotName(position.PilotId)
-                    </td>
-                    <td>
-                        @position.TotalLaps
-                    </td>
-                    <td>
-                        @($"{TimeSpan.FromMilliseconds(position.TotalMilliseconds):m\\:ss\\:fff}")
+                    <tr>
+                        <td>
+                            @position.Position
+                        </td>
+                        <td>
+                            @GetPilotName(position.PilotId)
+                        </td>
+                        <td>
+                            @position.TotalLaps
+                        </td>
+                        <td>
+                            @($"{TimeSpan.FromMilliseconds(position.TotalMilliseconds):m\\:ss\\:fff}")
 
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

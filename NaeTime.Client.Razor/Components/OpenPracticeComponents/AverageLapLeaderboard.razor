@@ -1,32 +1,35 @@
-﻿<h5 class="w-100 text-center">Average Lap</h5>
-<div style="width:300px;">
-    <table class="table table-striped">
-        <tr>
-            <th>
-                #
-            </th>
-            <th>
-                Pilot
-            </th>
-            <th>
-                Average
-            </th>
-        </tr>
-        <tbody>
-            @foreach (var position in _positions.OrderBy(x => x.Position))
-            {
-                <tr>
-                    <td>
-                        @position.Position
-                    </td>
-                    <td>
-                        @GetPilotName(position.PilotId)
-                    </td>
-                    <td>
-                        @($"{TimeSpan.FromMilliseconds(position.AverageMilliseconds):m\\:ss\\:fff}")
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+﻿
+<div class="shadow-sm p-3">
+    <h5 class="w-100 text-center">Average Lap</h5>
+    <div style="width:300px;">
+        <table class="table table-striped">
+            <tr>
+                <th>
+                    #
+                </th>
+                <th>
+                    Pilot
+                </th>
+                <th>
+                    Average
+                </th>
+            </tr>
+            <tbody>
+                @foreach (var position in _positions.OrderBy(x => x.Position))
+                {
+                    <tr>
+                        <td>
+                            @position.Position
+                        </td>
+                        <td>
+                            @GetPilotName(position.PilotId)
+                        </td>
+                        <td>
+                            @($"{TimeSpan.FromMilliseconds(position.AverageMilliseconds):m\\:ss\\:fff}")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

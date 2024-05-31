@@ -114,32 +114,19 @@
         </div>
         <SessionLapGraph SessionId="_selectedSession.Id"></SessionLapGraph>
 
-
-
         <div class="d-flex flex-wrap justify-content-center">
-            <div class="shadow-sm p-3">
-                <TotalLapsLeaderboard SessionId="_selectedSession.Id"></TotalLapsLeaderboard>
-            </div>
-            <div class="shadow-sm p-3">
-                <AverageLapLeaderboard SessionId="_selectedSession.Id"></AverageLapLeaderboard>
-            </div>
-            <div class="shadow-sm p-3">
-                <SingleLapLeaderboard SessionId="_selectedSession.Id"></SingleLapLeaderboard>
-            </div>
+            <TotalLapsLeaderboard SessionId="_selectedSession.Id"></TotalLapsLeaderboard>
+            <AverageLapLeaderboard SessionId="_selectedSession.Id"></AverageLapLeaderboard>
+            <SingleLapLeaderboard SessionId="_selectedSession.Id"></SingleLapLeaderboard>
             @foreach (var trackedLapCaps in _selectedSession.TrackedConsecutiveLaps.OrderBy(x => x))
             {
-                <div class="shadow-sm p-3">
-                    <ConsecutiveLapsLeaderboard SessionId="_selectedSession.Id" LapCap="trackedLapCaps"></ConsecutiveLapsLeaderboard>
-                </div>
+                <ConsecutiveLapsLeaderboard SessionId="_selectedSession.Id" LapCap="trackedLapCaps"></ConsecutiveLapsLeaderboard>
             }
         </div>
-
-        <div class="d-flex flex-wrap justify-content-around">
+        <div class="d-flex flex-wrap justify-content-center">
             @foreach (var pilot in _pilots)
             {
-                <div class="shadow-sm p-3">
-                    <PilotLapList SessionId="_selectedSession.Id" PilotId="pilot.Id" PilotName="@pilot.CallSign"></PilotLapList>
-                </div>
+                <PilotLapList SessionId="_selectedSession.Id" PilotId="pilot.Id" PilotName="@pilot.CallSign"></PilotLapList>
             }
         </div>
     }

@@ -5,7 +5,7 @@
 
     <ChartCrosshairSettings Enable="true" LineType="LineType.Vertical"></ChartCrosshairSettings>
 
-    <ChartTooltipSettings Enable="true" Shared="true" Format="${series.name} : ${point.x} : ${point.y}"></ChartTooltipSettings>
+    <ChartTooltipSettings Enable="true" Shared="true" Format="${series.name} - ${point.y}"></ChartTooltipSettings>
     <ChartSeriesCollection>
         @foreach(var pilot in _lapTimes)
         {

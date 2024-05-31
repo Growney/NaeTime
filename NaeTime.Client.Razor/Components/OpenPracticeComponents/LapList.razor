@@ -1,8 +1,24 @@
-﻿<div style="width:300px;">
-    @if (!string.IsNullOrWhiteSpace(Header))
-    {
-        <h5 class="w-100 text-center">@Header</h5>
-    }
+﻿@using Syncfusion.Blazor.Charts
+<div style="width:300px;">
+    <div class="d-flex">
+        @if (!string.IsNullOrWhiteSpace(Header))
+        {
+            <h5 class="text-center">@Header</h5>
+        }
+        @if (Laps.Any(x => x.Status == Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed))
+        {
+            <div style="position:relative; right:0; top:0;">
+                <SfSparkline TValue="NaeTime.Client.Razor.Lib.Models.OpenPractice.OpenPracticeLap"
+                             XName="FinishedUtc"
+                             YName="TotalMilliseconds"
+                             ValueType="SparklineValueType.DateTime"
+                             DataSource="Laps.Where(x=>x.Status == Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed)"
+                             Width="200px"></SfSparkline>
+            </div>
+        }
+    </div>
+    
+    
     <div style="max-height: 522px; overflow:auto;">
         <table class="table table-striped overflow-auto" style="height:200px">
             <tr>
@@ -51,13 +67,13 @@
                                 <div class="btn-group">
                                     @if (lap.Status == Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed)
                                     {
-                                        <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Danger @onclick="() => Invalidate(lap.Id,lap.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
+                                        <Button style="min-width:30px;" Size=BlazorBootstrap.Size.Small Color=ButtonColor.Danger @onclick="() => Invalidate(lap.Id,lap.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
                                     }
                                     else
                                     {
-                                        <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Success @onclick="() => Validate(lap.Id,lap.PilotId)"><i class="fa-solid fa-check"></i></Button>
+                                        <Button style="min-width:30px;" Size=BlazorBootstrap.Size.Small Color=ButtonColor.Success @onclick="() => Validate(lap.Id,lap.PilotId)"><i class="fa-solid fa-check"></i></Button>
                                     }
-                                    <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>
+                                    <Button style="min-width:30px;" Size=BlazorBootstrap.Size.Small Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>
                                 </div>
                             </td>
                         </tr>

@@ -1,38 +1,41 @@
-﻿<h5 class="w-100 text-center">Fastest Single Lap</h5>
-<div style="width:300px;">
-    <table class="table table-striped">
-        <tr class="px-2">
-            <th>
-                #
-            </th>
-            <th>
-                Pilot
-            </th>
-            <th class="text-center">
-                Time
-            </th>
-            <th>
+﻿
+<div class="shadow-sm p-3">
+    <h5 class="w-100 text-center">Fastest Single Lap</h5>
+    <div style="width:300px;">
+        <table class="table table-striped">
+            <tr class="px-2">
+                <th>
+                    #
+                </th>
+                <th>
+                    Pilot
+                </th>
+                <th class="text-center">
+                    Time
+                </th>
+                <th>
 
-            </th>
-        </tr>
-        <tbody>
-            @foreach (var position in _positions.OrderBy(x => x.Position))
-            {
-                <tr>
-                    <td>
-                        @position.Position
-                    </td>
-                    <td>
-                        @GetPilotName(position.PilotId)
-                    </td>
-                    <td>
-                        @($"{TimeSpan.FromMilliseconds(position.TotalMilliseconds):m\\:ss\\:fff}")
-                    </td>
-                    <td>
-                        <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Danger @onclick="() => Invalidate(position.LapId,position.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                </th>
+            </tr>
+            <tbody>
+                @foreach (var position in _positions.OrderBy(x => x.Position))
+                {
+                    <tr>
+                        <td>
+                            @position.Position
+                        </td>
+                        <td>
+                            @GetPilotName(position.PilotId)
+                        </td>
+                        <td>
+                            @($"{TimeSpan.FromMilliseconds(position.TotalMilliseconds):m\\:ss\\:fff}")
+                        </td>
+                        <td>
+                            <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Danger @onclick="() => Invalidate(position.LapId,position.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
