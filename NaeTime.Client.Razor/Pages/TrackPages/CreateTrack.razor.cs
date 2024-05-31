@@ -47,7 +47,7 @@ public partial class CreateTrack
     {
         byte maxLanes = _timers.Where(x => track.Timers.Contains(x.Id)).Max(x => x.MaxLanes);
 
-        await EventClient.Publish(new TrackCreated(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, maxLanes));
+        await EventClient.PublishAsync(new TrackCreated(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, maxLanes));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/track/list");
     }

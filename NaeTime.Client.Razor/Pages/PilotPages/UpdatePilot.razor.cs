@@ -48,7 +48,7 @@ public partial class UpdatePilot : ComponentBase
             return;
         }
 
-        await EventClient.Publish(new PilotDetailsChanged(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
+        await EventClient.PublishAsync(new PilotDetailsChanged(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/pilot/list");
     }

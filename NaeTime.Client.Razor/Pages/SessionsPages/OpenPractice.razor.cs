@@ -97,7 +97,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
     private async Task SetupForSession(Guid sessionId)
     {
         _selectedSession = null;
-
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
         NaeTime.OpenPractice.Messages.Models.OpenPracticeSession? practiceSessionResponse = await RpcClient.InvokeAsync<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", sessionId);
         if (practiceSessionResponse == null)
         {
@@ -141,6 +141,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
             TrackedConsecutiveLaps = practiceSessionResponse.TrackedConsecutiveLaps.ToList()
         };
 
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
     private IEnumerable<OpenPracticeLaneConfiguration> GetLaneConfigurations(byte allowedLanes, IEnumerable<NaeTime.OpenPractice.Messages.Models.PilotLane> lanes, IEnumerable<Timing.Messages.Models.LaneActiveTimings>? timings)
     {
@@ -173,9 +174,9 @@ public partial class OpenPractice : ComponentBase, IDisposable
     {
 
         string sessionName = $"Quick Session - {DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}";
-        await EventClient.Publish(new OpenPracticeSessionConfigured(sessionId, sessionName, trackId, minimumLapMilliseconds, maximumLapMilliseconds));
+        await EventClient.PublishAsync(new OpenPracticeSessionConfigured(sessionId, sessionName, trackId, minimumLapMilliseconds, maximumLapMilliseconds));
 
-        await EventClient.Publish(new SessionActivated(sessionId, SessionActivated.SessionType.OpenPractice));
+        await EventClient.PublishAsync(new SessionActivated(sessionId, SessionActivated.SessionType.OpenPractice));
 
         _sessionDetails.Add(new SessionDetails
         {
@@ -205,7 +206,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         byte maxLanes = trackTimers.Max(x => x.MaxLanes);
         IEnumerable<Guid> timerIds = trackTimers.Select(x => x.Id);
 
-        await EventClient.Publish(new TrackCreated(newTrackId, $"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds, maxLanes));
+        await EventClient.PublishAsync(new TrackCreated(newTrackId, $"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds, maxLanes));
 
         Management.Messages.Models.Track? track = await RpcClient.InvokeAsync<Management.Messages.Models.Track?>("GetTrack", newTrackId);
 
@@ -234,7 +235,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         _selectedSession.MinimumLapMilliseconds = minimumLapMilliseconds;
 
-        return EventClient.Publish(new OpenPracticeMinimumLapTimeConfigured(_selectedSession.Id, minimumLapMilliseconds));
+        return EventClient.PublishAsync(new OpenPracticeMinimumLapTimeConfigured(_selectedSession.Id, minimumLapMilliseconds));
     }
     public Task SetSessionMaximumLapTime(long? maximumLapMilliseconds)
     {
@@ -250,7 +251,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         _selectedSession.MaximumLapMilliseconds = maximumLapMilliseconds;
 
-        return EventClient.Publish(new OpenPracticeMaximumLapTimeConfigured(_selectedSession.Id, maximumLapMilliseconds));
+        return EventClient.PublishAsync(new OpenPracticeMaximumLapTimeConfigured(_selectedSession.Id, maximumLapMilliseconds));
     }
     public Task TrackConsecutiveLaps(Guid sessionId, uint lapCap)
     {
@@ -265,7 +266,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         }
 
         _selectedSession.TrackedConsecutiveLaps.Add(lapCap);
-        return EventClient.Publish(new ConsecutiveLapCountTracked(sessionId, lapCap));
+        return EventClient.PublishAsync(new ConsecutiveLapCountTracked(sessionId, lapCap));
     }
     public void Dispose() => EventRegistrarScope?.Dispose();
 }

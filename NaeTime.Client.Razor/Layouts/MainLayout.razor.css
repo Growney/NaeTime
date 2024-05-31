@@ -1,15 +1,18 @@
 .page {
     position: relative;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "top-row" "main";
+    width:100vw;
+    height:100vh;
 }
 
 main {
-    flex: 1;
+    grid-area: main;
 }
 
-.sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+.menu {
+    grid-area: top-row;
 }
 
 .top-row {

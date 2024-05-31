@@ -45,7 +45,7 @@ public partial class LapRFChannelTuner
     {
         Threshold = (float)args.Value;
 
-        await EventClient.Publish(new EthernetLapRF8ChannelTimerLaneThresholdConfigured(TimerId, Lane, Threshold.Value));
+        await EventClient.PublishAsync(new EthernetLapRF8ChannelTimerLaneThresholdConfigured(TimerId, Lane, Threshold.Value));
     }
     public Task EnabledChanged(bool value)
     {
@@ -58,18 +58,18 @@ public partial class LapRFChannelTuner
 
         if (value)
         {
-            return EventClient.Publish(new LaneEnabled(Lane));
+            return EventClient.PublishAsync(new LaneEnabled(Lane));
         }
         else
         {
-            return EventClient.Publish(new LaneDisabled(Lane));
+            return EventClient.PublishAsync(new LaneDisabled(Lane));
         }
     }
     public async void UpdateGain(SliderChangeEventArgs<ushort?> args)
     {
         Gain = args.Value ?? 0;
 
-        await EventClient.Publish(new EthernetLapRF8ChannelTimerLaneGainConfigured(TimerId, Lane, Gain.Value));
+        await EventClient.PublishAsync(new EthernetLapRF8ChannelTimerLaneGainConfigured(TimerId, Lane, Gain.Value));
     }
     public async Task When(RssiLevelRecorded recorded)
     {

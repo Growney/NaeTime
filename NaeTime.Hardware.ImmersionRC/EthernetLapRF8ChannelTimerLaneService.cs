@@ -82,23 +82,23 @@ public class EthernetLapRF8ChannelTimerLaneService
 
         if (timerReconfigurations.Any())
         {
-            await _eventClient.Publish(new TimersLaneConfigured(connectionEstablished.TimerId, timerReconfigurations)).ConfigureAwait(false);
+            await _eventClient.PublishAsync(new TimersLaneConfigured(connectionEstablished.TimerId, timerReconfigurations)).ConfigureAwait(false);
         }
     }
     public async Task GenerateConfigurationEvents(Messages.Models.LapRFLaneConfiguration configuration)
     {
         if (configuration.IsEnabled)
         {
-            await _eventClient.Publish(new LaneEnabled(configuration.Lane)).ConfigureAwait(false);
+            await _eventClient.PublishAsync(new LaneEnabled(configuration.Lane)).ConfigureAwait(false);
         }
         else
         {
-            await _eventClient.Publish(new LaneDisabled(configuration.Lane)).ConfigureAwait(false);
+            await _eventClient.PublishAsync(new LaneDisabled(configuration.Lane)).ConfigureAwait(false);
         }
 
         if (configuration.FrequencyInMhz != null)
         {
-            await _eventClient.Publish(new LaneRadioFrequencyConfigured(configuration.Lane, null, configuration.FrequencyInMhz.Value)).ConfigureAwait(false);
+            await _eventClient.PublishAsync(new LaneRadioFrequencyConfigured(configuration.Lane, null, configuration.FrequencyInMhz.Value)).ConfigureAwait(false);
         }
     }
 
@@ -117,7 +117,7 @@ public class EthernetLapRF8ChannelTimerLaneService
 
             if (timerLaneConfiguration == null || !timerLaneConfiguration.IsEnabled)
             {
-                await _eventClient.Publish(new EthernetLapRF8ChannelTimerLaneEnabled(timer.TimerId, laneEnabled.LaneNumber)).ConfigureAwait(false);
+                await _eventClient.PublishAsync(new EthernetLapRF8ChannelTimerLaneEnabled(timer.TimerId, laneEnabled.LaneNumber)).ConfigureAwait(false);
             }
         }
     }
@@ -136,7 +136,7 @@ public class EthernetLapRF8ChannelTimerLaneService
 
             if (timerLaneConfiguration == null || timerLaneConfiguration.IsEnabled)
             {
-                await _eventClient.Publish(new EthernetLapRF8ChannelTimerLaneDisabled(timer.TimerId, laneDisabled.LaneNumber)).ConfigureAwait(false);
+                await _eventClient.PublishAsync(new EthernetLapRF8ChannelTimerLaneDisabled(timer.TimerId, laneDisabled.LaneNumber)).ConfigureAwait(false);
             }
         }
     }
@@ -155,7 +155,7 @@ public class EthernetLapRF8ChannelTimerLaneService
 
             if (timerLaneConfiguration == null || timerLaneConfiguration.FrequencyInMhz != frequencyChange.FrequencyInMhz)
             {
-                await _eventClient.Publish(new EthernetLapRF8ChannelTimerLaneRadioFrequencyConfigured(timer.TimerId, frequencyChange.LaneNumber, frequencyChange.FrequencyInMhz)).ConfigureAwait(false);
+                await _eventClient.PublishAsync(new EthernetLapRF8ChannelTimerLaneRadioFrequencyConfigured(timer.TimerId, frequencyChange.LaneNumber, frequencyChange.FrequencyInMhz)).ConfigureAwait(false);
             }
         }
     }

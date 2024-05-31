@@ -119,5 +119,33 @@ public partial class PilotLapList : ComponentBase
 
         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
+    public async Task When(OpenPracticeLapDisputed lap)
+    {
+        if (SessionId != lap.SessionId)
+        {
+            return;
+        }
 
+        if (PilotId != lap.PilotId)
+        {
+            return;
+        }
+
+        int lapIndex = _laps.FindIndex(x => x.Id == lap.LapId);
+
+        if (lapIndex < 0)
+        {
+            return;
+        }
+
+        _laps[lapIndex].Status = lap.ActualStatus switch
+        {
+            OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid => OpenPracticeLapStatus.Invalid,
+            OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed => OpenPracticeLapStatus.Completed,
+            _ => throw new NotImplementedException()
+        };
+
+
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+    }
 }

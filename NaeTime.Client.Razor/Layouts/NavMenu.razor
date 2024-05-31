@@ -1,36 +1,28 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/?force=true">Nae Time</a>
-        <div class="float-right">
-            <LocalVolume></LocalVolume>
-        </div>
+﻿<div class="d-flex justify-content-between align-items-center bg-primary bg-gradient">
+    <div class="align-self-start text-light px-1">
+        <h1>Nae Time</h1>
     </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <TrackedLink class="nav-link" Path="/pilot/list">
-                <i class="fa-solid fa-people-group"></i> 
-                <div class="mx-2">Pilots</div>
-                <div class="float-end">
-                    <TrackedLink Path="/pilot/create" @onclick:stopPropagation="true"><i class=" fas fa-user-plus"></i></TrackedLink>
-                </div>
-            </TrackedLink>
-            <TrackedLink class="nav-link" Path="/hardware/list">
-                <i class="fa-solid fa-microchip"></i> <div class="mx-2">Hardware</div>
-            </TrackedLink>
-            <TrackedLink class="nav-link" Path="/track/list">
-                <i class="fa-solid fa-flag-checkered"></i> <div class="mx-2">Tracks</div>
-            </TrackedLink>
-            <TrackedLink class="nav-link" Path="/configuration">
-                <i class="fa-solid fa-gears"></i><div class="mx-2">Configuration</div>
-            </TrackedLink>
-            <TrackedLink class="nav-link" Path="/openpractice">
-                <i class="fa-solid fa-gears"></i><div class="mx-2">Practice</div>
-            </TrackedLink>
-        </div>
-    </nav>
+    <div class="h5 d-flex flex-row justify-content-center align-items-center">
+        <a class="text-light text-decoration-none " href="/pilot/list">
+            <i class="fa-solid fa-people-group"></i> Pilots
+        </a>
+        <a class="text-light text-decoration-none" href="/pilot/create">
+            <i class="fas fa-user-plus"></i>
+        </a>
+        <a class="text-light text-decoration-none" href="/hardware/list">
+            <i class="fa-solid fa-microchip"></i> Hardware
+        </a>
+        <a class="text-light text-decoration-none" href="/track/list">
+            <i class="fa-solid fa-flag-checkered"></i> Tracks
+        </a>
+        <a class="text-light text-decoration-none" href="/configuration">
+            <i class="fa-solid fa-gears"></i>Configuration
+        </a>
+        <a class="text-light text-decoration-none" href="/openpractice">
+            <i class="fa-solid fa-dumbbell"></i>Practice
+        </a>
+    </div>
+    <div class="px-1">
+        <LocalVolume></LocalVolume>
+    </div>
 </div>

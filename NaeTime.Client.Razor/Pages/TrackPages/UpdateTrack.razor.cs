@@ -63,7 +63,7 @@ public partial class UpdateTrack
     {
         byte maxLanes = _timers.Where(x => track.Timers.Contains(x.Id)).Max(x => x.MaxLanes);
 
-        await EventClient.Publish(new TrackDetailsChanged(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, maxLanes));
+        await EventClient.PublishAsync(new TrackDetailsChanged(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, maxLanes));
 
         string returnUrl = ReturnUrl ?? "/track/list";
 

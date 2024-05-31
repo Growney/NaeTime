@@ -107,6 +107,6 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
     }
 
     private string GetPilotName(Guid pilotId) => _pilots.FirstOrDefault(x => x.Id == pilotId)?.CallSign ?? "Unknown";
-    public Task Invalidate(Guid lapId, Guid pilotId) => EventClient.Publish(new OpenPracticeLapDisputed(SessionId, lapId, pilotId, OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid));
+    public Task Invalidate(Guid lapId, Guid pilotId) => EventClient.PublishAsync(new OpenPracticeLapDisputed(SessionId, lapId, pilotId, OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid));
     public void Dispose() => EventRegistrarScope?.Dispose();
 }

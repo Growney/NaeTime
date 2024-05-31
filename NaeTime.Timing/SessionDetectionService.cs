@@ -30,7 +30,7 @@ internal class SessionDetectionService
 
         if (activeSessionResponse.Type == ActiveSession.SessionType.OpenPractice)
         {
-            await _eventClient.Publish(new ActiveOpenPracticeSessionDetectionOccured(activeSessionResponse.SessionId, timerId, lane, hardwareTime, softwareTime, utcTime));
+            await _eventClient.PublishAsync(new ActiveOpenPracticeSessionDetectionOccured(activeSessionResponse.SessionId, timerId, lane, hardwareTime, softwareTime, utcTime));
         }
     }
 }

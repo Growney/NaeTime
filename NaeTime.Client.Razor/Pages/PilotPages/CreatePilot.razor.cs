@@ -29,7 +29,7 @@ public partial class CreatePilot : ComponentBase
 
     private async Task HandleValidSubmit(Pilot pilot)
     {
-        await EventClient.Publish(new PilotCreated(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
+        await EventClient.PublishAsync(new PilotCreated(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/pilot/list");
     }

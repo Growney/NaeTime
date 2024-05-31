@@ -188,11 +188,11 @@ public class OpenPracticeSingleLapLeaderboardManager
 
                 if (positionMovement > 0)
                 {
-                    await _eventClient.Publish(new SingleLapLeaderboardPositionImproved(sessionId, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                    await _eventClient.PublishAsync(new SingleLapLeaderboardPositionImproved(sessionId, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId, true));
                 }
                 else if (positionMovement < 0)
                 {
-                    await _eventClient.Publish(new SingleLapLeaderboardPositionReduced(sessionId, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                    await _eventClient.PublishAsync(new SingleLapLeaderboardPositionReduced(sessionId, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId, true));
                 }
                 //We only need to check the pilot we updates record as the rest should not have changed
                 else if (existingRecord.PilotId == pilotId)
@@ -200,18 +200,18 @@ public class OpenPracticeSingleLapLeaderboardManager
                     int recordComparison = ComparePositions(existingRecord.LapMilliseconds, existingRecord.CompletionTime, newRecord.LapMilliseconds, newRecord.CompletionTime);
                     if (recordComparison > 0)
                     {
-                        await _eventClient.Publish(new SingleLapLeaderboardRecordImproved(sessionId, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                        await _eventClient.PublishAsync(new SingleLapLeaderboardRecordImproved(sessionId, newRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId, true));
                     }
                     else if (recordComparison < 0)
                     {
-                        await _eventClient.Publish(new SingleLapLeaderboardRecordReduced(sessionId, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                        await _eventClient.PublishAsync(new SingleLapLeaderboardRecordReduced(sessionId, newRecord.Position, existingPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId, true));
                     }
                 }
             }
             //We a removed position
             else
             {
-                await _eventClient.Publish(new SingleLapLeaderboardPositionRemoved(sessionId, existingRecord.PilotId));
+                await _eventClient.PublishAsync(new SingleLapLeaderboardPositionRemoved(sessionId, existingRecord.PilotId));
             }
         }
 
@@ -220,7 +220,7 @@ public class OpenPracticeSingleLapLeaderboardManager
             SingleLapLeaderboardPosition newRecord = newPosition.Value;
             if (!existingPositions.ContainsKey(newPosition.Key))
             {
-                await _eventClient.Publish(new SingleLapLeaderboardPositionImproved(sessionId, newRecord.Position, null, newPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId));
+                await _eventClient.PublishAsync(new SingleLapLeaderboardPositionImproved(sessionId, newRecord.Position, null, newPosition.Key, newRecord.LapMilliseconds, newRecord.CompletionTime, newRecord.LapId, false));
             }
         }
     }

@@ -101,11 +101,11 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
         Configuration.IsEnabled = value;
         if (value)
         {
-            return EventClient.Publish(new LaneEnabled(Configuration.LaneNumber));
+            return EventClient.PublishAsync(new LaneEnabled(Configuration.LaneNumber));
         }
         else
         {
-            return EventClient.Publish(new LaneDisabled(Configuration.LaneNumber));
+            return EventClient.PublishAsync(new LaneDisabled(Configuration.LaneNumber));
         }
     }
     public Task GoToBand(byte? bandId)
@@ -137,7 +137,7 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
 
         Configuration.BandId = bandId;
         Configuration.FrequencyInMhz = frequencyInMhz;
-        return EventClient.Publish(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, bandId, frequencyInMhz));
+        return EventClient.PublishAsync(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, bandId, frequencyInMhz));
     }
     private string GetBandString()
     {
@@ -173,7 +173,7 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
         }
 
         Configuration.PilotId = pilotId;
-        return EventClient.Publish(new OpenPracticeLanePilotSet(SessionId, pilotId, Configuration.LaneNumber));
+        return EventClient.PublishAsync(new OpenPracticeLanePilotSet(SessionId, pilotId, Configuration.LaneNumber));
     }
     private string GetPilotString(Guid? pilotId)
     {
@@ -186,8 +186,8 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
 
         return pilot.CallSign ?? $"{pilot.FirstName} {pilot.LastName}";
     }
-    private Task TriggerDetection(Guid timerId) => EventClient.Publish(new OpenPracticeSessionDetectionTriggered(SessionId, Configuration.LaneNumber, timerId));
+    private Task TriggerDetection(Guid timerId) => EventClient.PublishAsync(new OpenPracticeSessionDetectionTriggered(SessionId, Configuration.LaneNumber, timerId));
 
-    private Task TriggerInvalidation(Guid timerId) => EventClient.Publish(new OpenPracticeSessionInvalidationTriggered(SessionId, Configuration.LaneNumber));
+    private Task TriggerInvalidation(Guid timerId) => EventClient.PublishAsync(new OpenPracticeSessionInvalidationTriggered(SessionId, Configuration.LaneNumber));
     public void Dispose() => RegistrarScope?.Dispose();
 }

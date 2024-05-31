@@ -239,5 +239,30 @@ internal class OpenPracticeSessionService
             _ => throw new NotImplementedException()
         }, x.TotalMilliseconds));
     }
+    public async Task<IEnumerable<Messages.Models.Lap>> GetOpenPracticeSessionLaps(Guid sessionId)
+    {
+        List<OpenPracticeLap> laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == sessionId).ToListAsync();
+
+        return laps.Select(x => new Messages.Models.Lap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc, x.Status switch
+        {
+            OpenPracticeLapStatus.Invalid => Messages.Models.LapStatus.Invalid,
+            OpenPracticeLapStatus.Completed => Messages.Models.LapStatus.Completed,
+            _ => throw new NotImplementedException()
+        }, x.TotalMilliseconds));
+    }
+
+    public async Task<Messages.Models.Lap?> GetOpenPracticeSessionLap(Guid lapId)
+    {
+        OpenPracticeLap? lap = await _dbContext.OpenPracticeLaps.Where(x => x.Id == lapId).FirstOrDefaultAsync();
+
+        return lap == null
+            ? null
+            : new Messages.Models.Lap(lap.Id, lap.PilotId, lap.StartedUtc, lap.FinishedUtc, lap.Status switch
+            {
+                OpenPracticeLapStatus.Invalid => Messages.Models.LapStatus.Invalid,
+                OpenPracticeLapStatus.Completed => Messages.Models.LapStatus.Completed,
+                _ => throw new NotImplementedException()
+            }, lap.TotalMilliseconds);
+    }
 }
 

@@ -24,7 +24,7 @@ public class EventManager : IEventClient, IEventRegistrar
     }
 
     public IEventRegistrarScope CreateScope() => new EventManagerScope(Guid.NewGuid(), this);
-    public Task Publish(object obj)
+    public Task PublishAsync(object obj)
     {
         Type type = obj.GetType();
 

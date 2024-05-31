@@ -60,7 +60,7 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
         }
 
 
-        await EventClient.Publish(new EthernetLapRF8ChannelConfigured(timer.Id, timer.Name, validIP, timer.Port));
+        await EventClient.PublishAsync(new EthernetLapRF8ChannelConfigured(timer.Id, timer.Name, validIP, timer.Port));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/hardware/list");
     }

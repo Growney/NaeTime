@@ -1,0 +1,24 @@
+﻿@using Syncfusion.Blazor.Charts
+
+<SfChart>
+    <ChartPrimaryXAxis Interval="2"/>
+
+    <ChartCrosshairSettings Enable="true" LineType="LineType.Vertical"></ChartCrosshairSettings>
+
+    <ChartTooltipSettings Enable="true" Shared="true" Format="${series.name} : ${point.x} : ${point.y}"></ChartTooltipSettings>
+    <ChartSeriesCollection>
+        @foreach(var pilot in _lapTimes)
+        {
+            Pilot? pilotObj = _pilots.FirstOrDefault(x => x.Id == pilot.Key);
+            string pilotName = pilotObj?.CallSign ?? pilotObj?.FirstName ?? pilotObj?.LastName ?? "Unknown";
+
+            <ChartSeries Name="@pilotName" DataSource="@pilot.Value" XName="LapNumber" YName="TotalSeconds" >
+                <ChartMarker>
+                    <ChartDataLabel Visible="true" />
+                </ChartMarker>
+            </ChartSeries>
+        }
+    </ChartSeriesCollection>
+
+    <ChartLegendSettings Visible="true" />
+</SfChart>

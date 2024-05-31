@@ -124,13 +124,13 @@ internal class LapService
             _ => throw new NotImplementedException()
         });
 
-        await _eventClient.Publish(completedLap).ConfigureAwait(false);
+        await _eventClient.PublishAsync(completedLap).ConfigureAwait(false);
     }
     private async Task CompleteLap(Guid sessionId, byte lane, ulong? startedHardwareTime, long startedSoftwareTime, DateTime startedUtcTime, ulong? finishedHardwareTime, long finishedSoftwareTime, DateTime finishedUtcTime, ActiveLap activeLap, long totalTime)
     {
         LapCompleted completedLap = new(sessionId, lane, activeLap.LapNumber, startedSoftwareTime, startedUtcTime, startedHardwareTime, finishedSoftwareTime, finishedUtcTime, finishedHardwareTime, totalTime);
 
-        await _eventClient.Publish(completedLap).ConfigureAwait(false);
+        await _eventClient.PublishAsync(completedLap).ConfigureAwait(false);
     }
     private long CalculateTotalTime(ulong? startHardwareTime, long startSoftwareTime, DateTime startUtcTime, ulong? endHardwareTime, long endSoftwareTime, DateTime endUtcTime)
     {
@@ -197,7 +197,7 @@ internal class LapService
     {
         SplitCompleted splitEnded = new(sessionId, lane, lapNumber, (byte)currentSplitNumber, softwareTime, utcTime, totalTime);
 
-        await _eventClient.Publish(splitEnded).ConfigureAwait(false);
+        await _eventClient.PublishAsync(splitEnded).ConfigureAwait(false);
     }
     private long CalculateTotalTime(long startSoftwareTime, DateTime startUtcTime, long endSoftwareTime, DateTime endUtcTime)
     {
@@ -210,19 +210,19 @@ internal class LapService
         {
             SplitSkipped skippedSplit = new(sessionId, lane, lapNumber, splitNumber);
 
-            await _eventClient.Publish(skippedSplit).ConfigureAwait(false);
+            await _eventClient.PublishAsync(skippedSplit).ConfigureAwait(false);
         }
     }
     private async Task StartSplit(Guid sessionId, uint lapNumber, byte lane, long softwareTime, DateTime utcTime, int timerPosition)
     {
         SplitStarted splitStarted = new(sessionId, lane, lapNumber, (byte)timerPosition, softwareTime, utcTime);
 
-        await _eventClient.Publish(splitStarted).ConfigureAwait(false);
+        await _eventClient.PublishAsync(splitStarted).ConfigureAwait(false);
     }
     private async Task StartLap(Guid sessionId, byte lane, uint lapNumber, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
         LapStarted lapStarted = new(sessionId, lane, lapNumber, softwareTime, utcTime, hardwareTime);
 
-        await _eventClient.Publish(lapStarted).ConfigureAwait(false);
+        await _eventClient.PublishAsync(lapStarted).ConfigureAwait(false);
     }
 }

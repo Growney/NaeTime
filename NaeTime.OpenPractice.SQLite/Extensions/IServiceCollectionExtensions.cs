@@ -10,6 +10,7 @@ public static class IServiceCollectionExtensions
         services.AddEventAndRemoteProcedureCallHub<OpenPracticeSessionService>();
         services.AddEventAndRemoteProcedureCallHub<SingleLapsLeaderboardService>();
         services.AddEventAndRemoteProcedureCallHub<TotalLapLeaderboardService>();
+        services.AddEventAndRemoteProcedureCallHub<AverageLapLeaderboardService>();
 
         services.AddHostedService<SQLiteDatabaseManager<OpenPracticeDbContext>>();
         services.AddDbContext<OpenPracticeDbContext>(options => options.UseSqlite($"Data Source=naetime.openpractice.db"), contextLifetime: ServiceLifetime.Transient);

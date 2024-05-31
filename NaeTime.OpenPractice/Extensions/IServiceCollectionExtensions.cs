@@ -10,6 +10,7 @@ public static class IServiceCollectionExtensions
         services.AddEventAndRemoteProcedureCallHub<OpenPracticeSessionManager>();
         services.AddEventAndRemoteProcedureCallHub<OpenPracticeSingleLapLeaderboardManager>();
         services.AddEventAndRemoteProcedureCallHub<OpenPracticeTotalLapsLeaderboardManager>();
+        services.AddEventAndRemoteProcedureCallHub<OpenPracticeAverageLapLeaderboardManager>();
 
         return services;
     }

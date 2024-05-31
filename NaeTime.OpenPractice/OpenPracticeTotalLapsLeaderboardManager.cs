@@ -76,13 +76,13 @@ internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<Tota
         return response?.Select(x => new LeaderboardPosition<TotalLapRecord>(x.PilotId, x.Position, new TotalLapRecord(x.TotalLaps, x.FirstLapCompletionUtc))) ?? Enumerable.Empty<LeaderboardPosition<TotalLapRecord>>();
     }
     protected override Task OnPositionImproved(Guid sessionId, Guid pilotId, int newPosition, int? oldPosition, TotalLapRecord newRecord)
-        => _eventClient.Publish(new TotalLapsLeaderboardPositionImproved(sessionId, newPosition, oldPosition, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
+        => _eventClient.PublishAsync(new TotalLapsLeaderboardPositionImproved(sessionId, newPosition, oldPosition, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
     protected override Task OnPositionReduced(Guid sessionId, Guid pilotId, int newPosition, int oldPosition, TotalLapRecord newRecord)
-        => _eventClient.Publish(new TotalLapsLeaderboardPositionReduced(sessionId, newPosition, oldPosition, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
+        => _eventClient.PublishAsync(new TotalLapsLeaderboardPositionReduced(sessionId, newPosition, oldPosition, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
     protected override Task OnPositionRemoved(Guid sessionId, Guid pilotId)
-        => _eventClient.Publish(new TotalLapsLeaderboardPositionRemoved(sessionId, pilotId));
+        => _eventClient.PublishAsync(new TotalLapsLeaderboardPositionRemoved(sessionId, pilotId));
     protected override Task OnRecordImproved(Guid sessionId, Guid pilotId, TotalLapRecord newRecord)
-        => _eventClient.Publish(new TotalLapsLeaderboardRecordImproved(sessionId, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
+        => _eventClient.PublishAsync(new TotalLapsLeaderboardRecordImproved(sessionId, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
     protected override Task OnRecordReduced(Guid sessionId, Guid pilotId, TotalLapRecord newRecord)
-        => _eventClient.Publish(new TotalLapsLeaderboardRecordReduced(sessionId, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
+        => _eventClient.PublishAsync(new TotalLapsLeaderboardRecordReduced(sessionId, pilotId, newRecord.TotalLaps, newRecord.FirstLapCompletionUtc));
 }
