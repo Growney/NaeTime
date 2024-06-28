@@ -20,7 +20,7 @@
                             </DropdownMenu>
                         </Dropdown>
                         <Dropdown>
-                            <DropdownToggleButton Color="ButtonColor.Primary">@GetActiveSessionName()</DropdownToggleButton>
+                            <DropdownToggleButton Color="ButtonColor.Secondary">@GetActiveSessionName()</DropdownToggleButton>
                             <DropdownMenu>
                                 @foreach (var session in _sessionDetails)
                                 {
@@ -28,24 +28,6 @@
                                 }
                             </DropdownMenu>
                         </Dropdown>
-                        @if(_selectedSession != null)
-                        {
-                            <Dropdown Class="mx-1">
-                                <DropdownToggleButton Color="ButtonColor.Primary">Add Consecutive Laps</DropdownToggleButton>
-                                <DropdownMenu>
-                                    @{
-                                        uint[] laps = [2, 3, 4, 5, 6, 7, 8, 9, 10];
-                                        foreach (var lap in laps)
-                                        {
-                                            if (!_selectedSession.TrackedConsecutiveLaps.Any(x => x == lap))
-                                            {
-                                                <DropdownItem Type="ButtonType.Button" @onclick="() => TrackConsecutiveLaps(_selectedSession.Id,lap)">@lap</DropdownItem>
-                                            }
-                                        }
-                                    }
-                                </DropdownMenu>
-                            </Dropdown>
-                        }
                     </td>
                     @if (_selectedSession != null)
                     {
@@ -114,10 +96,29 @@
         </div>
         <SessionLapGraph SessionId="_selectedSession.Id"></SessionLapGraph>
 
+        @if (!_isLaneConfigCollapsed)
+        {
+            <Dropdown Class="mx-1">
+                <DropdownToggleButton Color="ButtonColor.Secondary">Add Consecutive Laps Leaderboard</DropdownToggleButton>
+                <DropdownMenu>
+                    @{
+                        uint[] laps = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+                        foreach (var lap in laps)
+                        {
+                            if (!_selectedSession.TrackedConsecutiveLaps.Any(x => x == lap))
+                            {
+                                <DropdownItem Type="ButtonType.Button" @onclick="() => TrackConsecutiveLaps(_selectedSession.Id,lap)">@lap</DropdownItem>
+                            }
+                        }
+                    }
+                </DropdownMenu>
+            </Dropdown>
+        }
         <div class="d-flex flex-wrap justify-content-center">
             <TotalLapsLeaderboard SessionId="_selectedSession.Id"></TotalLapsLeaderboard>
             <AverageLapLeaderboard SessionId="_selectedSession.Id"></AverageLapLeaderboard>
             <SingleLapLeaderboard SessionId="_selectedSession.Id"></SingleLapLeaderboard>
+
             @foreach (var trackedLapCaps in _selectedSession.TrackedConsecutiveLaps.OrderBy(x => x))
             {
                 <ConsecutiveLapsLeaderboard SessionId="_selectedSession.Id" LapCap="trackedLapCaps"></ConsecutiveLapsLeaderboard>

@@ -2,10 +2,17 @@
 @layout WithReturn
 <button @onclick="NavigateToCreateTrack" class="btn btn-primary"><i class="fa-solid fa-plus"></i></button>
 
+<div class="d-flex flow-row flex-wrap">
 @foreach (var track in _tracks)
 {
-    <div @onclick="() => NavigateToTrack(track)">
-        <TrackDetails Details="track"></TrackDetails>
+    <div class="flex-fill card col-sm-5 m-2 hover-shadow" @onclick="() => NavigateToTrack(track)">
+        <img src="" class="card-img-top" alt="">
+        <div class="card-body">
+            <div class="card-title">
+                @track.Name (@track.Timers.Count() timers)
+                <a class="float-right btn btn-primary btn-sm stretched-link" @onclick="() =>  NavigateToTrack(track)"><i class="fa-solid fa-pen-to-square"></i></a>
+            </div>
+        </div>
     </div>
-
 }
+</div>
