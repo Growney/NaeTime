@@ -1,28 +1,19 @@
 @page "/hardware/list"
 @layout WithReturn
 
-<button @onclick="NavigateToCreateLapRF8Channel" class="btn btn-primary">Create LapRF 8 Channel</button>
+<button @onclick="NavigateToCreateLapRF8Channel" class="btn btn-primary">Create LapRF 8 Channel Timer</button>
 
-@foreach(var timer in _timers)
-{
-    <div class="shadow p-2 w-25 list-item" @onclick="()=>NavigateToTimerDetails(timer)">
-        <table>
-            <tr>
-                <td>
-                    Name
-                </td>
-                <td>
-                    @timer.Name
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Type
-                </td>
-                <td>
-                    @timer.Type
-                </td>
-            </tr>
-        </table>
-    </div>
-}
+<div class="d-flex flow-row flex-wrap">
+    @foreach(var timer in _timers)
+    {
+        <div class="flex-fill card col-sm-5 m-2 hover-shadow" @onclick="() => NavigateToTimerDetails(timer)">
+            <img src="" class="card-img-top" alt="">
+            <div class="card-body">
+                <div class="card-title">
+                    @timer.Name (@timer.Type)
+                    <a class="float-right btn btn-primary btn-sm stretched-link" @onclick="() =>  NavigateToTimerDetails(timer)"><i class="fa-solid fa-pen-to-square"></i></a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
