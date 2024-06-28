@@ -8,7 +8,7 @@ namespace RX5808;
 public class RX5808RegisterCommunication
 {
 
-    public const int c_minimumTransactionDelayInMilliseconds = 100;
+    public const int c_minimumTransactionDelayInMilliseconds = 500;
     public const int c_communicationDelayInMicroseconds = 50;
 
     private readonly Stopwatch _stopwatch;
