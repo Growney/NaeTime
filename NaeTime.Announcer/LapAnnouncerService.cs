@@ -26,7 +26,7 @@ public class LapAnnouncerService
         string identifier = pilot.CallSign ?? pilot.FirstName ?? pilot.LastName;
         TimeSpan lapTime = TimeSpan.FromMilliseconds(lapCompleted.TotalMilliseconds);
 
-        string announcementText = $"{identifier} {lapTime.TotalSeconds}";
+        string announcementText = $"{identifier} {Math.Round(lapTime.TotalSeconds, 1)}";
 
         _queue.Enqueue(new Announcement(announcementText));
     }

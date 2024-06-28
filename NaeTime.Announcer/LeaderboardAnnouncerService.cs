@@ -33,7 +33,7 @@ public class LeaderboardAnnouncerService
         string identifier = pilot.CallSign ?? pilot.FirstName ?? pilot.LastName;
         TimeSpan totalTime = TimeSpan.FromMilliseconds(totalMilliseconds);
 
-        string positionText = isFastest ? "fastest" : "personal best";
+        string positionText = isFastest ? "best" : "p b";
 
         string announcementText = $"{identifier} new {positionText} {lapCap} consecutive lap record with {totalLaps} laps in {totalTime.TotalSeconds}";
 
@@ -61,7 +61,7 @@ public class LeaderboardAnnouncerService
         string identifier = pilot.CallSign ?? pilot.FirstName ?? pilot.LastName;
         TimeSpan totalTime = TimeSpan.FromMilliseconds(totalMilliseconds);
 
-        string positionText = isFastest ? "fastest" : "personal best";
+        string positionText = isFastest ? "best" : "p b";
 
         string announcementText = $"{identifier} new {positionText} single lap record in {totalTime.TotalSeconds}";
 
