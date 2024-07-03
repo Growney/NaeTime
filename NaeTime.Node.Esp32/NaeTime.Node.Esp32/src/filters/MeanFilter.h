@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "RssiFilter.h"
-
+#ifndef MEANFILTER_H
+#define MEANFILTER_H
 class MeanFilter: public RssiFilter
 {
     private:
@@ -17,3 +18,4 @@ class MeanFilter: public RssiFilter
             delete _buffer;
         }
 };
+#endif

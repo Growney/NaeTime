@@ -1,22 +1,16 @@
 #include <Arduino.h>
-#include "Rx5808.h"
-#include "NodeReading.h"
-#include "filters/RssiFilter.h"
-#include "filters/MeanFilter.h"
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <CircularBuffer.hpp>
+#include "debug.h"
+#include "timer/Rx5808RssiTimerNode.h"
 
-#define DEBUG 0
-
-#if DEBUG == 1
-  #define debugprintln(x) Serial.println(x) 
-  #define debugprint(x) Serial.print(x) 
-#else
-  #define debugprintln(x) 
-  #define debugprint(x)
-#endif
-
-#define FirstMeanFilterSpan 100
+#define TRANSMISSION_DELAY_HZ 50
+#define TRANSMISSION_ALIVE_HZ 1
+#define ALIVE_COMMAND 0
+#define RSSI_TICK_COMMAND 1
+#define CROSSING_ENTERED_COMMAND 2
+#define CROSSING_LEFT_COMMAND 3
 
 const char * networkSid = "Beagle WIFI";
 const char * networkPassword = "whatcanthebeaglesmellunderthetree";
@@ -26,20 +20,18 @@ const int udpPort = 11000;
 
 long lastLedChange = 0;
 bool ledOn = false;
-const int nodeCount = 4;
-const int readingBuffer = 10;
-const int filterCount = 1;
 //Are we currently connected?
 boolean connected = false;
 
+long transmissionPeriod = 1000000 / TRANSMISSION_DELAY_HZ;
+long alivePeriod = 1000 / TRANSMISSION_ALIVE_HZ;
+
+long lastAliveTick = 0;
+
 WiFiUDP udp;
 
-Rx5808 nodes[] = {Rx5808(A0, D3, D2, D12), Rx5808(A1, D3, D2, D11), Rx5808(A3, D3, D2, D10), Rx5808(A4, D3, D2, D9)};
-
-RssiFilter*** filters;
-NodeReading*** readings;
-int readingIndex = 0;
-
+int nodeCount = 4;
+Rx5808RssiTimerNode nodes[] = {Rx5808RssiTimerNode(A0, D3, D2, D12), Rx5808RssiTimerNode(A1, D3, D2, D11), Rx5808RssiTimerNode(A3, D3, D2, D10), Rx5808RssiTimerNode(A4, D3, D2, D9)};
 
 void WiFiEvent(WiFiEvent_t event){
     switch(event) {
@@ -49,6 +41,7 @@ void WiFiEvent(WiFiEvent_t event){
           debugprintln(WiFi.localIP());  
           //initializes the UDP state
           //This initializes the transfer buffer
+          udp.begin(WiFi.localIP(),udpPort);
           connected = true;
           break;
       case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
@@ -71,52 +64,13 @@ void connectToWiFi(const char * ssid, const char * pwd){
 
   debugprintln("Waiting for WIFI connection...");
 }
-
-void initReadings(){
-  readings = new NodeReading**[nodeCount];
-
-  for(int i = 0; i < nodeCount; i++){
-    readings[i] = new NodeReading*[readingBuffer];
-    for(int j = 0; j < readingBuffer; j++){
-      readings[i][j] = new NodeReading();
-    }
-  }
-}
-void initFilters(){
-  filters = new RssiFilter**[nodeCount];
-  for(int i =0; i < nodeCount; i++){
-    filters[i] = new RssiFilter*[1];
-
-    filters[i][0] = new MeanFilter(FirstMeanFilterSpan);
-  }
-}
-void initRx58080Modules(){
-  for(Rx5808 i : nodes){
-    i.Init();
-  }
-}
-void setup() {
-  Serial.begin(57600);
-  pinMode(LED_BUILTIN, OUTPUT);
-
-  digitalWrite(LED_BUILTIN, HIGH);
-
-  initReadings();
-  initFilters();
-  initRx58080Modules();
-
-  //Connect to the WiFi network
-  connectToWiFi(networkSid, networkPassword);
-  
-  digitalWrite(LED_BUILTIN, LOW);
-}
-
 void FlashLED(){
   long current = millis();
   int delay = 1000;
   if(!connected){
     delay = 100;
   }
+
   if((current - lastLedChange) > delay)
   {
       if(ledOn){
@@ -131,84 +85,114 @@ void FlashLED(){
       }
   }
 }
+void initRx58080Modules(){
+  for(int i =0; i< nodeCount; i++){
+    nodes[i].Init();
+  }
+}
+void setup() {
+  Serial.begin(9600);
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BLUE,OUTPUT);
+  pinMode(LED_GREEN,OUTPUT);
+  pinMode(LED_RED,OUTPUT);
+
+  digitalWrite(LED_BLUE, HIGH);
+  digitalWrite(LED_GREEN, HIGH);
+  digitalWrite(LED_RED, LOW);
+
+  digitalWrite(LED_BUILTIN, HIGH);
+
+  debugprintln("Init nodes");
+  initRx58080Modules();
+  
+  debugprintln("Connect to wifi");
+  connectToWiFi(networkSid, networkPassword);
+  
+  digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(LED_GREEN, LOW);
+  digitalWrite(LED_RED, HIGH);
+
+  debugprintln("Setup complete");
+}
+
 
 void writeUdp(WiFiUDP* udp,int value){
-  debugprint("Writing int: ");
-  debugprintln(value);
   int segments = sizeof(int) / sizeof(uint8_t);
   for(int i = 0; i < segments; i ++){
-    debugprint("Shift by: ");
     int shiftBy =(i * sizeof(uint8_t) * 8);
-    debugprint(shiftBy);
-    debugprint(" Shifted value: ");
     int shifted = value >> shiftBy;
-    debugprintln(shifted);
     udp->write(shifted);
   }
-  
-  debugprint("Completed Writing int: ");
-  debugprintln(value);
 }
 void writeUdp(WiFiUDP* udp,long value){
   int segments = sizeof(long) / sizeof(uint8_t);
-  debugprint("Writing long: ");
-  debugprintln(value);
   for(int i = 0; i < segments; i ++){
-    debugprint("Shift by: ");
     int shiftBy =(i * sizeof(uint8_t) * 8);
-    debugprint(shiftBy);
-    debugprint(" Shifted value: ");
     int shifted = value >> shiftBy;
-    debugprintln(shifted);
     udp->write(shifted);
   }
-  
-  debugprint("Completed Writing long: ");
-  debugprintln(value);
 }
-void loop() {
+
+void transmitNodeRssi(WiFiUDP* udp,int nodeIndex,long tick, int rssi){
+  udp->beginPacket(udpAddress,udpPort);
+  udp->write(RSSI_TICK_COMMAND);
+  writeUdp(udp,nodeIndex);
+  writeUdp(udp,tick);
+  writeUdp(udp,rssi);
+  udp->endPacket();
+}
+void transmitNodeEnteredCrossing(WiFiUDP* udp,int nodeIndex,long tick, int rssi){
+  udp->beginPacket(udpAddress,udpPort);
+  udp->write(CROSSING_ENTERED_COMMAND);
+  writeUdp(udp,nodeIndex);
+  writeUdp(udp,tick);
+  writeUdp(udp,rssi);
+  udp->endPacket();
+}
+void transmitNodeLeftCrossing(WiFiUDP* udp,int nodeIndex,long tick, int rssi){
+  udp->beginPacket(udpAddress,udpPort);
+  udp->write(CROSSING_LEFT_COMMAND);
+  writeUdp(udp,nodeIndex);
+  writeUdp(udp,tick);
+  writeUdp(udp,rssi);
+  udp->endPacket();
+}
+void transmitAlive(WiFiUDP* udp){
+  udp->beginPacket(udpAddress,udpPort);
+  udp->write(ALIVE_COMMAND);
+  udp->endPacket();
+}
+void loop(){
   FlashLED();
 
   if(connected){
-    int nodeReadIndex = 0;
-    
-    for(Rx5808 node : nodes){
+      for(int i =0; i< nodeCount; i++){
+        nodes[i].TickRssi();
 
-      int rawReading = node.GetRssi();
-      int filteredReading = rawReading;
-      for(int i = 0; i< filterCount; i++){
-        filteredReading = filters[nodeReadIndex][i]->GetValue(filteredReading);
-      }
-      
-      readings[nodeReadIndex][readingIndex]->Rssi = filteredReading;
-      readings[nodeReadIndex][readingIndex]->Tick = millis();
-      nodeReadIndex ++;
-    }
-    readingIndex++;
-    if(readingIndex >= readingBuffer){
-        debugprintln("Sending Udp");
-        udp.beginPacket(udpAddress,udpPort);
-        writeUdp(&udp,nodeCount);
-        writeUdp(&udp,readingBuffer);
-        int nodeIndex = 0;
-        for(int nodeIndex = 0; nodeIndex < nodeCount; nodeIndex ++){  
-          writeUdp(&udp,nodeIndex);
-          for(int readingIndex = 0; readingIndex < readingBuffer; readingIndex++){
-              NodeReading reading = *readings[nodeIndex][readingIndex];
-              writeUdp(&udp,reading.Tick);
-              writeUdp(&udp,reading.Rssi);
-          }
+        RssiNodeState currentState = nodes[i].GetCurrentState();
+
+        long timeSinceLastTransmission = currentState.LastTick - currentState.LastTransmittedTick;
+
+        if(timeSinceLastTransmission > transmissionPeriod && currentState.CurrentState != BELOW_TRANSMISSION_THRESHOLD){
+           transmitNodeRssi(&udp,i,currentState.LastTick,currentState.LastFilteredRssi);
+           nodes[i].MarkTickAsTrasmitted();
         }
-        udp.endPacket();
 
-        readingIndex = 0;
-        debugprintln("UDP sent");
+        if(currentState.CurrentState == ENTERED_CROSSING){
+          transmitNodeEnteredCrossing(&udp,i,currentState.LastTick,currentState.LastFilteredRssi);
+        }
+        else if(currentState.CurrentState == LEFT_CROSSING){
+          transmitNodeLeftCrossing(&udp,i,currentState.LastTick,currentState.LastFilteredRssi);
+        }
+      }
+      long currentTick = millis();
+      long timeSinceLastAlive = currentTick - lastAliveTick;
+
+      if(timeSinceLastAlive > alivePeriod){
+        transmitAlive(&udp);
+        lastAliveTick =currentTick;
+      }
     }
-    debugprint("Reading index: ");
-    debugprintln(readingIndex);
-  }
 }
 
-
-
-//wifi event handler

@@ -34,6 +34,10 @@ int Rx5808::GetActualStoredFrequency(){
 int Rx5808::GetRssi(){
     return analogRead(_rssiPin);
 }
+bool Rx5808::Tune(int frequencyInMhz){
+    SetFrequency(frequencyInMhz);
+    return ConfirmFrequency(frequencyInMhz);
+}
 
 void Rx5808::PulseClockPin(){
 
