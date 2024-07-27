@@ -2,6 +2,7 @@
 #include <Arduino.h>
 
 #define COMMUNICATION_DELAY_MICROSECONDS 10
+#define TRANSACTION_DELAY_MILLISECONDS 100
 
 Rx5808::Rx5808(int rssiPin, int clockPin, int dataPin, int selectPin){
     _rssiPin = rssiPin;
@@ -10,11 +11,13 @@ Rx5808::Rx5808(int rssiPin, int clockPin, int dataPin, int selectPin){
     _selectPin = selectPin;   
 }
 void Rx5808::Init(){
-    pinMode(_rssiPin, INPUT);
     pinMode(_clockPin, OUTPUT);
     pinMode(_dataPin, OUTPUT);
     _isDataInWrite = true;
     pinMode(_selectPin, OUTPUT);
+
+    delay(TRANSACTION_DELAY_MILLISECONDS);
+    WriteToRegister(Power_Down_Control,0b11010000110111110011);
 }
 void Rx5808::SetFrequency(int frequencyInMhz){
     int registerValue = CalculateFrequencyRegisterValue(frequencyInMhz);
@@ -95,7 +98,16 @@ void Rx5808::SendRegisterAddress(int registerAddress){
         WriteBit(readBit);
     }
 }
+void Rx5808::CheckTransactionDelay(){
+    int currentMillis = millis();
+    int timeSince = currentMillis - _lastTransaction;
+    if(timeSince < TRANSACTION_DELAY_MILLISECONDS){
+        delay(TRANSACTION_DELAY_MILLISECONDS - timeSince);
+    }
+
+}
 int Rx5808::ReadFromRegister(int registerAddress){
+    CheckTransactionDelay();
     SetSelect(true); //Raise the select before a transaction to ensure that the trailing edge proceeds the transaction
     
     SetupDataPinForWrite();
@@ -119,9 +131,11 @@ int Rx5808::ReadFromRegister(int registerAddress){
         }
     }
     SetSelect(true);
+    _lastTransaction = millis();
     return result;
 }
 void Rx5808::WriteToRegister(int registerAddress, int value){
+    CheckTransactionDelay();
     SetSelect(true); //Raise the select before a transaction to ensure that the trailing edge proceeds the transaction
     SetupDataPinForWrite();
     SetSelect(false);
@@ -143,6 +157,7 @@ void Rx5808::WriteToRegister(int registerAddress, int value){
         }
     }
     SetSelect(true);
+    _lastTransaction = millis();
 }
 int Rx5808::CalculateFrequencyRegisterValue(int frequencyInMhz){
     int tf = (frequencyInMhz - 479) / 2;

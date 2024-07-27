@@ -17,6 +17,8 @@ class Rx5808 {
     int _dataPin;
     int _selectPin;
 
+    long _lastTransaction =0;
+
     bool _isDataInWrite;
 
     public: 
@@ -41,4 +43,5 @@ class Rx5808 {
         int CalculateFrequencyRegisterValue(int frequencyInMhz);
         int CalculateRegisterValueFrequency(int registerValue);
         bool DoFrequenciesMatch(int frequencyOne, int frequencyTwo);
+        void CheckTransactionDelay();
 };

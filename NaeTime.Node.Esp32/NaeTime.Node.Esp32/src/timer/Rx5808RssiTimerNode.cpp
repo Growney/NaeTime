@@ -3,7 +3,6 @@
 #include "../filters/MeanFilter.h"
 #include "../debug.h"
 
-#define PrimaryMeanFilterSpan 1000
 
 Rx5808RssiTimerNode::Rx5808RssiTimerNode(int rssiPin, int clockPin, int dataPin, int selectPin){
     receiver = new Rx5808(rssiPin, clockPin, dataPin, selectPin);
@@ -80,6 +79,10 @@ void Rx5808RssiTimerNode::UpdateState(int filteredValue){
     }
 }
 
-void Rx5808RssiTimerNode::Tune(int frequencyInMhz){
-    receiver->Tune(frequencyInMhz);
+bool Rx5808RssiTimerNode::Tune(int frequencyInMhz){
+    requestedFrequency = frequencyInMhz;
+    receiver->SetFrequency(frequencyInMhz);
+    actualFrequency = receiver->GetActualStoredFrequency();
+
+    return receiver->ConfirmFrequency(frequencyInMhz);
 }

@@ -28,16 +28,16 @@ class RssiTimerNode{
         
 
     public:
-        int EntryThreshold = 1000;
-        int ExitThreshold = 1000;
-        int TransmissionThreshold = 500;
+        int EntryThreshold = 1500;
+        int ExitThreshold = 1500;
+        int TransmissionThreshold = 1000;
         
         int RequestedFrequency() const { return requestedFrequency; }
         int ActualFrequency() const { return actualFrequency; }
         virtual void Init(){
 
         }
-        virtual void Tune(int frequencyInMhz)
+        virtual bool Tune(int frequencyInMhz)
         {
             requestedFrequency = frequencyInMhz;
             actualFrequency = frequencyInMhz;

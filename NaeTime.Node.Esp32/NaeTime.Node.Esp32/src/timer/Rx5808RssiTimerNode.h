@@ -3,7 +3,7 @@
 #include "../filters/RssiFilter.h"
 #include "../filters/MeanFilter.h"
 
-#define PrimaryMeanFilterSpan 1000
+#define PrimaryMeanFilterSpan 250
 
 class Rx5808RssiTimerNode: public RssiTimerNode{
 
@@ -20,7 +20,7 @@ class Rx5808RssiTimerNode: public RssiTimerNode{
         }
         void Init();
         void TickRssi();
-        void Tune(int frequencyInMhz);
+        bool Tune(int frequencyInMhz);
         RssiNodeState GetCurrentState();
 
 };
