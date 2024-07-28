@@ -46,7 +46,7 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
 
         laps.Sort((x, y) => x.FinishedUtc.CompareTo(y.FinishedUtc));
 
-        await FullTrackAndUpdateTrackedLaps(completed.SessionId, completed.PilotId, sessionTrackedLaps, pilotLapRecords, laps);
+        await FullTrackAndUpdateTrackedLaps(completed.SessionId, completed.PilotId, completed.LapId, sessionTrackedLaps, pilotLapRecords, laps);
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
@@ -79,7 +79,7 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             laps.RemoveAt(removeIndex);
         }
 
-        await FullTrackAndUpdateTrackedLaps(removed.SessionId, removed.PilotId, sessionTrackedLaps, pilotLapRecords, laps);
+        await FullTrackAndUpdateTrackedLaps(removed.SessionId, removed.PilotId, removed.LapId, sessionTrackedLaps, pilotLapRecords, laps);
     }
     public async Task When(OpenPracticeLapDisputed disputed)
     {
@@ -127,9 +127,9 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             laps.Add(new Lap(existingLap.LapId, existingLap.StartedUtc, existingLap.FinishedUtc, desiredStatus, existingLap.TotalMilliseconds));
         }
 
-        await FullTrackAndUpdateTrackedLaps(disputed.SessionId, disputed.PilotId, sessionTrackedLaps, pilotLapRecords, laps);
+        await FullTrackAndUpdateTrackedLaps(disputed.SessionId, disputed.PilotId, disputed.LapId, sessionTrackedLaps, pilotLapRecords, laps);
     }
-    private async Task FullTrackAndUpdateTrackedLaps(Guid sessionId, Guid pilotId, IEnumerable<uint> sessionTrackedLaps, IEnumerable<Messages.Models.ConsecutiveLapRecord>? pilotLapRecords, List<Lap> laps)
+    private async Task FullTrackAndUpdateTrackedLaps(Guid sessionId, Guid pilotId, Guid triggeringLap, IEnumerable<uint> sessionTrackedLaps, IEnumerable<Messages.Models.ConsecutiveLapRecord>? pilotLapRecords, List<Lap> laps)
     {
         laps.Sort((x, y) => x.FinishedUtc.CompareTo(y.FinishedUtc));
         FastestConsecutiveLapCalculator calculator = new();
@@ -148,13 +148,13 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             //We have no new record and the existing record existed we should issues a remove event
             if (newRecord == null && existingRecord != null)
             {
-                await HandleRemovedRecord(sessionId, pilotId, trackedLaps);
+                await HandleRemovedRecord(sessionId, pilotId, triggeringLap, trackedLaps);
                 continue;
             }
             // somehow we have removed a lap but we have no existing record and we have a new record so we should issue an improved, this could only happen if something happened when updating the existing record or something
             else if (newRecord != null && existingRecord == null)
             {
-                await HandleUpdatedRecord(sessionId, pilotId, trackedLaps, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps);
+                await HandleUpdatedRecord(sessionId, pilotId, triggeringLap, trackedLaps, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps);
             }
             else if (newRecord != null && existingRecord != null)
             {
@@ -162,11 +162,11 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
 
                 if (comparison > 0)
                 {
-                    await HandleUpdatedRecord(sessionId, pilotId, trackedLaps, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps);
+                    await HandleUpdatedRecord(sessionId, pilotId, triggeringLap, trackedLaps, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps);
                 }
                 else if (comparison < 0)
                 {
-                    await HandleUpdatedRecord(sessionId, pilotId, trackedLaps, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps);
+                    await HandleUpdatedRecord(sessionId, pilotId, triggeringLap, trackedLaps, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps);
                 }
             }
         }
@@ -188,7 +188,7 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
         return xLastLapCompletionUtc.CompareTo(yLastLapCompletionUtc);
     }
 
-    private async Task HandleUpdatedRecord(Guid sessionId, Guid pilotId, uint lapCap, uint totalLaps, long totalMilliseconds, DateTime lastLapCompletionUtc, IEnumerable<Guid> includedLaps)
+    private async Task HandleUpdatedRecord(Guid sessionId, Guid pilotId, Guid triggeringLap, uint lapCap, uint totalLaps, long totalMilliseconds, DateTime lastLapCompletionUtc, IEnumerable<Guid> includedLaps)
     {
         IEnumerable<Messages.Models.ConsecutiveLapLeaderboardPosition>? existingLeaderboardPositions = await _rpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.ConsecutiveLapLeaderboardPosition>>("GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions", sessionId, lapCap);
         ConsecutiveLapsLeaderboard existingLeaderboard = new();
@@ -211,9 +211,9 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
 
         newLeaderboard.SetFastest(pilotId, new ConsecutiveLapRecord(totalLaps, totalMilliseconds, lastLapCompletionUtc, includedLaps));
 
-        await CheckLeaderboards(sessionId, lapCap, pilotId, existingLeaderboard, newLeaderboard);
+        await CheckLeaderboards(sessionId, lapCap, pilotId, triggeringLap, existingLeaderboard, newLeaderboard);
     }
-    private async Task HandleRemovedRecord(Guid sessionId, Guid pilotId, uint lapCap)
+    private async Task HandleRemovedRecord(Guid sessionId, Guid pilotId, Guid triggeringLap, uint lapCap)
     {
         IEnumerable<Messages.Models.ConsecutiveLapLeaderboardPosition>? existingLeaderboardPositions = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapLeaderboardPosition>>("GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions", sessionId, lapCap);
         ConsecutiveLapsLeaderboard existingLeaderboard = new();
@@ -234,9 +234,9 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             }
         }
 
-        await CheckLeaderboards(sessionId, lapCap, pilotId, existingLeaderboard, newLeaderboard);
+        await CheckLeaderboards(sessionId, lapCap, pilotId, triggeringLap, existingLeaderboard, newLeaderboard);
     }
-    private async Task CheckLeaderboards(Guid sessionId, uint lapCap, Guid pilotId, ConsecutiveLapsLeaderboard existingLeaderboard, ConsecutiveLapsLeaderboard newLeaderboard)
+    private async Task CheckLeaderboards(Guid sessionId, uint lapCap, Guid pilotId, Guid triggeringLap, ConsecutiveLapsLeaderboard existingLeaderboard, ConsecutiveLapsLeaderboard newLeaderboard)
     {
         IDictionary<Guid, ConsecutiveLapsLeaderboardPosition> existingPositions = existingLeaderboard.GetPositions();
         IDictionary<Guid, ConsecutiveLapsLeaderboardPosition> newPositions = newLeaderboard.GetPositions();
@@ -250,11 +250,11 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
 
                 if (positionMovement > 0)
                 {
-                    await _eventClient.PublishAsync(new ConsecutiveLapLeaderboardPositionImproved(sessionId, lapCap, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps, true));
+                    await _eventClient.PublishAsync(new ConsecutiveLapLeaderboardPositionImproved(sessionId, lapCap, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps, triggeringLap));
                 }
                 else if (positionMovement < 0)
                 {
-                    await _eventClient.PublishAsync(new ConsecutiveLapLeaderboardPositionReduced(sessionId, lapCap, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps, true));
+                    await _eventClient.PublishAsync(new ConsecutiveLapLeaderboardPositionReduced(sessionId, lapCap, newRecord.Position, existingRecord.Position, existingPosition.Key, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps));
                 }
                 //We only need to check the pilot we updates record as the rest should not have changed
                 else if (existingRecord.PilotId == pilotId)
@@ -262,11 +262,11 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
                     int recordComparison = ComparePositions(existingRecord.TotalLaps, existingRecord.TotalMilliseconds, existingRecord.LastLapCompletionUtc, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc);
                     if (recordComparison > 0)
                     {
-                        await _eventClient.PublishAsync(new ConsecutiveLapLeaderboardRecordImproved(sessionId, newRecord.Position, lapCap, pilotId, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps, true));
+                        await _eventClient.PublishAsync(new ConsecutiveLapLeaderboardRecordImproved(sessionId, newRecord.Position, lapCap, pilotId, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps, triggeringLap));
                     }
                     else if (recordComparison < 0)
                     {
-                        await _eventClient.PublishAsync(new ConsecutiveLapLeaderboardRecordReduced(sessionId, newRecord.Position, lapCap, pilotId, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps, true));
+                        await _eventClient.PublishAsync(new ConsecutiveLapLeaderboardRecordReduced(sessionId, newRecord.Position, lapCap, pilotId, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps));
                     }
                 }
             }
@@ -282,7 +282,7 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             ConsecutiveLapsLeaderboardPosition newRecord = newPosition.Value;
             if (!existingPositions.ContainsKey(newPosition.Key))
             {
-                await _eventClient.PublishAsync(new ConsecutiveLapLeaderboardPositionImproved(sessionId, lapCap, newRecord.Position, null, newPosition.Key, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps, false));
+                await _eventClient.PublishAsync(new ConsecutiveLapLeaderboardPositionImproved(sessionId, lapCap, newRecord.Position, null, newPosition.Key, newRecord.TotalLaps, newRecord.TotalMilliseconds, newRecord.LastLapCompletionUtc, newRecord.IncludedLaps, null));
             }
         }
     }

@@ -45,7 +45,7 @@ internal class OpenPracticeAverageLapLeaderboardManager : LeaderboardManager<Ave
         IEnumerable<Messages.Models.Lap>? validLaps = pilotLaps?.Where(x => x.Status == Messages.Models.LapStatus.Completed
         && (x.Id != disputed.LapId || disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed));
 
-        double average = validLaps?.Average(x => x.TotalMilliseconds) ?? 0;
+        double average = validLaps == null || !validLaps.Any() ? 0 : validLaps.Average(x => x.TotalMilliseconds);
 
         Messages.Models.Lap? firstLap = validLaps?.FirstOrDefault();
         DateTime? firstLapCompletionUtc = firstLap?.FinishedUtc ?? lap?.StartedUtc;
@@ -70,6 +70,7 @@ internal class OpenPracticeAverageLapLeaderboardManager : LeaderboardManager<Ave
         {
             average = validLaps.Average(x => x.TotalMilliseconds);
         }
+
         Messages.Models.Lap? firstLap = validLaps?.FirstOrDefault();
         DateTime? firstLapCompletionUtc = firstLap?.FinishedUtc ?? lap?.StartedUtc;
 
@@ -82,7 +83,6 @@ internal class OpenPracticeAverageLapLeaderboardManager : LeaderboardManager<Ave
             await HandleUpdatedRecord(removed.SessionId, removed.PilotId, new AverageLapRecord(average, firstLapCompletionUtc.Value));
         }
     }
-
 
     protected override async Task<IEnumerable<LeaderboardPosition<AverageLapRecord>>> GetExistingPositions(Guid sessionId)
     {

@@ -5,12 +5,12 @@ using NaeTime.Announcer.Models;
 namespace NaeTime.Announcer;
 public class Announcer : BackgroundService
 {
-    private readonly IAnnouncmentQueue _queue;
+    private readonly IEnumerable<IAnnouncmentProvider> _providers;
     private readonly ISpeechProvider _speechProvider;
 
-    public Announcer(IAnnouncmentQueue queue, ISpeechProvider speechProvider)
+    public Announcer(IEnumerable<IAnnouncmentProvider> providers, ISpeechProvider speechProvider)
     {
-        _queue = queue ?? throw new ArgumentNullException(nameof(queue));
+        _providers = providers ?? throw new ArgumentNullException(nameof(providers));
         _speechProvider = speechProvider ?? throw new ArgumentNullException(nameof(speechProvider));
     }
 
@@ -21,12 +21,19 @@ public class Announcer : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false);
-            if (_queue.TryDequeue(out Announcement? announcement))
+            foreach (IAnnouncmentProvider provider in _providers)
             {
-                if (announcement is not null)
+                //Doing it this way allows for the first provider to have priority, BUT could end up with a provider blocking the others constantly if they are constantly returning announcements may need to look at a better way to handle this.
+                Announcement? nextAnnouncement;
+                do
                 {
-                    await Announce(announcement);
-                }
+                    nextAnnouncement = await provider.GetNextAnnouncement();
+                    if (nextAnnouncement != null)
+                    {
+                        await Announce(nextAnnouncement);
+                    }
+
+                } while (nextAnnouncement != null);
             }
         }
     }

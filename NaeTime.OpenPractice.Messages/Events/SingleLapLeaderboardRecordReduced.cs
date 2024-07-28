@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.OpenPractice.Messages.Events;
-public record SingleLapLeaderboardRecordReduced(Guid SessionId, int Position, Guid PilotId, long TotalMilliseconds, DateTime CompletionUtc, Guid LapId, bool WasTriggeredOnLapCompletion);
+public record SingleLapLeaderboardRecordReduced(Guid SessionId, int Position, Guid PilotId, long TotalMilliseconds, DateTime CompletionUtc, Guid LapId);
