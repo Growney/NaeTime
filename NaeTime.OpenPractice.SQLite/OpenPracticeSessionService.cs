@@ -276,5 +276,25 @@ internal class OpenPracticeSessionService
             _ => throw new NotImplementedException()
         }, x.TotalMilliseconds));
     }
+
+    public async Task<IEnumerable<Messages.Models.LapRecord>> GetOpenPracticeSessionLapPilotLapRecords(Guid sessionId, Guid pilotId)
+    {
+        List<Messages.Models.LapRecord> records = new();
+        SingleLapLeaderboardPosition? singleLapRecord = await _dbContext.SingleLapLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.PilotId == pilotId).ConfigureAwait(false);
+
+        if (singleLapRecord != null)
+        {
+            records.Add(new Messages.Models.LapRecord(1, [singleLapRecord.LapId]));
+        }
+
+        IEnumerable<ConsecutiveLapLeaderboardPosition> consecutiveLapRecords = await _dbContext.ConsecutiveLapLeaderboardPositions.Where(x => x.SessionId == sessionId && x.PilotId == pilotId).ToListAsync().ConfigureAwait(false);
+
+        if (consecutiveLapRecords.Any())
+        {
+            records.AddRange(consecutiveLapRecords.Select(x => new Messages.Models.LapRecord(x.LapCap, x.IncludedLaps.Select(x => x.LapId))));
+        }
+
+        return records;
+    }
 }
 

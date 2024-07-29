@@ -33,3 +33,53 @@
     width: 300px;
     height: 100px;
 }
+
+.lap-table tbody tr td {
+    padding: 2px;
+    padding-left: 10px;
+    border: 1px;
+}
+
+
+.lap-table tbody tr .lap-line-cell {
+    padding: 0px;
+    width:10px;
+}
+
+.lap-line {
+    height: 100%;
+    width: 3px;
+    margin-right: 2px;
+    float: right;
+}
+
+.lap-line-1 {
+    background-color: #E64C4C;
+}
+.lap-line-2 {
+    background-color: #E1519A;
+}
+.lap-line-3 {
+    background-color: #F2A240;
+}
+.lap-line-4 {
+    background-color: #D358DA;
+}
+.lap-line-5 {
+    background-color: #7B52E0;
+}
+.lap-line-6 {
+    background-color: #6486CE;
+}
+.lap-line-7 {
+    background-color: #62BDD0;
+}
+.lap-line-8 {
+    background-color: #62D0AE;
+}
+.lap-line-9 {
+    background-color: #5ED75B;
+}
+.lap-line-10 {
+    background-color: #A7D45E;
+}

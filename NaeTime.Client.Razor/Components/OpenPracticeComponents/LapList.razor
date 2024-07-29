@@ -1,5 +1,5 @@
 ﻿@using Syncfusion.Blazor.Charts
-<div style="width:300px;">
+<div style="width:340px;">
     <div class="d-flex">
         @if (!string.IsNullOrWhiteSpace(Header))
         {
@@ -17,14 +17,34 @@
             </div>
         }
     </div>
+    <div>
+        @{
+            string deviation = GetStandardDeviation(10);
+            if (!string.IsNullOrWhiteSpace(deviation))
+            {
+                <span class="e-badge">@deviation</span>
+            }
+            deviation = GetStandardDeviation(50);
+            if (!string.IsNullOrWhiteSpace(deviation))
+            {
+                <span class="e-badge">@deviation</span>
+            }
+            deviation = GetStandardDeviation(null);
+            if (!string.IsNullOrWhiteSpace(deviation))
+            {
+                <span class="e-badge">@deviation</span>
+            }
+        }
+    </div>
     
     
     <div style="max-height: 522px; overflow:auto;">
-        <table class="table table-striped overflow-auto" style="height:200px">
+        <table class="table table-striped overflow-auto lap-table" style="height:200px">
             <tr>
                 <th>
                     #
                 </th>
+                
                 @if (IncludePilot)
                 {
                     <th>
@@ -33,6 +53,9 @@
                 }
                 <th>
                     Completed
+                </th>
+                <th>
+
                 </th>
                 <th>
                     Time
@@ -60,8 +83,17 @@
                             <td>
                                 @lap.FinishedUtc.ToString("HH:mm:ss")
                             </td>
+                            <td class="lap-line-cell">
+                                @foreach (LapRecord record in LapRecords.OrderByDescending(x => x.LapCap))
+                                {
+                                    @if (record.IncludedLaps.Contains(lap.Id))
+                                    {
+                                        <div class="lap-line @($"lap-line-{record.LapCap}")"></div>
+                                    }
+                                }
+                            </td>
                             <td class="@(lap.Status != Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed ?"text-danger" :"")">
-                                @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):mm\\:ss\\:fff}")
+                                @($"{TimeSpan.FromMilliseconds(lap.TotalMilliseconds):m\\:ss\\:fff}")
                             </td>
                             <td>
                                 <div class="btn-group">
