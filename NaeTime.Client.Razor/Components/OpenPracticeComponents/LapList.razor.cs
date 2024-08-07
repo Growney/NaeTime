@@ -55,10 +55,10 @@ public partial class LapList : ComponentBase
     private string GetStandardDeviation(int? topLaps)
     {
         IEnumerable<OpenPracticeLap> validLaps = Laps.Where(l => l.Status == OpenPracticeLapStatus.Completed).OrderBy(x => x.TotalMilliseconds);
-
+        int lapCount = validLaps.Count();
         if (topLaps.HasValue)
         {
-            int takeCount = (int)(topLaps.Value / 100.0 * validLaps.Count());
+            int takeCount = (int)(topLaps.Value / 100.0 * lapCount);
             validLaps = validLaps.Take(takeCount);
         }
 
@@ -69,7 +69,7 @@ public partial class LapList : ComponentBase
 
         double mean = validLaps.Average(l => l.TotalMilliseconds);
         double sumOfSquaresOfDifferences = validLaps.Sum(l => (l.TotalMilliseconds - mean) * (l.TotalMilliseconds - mean));
-        double standardDeviation = (float)Math.Sqrt(sumOfSquaresOfDifferences / (validLaps.Count() - 1));
+        double standardDeviation = (float)Math.Sqrt(sumOfSquaresOfDifferences / (lapCount - 1));
 
         string prefix = topLaps.HasValue ? $"std{topLaps}:" : "std:";
 
