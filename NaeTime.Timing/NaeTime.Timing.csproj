@@ -10,7 +10,7 @@
     <ProjectReference Include="..\NaeTime.Hardware.Messages\NaeTime.Hardware.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
     <ProjectReference Include="..\NaeTime.Management.Messages\NaeTime.Management.Messages.csproj" />
-    <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
+    <ProjectReference Include="..\NaeTime.PubSub.Abstractions\NaeTime.PubSub.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Timing.Messages\NaeTime.Timing.Messages.csproj" />
   </ItemGroup>
 

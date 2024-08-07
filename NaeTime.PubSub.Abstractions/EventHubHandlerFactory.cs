@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Reflection;
 
-namespace NaeTime.PubSub;
+namespace NaeTime.PubSub.Abstractions;
 public class EventHubHandlerFactory
 {
     public IEnumerable<(Type, Func<object, object, Task>)> GetTypeHandlers(Type type)

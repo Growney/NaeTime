@@ -1,7 +1,6 @@
-﻿using NaeTime.PubSub.Abstractions;
-using System.Reflection;
+﻿using System.Reflection;
 
-namespace NaeTime.PubSub;
+namespace NaeTime.PubSub.Abstractions;
 public class RPCHubHandlerFactory
 {
     public IEnumerable<(RPCSignature signature, Func<object, object?[], Task<object?>>)> GetTypeHandlers(Type type)
@@ -41,7 +40,7 @@ public class RPCHubHandlerFactory
         return values;
     }
     private static Func<object, object?[], Task<object?>> CreateGenericTaskResponse(MethodInfo info)
-        => async (object obj, object?[] parameters) =>
+        => async (obj, parameters) =>
         {
             dynamic? methodResult = info.Invoke(obj, parameters);
 
@@ -58,7 +57,7 @@ public class RPCHubHandlerFactory
             return methodResult.Result;
         };
     private static Func<object, object?[], Task<object?>> CreateResponse(MethodInfo info)
-        => (object obj, object?[] parameters) =>
+        => (obj, parameters) =>
         {
             object? methodResult = info.Invoke(obj, parameters);
 

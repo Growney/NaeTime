@@ -99,7 +99,7 @@
       <ProjectReference Include="..\NaeTime.Management.SQLite\NaeTime.Management.SQLite.csproj" />
       <ProjectReference Include="..\NaeTime.OpenPractice.SQLite\NaeTime.OpenPractice.SQLite.csproj" />
       <ProjectReference Include="..\NaeTime.OpenPractice\NaeTime.OpenPractice.csproj" />
-      <ProjectReference Include="..\NaeTime.PubSub\NaeTime.PubSub.csproj" />
+      <ProjectReference Include="..\NaeTime.PubSub.InMemory\NaeTime.PubSub.InMemory.csproj" />
       <ProjectReference Include="..\NaeTime.Timing.SQLite\NaeTime.Timing.SQLite.csproj" />
       <ProjectReference Include="..\NaeTime.Timing\NaeTime.Timing.csproj" />
     </ItemGroup>

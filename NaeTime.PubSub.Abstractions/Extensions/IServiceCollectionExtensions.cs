@@ -5,13 +5,14 @@ using NaeTime.PubSub.Abstractions;
 namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions
 {
-    public static IServiceCollection AddNaeTimeRemoteProcedureCall(this IServiceCollection services)
+    public static IServiceCollection AddNaeTimeRemoteProcedureCall<TManager>(this IServiceCollection services)
+        where TManager : class, IRemoteProcedureCallRegistrar, IRemoteProcedureCallClient
     {
         services.TryAddSingleton(serviceProvider =>
         {
             IEnumerable<RemoteProcedureCallHubRegistration> hubRegistrations = serviceProvider.GetServices<RemoteProcedureCallHubRegistration>();
 
-            RemoteProcedureCallManager manager = ActivatorUtilities.CreateInstance<RemoteProcedureCallManager>(serviceProvider);
+            TManager manager = ActivatorUtilities.CreateInstance<TManager>(serviceProvider);
 
             foreach (RemoteProcedureCallHubRegistration hubRegistration in hubRegistrations)
             {
@@ -37,8 +38,8 @@ public static class IServiceCollectionExtensions
 
             return manager;
         });
-        services.TryAddSingleton<IRemoteProcedureCallRegistrar>(serviceProvider => serviceProvider.GetRequiredService<RemoteProcedureCallManager>());
-        services.TryAddSingleton<IRemoteProcedureCallClient>(serviceProvider => serviceProvider.GetRequiredService<RemoteProcedureCallManager>());
+        services.TryAddSingleton<IRemoteProcedureCallRegistrar>(serviceProvider => serviceProvider.GetRequiredService<TManager>());
+        services.TryAddSingleton<IRemoteProcedureCallClient>(serviceProvider => serviceProvider.GetRequiredService<TManager>());
 
         return services;
     }
@@ -52,13 +53,14 @@ public static class IServiceCollectionExtensions
         services.AddSingleton(new RemoteProcedureCallHubRegistration(typeof(THub), lifeTime, instance));
         return services;
     }
-    public static IServiceCollection AddNaeTimeEventing(this IServiceCollection services)
+    public static IServiceCollection AddNaeTimeEventing<TManager>(this IServiceCollection services)
+        where TManager : class, IEventRegistrar, IEventClient
     {
         services.TryAddSingleton(serviceProvider =>
         {
             IEnumerable<EventHubRegistration> hubRegistrations = serviceProvider.GetServices<EventHubRegistration>();
 
-            EventManager manager = ActivatorUtilities.CreateInstance<EventManager>(serviceProvider);
+            TManager manager = ActivatorUtilities.CreateInstance<TManager>(serviceProvider);
 
             foreach (EventHubRegistration hubRegistration in hubRegistrations)
             {
@@ -84,9 +86,9 @@ public static class IServiceCollectionExtensions
 
             return manager;
         });
-        services.TryAddSingleton<IEventRegistrar>(x => x.GetRequiredService<EventManager>());
-        services.TryAddSingleton<IEventClient>(x => x.GetRequiredService<EventManager>());
-        services.TryAddTransient<IEventRegistrarScope>(x => x.GetRequiredService<EventManager>().CreateScope());
+        services.TryAddSingleton<IEventRegistrar>(x => x.GetRequiredService<TManager>());
+        services.TryAddSingleton<IEventClient>(x => x.GetRequiredService<TManager>());
+        services.TryAddTransient<IEventRegistrarScope>(x => x.GetRequiredService<TManager>().CreateScope());
 
         return services;
     }

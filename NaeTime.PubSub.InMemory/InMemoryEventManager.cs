@@ -1,18 +1,18 @@
 ﻿using NaeTime.PubSub.Abstractions;
 using System.Collections.Concurrent;
 
-namespace NaeTime.PubSub;
-public class EventManager : IEventClient, IEventRegistrar
+namespace NaeTime.PubSub.InMemory;
+public class InMemoryEventManager : IEventClient, IEventRegistrar
 {
     private readonly ConcurrentDictionary<Guid, ConcurrentBag<Type>> _keyedHandlers = new();
     private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ConcurrentBag<Func<object, Task>>>> _handlers = new();
 
     private class EventManagerScope : IEventRegistrarScope
     {
-        private readonly EventManager _eventManager;
+        private readonly InMemoryEventManager _eventManager;
         private readonly Guid _scopeId;
 
-        public EventManagerScope(Guid scopeId, EventManager eventManager)
+        public EventManagerScope(Guid scopeId, InMemoryEventManager eventManager)
         {
             _scopeId = scopeId;
             _eventManager = eventManager ?? throw new ArgumentNullException(nameof(eventManager));

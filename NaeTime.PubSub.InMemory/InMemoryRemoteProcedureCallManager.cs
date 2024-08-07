@@ -1,8 +1,8 @@
 ﻿using NaeTime.PubSub.Abstractions;
 
-namespace NaeTime.PubSub;
+namespace NaeTime.PubSub.InMemory;
 
-public class RemoteProcedureCallManager : IRemoteProcedureCallClient, IRemoteProcedureCallRegistrar
+public class InMemoryRemoteProcedureCallManager : IRemoteProcedureCallClient, IRemoteProcedureCallRegistrar
 {
     private readonly FuzzySignatureCollection _signatures = new();
 

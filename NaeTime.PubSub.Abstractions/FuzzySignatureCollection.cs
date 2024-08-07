@@ -1,8 +1,7 @@
-﻿using NaeTime.PubSub.Abstractions;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
-namespace NaeTime.PubSub;
+namespace NaeTime.PubSub.Abstractions;
 public class FuzzySignatureCollection
 {
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, ConcurrentDictionary<RPCSignature, Func<object?[], Task<object?>>>>> _signatures = new();

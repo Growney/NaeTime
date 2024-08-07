@@ -1,4 +1,4 @@
-﻿namespace NaeTime.PubSub;
+﻿namespace NaeTime.PubSub.Abstractions;
 public enum HubLifetime
 {
     Service,
