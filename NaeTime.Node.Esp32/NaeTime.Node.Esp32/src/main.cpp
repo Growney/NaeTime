@@ -1,30 +1,21 @@
 #include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiUdp.h>
-#include <WiFiManager.h>
 #include "debug.h"
 #include "timer/Rx5808RssiTimerNode.h"
-#include "AsyncUDP.h"
 #include <Preferences.h>
 #include <vector>
 #include "CommandPackets.h"
+#include "comms/NetworkCommunication.h"
 
 #define TRANSMISSION_DELAY_HZ 50
 #define TRANSMISSION_ALIVE_HZ 1
 
-#define SERVER_PORT 11000
-#define BROADCAST_PORT 11001
 #define STATUS_LED_RED D5
 #define STATUS_LED_GREEN D4
 #define BROADCAST_DELAY_HZ 1
 #define DEVICE_ID_KEY "Device_ID"
 
-WiFiManager wifiManager;
-WiFiManagerParameter deviceIdParameter("deviceId","Device Id","",20);
-WiFiServer server(SERVER_PORT);
-WiFiClient client;
-AsyncUDP udp;
 Preferences preferences;
+NetworkCommunication comms;
 
 class LEDStatus{
   public:
@@ -94,7 +85,7 @@ void FlashLED(LEDStatus* status, long currentMillis,int delay){
 }
 void FlashWIFILED(long currentMillis,LEDStatus* status){
   int delay = 0;
-  if(WiFi.status() != WL_CONNECTED){
+  if(!comms.IsConnectedToNetwork()){
     status->Enabled = true;
     delay = 1000;
   }
@@ -105,9 +96,9 @@ void FlashWIFILED(long currentMillis,LEDStatus* status){
 }
 void FlashConnectionLED(long currentMillis,LEDStatus* status){
   int delay = 1000;
-  if(WiFi.status() == WL_CONNECTED){
+  if(comms.IsConnectedToNetwork()){
     status->Enabled = true;
-    if(client.connected()){
+    if(comms.IsConnectedToClient()){
       delay = 0;
     }
   }
@@ -132,12 +123,6 @@ void initRx58080Modules(){
   }
 }
 void setup() {
-  WiFi.mode(WIFI_STA);
-  preferences.begin("naetime-node");
-  deviceIdParameter.setValue(preferences.getString(DEVICE_ID_KEY).c_str(),20);
-
-  Serial.begin(9600);
-  
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(LED_BLUE,OUTPUT);
   pinMode(LED_GREEN,OUTPUT);
@@ -147,16 +132,14 @@ void setup() {
 
   digitalWrite(LED_BUILTIN, HIGH);
 
+  preferences.begin("naetime-node");
+  comms.Init(preferences.getString(DEVICE_ID_KEY).c_str(),20);
+
+  Serial.begin(9600);
+  
+
   debugprintln("Init nodes");
   initRx58080Modules();
-  wifiManager.addParameter(&deviceIdParameter);
-  wifiManager.setConfigPortalBlocking(false);
-  if(wifiManager.autoConnect("NaeTime Node")){
-    debugprintln("Sucess");
-  }
-  else{
-    debugprintln("running config portal");
-  }
 
   debugprintln("Setup complete");
 }
@@ -218,15 +201,17 @@ void transmitAlive(WiFiClient client,long current){
   header.DataLength = sizeof(Alive);
   header.Data = (char*)&packet;
 
-  char* data = (char*)&header;
+  unsigned int dataSize = sizeof(Alive) + sizeof(PacketHeader);
+  uint8_t* data = (uint8_t*)&header;
+  data = (uint8_t*)&header;
 
   client.write(data, sizeof(Alive) + sizeof(PacketHeader));
 }
 
-void DoTcpClientConnectedLoop(){
+void DoClientConnectedLoop(){
   long current = millis();
   if(current - lastAliveTick > broadcastPeriod){
-    transmitAlive(client, current);
+    comms.TransmitAlive(current);
     lastAliveTick = current;
   }
 
@@ -238,56 +223,43 @@ void DoTcpClientConnectedLoop(){
     long timeSinceLastTransmission = currentState.LastTick - currentState.LastTransmittedTick;
 
     if(timeSinceLastTransmission > transmissionPeriod && currentState.CurrentState != BELOW_TRANSMISSION_THRESHOLD){
-        transmitNodeRssi(client,i,currentState.LastTick,currentState.LastFilteredRssi);
+        comms.TransmitNodeRssi(i,currentState.LastTick,currentState.LastFilteredRssi);
         nodes[i].MarkTickAsTrasmitted();
     }
 
     if(currentState.CurrentState == ENTERED_CROSSING){
-      transmitNodeEnteredCrossing(client,i,currentState.LastTick,currentState.LastFilteredRssi);
+      comms.TransmitNodeEnteredCrossing(i,currentState.LastTick,currentState.LastFilteredRssi);
     }
     else if(currentState.CurrentState == LEFT_CROSSING){
-      transmitNodeLeftCrossing(client,i,currentState.LastTick,currentState.LastFilteredRssi);
+      comms.TransmitNodeLeftCrossing(i,currentState.LastTick,currentState.LastFilteredRssi);
     }
   }
 }
 void BroadcastClientIpAndConfig(long currentMillis){
-  String deviceId = deviceIdParameter.getValue();
-  IPAddress ipAddress = WiFi.localIP();
-  String message =  String(currentMillis) + "," +  ipAddress.toString() + "," + deviceId;
-  Serial.println(message);
-  udp.broadcastTo(message.c_str(),BROADCAST_PORT);
+
 }
-void DoNoTcpClientLoop(){
+void DoNoClientLoop(){
   long current = millis();
 
   if(current - lastBroadcast > broadcastPeriod){
-    BroadcastClientIpAndConfig(current);
+    comms.BroadcastDeviceInfo(current);
     lastBroadcast = current;
   }
 }
 void DoWifiConnectedLoop(){
-    if(!wifiConnectedLastTick){
-      server.begin();
-      Serial.println("Starting server");
-      wifiConnectedLastTick = true;
-    }
-
-    if(!client.connected()){
-      client = server.available();
-    }
-    if(client.connected()){
-      DoTcpClientConnectedLoop();
+    if(comms.IsConnectedToClient()){
+      DoClientConnectedLoop();
     }
     else{
-      DoNoTcpClientLoop();
+      DoNoClientLoop();
     }
 }
 
 void loop(){
-  wifiManager.process();
+  comms.Tick();
 
   FlashLEDs();
-  if(WiFi.status() == WL_CONNECTED){
+  if(comms.IsConnectedToNetwork()){
     DoWifiConnectedLoop();
   }
   else{
