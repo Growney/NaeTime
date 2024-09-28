@@ -106,7 +106,7 @@ static async Task TestConfiguration(byte aAddress, byte bAddress, byte cAddress,
         {
             new()
             {
-                Id = 2,
+                Id = 1,
                 MultiplexerId = 1,
                 MultiplexerChannel = 0,
                 ADCId =0,
@@ -140,8 +140,48 @@ static async Task TestConfiguration(byte aAddress, byte bAddress, byte cAddress,
                 MultiplexerId = 1,
                 MultiplexerChannel = 3,
                 ADCId =0,
-                ADCChannel = 2,
+                ADCChannel = 3,
                 Frequency = 5800,
+                IsEnabled = true,
+            },
+            new()
+            {
+                Id = 5,
+                MultiplexerId = 1,
+                MultiplexerChannel = 4,
+                ADCId =0,
+                ADCChannel = 4,
+                Frequency = 5820,
+                IsEnabled = true,
+            },
+            new()
+            {
+                Id = 6,
+                MultiplexerId = 1,
+                MultiplexerChannel = 5,
+                ADCId =0,
+                ADCChannel = 5,
+                Frequency = 5780,
+                IsEnabled = true,
+            },
+            new()
+            {
+                Id = 7,
+                MultiplexerId = 1,
+                MultiplexerChannel = 6,
+                ADCId =0,
+                ADCChannel = 6,
+                Frequency = 5740,
+                IsEnabled = true,
+            },
+            new()
+            {
+                Id = 8,
+                MultiplexerId = 1,
+                MultiplexerChannel = 7,
+                ADCId =0,
+                ADCChannel = 7,
+                Frequency = 5700,
                 IsEnabled = true,
             }
         }
