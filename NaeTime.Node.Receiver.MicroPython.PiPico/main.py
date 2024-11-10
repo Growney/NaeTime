@@ -6,7 +6,6 @@ from machine import Pin, SPI
 
 print("Starting device")
 
-
 CS = Pin(5, Pin.OUT)
 RESET = Pin(6, Pin.OUT)
 DIO0 = Pin(7, Pin.IN)

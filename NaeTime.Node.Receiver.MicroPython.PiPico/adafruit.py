@@ -189,7 +189,7 @@ class RFM69:
 
         self.tx_waiting_event = asyncio.Event()
         self.rx_received_event = asyncio.Event()
-        self.rx_waiting_event = asyncio.Event()
+        self.rx_waiting_event = asyncio.ThreadSafeFlag()
 
         self.module_io_lock = asyncio.Lock()
 
@@ -595,8 +595,8 @@ class RFM69:
             if(self.operation_mode == RX_MODE):
                 if(dio0mapping == _DIO_MAPPING_DIO0_RX_PAYLOADREADY):
                     print("setting rx received")
-                    print("NOT IMPLEMENTED FIND A WAY TO TRIGGER THE READ")
-                    print("rx received set: ", self.rx_waiting_event.is_set())
+                    self.rx_waiting_event.set()
+                    print("set rx waiting")
             elif(self.operation_mode == TX_MODE):
                 if(dio0mapping == _DIO_MAPPING_DIO0_TX_PACKETSENT):
                     print("setting packet sent")
@@ -633,7 +633,7 @@ class RFM69:
         print("taken packet from queue")
         self.rx_received_event.clear()
         print("rx queue count: ", len(self.rx_queue))
-        if(len(self.rx_queue) >= 0):
+        if(len(self.rx_queue) > 0):
             print("restting rx received event")
             self.rx_received_event.set()
         return data
@@ -642,7 +642,7 @@ class RFM69:
         print("starting receive rx")
         while(self.running):
             try:
-                print("waiting for rx event: ", self.rx_waiting_event.is_set())
+                print("waiting for rx event")
                 await self.rx_waiting_event.wait()
                 print("rx waiting for lock")
                 await self.module_io_lock.acquire()      
@@ -653,6 +653,7 @@ class RFM69:
                 self.rx_waiting_event.clear()
                 self.listen()
                 print("rx recieve complete")
+                self.rx_received_event.set()
             except Exception as e:
                 print("receive error: ", e)
             finally:
