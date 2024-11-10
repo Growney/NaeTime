@@ -10,8 +10,9 @@
             "includePath": [
                 "D:/Work/Gware/NaeTime/NaeTime.Node.Esp32/NaeTime.Node.Esp32/include",
                 "D:/Work/Gware/NaeTime/NaeTime.Node.Esp32/NaeTime.Node.Esp32/src",
-                "C:/Users/Growney/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
                 "C:/Users/Growney/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",
+                "C:/Users/Growney/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
+                "D:/Work/Gware/NaeTime/NaeTime.Node.Esp32/NaeTime.Node.Esp32/.pio/libdeps/arduino_nano_esp32/FastCRC",
                 "D:/Work/Gware/NaeTime/NaeTime.Node.Esp32/NaeTime.Node.Esp32/.pio/libdeps/arduino_nano_esp32/WiFiManager",
                 "C:/Users/Growney/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                 "C:/Users/Growney/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
@@ -250,8 +251,9 @@
                 "path": [
                     "D:/Work/Gware/NaeTime/NaeTime.Node.Esp32/NaeTime.Node.Esp32/include",
                     "D:/Work/Gware/NaeTime/NaeTime.Node.Esp32/NaeTime.Node.Esp32/src",
-                    "C:/Users/Growney/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
                     "C:/Users/Growney/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",
+                    "C:/Users/Growney/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
+                    "D:/Work/Gware/NaeTime/NaeTime.Node.Esp32/NaeTime.Node.Esp32/.pio/libdeps/arduino_nano_esp32/FastCRC",
                     "D:/Work/Gware/NaeTime/NaeTime.Node.Esp32/NaeTime.Node.Esp32/.pio/libdeps/arduino_nano_esp32/WiFiManager",
                     "C:/Users/Growney/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                     "C:/Users/Growney/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
@@ -487,7 +489,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=60115",
+                "PLATFORMIO=60116",
                 "ARDUINO_NANO_ESP32",
                 "BOARD_HAS_PIN_REMAP",
                 "BOARD_HAS_PSRAM",
