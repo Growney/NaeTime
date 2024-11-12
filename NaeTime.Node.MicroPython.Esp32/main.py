@@ -44,10 +44,9 @@ try:
             current_frequency = start_frequency
          
          timebefore = time.ticks_us()
-         rfm69.send(tuned_frequency.to_bytes(2, "big"))
+         rfm69.send(str(tuned_frequency))
          tunetosend = time.ticks_us()
          print("Time to send: " + str(tunetosend - timebefore) + " us")
-         time.sleep(1)
       except Exception as e:
          print("An error occurred "+ repr(e))
          time.sleep_ms(1000)

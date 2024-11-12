@@ -148,7 +148,7 @@ class RFM69:
         reset,
         frequency,
         *,
-        sync_word=b"\x2D\xD4",
+        sync_word="hello",
         preamble_length=4,
         encryption_key=None,
         high_power=True,

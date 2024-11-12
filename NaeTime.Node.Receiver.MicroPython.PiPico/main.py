@@ -12,7 +12,9 @@ DIO0 = Pin(7, Pin.IN)
 spi = SPI(0, baudrate=1000000, polarity=0, phase=0, bits=8, firstbit= SPI.MSB, sck=Pin(2), mosi=Pin(3), miso=Pin(4))
 RADIO_FREQ_MHZ = 433.0
 
-
+receiver = RFM69(spi,CS, RESET, DIO0, RADIO_FREQ_MHZ)
+receiver.sync_on = True
+receiver.sync_word = "hello"
 async def process_packets(rfm69):
    print("Starting packet processing")
    while True:
@@ -35,4 +37,4 @@ async def main_process(rfm69):
 
 
 time.sleep(2)
-asyncio.run(main_process(RFM69(spi, CS, RESET, DIO0, RADIO_FREQ_MHZ)))
+asyncio.run(main_process(receiver))

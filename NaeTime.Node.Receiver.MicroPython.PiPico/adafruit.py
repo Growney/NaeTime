@@ -356,11 +356,15 @@ class RFM69:
            :py:func:`listen` instead to signal intent for explicit logical modes.
         """
         op_mode = self._read_u8(_REG_OP_MODE)
-        return (op_mode >> 2) & 0b111
+        calculated_opMode =  (op_mode >> 2) & 0b111
+        print("read op mode: ", calculated_opMode)
+        return calculated_opMode
+    
 
     @operation_mode.setter
     def operation_mode(self, val):
         assert 0 <= val <= 4
+        print("setting op mode: ", val)
         # Set the mode bits inside the operation mode register.
         op_mode = self._read_u8(_REG_OP_MODE)
         op_mode &= 0b11100011
@@ -594,7 +598,7 @@ class RFM69:
             dio0mapping = self.dio_0_mapping
             if(self.operation_mode == RX_MODE):
                 if(dio0mapping == _DIO_MAPPING_DIO0_RX_PAYLOADREADY):
-                    print("setting rx received")
+                    print("setting rx received: ",self.payload_ready)
                     self.rx_waiting_event.set()
                     print("set rx waiting")
             elif(self.operation_mode == TX_MODE):
@@ -649,6 +653,7 @@ class RFM69:
                 print("rx aquired lock")
                 self.idle()
                 data = self._readfifo()
+                print("rx adding to queue: ", data)
                 self.rx_queue.append(data)
                 self.rx_waiting_event.clear()
                 self.listen()
