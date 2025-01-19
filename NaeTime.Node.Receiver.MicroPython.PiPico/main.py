@@ -1,8 +1,9 @@
 import time
-import sys
 import asyncio
+import sys
 from adafruit import RFM69
 from machine import Pin, SPI
+from collections import deque
 
 print("Starting device")
 
@@ -14,27 +15,30 @@ RADIO_FREQ_MHZ = 433.0
 
 receiver = RFM69(spi,CS, RESET, DIO0, RADIO_FREQ_MHZ)
 receiver.sync_on = True
-receiver.sync_word = "hello"
+receiver.sync_word = "NaeTime"
+
+rx_queue = deque([],100)
+
 async def process_packets(rfm69):
-   print("Starting packet processing")
+   global rx_queue
    while True:
+      print("Waiting for packet")
       try:
-         print("before wait for rx")
          packet = await rfm69.wait_for_rx()
-         print("Received: ", packet)
+         rx_queue.append(packet)
       except Exception as e:
          print("Error: ", e)
-   
+
 
 async def main_process(rfm69):
    print("Starting main process")
+   global rx_queue
    rfm69.start()
    await process_packets(rfm69)
-   print("after packet processing")
    while True:
-      print("Spinning in main loop")
-      await asyncio.sleep(1)
+      while(len(rx_queue) > 0):
+         sys.stdout.write(rx_queue.popleft())
+         print("here")
 
 
-time.sleep(2)
 asyncio.run(main_process(receiver))

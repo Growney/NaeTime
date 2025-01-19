@@ -196,7 +196,6 @@ class RFM69:
         self.rx_queue = deque([],100)
         self.tx_queue = deque([],100)
 
-        print("setting interrupt")
         dio0.irq(trigger=Pin.IRQ_RISING, handler= lambda p : self._dxo0_interrupt(p))
 
     def _configure_radio_defaults(self):
@@ -357,14 +356,12 @@ class RFM69:
         """
         op_mode = self._read_u8(_REG_OP_MODE)
         calculated_opMode =  (op_mode >> 2) & 0b111
-        print("read op mode: ", calculated_opMode)
         return calculated_opMode
     
 
     @operation_mode.setter
     def operation_mode(self, val):
         assert 0 <= val <= 4
-        print("setting op mode: ", val)
         # Set the mode bits inside the operation mode register.
         op_mode = self._read_u8(_REG_OP_MODE)
         op_mode &= 0b11100011
@@ -593,22 +590,16 @@ class RFM69:
         return packet
         
     def _dxo0_interrupt(self,pin):
-        print("in dio0 interrupt")
         try:
             dio0mapping = self.dio_0_mapping
             if(self.operation_mode == RX_MODE):
                 if(dio0mapping == _DIO_MAPPING_DIO0_RX_PAYLOADREADY):
-                    print("setting rx received: ",self.payload_ready)
                     self.rx_waiting_event.set()
-                    print("set rx waiting")
             elif(self.operation_mode == TX_MODE):
                 if(dio0mapping == _DIO_MAPPING_DIO0_TX_PACKETSENT):
-                    print("setting packet sent")
                     self.packet_sent_condition.set()
         except Exception as e:
             print("Interrupt error: ", e)
-        
-        print("end of interrupt")
 
     def get_rx_packet(self):
         return self.rx_queue.popleft()
@@ -630,34 +621,23 @@ class RFM69:
         self.running = False
     
     async def wait_for_rx(self):
-        print("process is waiting for a packet")
         await self.rx_received_event.wait()
-        print("packet event received")
         data = self.get_rx_packet()
-        print("taken packet from queue")
         self.rx_received_event.clear()
-        print("rx queue count: ", len(self.rx_queue))
         if(len(self.rx_queue) > 0):
-            print("restting rx received event")
             self.rx_received_event.set()
         return data
 
     async def _receive_rx(self):
-        print("starting receive rx")
         while(self.running):
             try:
-                print("waiting for rx event")
                 await self.rx_waiting_event.wait()
-                print("rx waiting for lock")
                 await self.module_io_lock.acquire()      
-                print("rx aquired lock")
                 self.idle()
                 data = self._readfifo()
-                print("rx adding to queue: ", data)
                 self.rx_queue.append(data)
                 self.rx_waiting_event.clear()
                 self.listen()
-                print("rx recieve complete")
                 self.rx_received_event.set()
             except Exception as e:
                 print("receive error: ", e)
@@ -666,36 +646,20 @@ class RFM69:
 
 
     async def _handle_tx(self):
-        print("starting handle tx")
         while self.running:
             try:
-                print("waiting for something to send")
                 await self.tx_waiting_event.wait()
-                print("tx waiting for lock")
+                self.tx_waiting_event.clear()
                 try:
                     await self.module_io_lock.acquire()
-                    print("tx aquired lock")
                     self.idle()
                     self._transmitfifo(self._get_tx_packet())
+                    
                     self.transmit()
+                    
                     self.listen()
                 finally:
                     self.module_io_lock.release()
-                
-                self.tx_waiting_event.clear()
-
-                if(len(self.rx_queue) > 0):
-                    self.tx_waiting_event.set()
-                print("after run loop")
+                    
             except Exception as e:
-                print("Error: ", e)
-        print("after running loop")
-
-
-
-
-
-
-
-    
-
+                print("Handle Tx Error: ", e)
