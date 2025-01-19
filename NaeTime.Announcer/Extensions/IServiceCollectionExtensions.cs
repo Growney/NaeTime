@@ -11,10 +11,12 @@ public static class IServiceCollectionExtensions
         services.AddHostedService<Announcer>();
 
         services.AddSingleton<OpenPracticeLapAnnouncer>();
+        services.AddSingleton<HardwareAnnouncerService>();
         services.AddSingleton<IAnnouncmentProvider>(serviceProvider => serviceProvider.GetRequiredService<OpenPracticeLapAnnouncer>());
-        services.AddEventAndRemoteProcedureCallHub<OpenPracticeLapAnnouncer>(NaeTime.PubSub.Abstractions.HubLifetime.Service);
+        services.AddSingleton<IAnnouncmentProvider>(serviceProvider => serviceProvider.GetRequiredService<HardwareAnnouncerService>());
 
-        services.AddEventAndRemoteProcedureCallHub<HardwareAnnouncerService>(NaeTime.PubSub.Abstractions.HubLifetime.Singleton);
+        services.AddEventAndRemoteProcedureCallHub<OpenPracticeLapAnnouncer>(NaeTime.PubSub.Abstractions.HubLifetime.Service);
+        services.AddEventAndRemoteProcedureCallHub<HardwareAnnouncerService>(NaeTime.PubSub.Abstractions.HubLifetime.Service);
 
         return services;
     }
