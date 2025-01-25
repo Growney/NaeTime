@@ -45,14 +45,18 @@ async def command_loop():
     while running:
         command = await node_comms.wait_for_command()
         if isinstance(command, commands.TuneLane):
+            print("Tune command received")
             if(command.lane < len(rx_modules) and command.lane >= 0):
                 #todo check if frequency was set
                 rx_modules[command.lane].tune(command.frequency_in_mhz)
         elif isinstance(command, commands.ConfigureNode):
+            print("Configure command received")
             node_id = command.node_id
             transmit_delay_ms = frequency_to_delay_ms(command.transmit_frequency_hz)
             polling_delay_ms = frequency_to_delay_ms(command.polling_frequency_hz)
-                     
+        else:
+            print("Unknown command received")
+    
 async def transmission_loop():
     print("starting transmission loop")
     global running
@@ -68,13 +72,16 @@ async def transmission_loop():
             while(lane_pointer < len(lane_timings)):
                 current_time = time.ticks_ms()
                 lane_last_transmit[lane_pointer] = current_time
-                command = commands.LaneTimings(current_time, lane_pointer, lane_timings[lane_pointer][0],lane_timings[lane_pointer][1],lane_timings[lane_pointer][2])
+                command = commands.LaneTimings(current_time, lane_pointer, lane_timings[lane_pointer][0],lane_timings[lane_pointer][1],lane_timings[lane_pointer][2],lane_timings[lane_pointer][3],lane_timings[lane_pointer][4])
+                print("sending lane ", command.lane)
                 node_comms.send_command(command)
+                await asyncio.sleep_ms(10)
                 lane_pointer += 1
         except Exception as e:
             print("transmit error: ",str(e))
 
         min_delay = calculate_minimum_delay(lane_last_transmit, transmit_delay_ms)
+        print("min delay: ", min_delay)
         await asyncio.sleep_ms(min_delay)
 
 async def rssi_loop():
@@ -92,13 +99,18 @@ async def rssi_loop():
             current_rssi = rssi_modules[lane_pointer].read_value()
             lane_last_rssi_read[lane_pointer] = current_time
 
-            last_peak = lane_timings[lane_pointer][1]
-            peak_count = lane_timings[lane_pointer][2]
-            if peak_detectors[lane_pointer].add_reading(current_rssi):
-                last_peak = current_time
-                peak_count += 1 
+            last_pass_start = lane_timings[lane_pointer][1]
+            last_pass_end = lane_timings[lane_pointer][2]
+            pass_count = lane_timings[lane_pointer][4]
             
-            lane_timings[lane_pointer] = (current_rssi, last_peak, peak_count)
+            pass_state = peak_detectors[lane_pointer].add_reading(current_rssi,current_time)
+            if(pass_state == 1):
+                last_pass_start = current_time
+            elif(pass_state == 3):
+                last_pass_end = current_time
+                pass_count += 1
+            
+            lane_timings[lane_pointer] = (current_rssi, last_pass_start, last_pass_end, pass_state, pass_count)
             lane_pointer += 1
         
         min_delay = calculate_minimum_delay(lane_last_rssi_read, polling_delay_ms)
@@ -143,13 +155,16 @@ rx_modules = [
     Rx5808RegisterCommunication(6,5,7)
 ]
 peak_detectors = [
-    PeakDetector(),
-    PeakDetector(),
-    PeakDetector()
+    PeakDetector(4000,3800),
+    PeakDetector(4000,3800),
+    PeakDetector(4000,3800)
 ]
 
 print("Devices Initialized")
-#rssi, last_pass, pass count
-lane_timings = [(0,0,0),(0,0,0),(0,0,0)]
+#rssi, last_pass_start,last_pass_end,pass_state, pass count
+lane_timings = [(0,0,0,0,0),(0,0,0,0,0),(0,0,0,0,0)]
 
+rx_modules[0].tune(5658)
+rx_modules[0].tune(5695)
+rx_modules[0].tune(5732)
 asyncio.run(main_process())

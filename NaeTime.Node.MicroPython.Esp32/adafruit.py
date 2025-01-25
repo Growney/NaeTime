@@ -178,7 +178,6 @@ class RFM69:
         # Set the syncronization word.
         self.frequency_mhz = frequency  # Set frequency.
 
-        self.packet_sent_condition = asyncio.Event()
         # set radio configuration parameters
         self._configure_radio_defaults()
 
@@ -190,6 +189,7 @@ class RFM69:
         self.tx_waiting_event = asyncio.ThreadSafeFlag()
         self.rx_received_event = asyncio.Event()
         self.rx_waiting_event = asyncio.ThreadSafeFlag()
+        self.packet_sent_condition = asyncio.ThreadSafeFlag()
 
         self.module_io_lock = asyncio.Lock()
 
@@ -633,11 +633,9 @@ class RFM69:
             try:
                 await self.rx_waiting_event.wait()
                 await self.module_io_lock.acquire()      
-                self.idle()
                 data = self._readfifo()
                 self.rx_queue.append(data)
                 self.rx_waiting_event.clear()
-                self.listen()
                 self.rx_received_event.set()
             except Exception as e:
                 print("receive error: ", e)
@@ -653,13 +651,19 @@ class RFM69:
                     try:
                         await self.module_io_lock.acquire()
                         self.idle()
-                        self._transmitfifo(self._get_tx_packet())
-                        self.transmit()
+                        # Transmit all packets in the queue, be aware that if the queue is filled alot then nothing else happens on the thread until all packets are sent
+                        # sending them all at once removes the need to switch back and forth between modes on the radio but could also cause received packets to be lost.
+                        while(len(self.tx_queue) > 0):
+                            self._transmitfifo(self._get_tx_packet())
+                            self.transmit()
+                            await self.packet_sent_condition.wait()
+                            self.packet_sent_condition.clear()
                         self.listen()
                     finally:
                         self.module_io_lock.release()
-                        
-                    self.tx_waiting_event.clear()
+                    
+                    if(len(self.tx_queue) == 0):
+                        self.tx_waiting_event.clear()
 
                 except Exception as e:
                     print("Handle Tx Error: ", e)

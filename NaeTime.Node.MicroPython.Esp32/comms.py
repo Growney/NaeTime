@@ -32,16 +32,16 @@ class RFM69NodeCommunication:
         try:
             packet = await self._radio.wait_for_rx()
             
-            command_id, crc, length, payload = struct.unpack("cii" + str(len(packet) - struct.calcsize("Bii")) + "s", packet)
+            command_id, crc, length, payload = struct.unpack("<BHH" + str(len(packet) - struct.calcsize("<BHH")) + "s", packet)
             if command_id == TUNE_LANE:
-                lane, frequency = struct.unpack("ci", payload)
+                lane, frequency = struct.unpack("<ci", payload)
                 return commands.TuneLane(lane, frequency)
             elif command_id == CONFIGURE_NODE:
-                node_id, transmit_frequency, polling_frequency = struct.unpack("cii", payload)
+                node_id, transmit_frequency, polling_frequency = struct.unpack("<cii", payload)
                 return commands.ConfigureNode(node_id, transmit_frequency, polling_frequency)
             elif command_id == LANE_TIMINGS:
-                current_time, lane, rssi, last_pass, pass_count = struct.unpack("lBhlI", payload)
-                return commands.LaneTimings(current_time, lane, rssi, last_pass, pass_count)
+                current_time, lane, rssi, last_pass_start,last_pass_end,pass_state, pass_count = struct.unpack("<BlhllhI", payload)
+                return commands.LaneTimings(current_time, lane, rssi, last_pass_start,last_pass_end,pass_state, pass_count)
             
             print("Received: ", packet)
         except Exception as e:
@@ -50,18 +50,21 @@ class RFM69NodeCommunication:
     def send_command(self, command):
         if isinstance(command, commands.TuneLane):
             command_id= TUNE_LANE
-            payload = struct.pack("ci", command.lane, command.frequency_in_mhz)
+            payload = struct.pack("<ci", command.lane, command.frequency_in_mhz)
         elif isinstance(command, commands.ConfigureNode):
             command_id = CONFIGURE_NODE
-            payload = struct.pack("cii", command.node_id, command.transmit_frequency_hz,command.polling_frequency_hz)
+            payload = struct.pack("<cii", command.node_id, command.transmit_frequency_hz,command.polling_frequency_hz)
         elif isinstance(command, commands.LaneTimings):
             command_id = LANE_TIMINGS
-            payload = struct.pack("lBhlI", command.lane,command.current_time, command.rssi, command.last_pass, command.pass_count)
+            payload = struct.pack("<BlhllhI", command.lane,command.current_time, command.rssi, command.last_pass_start,command.last_pass_end,command.pass_state, command.pass_count)
         else:
             raise ValueError("Unknown command type")
         
-        packet = struct.pack("Bii", command_id, 0, len(payload))
+        print("Payload bytes: ", len(payload))
+        packet = struct.pack("<BHH", command_id, 0, len(payload))
         packet += payload
+
+        print("Sending bytes: ", len(packet))
 
         self._radio.send(packet)
 

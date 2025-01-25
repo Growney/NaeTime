@@ -592,10 +592,11 @@ class RFM69:
     def _dxo0_interrupt(self,pin):
         try:
             dio0mapping = self.dio_0_mapping
-            if(self.operation_mode == RX_MODE):
+            operating_mode = self.operation_mode
+            if(operating_mode == RX_MODE):
                 if(dio0mapping == _DIO_MAPPING_DIO0_RX_PAYLOADREADY):
                     self.rx_waiting_event.set()
-            elif(self.operation_mode == TX_MODE):
+            elif(operating_mode == TX_MODE):
                 if(dio0mapping == _DIO_MAPPING_DIO0_TX_PACKETSENT):
                     self.packet_sent_condition.set()
         except Exception as e:
@@ -633,11 +634,11 @@ class RFM69:
             try:
                 await self.rx_waiting_event.wait()
                 await self.module_io_lock.acquire()      
-                self.idle()
+                #self.idle() removed to see if we need to switch to idle mode if we are constantly listening and only switch to ilde when transmitting
                 data = self._readfifo()
                 self.rx_queue.append(data)
                 self.rx_waiting_event.clear()
-                self.listen()
+                #self.listen()
                 self.rx_received_event.set()
             except Exception as e:
                 print("receive error: ", e)

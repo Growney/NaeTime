@@ -12,66 +12,55 @@ class ADCReader:
         return self.filter.get_value(raw_value)
 
 
+class Peak:
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    def __repr__(self):
+        return f"Peak(start={self.start}, end={self.end})"
+
 class PeakDetector:
-    def __init__(self, min_values=50):
+    def __init__(self, entry_threshold, exit_threshold):
         """
         Initialize the Peak Detector.
 
-        :param min_values: The minimum number of values before detecting peaks.
+        :param entry_threshold: The threshold to detect the start of a peak.
+        :param exit_threshold: The threshold to detect the end of a peak.
         """
-        self.min_values = min_values
+        self.entry_threshold = entry_threshold
+        self.exit_threshold = exit_threshold
         self.previous_rssi = None
-        self.peaks = []
-        self.rssi_readings = []
-        self.sum_rssi = 0
-        self.sum_rssi_squared = 0
+        self.in_peak = False
+        self.peak_start_time = None
 
-    def add_reading(self, rssi):
+    def add_reading(self, rssi, time):
         """
         Add an RSSI reading and check for peaks.
 
         :param rssi: The current RSSI reading.
-        :return: True if a peak is detected, False otherwise.
+        :param time: The time of the RSSI reading.
+        :return: 0 if outside a peak, 1 if a peak is entered, 2 if inside a peak, 3 if a value leaves a peak.
         """
-        self.rssi_readings.append(rssi)
-        self.sum_rssi += rssi
-        self.sum_rssi_squared += rssi ** 2
-
-        if len(self.rssi_readings) < self.min_values:
-            self.previous_rssi = rssi
-            return False
-
-        threshold = self.calculate_dynamic_threshold()
 
         if self.previous_rssi is None:
             self.previous_rssi = rssi
-            return False
+            return 0
 
-        if rssi > self.previous_rssi + threshold:
-            self.peaks.append(rssi)
+        if not self.in_peak and rssi > self.previous_rssi + self.entry_threshold:
+            self.in_peak = True
+            self.peak_start_time = time
             self.previous_rssi = rssi
-            return True
+            return 1
+
+        if self.in_peak:
+            if rssi < self.previous_rssi - self.exit_threshold:
+                self.in_peak = False
+                self.previous_rssi = rssi
+                return 3
+            else:
+                self.previous_rssi = rssi
+                return 2
 
         self.previous_rssi = rssi
-        return False
-
-    def calculate_dynamic_threshold(self):
-        """
-        Calculate the dynamic threshold based on the standard deviation of the RSSI readings.
-
-        :return: The dynamic threshold.
-        """
-        n = len(self.rssi_readings)
-        mean = self.sum_rssi / n
-        variance = (self.sum_rssi_squared / n) - (mean ** 2)
-        return math.sqrt(variance)
-
-    def get_peaks(self):
-        """
-        Get the list of detected peaks and clear the peaks list.
-
-        :return: List of detected peaks.
-        """
-        peaks = self.peaks[:]
-        self.peaks.clear()
-        return peaks
+        return 0
