@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.Bytes\NaeTime.Bytes.csproj" />
+    <ProjectReference Include="..\NaeTime.Collections\NaeTime.Collections.csproj" />
     <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub.Abstractions\NaeTime.PubSub.Abstractions.csproj" />
   </ItemGroup>

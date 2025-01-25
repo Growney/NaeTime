@@ -11,15 +11,17 @@ public class NodeProtocol : INodeProtocol
     public static readonly DataEscaper DataEscaper = new(ESCAPE, ESCAPED_ADDER, 1, 1, START_OF_RECORD, END_OF_RECORD, ESCAPE);
 
     private readonly INodeCommunication _communication;
+    public INodeTimingProtocol TimingProtocol { get; }
     private readonly Crc16 _crc16 = new();
 
     private readonly Stack<byte> _receivedStack = new();
 
     private readonly byte[] _packet = new byte[2096];
 
-    public NodeProtocol(INodeCommunication communication)
+    public NodeProtocol(INodeCommunication communication, INodeTimingProtocol timingProtocol)
     {
         _communication = communication ?? throw new ArgumentNullException(nameof(communication));
+        TimingProtocol = timingProtocol;
     }
 
     public async Task RunAsync(CancellationToken token)
@@ -131,20 +133,7 @@ public class NodeProtocol : INodeProtocol
         switch (recordHeader.RecordType)
         {
             case RecordType.LANE_TIMINGS:
-                byte lane = recordReader.ReadByte();
-                ulong time = (ulong)recordReader.ReadInt32();
-                ushort rssi = recordReader.ReadUInt16();
-                long lastPassStart = recordReader.ReadInt32();
-                long lastPassEnd = recordReader.ReadInt32();
-                short passState = recordReader.ReadInt16();
-                int passCount = recordReader.ReadInt32();
-                System.Diagnostics.Debug.WriteLine($"Lane: {lane}");
-                System.Diagnostics.Debug.WriteLine($"Time: {time}");
-                System.Diagnostics.Debug.WriteLine($"Rssi: {rssi}");
-                System.Diagnostics.Debug.WriteLine($"Last Pass Start: {lastPassStart}");
-                System.Diagnostics.Debug.WriteLine($"Last Pass End: {lastPassEnd}");
-                System.Diagnostics.Debug.WriteLine($"Pass State: {passState}");
-                System.Diagnostics.Debug.WriteLine($"Pass Count: {passCount}");
+                TimingProtocol.HandleRecordData(recordReader);
                 break;
             default:
                 break;

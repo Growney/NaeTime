@@ -2,5 +2,6 @@
 
 public interface INodeProtocol
 {
+    INodeTimingProtocol TimingProtocol { get; }
     Task RunAsync(CancellationToken token);
 }

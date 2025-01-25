@@ -14,5 +14,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.Bytes\NaeTime.Bytes.csproj" />
+    <ProjectReference Include="..\NaeTime.Collections\NaeTime.Collections.csproj" />
   </ItemGroup>
 </Project>

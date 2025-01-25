@@ -29,7 +29,7 @@ internal class NodeConnection
 
         CancellationToken token = _cancellationTokenSource.Token;
 
-        _runningTasks = [MaintainConnectionAsync(token)];
+        _runningTasks = [MaintainConnectionAsync(token), WaitForRSSIAsync(token)];
     }
 
     private async Task MaintainConnectionAsync(CancellationToken token)
@@ -60,6 +60,32 @@ internal class NodeConnection
             }
 
             await _communication.DisconnectAsync(token).ConfigureAwait(false);
+        }
+    }
+
+    private async Task WaitForRSSIAsync(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
+        {
+            try
+            {
+                ReceivedSignalStrengthIndicator? rssi = await _protocol.TimingProtocol.WaitForNextReceivedSignalStrengthIndicatorAsync(token).ConfigureAwait(false);
+
+                if (rssi == null)
+                {
+                    continue;
+                }
+
+                ReceivedSignalStrengthIndicator status = rssi.Value;
+
+                RssiLevelRecorded level = new(_timerId, status.Lane, status.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow, status.Level);
+
+                await _eventClient.PublishAsync(level).ConfigureAwait(false);
+            }
+            catch
+            {
+
+            }
         }
     }
 

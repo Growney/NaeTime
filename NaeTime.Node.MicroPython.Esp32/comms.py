@@ -60,11 +60,8 @@ class RFM69NodeCommunication:
         else:
             raise ValueError("Unknown command type")
         
-        print("Payload bytes: ", len(payload))
         packet = struct.pack("<BHH", command_id, 0, len(payload))
         packet += payload
-
-        print("Sending bytes: ", len(packet))
 
         self._radio.send(packet)
 

@@ -64,25 +64,19 @@ async def transmission_loop():
     global lane_timings
     global node_comms
 
-    lane_last_transmit = [0,0,0]
-
     while running:
+        delay = int(transmit_delay_ms / len(lane_timings))
         lane_pointer = 0
         try:
             while(lane_pointer < len(lane_timings)):
                 current_time = time.ticks_ms()
-                lane_last_transmit[lane_pointer] = current_time
                 command = commands.LaneTimings(current_time, lane_pointer, lane_timings[lane_pointer][0],lane_timings[lane_pointer][1],lane_timings[lane_pointer][2],lane_timings[lane_pointer][3],lane_timings[lane_pointer][4])
-                print("sending lane ", command.lane)
                 node_comms.send_command(command)
-                await asyncio.sleep_ms(10)
+                await asyncio.sleep_ms(delay)
                 lane_pointer += 1
         except Exception as e:
             print("transmit error: ",str(e))
 
-        min_delay = calculate_minimum_delay(lane_last_transmit, transmit_delay_ms)
-        print("min delay: ", min_delay)
-        await asyncio.sleep_ms(min_delay)
 
 async def rssi_loop():
     print("starting rssi loop")

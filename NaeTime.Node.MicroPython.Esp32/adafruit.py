@@ -658,6 +658,7 @@ class RFM69:
                             self.transmit()
                             await self.packet_sent_condition.wait()
                             self.packet_sent_condition.clear()
+                            await asyncio.sleep_ms(1)
                         self.listen()
                     finally:
                         self.module_io_lock.release()

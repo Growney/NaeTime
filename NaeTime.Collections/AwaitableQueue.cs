@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace ImmersionRC.LapRF;
+namespace NaeTime.Collections;
 public class AwaitableQueue<T> : IDisposable
 {
     private readonly ConcurrentQueue<T> _queue = new();

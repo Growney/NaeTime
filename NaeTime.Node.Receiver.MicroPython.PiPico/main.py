@@ -12,20 +12,27 @@ ESCAPED_ADDER = 0x40
 
 print("Starting device")
 
-CS = Pin(5, Pin.OUT)
-RESET = Pin(6, Pin.OUT)
-DIO0 = Pin(7, Pin.IN)
-spi = SPI(0, baudrate=1000000, polarity=0, phase=0, bits=8, firstbit= SPI.MSB, sck=Pin(2), mosi=Pin(3), miso=Pin(4))
-RADIO_FREQ_MHZ = 433.0
+CS = 21
+RESET = 18
+DIO0 = 5
+SCK = 48
+MOSI = 38
+MISO = 47
 
-receiver = RFM69(spi,CS, RESET, DIO0, RADIO_FREQ_MHZ)
+spi = SPI(1, baudrate=1_000_000, polarity=0, phase=0, bits=8, firstbit= SPI.MSB, sck=Pin(SCK), mosi=Pin(MOSI), miso=Pin(MISO))
+RADIO_FREQ_MHZ = 433.0
+chip_select_pin = Pin(CS, Pin.OUT)
+reset_pin = Pin(RESET, Pin.OUT)
+dio0_pin = Pin(DIO0, Pin.IN)
+
+receiver = RFM69(spi,chip_select_pin, reset_pin, dio0_pin, RADIO_FREQ_MHZ)
 receiver.sync_on = True
 receiver.sync_word = "NaeTime"
 
 
 async def tx_task(rfm69):
    print("Starting tx task")
-   tx_queue = deque(100)
+   tx_queue = deque([],100)
    in_record = False
    previous_byte_escape = False
    while True:

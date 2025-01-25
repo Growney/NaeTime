@@ -71,6 +71,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Hardware.Node.Esp32
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Bytes", "NaeTime.Bytes\NaeTime.Bytes.csproj", "{C12CB28C-8A77-4798-89A3-003548FD85D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Collections", "NaeTime.Collections\NaeTime.Collections.csproj", "{97637465-C8E5-4281-A728-26E7D8AE88D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -179,6 +181,10 @@ Global
 		{C12CB28C-8A77-4798-89A3-003548FD85D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C12CB28C-8A77-4798-89A3-003548FD85D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C12CB28C-8A77-4798-89A3-003548FD85D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97637465-C8E5-4281-A728-26E7D8AE88D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97637465-C8E5-4281-A728-26E7D8AE88D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97637465-C8E5-4281-A728-26E7D8AE88D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97637465-C8E5-4281-A728-26E7D8AE88D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -215,6 +221,7 @@ Global
 		{7DF41AFF-EEC2-4E5F-8017-30796EA591A1} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
 		{3D8554FB-924A-4203-86F3-CE477CEFEB2B} = {63D26510-EF4F-4018-B9DA-750A17E00448}
 		{C12CB28C-8A77-4798-89A3-003548FD85D8} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
+		{97637465-C8E5-4281-A728-26E7D8AE88D6} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {82CDEC6F-9E00-4506-834F-C4B29556E773}

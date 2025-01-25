@@ -16,8 +16,10 @@ internal class NodeConnectionFactory : INodeConnectionFactory
 
     public NodeConnection CreateSerialConnection(Guid timerId, string port)
     {
+        INodeTimingProtocol timingProtocol = new NodeTimingProtocol();
+
         INodeCommunication communication = new NodeSerialCommunication(port);
-        INodeProtocol protocol = new NodeProtocol(communication);
+        INodeProtocol protocol = new NodeProtocol(communication, timingProtocol);
         return new NodeConnection(timerId, _softwareTimer, _eventClient, communication, protocol);
     }
 }

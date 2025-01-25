@@ -36,6 +36,8 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     [Inject]
     private IEventRegistrarScope RegistrarScope { get; set; } = null!;
 
+    private readonly List<RssiLevelRecorded> _rssiValues = new();
+
     protected override Task OnInitializedAsync()
     {
         RegistrarScope.RegisterHub(this);
@@ -56,7 +58,12 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
             Configuration.MaxRssiValue = rssiLevelRecorded.Level;
         }
 
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+        _rssiValues.Add(rssiLevelRecorded);
+
+        if (_rssiValues[^1].HardwareTime - _rssiValues[0].HardwareTime > 5000)
+        {
+            _rssiValues.RemoveAt(0);
+        }
     }
     public async Task When(LapStarted started)
     {
