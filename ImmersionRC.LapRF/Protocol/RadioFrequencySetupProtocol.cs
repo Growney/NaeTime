@@ -1,4 +1,5 @@
 ﻿using ImmersionRC.LapRF.Abstractions;
+using NaeTime.Bytes;
 using System.Collections.Concurrent;
 
 namespace ImmersionRC.LapRF.Protocol;

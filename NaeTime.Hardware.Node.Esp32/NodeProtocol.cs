@@ -1,36 +1,25 @@
-﻿using ImmersionRC.LapRF.Abstractions;
-using NaeTime.Bytes;
+﻿using NaeTime.Bytes;
+using NaeTime.Hardware.Node.Esp32.Abstractions;
 
-namespace ImmersionRC.LapRF.Protocol;
-internal partial class LapRFProtocol : ILapRFProtocol
+namespace NaeTime.Hardware.Node.Esp32;
+public class NodeProtocol : INodeProtocol
 {
-
     public const byte START_OF_RECORD = 0x5a;
     public const byte END_OF_RECORD = 0x5b;
     public const byte ESCAPE = 0x5c;
     public const byte ESCAPED_ADDER = 0x40;
     public static readonly DataEscaper DataEscaper = new(ESCAPE, ESCAPED_ADDER, 1, 1, START_OF_RECORD, END_OF_RECORD, ESCAPE);
 
-    private readonly ILapRFCommunication _communication;
+    private readonly INodeCommunication _communication;
     private readonly Crc16 _crc16 = new();
 
     private readonly Stack<byte> _receivedStack = new();
 
     private readonly byte[] _packet = new byte[2096];
 
-    public IStatusProtocol StatusProtocol { get; }
-    public IPassingRecordProtocol PassingRecordProtocol { get; }
-    public IRadioFrequencySetupProtocol RadioFrequencySetupProtocol { get; }
-
-    public LapRFProtocol(ILapRFCommunication communication,
-        IStatusProtocol statusProtocol,
-        IPassingRecordProtocol passingRecordProtocol,
-        IRadioFrequencySetupProtocol radioFrequencySetupProtocol)
+    public NodeProtocol(INodeCommunication communication)
     {
         _communication = communication ?? throw new ArgumentNullException(nameof(communication));
-        StatusProtocol = statusProtocol;
-        PassingRecordProtocol = passingRecordProtocol;
-        RadioFrequencySetupProtocol = radioFrequencySetupProtocol;
     }
 
     public async Task RunAsync(CancellationToken token)
@@ -129,11 +118,11 @@ internal partial class LapRFProtocol : ILapRFProtocol
 
         ushort recordCRC = _crc16.Compute(packetData, packetData.Length);
 
-        if (recordCRC != recordHeader.RecordCRC)
-        {
-            //invalid crc
-            return;
-        }
+        //if (recordCRC != recordHeader.RecordCRC)
+        //{
+        //    //invalid crc
+        //    return;
+        //}
 
         Span<byte> recordData = packetData.AsSpan()[RecordHeader.GetDataStartLocation()..];
 
@@ -141,24 +130,21 @@ internal partial class LapRFProtocol : ILapRFProtocol
 
         switch (recordHeader.RecordType)
         {
-            case RecordType.LAPRF_TOR_ERROR:
-                break;
-            case RecordType.LAPRF_TOR_RSSI:
-                break;
-            case RecordType.LAPRF_TOR_RFSETUP:
-                RadioFrequencySetupProtocol.HandleRecordData(recordReader);
-                break;
-            case RecordType.LAPRF_TOR_STATE_CONTROL:
-                break;
-            case RecordType.LAPRF_TOR_PASSING:
-                PassingRecordProtocol.HandleRecordData(recordReader);
-                break;
-            case RecordType.LAPRF_TOR_SETTINGS:
-                break;
-            case RecordType.LAPRF_TOR_STATUS:
-                StatusProtocol.HandleRecordData(recordReader);
-                break;
-            case RecordType.LAPRF_TOR_TIME:
+            case RecordType.LANE_TIMINGS:
+                byte lane = recordReader.ReadByte();
+                ulong time = (ulong)recordReader.ReadInt32();
+                ushort rssi = recordReader.ReadUInt16();
+                long lastPassStart = recordReader.ReadInt32();
+                long lastPassEnd = recordReader.ReadInt32();
+                short passState = recordReader.ReadInt16();
+                int passCount = recordReader.ReadInt32();
+                System.Diagnostics.Debug.WriteLine($"Lane: {lane}");
+                System.Diagnostics.Debug.WriteLine($"Time: {time}");
+                System.Diagnostics.Debug.WriteLine($"Rssi: {rssi}");
+                System.Diagnostics.Debug.WriteLine($"Last Pass Start: {lastPassStart}");
+                System.Diagnostics.Debug.WriteLine($"Last Pass End: {lastPassEnd}");
+                System.Diagnostics.Debug.WriteLine($"Pass State: {passState}");
+                System.Diagnostics.Debug.WriteLine($"Pass Count: {passCount}");
                 break;
             default:
                 break;

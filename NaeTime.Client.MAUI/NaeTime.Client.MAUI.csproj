@@ -94,6 +94,7 @@
       <ProjectReference Include="..\NaeTime.Client.Razor.Lib\NaeTime.Client.Razor.Lib.csproj" />
       <ProjectReference Include="..\NaeTime.Client.Razor\NaeTime.Client.Razor.csproj" />
       <ProjectReference Include="..\NaeTime.Hardware.ImmersionRC\NaeTime.Hardware.ImmersionRC.csproj" />
+      <ProjectReference Include="..\NaeTime.Hardware.Node.Esp32\NaeTime.Hardware.Node.Esp32.csproj" />
       <ProjectReference Include="..\NaeTime.Hardware.SQLite\NaeTime.Hardware.SQLite.csproj" />
       <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
       <ProjectReference Include="..\NaeTime.Management.SQLite\NaeTime.Management.SQLite.csproj" />

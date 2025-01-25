@@ -1,4 +1,4 @@
-﻿namespace ImmersionRC.LapRF;
+﻿namespace NaeTime.Bytes;
 public static class ReadOnlySpanReaderExtensions
 {
     public static long ReadInt64(this ref ReadOnlySpanReader<byte> reader)

@@ -1,0 +1,6 @@
+@page "/hardware/serialesp32node/create"
+@layout WithReturn
+@if (_model != null)
+{
+    <EditableSerialEsp32NodeTimerDetails Details="_model" OnValidSubmit="HandleValidSubmit"></EditableSerialEsp32NodeTimerDetails>
+}

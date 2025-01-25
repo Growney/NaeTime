@@ -1,4 +1,6 @@
-﻿namespace ImmersionRC.LapRF.Protocol;
+﻿using NaeTime.Bytes;
+
+namespace ImmersionRC.LapRF.Protocol;
 public static class BinaryWriterExtensionMethods
 {
     public static void WriteRecordType(this BinaryWriter writer, RecordType recordType)

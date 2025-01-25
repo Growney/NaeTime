@@ -38,6 +38,7 @@ public partial class CreateTrack
             x.Type switch
             {
                 Hardware.Messages.Models.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
+                Hardware.Messages.Models.TimerType.SerialEsp32Node => TimerType.SerialEsp32Node,
                 _ => throw new NotImplementedException()
             }, x.MaxLanes)));
 

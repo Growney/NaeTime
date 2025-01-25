@@ -1,4 +1,6 @@
-﻿namespace ImmersionRC.LapRF.Abstractions;
+﻿using NaeTime.Bytes;
+
+namespace ImmersionRC.LapRF.Abstractions;
 public interface IStatusProtocol
 {
     Status? CurrentStatus { get; }

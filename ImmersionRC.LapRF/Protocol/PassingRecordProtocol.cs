@@ -1,6 +1,5 @@
-﻿
-
-using ImmersionRC.LapRF.Abstractions;
+﻿using ImmersionRC.LapRF.Abstractions;
+using NaeTime.Bytes;
 
 namespace ImmersionRC.LapRF.Protocol;
 internal class PassingRecordProtocol : IPassingRecordProtocol

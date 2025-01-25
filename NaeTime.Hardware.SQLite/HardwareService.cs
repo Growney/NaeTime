@@ -13,6 +13,23 @@ internal class HardwareService
         _dbcontext = dbcontext;
     }
 
+    public async Task When(SerialEsp32NodeConfigured configuredEvent)
+    {
+        SerialEsp32Node? existingTimer = await _dbcontext.SerialEsp32Nodes.FirstOrDefaultAsync(x => x.Id == configuredEvent.TimerId).ConfigureAwait(false);
+        if (existingTimer == null)
+        {
+            existingTimer = new SerialEsp32Node
+            {
+                Id = configuredEvent.TimerId,
+            };
+            _dbcontext.SerialEsp32Nodes.Add(existingTimer);
+        }
+
+        existingTimer.Name = configuredEvent.Name;
+        existingTimer.Port = configuredEvent.Port;
+        await _dbcontext.SaveChangesAsync().ConfigureAwait(false);
+    }
+
     public async Task When(EthernetLapRF8ChannelConfigured configuredEvent)
     {
         EthernetLapRF8Channel? existingTimer = await _dbcontext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == configuredEvent.TimerId).ConfigureAwait(false);
@@ -67,11 +84,24 @@ internal class HardwareService
         await _dbcontext.SaveChangesAsync().ConfigureAwait(false);
     }
 
+    public async Task<IEnumerable<Messages.Models.SerialEsp32Node>> GetAllSerialEsp32NodeTimers()
+    {
+        List<Messages.Models.SerialEsp32Node> serialNodes = await _dbcontext.SerialEsp32Nodes
+             .Select(x => new Messages.Models.SerialEsp32Node(x.Id, x.Name, x.Port))
+             .ToListAsync().ConfigureAwait(false);
+
+        return serialNodes;
+    }
+
     public async Task<IEnumerable<Messages.Models.TimerDetails>> GetAllTimerDetails()
     {
         List<Messages.Models.TimerDetails> lapRF8Channels = await _dbcontext.EthernetLapRF8Channels
             .Select(x => new Messages.Models.TimerDetails(x.Id, x.Name, Messages.Models.TimerType.EthernetLapRF8Channel, 8))
             .ToListAsync().ConfigureAwait(false);
+
+        lapRF8Channels.AddRange(await _dbcontext.SerialEsp32Nodes
+            .Select(x => new Messages.Models.TimerDetails(x.Id, x.Name, Messages.Models.TimerType.SerialEsp32Node, 6))
+            .ToListAsync().ConfigureAwait(false));
 
         //when there are more timer types will need to add them all to a larger list
 
@@ -90,5 +120,11 @@ internal class HardwareService
         EthernetLapRF8Channel? timer = await _dbcontext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == timerId).ConfigureAwait(false);
 
         return timer == null ? null : new Messages.Models.EthernetLapRF8ChannelTimer(timer.Id, timer.Name, new IPAddress(timer.IpAddress), timer.Port);
+    }
+    public async Task<Messages.Models.SerialEsp32Node?> GetSerialEsp32NodeTimer(Guid timerId)
+    {
+        SerialEsp32Node? timer = await _dbcontext.SerialEsp32Nodes.FirstOrDefaultAsync(x => x.Id == timerId).ConfigureAwait(false);
+
+        return timer == null ? null : new Messages.Models.SerialEsp32Node(timer.Id, timer.Name, timer.Port);
     }
 }

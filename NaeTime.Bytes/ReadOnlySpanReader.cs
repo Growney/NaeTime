@@ -1,4 +1,4 @@
-﻿namespace ImmersionRC.LapRF;
+﻿namespace NaeTime.Bytes;
 public ref struct ReadOnlySpanReader<T>
 {
     private readonly ReadOnlySpan<T> _data;

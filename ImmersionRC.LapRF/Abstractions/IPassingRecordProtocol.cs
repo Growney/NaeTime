@@ -1,4 +1,6 @@
-﻿namespace ImmersionRC.LapRF.Abstractions;
+﻿using NaeTime.Bytes;
+
+namespace ImmersionRC.LapRF.Abstractions;
 public interface IPassingRecordProtocol
 {
     Task<Pass?> WaitForNextPassAsync(CancellationToken cancellationToken);

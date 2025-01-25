@@ -1,5 +1,4 @@
-﻿
-namespace ImmersionRC.LapRF;
+﻿namespace NaeTime.Bytes;
 public class DataEscaper
 {
     private readonly byte _escape;
@@ -77,6 +76,6 @@ public class DataEscaper
 
     private bool IsInEscapeBounds(int index, int dataLength)
     {
-        return index > _escapeStart && index < (dataLength - _escapeEnd);
+        return index > _escapeStart && index < dataLength - _escapeEnd;
     }
 }

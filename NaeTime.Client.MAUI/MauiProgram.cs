@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NaeTime.Client.MAUI.Lib;
+using NaeTime.Hardware.Node.Esp32.Extensions;
 using Syncfusion.Blazor;
 
 namespace NaeTime.Client.MAUI;
@@ -36,7 +37,7 @@ public static class MauiProgram
         //Add Hardware Services
         builder.Services.AddHardwareCore();
         builder.Services.AddImmersionRCHardware();
-
+        builder.Services.AddEsp32NodeTimers();
         //Add Management Services
 
         //Add Open Practice Services

@@ -1,0 +1,11 @@
+﻿@page "/hardware/serialesp32node/update/{timerId:guid}"
+@layout WithReturn
+@if (_model != null)
+{
+    <EditableSerialEsp32NodeTimerDetails Details="_model" OnValidSubmit="HandleValidSubmit"></EditableSerialEsp32NodeTimerDetails>
+}
+
+
+@code {
+
+}

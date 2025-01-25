@@ -27,6 +27,7 @@ public partial class HardwareList : ComponentBase
             x.Type switch
             {
                 Hardware.Messages.Models.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
+                Hardware.Messages.Models.TimerType.SerialEsp32Node => TimerType.SerialEsp32Node,
                 _ => throw new NotImplementedException()
             }, x.MaxLanes)));
 
@@ -39,6 +40,9 @@ public partial class HardwareList : ComponentBase
             case TimerType.EthernetLapRF8Channel:
                 NavigationManager.NavigateTo($"/hardware/ethernetlaprf8channel/update/{details.Id}");
                 break;
+            case TimerType.SerialEsp32Node:
+                NavigationManager.NavigateTo($"/hardware/serialesp32node/update/{details.Id}");
+                break;
             default:
                 break;
         }
@@ -46,5 +50,9 @@ public partial class HardwareList : ComponentBase
     private void NavigateToCreateLapRF8Channel()
     {
         NavigationManager.NavigateTo("/hardware/ethernetlaprf8channel/create");
+    }
+    private void NavigateToCreateSerialEsp32Node()
+    {
+        NavigationManager.NavigateTo("/hardware/serialesp32node/create");
     }
 }
