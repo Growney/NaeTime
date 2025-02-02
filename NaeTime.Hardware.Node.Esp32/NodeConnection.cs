@@ -29,7 +29,7 @@ internal class NodeConnection
 
         CancellationToken token = _cancellationTokenSource.Token;
 
-        _runningTasks = [MaintainConnectionAsync(token), WaitForRSSIAsync(token)];
+        _runningTasks = [MaintainConnectionAsync(token), WaitForRSSIAsync(token), WaitForPassAsync(token)];
     }
 
     private async Task MaintainConnectionAsync(CancellationToken token)
@@ -87,6 +87,56 @@ internal class NodeConnection
 
             }
         }
+    }
+
+    private async Task WaitForPassAsync(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
+        {
+            try
+            {
+                Pass? nullablePassingRecord = await _protocol.TimingProtocol.WaitForNextPassAsync(token).ConfigureAwait(false);
+                if (nullablePassingRecord == null)
+                {
+                    continue;
+                }
+                Pass passingRecord = nullablePassingRecord.Value;
+                TimerDetectionOccured detection = new(_timerId, passingRecord.Lane, passingRecord.PassStart + ((passingRecord.PassEnd - passingRecord.PassStart) / 2), _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
+                await _eventClient.PublishAsync(detection).ConfigureAwait(false);
+            }
+            catch
+            {
+            }
+        }
+    }
+    public async Task SetLaneRadioFrequency(byte Lane, int frequencyInMhz)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+
+        await _protocol.ConfigurationProtocol.SetLaneFrequency(Lane, (ushort)frequencyInMhz).ConfigureAwait(false);
+    }
+
+    public async Task SetLaneEntryThreshold(byte Lane, ushort threshold)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+
+        await _protocol.ConfigurationProtocol.SetEntryThreshold(Lane, threshold).ConfigureAwait(false);
+    }
+
+    public async Task SetLaneExitThreshold(byte Lane, ushort threshold)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+
+        await _protocol.ConfigurationProtocol.SetExitThreshold(Lane, threshold).ConfigureAwait(false);
     }
 
     public Task Stop()

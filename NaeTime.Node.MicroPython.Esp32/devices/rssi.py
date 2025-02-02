@@ -1,15 +1,16 @@
 import machine
-import math
 from devices import filters
 
 class ADCReader:
-    def __init__(self, pin, filter_size=50):
+    def __init__(self, pin, sample_rate, cutoff_frequency):
+        self.pin = pin
         self.adc = machine.ADC(machine.Pin(pin))
-        self.filter = filters.MeanFilter(filter_size)
+        self.filter = filters.LowPassFilter(cutoff_frequency, sample_rate)
     
     def read_value(self):
         raw_value = self.adc.read_u16()
-        return self.filter.get_value(raw_value)
+        filtered = self.filter.get_value(raw_value)
+        return filtered
 
 
 class Peak:
@@ -28,12 +29,27 @@ class PeakDetector:
         :param entry_threshold: The threshold to detect the start of a peak.
         :param exit_threshold: The threshold to detect the end of a peak.
         """
-        self.entry_threshold = entry_threshold
-        self.exit_threshold = exit_threshold
-        self.previous_rssi = None
+        self._entry_threshold = entry_threshold
+        self._exit_threshold = exit_threshold
         self.in_peak = False
         self.peak_start_time = None
 
+    @property 
+    def entry_threshold(self):
+        return self._entry_threshold
+    
+    @entry_threshold.setter
+    def entry_threshold(self, value):
+        self._entry_threshold = value
+    
+    @property
+    def exit_threshold(self):
+        return self._exit_threshold
+    
+    @exit_threshold.setter
+    def exit_threshold(self, value):
+        self._exit_threshold = value
+    
     def add_reading(self, rssi, time):
         """
         Add an RSSI reading and check for peaks.
@@ -43,24 +59,16 @@ class PeakDetector:
         :return: 0 if outside a peak, 1 if a peak is entered, 2 if inside a peak, 3 if a value leaves a peak.
         """
 
-        if self.previous_rssi is None:
-            self.previous_rssi = rssi
-            return 0
-
-        if not self.in_peak and rssi > self.previous_rssi + self.entry_threshold:
+        if not self.in_peak and rssi > self._entry_threshold:
             self.in_peak = True
             self.peak_start_time = time
-            self.previous_rssi = rssi
             return 1
 
         if self.in_peak:
-            if rssi < self.previous_rssi - self.exit_threshold:
+            if rssi < self._exit_threshold:
                 self.in_peak = False
-                self.previous_rssi = rssi
                 return 3
             else:
-                self.previous_rssi = rssi
                 return 2
-
-        self.previous_rssi = rssi
+            
         return 0

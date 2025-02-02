@@ -19,7 +19,8 @@ internal class NodeConnectionFactory : INodeConnectionFactory
         INodeTimingProtocol timingProtocol = new NodeTimingProtocol();
 
         INodeCommunication communication = new NodeSerialCommunication(port);
-        INodeProtocol protocol = new NodeProtocol(communication, timingProtocol);
+        INodeConfigurationProtocol configurationProtocol = new NodeConfigurationProtocol(communication);
+        INodeProtocol protocol = new NodeProtocol(communication, timingProtocol, configurationProtocol);
         return new NodeConnection(timerId, _softwareTimer, _eventClient, communication, protocol);
     }
 }

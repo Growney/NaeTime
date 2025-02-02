@@ -2,7 +2,6 @@
 public class Crc16
 {
     private readonly ushort[] _crc16_table;
-
     //-------------------------------------------------------------------------------------------------------
     public Crc16()
     {
@@ -46,7 +45,7 @@ public class Crc16
     }
 
     //-------------------------------------------------------------------------------------------------------
-    public ushort Compute(byte[] dataIn, int length)
+    public ushort Compute(ReadOnlySpan<byte> dataIn, int length)
     {
         ushort remainder = 0x0000;
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using NaeTime.Hardware.Abstractions;
+using NaeTime.Hardware.Messages;
 using NaeTime.Hardware.Messages.Models;
 using NaeTime.Hardware.Node.Esp32.Abstractions;
 using NaeTime.PubSub.Abstractions;
@@ -53,4 +54,25 @@ internal class NodeManager : IHostedService
 
         _eventRegistrarScope.Dispose();
     }
+
+    public Task When(NodeTimerLaneRadioFrequencyConfigured lane)
+    => !_hardwareProcesses.TryGetValue(lane.TimerId, out NodeConnection? connection)
+        ? Task.CompletedTask
+        : !connection.IsConnected
+            ? Task.CompletedTask
+            : connection.SetLaneRadioFrequency(lane.Lane, lane.FrequencyInMhz);
+
+    public Task When(NodeTimerEntryThresholdConfigured threshold)
+    => !_hardwareProcesses.TryGetValue(threshold.TimerId, out NodeConnection? connection)
+        ? Task.CompletedTask
+        : !connection.IsConnected
+            ? Task.CompletedTask
+            : connection.SetLaneEntryThreshold(threshold.Lane, threshold.Threshold);
+
+    public Task When(NodeTimerExitThresholdConfigured threshold)
+     => !_hardwareProcesses.TryGetValue(threshold.TimerId, out NodeConnection? connection)
+        ? Task.CompletedTask
+        : !connection.IsConnected
+            ? Task.CompletedTask
+            : connection.SetLaneExitThreshold(threshold.Lane, threshold.Threshold);
 }

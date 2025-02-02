@@ -11,6 +11,32 @@ class TuneLane:
     def frequency_in_mhz(self):
         return self._frequency_in_mhz
 
+class ConfigureLaneEntryThreshold:
+    def __init__(self,lane,entry_threshold):
+        self._lane = lane
+        self._entry_threshold = entry_threshold
+    
+    @property
+    def lane(self):
+        return self._lane
+    
+    @property
+    def entry_threshold(self):
+        return self._entry_threshold
+
+class ConfigureLaneExitThreshold:
+    def __init__(self,lane,exit_threshold):
+        self._lane = lane
+        self._exit_threshold = exit_threshold
+    
+    @property
+    def lane(self):
+        return self._lane
+    
+    @property
+    def exit_threshold(self):
+        return self._exit_threshold
+
 class ConfigureNode:
     def __init__(self, node_id, transmit_frequency_hz, polling_frequency_hz):
         self._node_id = node_id
@@ -67,5 +93,6 @@ class LaneTimings:
     def last_pass_start(self):
         return self._last_pass_start
     
+
 
     

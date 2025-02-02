@@ -12,34 +12,40 @@ public class NodeProtocol : INodeProtocol
 
     private readonly INodeCommunication _communication;
     public INodeTimingProtocol TimingProtocol { get; }
-    private readonly Crc16 _crc16 = new();
+    public INodeConfigurationProtocol ConfigurationProtocol { get; }
+    private readonly CRC16 _crc16 = new();
 
     private readonly Stack<byte> _receivedStack = new();
 
     private readonly byte[] _packet = new byte[2096];
 
-    public NodeProtocol(INodeCommunication communication, INodeTimingProtocol timingProtocol)
+    public NodeProtocol(INodeCommunication communication, INodeTimingProtocol timingProtocol, INodeConfigurationProtocol configurationProtocol)
     {
         _communication = communication ?? throw new ArgumentNullException(nameof(communication));
         TimingProtocol = timingProtocol;
+        ConfigurationProtocol = configurationProtocol;
     }
 
     public async Task RunAsync(CancellationToken token)
     {
         PeriodicTimer timer = new(TimeSpan.FromMilliseconds(10));
-
         while (!token.IsCancellationRequested)
         {
-            await timer.WaitForNextTickAsync(token).ConfigureAwait(false);
-
             ReadOnlyMemory<byte> data = await _communication.ReceiveAsync(token).ConfigureAwait(false);
 
-            if (!token.IsCancellationRequested)
+            if (data.Length > 0)
             {
-                for (int i = 0; i < data.Length; i++)
+                if (!token.IsCancellationRequested)
                 {
-                    ProcessByte(data.Span[i]);
+                    for (int i = 0; i < data.Length; i++)
+                    {
+                        ProcessByte(data.Span[i]);
+                    }
                 }
+            }
+            else
+            {
+                await timer.WaitForNextTickAsync(token).ConfigureAwait(false);
             }
         }
     }
@@ -115,23 +121,38 @@ public class NodeProtocol : INodeProtocol
             return;
         }
 
-        RecordHeader recordHeader = RecordHeader.Read(packetData);
-        RecordHeader.SetRecordCRC(packetData, 0);
+        Span<byte> payloadData = packetData[1..^1];
 
-        ushort recordCRC = _crc16.Compute(packetData, packetData.Length);
+        RecordHeader recordHeader = RecordHeader.Read(payloadData);
+        RecordHeader.SetRecordCRC(payloadData, 0);
 
-        //if (recordCRC != recordHeader.RecordCRC)
-        //{
-        //    //invalid crc
-        //    return;
-        //}
+        ushort recordCRC = _crc16.Calculate(payloadData);
 
-        Span<byte> recordData = packetData.AsSpan()[RecordHeader.GetDataStartLocation()..];
+        if (recordCRC != recordHeader.RecordCRC)
+        {
+            return;
+        }
+
+        Span<byte> recordData = payloadData[RecordHeader.GetDataStartLocation()..];
 
         ReadOnlySpanReader<byte> recordReader = new(recordData);
 
         switch (recordHeader.RecordType)
         {
+            case RecordType.ACK:
+            case RecordType.ERROR:
+                RecordType responseCommand = (RecordType)recordReader.PeakByte();
+                switch (responseCommand)
+                {
+                    case RecordType.TUNE_LANE:
+                    case RecordType.CONFIGURE_LANE_ENTRY_THRESHOLD:
+                    case RecordType.CONFIGURE_LANE_EXIT_THRESHOLD:
+                        ConfigurationProtocol.HandleResponseData((byte)recordHeader.RecordType, recordReader);
+                        break;
+                    default:
+                        break;
+                }
+                break;
             case RecordType.LANE_TIMINGS:
                 TimingProtocol.HandleRecordData(recordReader);
                 break;

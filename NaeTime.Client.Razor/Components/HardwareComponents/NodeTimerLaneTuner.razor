@@ -1,0 +1,33 @@
+@using Microsoft.JSInterop
+@using Syncfusion.Blazor.Inputs
+@inject IJSRuntime JSRuntime
+
+<div>
+    <div>
+        <table>
+            <tr>
+                <td class="px-1">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </td>
+                <td class ="px-1">
+                    <NumberInput TValue="int" Min=0 Max=@ushort.MaxValue @bind-Value="@_entryThreshold" Placeholder="Enter amount" />
+                </td>
+                <td>
+                    <Button Color="ButtonColor.Primary" @onclick="SetEntryThreshold"><i class="fa-solid fa-check"></i></Button>
+                </td>
+            </tr>
+            <tr>
+                <td class="px-1">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </td>
+                <td class="px-1">
+                    <NumberInput TValue="int" Min=0 Max=@ushort.MaxValue @bind-Value="@_exitThreshold" Placeholder="Enter amount" />
+                </td>
+                <td>
+                    <Button Color="ButtonColor.Primary" @onclick="SetExitThreshold"><i class="fa-solid fa-check"></i></Button>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <canvas id="@chartId" style="width:100%; height: 200px;"></canvas>
+</div>

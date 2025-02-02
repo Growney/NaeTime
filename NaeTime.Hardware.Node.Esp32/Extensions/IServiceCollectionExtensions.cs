@@ -8,6 +8,7 @@ public static class IServiceCollectionExtensions
     {
         services.AddHostedService<NodeManager>();
         services.AddTransient<INodeConnectionFactory, NodeConnectionFactory>();
+        services.AddEventAndRemoteProcedureCallHub<NodeTimerLaneService>();
         return services;
     }
 }

@@ -1,6 +1,7 @@
 import time
 import asyncio
 import sys
+import uselect
 from adafruit import RFM69
 from machine import Pin, SPI
 from collections import deque
@@ -32,31 +33,42 @@ receiver.sync_word = "NaeTime"
 
 async def tx_task(rfm69):
    print("Starting tx task")
+   spoll = uselect.poll()
+   spoll.register(sys.stdin, uselect.POLLIN)
+
    tx_queue = deque([],100)
-   in_record = False
    previous_byte_escape = False
+   inrecord = False
    while True:
-      await asyncio.sleep_ms(500)
-      while(sys.stdin.readable()):
-         data = sys.stdin.read()
-         if(data == END_OF_RECORD):
-            packet = bytearray()
-            while(len(tx_queue) > 0):
-               packet.append(tx_queue.popleft())
-            await rfm69.send(packet)
-         elif(data == ESCAPE):
-            previous_byte_escape = True
-         else:
-            if(previous_byte_escape):
-               data = data - ESCAPED_ADDER
-               previous_byte_escape = False  
-            else:
-               data = data
-            tx_queue.append(data)
+      try:
+         await asyncio.sleep_ms(20)
+         while(spoll.poll(0)):
+            byte = sys.stdin.buffer.read(1)[0]
+            if(byte == END_OF_RECORD):
+               inrecord = False
+               packet = bytearray()
+               while(len(tx_queue) > 0):
+                  packet.append(tx_queue.popleft())
+               await rfm69.send(packet)
+            elif(byte == ESCAPE):
+               previous_byte_escape = True
+            elif(byte == START_OF_RECORD):
+               inrecord = True;
+               while(len(tx_queue) > 0):
+                  tx_queue.popleft()
+            elif(inrecord):
+               if(previous_byte_escape):
+                  byte = byte - ESCAPED_ADDER
+                  previous_byte_escape = False 
+               tx_queue.append(byte)
+      except Exception:
+         print("Exception in tx_task")
+
 
 async def main_process(rfm69):
    print("Starting main process")
    rfm69.start()
+   asyncio.create_task(tx_task(rfm69))
    while True:
       packet = await rfm69.wait_for_rx()
       data = bytearray()

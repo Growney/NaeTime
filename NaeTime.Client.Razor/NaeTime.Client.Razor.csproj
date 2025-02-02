@@ -41,7 +41,6 @@
 
   <ItemGroup>
     <Folder Include="Components\Timing\" />
-    <Folder Include="Components\TrackComponents\" />
   </ItemGroup>
 
 </Project>

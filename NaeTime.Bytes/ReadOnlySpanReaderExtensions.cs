@@ -1,6 +1,11 @@
 ﻿namespace NaeTime.Bytes;
 public static class ReadOnlySpanReaderExtensions
 {
+    public static byte PeakByte(this ref ReadOnlySpanReader<byte> reader)
+    {
+        ReadOnlySpan<byte> span = reader.Peek(sizeof(byte));
+        return span[0];
+    }
     public static long ReadInt64(this ref ReadOnlySpanReader<byte> reader)
     {
         ReadOnlySpan<byte> span = reader.Read(sizeof(long));
