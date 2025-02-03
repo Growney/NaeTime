@@ -44,9 +44,6 @@ class RFM69NodeCommunication:
             elif command_id == CONFIGURE_NODE:
                 node_id, transmit_frequency, polling_frequency = struct.unpack("<cii", payload)
                 return commands.ConfigureNode(node_id, transmit_frequency, polling_frequency)
-            elif command_id == LANE_TIMINGS:
-                current_time, lane, rssi, last_pass_start,last_pass_end,pass_state, pass_count = struct.unpack("<BlhllhI", payload)
-                return commands.LaneTimings(current_time, lane, rssi, last_pass_start,last_pass_end,pass_state, pass_count)
             elif command_id == CONFIGURE_LANE_ENTRY_THRESHOLD:
                 lane, entry_threshold = struct.unpack("<BH", payload)
                 return commands.ConfigureLaneEntryThreshold(lane, entry_threshold)
@@ -78,9 +75,14 @@ class RFM69NodeCommunication:
         self._send_packet(response, data)
 
     def send_command(self, command):
-        if isinstance(command, commands.LaneTimings):
+        if isinstance(command, commands.NodeTimings):
             command_id = LANE_TIMINGS
-            payload = struct.pack("<BlHllBH", command.lane,command.current_time, command.rssi, command.last_pass_start,command.last_pass_end,command.pass_state, command.pass_count)
+
+            payload = struct.pack("<LBB", command.current_time, command.lane_count, command.enabled_lanes)
+
+            for lane_timing in command.lane_timings:
+                payload += struct.pack("<HLH", lane_timing.rssi, lane_timing.last_pass, lane_timing.pass_count)
+                
         else:
             raise ValueError("Unknown command type")
         
@@ -122,7 +124,7 @@ class CRC16:
                     crc >>= 1
                 byte >>= 1
             table.append(crc)
-            
+
         return table
 
     def reflect(self, data, width):

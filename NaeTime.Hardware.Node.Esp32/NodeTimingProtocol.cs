@@ -15,24 +15,33 @@ public class NodeTimingProtocol : INodeTimingProtocol
     public Task<Pass> WaitForNextPassAsync(CancellationToken cancellationToken) => _passQueue.WaitForDequeueAsync(cancellationToken);
     public void HandleRecordData(ReadOnlySpanReader<byte> recordReader)
     {
-        byte lane = (byte)(recordReader.ReadByte() + 1);
-        ulong time = (ulong)recordReader.ReadInt32();
-        ushort rssi = recordReader.ReadUInt16();
-        ulong lastPassStart = (ulong)recordReader.ReadInt32();
-        ulong lastPassEnd = (ulong)recordReader.ReadInt32();
-        byte passState = recordReader.ReadByte();
-        ushort passCount = recordReader.ReadUInt16();
+        ulong currentTime = recordReader.ReadUInt32();
+        byte laneCount = recordReader.ReadByte();
+        byte enabledLanes = recordReader.ReadByte();
 
-        ushort? lastRecordPassCount = _lanePassStats.GetOrAdd(lane, (ushort?)null);
-
-        if (lastRecordPassCount != null && passCount != 0 && passCount != lastRecordPassCount)
+        for (byte lane = 0; lane < laneCount; lane++)
         {
-            _passQueue.Enqueue(new Pass(lane, lastPassStart, lastPassEnd, time));
+            if ((enabledLanes & (1 << lane)) == 0)
+            {
+                continue;
+            }
+
+            byte translatedLane = (byte)(lane + 1);
+            ushort rssi = recordReader.ReadUInt16();
+            ulong lastPass = recordReader.ReadUInt32();
+            ushort passCount = recordReader.ReadUInt16();
+
+            ushort? lastRecordPassCount = _lanePassStats.GetOrAdd(lane, (ushort?)null);
+
+            if (lastRecordPassCount != null && passCount != 0 && passCount != lastRecordPassCount)
+            {
+                _passQueue.Enqueue(new Pass(translatedLane, lastPass));
+            }
+
+            _lanePassStats.AddOrUpdate(lane, passCount, (x, t) => passCount);
+
+            _receivedSignalStrengthIndicators.Enqueue(new ReceivedSignalStrengthIndicator(translatedLane, rssi, currentTime));
         }
-
-        _lanePassStats.AddOrUpdate(lane, passCount, (x, t) => passCount);
-
-        _receivedSignalStrengthIndicators.Enqueue(new ReceivedSignalStrengthIndicator(lane, rssi, time));
     }
 
     public void HandleResponseData(byte response, ReadOnlySpanReader<byte> recordReader)

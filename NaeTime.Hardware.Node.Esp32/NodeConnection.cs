@@ -101,7 +101,7 @@ internal class NodeConnection
                     continue;
                 }
                 Pass passingRecord = nullablePassingRecord.Value;
-                TimerDetectionOccured detection = new(_timerId, passingRecord.Lane, passingRecord.PassStart + ((passingRecord.PassEnd - passingRecord.PassStart) / 2), _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
+                TimerDetectionOccured detection = new(_timerId, passingRecord.Lane, passingRecord.Time, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
                 await _eventClient.PublishAsync(detection).ConfigureAwait(false);
             }
             catch

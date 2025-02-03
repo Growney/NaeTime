@@ -55,23 +55,35 @@ class ConfigureNode:
     def polling_frequency_hz(self):
         return self._polling_frequency_hz
 
-class LaneTimings:
-    def __init__(self,current_time, lane, rssi, last_pass_start, last_pass_end,pass_state, pass_count):
+class NodeTimings:
+    def __init__(self, current_time, lane_count, enabled_lanes, lane_timings):
         self._current_time = current_time
-        self._lane = lane
-        self._rssi = rssi
-        self._last_pass_start = last_pass_start
-        self._last_pass_end = last_pass_end
-        self._pass_state = pass_state
-        self._pass_count = pass_count
+        self._lane_count = lane_count
+        self._enabled_lanes = enabled_lanes
+        self._lane_timings = lane_timings
 
     @property
     def current_time(self):
         return self._current_time
-
+    
     @property
-    def lane(self):
-        return self._lane
+    def lane_count(self):
+        return self._lane_count
+    
+    @property
+    def enabled_lanes(self):
+        return self._enabled_lanes
+    
+    @property
+    def lane_timings(self):
+        return self._lane_timings
+
+
+class LaneTimings:
+    def __init__(self,rssi, last_pass, pass_count):
+        self._rssi = rssi
+        self._last_pass = last_pass
+        self._pass_count = pass_count
     
     @property
     def rssi(self):
@@ -82,17 +94,9 @@ class LaneTimings:
         return self._pass_count
     
     @property
-    def pass_state(self):
-        return self._pass_state
-    
-    @property
-    def last_pass_end(self):
-        return self._last_pass_end
+    def last_pass(self):
+        return self._last_pass
 
-    @property
-    def last_pass_start(self):
-        return self._last_pass_start
-    
 
 
     

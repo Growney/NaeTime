@@ -153,7 +153,7 @@ public class NodeProtocol : INodeProtocol
                         break;
                 }
                 break;
-            case RecordType.LANE_TIMINGS:
+            case RecordType.NODE_TIMINGS:
                 TimingProtocol.HandleRecordData(recordReader);
                 break;
             default:

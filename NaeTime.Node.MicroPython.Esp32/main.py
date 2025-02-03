@@ -88,17 +88,24 @@ async def transmission_loop():
     global transmit_delay_ms
     global lane_timings
     global node_comms
+    global lane_states
 
     while running:
-        delay = int(transmit_delay_ms / len(lane_timings))
         lane_pointer = 0
         try:
+            lane_timing_commands = []
+            enabled_lanes = 0
             while(lane_pointer < len(lane_timings)):
-                current_time = time.ticks_ms()
-                command = commands.LaneTimings(current_time, lane_pointer, lane_timings[lane_pointer][0],lane_timings[lane_pointer][1],lane_timings[lane_pointer][2],lane_timings[lane_pointer][3],lane_timings[lane_pointer][4])
-                node_comms.send_command(command)
-                await asyncio.sleep_ms(delay)
+                if(lane_states[lane_pointer]):
+                    last_pass = lane_timings[lane_pointer][1] + ((lane_timings[lane_pointer][2] - lane_timings[lane_pointer][1]) // 2)
+                    command = commands.LaneTimings(lane_timings[lane_pointer][0],last_pass,lane_timings[lane_pointer][4])
+                    lane_timing_commands.append(command)
+                    enabled_lanes |= 1 << lane_pointer
                 lane_pointer += 1
+            
+            command = commands.NodeTimings(time.ticks_ms(), len(lane_timings), enabled_lanes, lane_timing_commands)
+            node_comms.send_command(command)
+            await asyncio.sleep_ms(transmit_delay_ms)
         except Exception as e:
             print("transmit error: ",str(e))
 
@@ -177,7 +184,7 @@ RADIO_FREQ_MHZ = 433.0
 
 running = True
 node_id = 1
-transmit_delay_ms = 200 #10hz
+transmit_delay_ms = 100 #10hz
 polling_delay_ms = 10 #100hz
 filter_cutoff_frequency = 20
 
@@ -199,10 +206,11 @@ peak_detectors = [
     PeakDetector(40000,40000)
 ]
 
+
 print("Devices Initialized")
 #rssi, last_pass_start,last_pass_end,pass_state, pass count
 lane_timings = [(0,0,0,0,0),(0,0,0,0,0),(0,0,0,0,0)]
-
+lane_states = [True,True,True]
 asyncio.run(init_device())
 
 
