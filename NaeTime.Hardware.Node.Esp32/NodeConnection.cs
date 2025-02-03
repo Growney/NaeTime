@@ -139,6 +139,15 @@ internal class NodeConnection
         await _protocol.ConfigurationProtocol.SetExitThreshold(Lane, threshold).ConfigureAwait(false);
     }
 
+    public async Task SetLaneEnabled(byte Lane, bool isEnabled)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+        await _protocol.ConfigurationProtocol.SetLaneEnabled(Lane, isEnabled).ConfigureAwait(false);
+    }
+
     public Task Stop()
     {
         _cancellationTokenSource.Cancel();

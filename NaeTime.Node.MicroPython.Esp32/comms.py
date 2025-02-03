@@ -5,9 +5,10 @@ import struct
 
 TUNE_LANE = 0x01
 CONFIGURE_NODE = 0x02
-LANE_TIMINGS = 0x03
+NODE_TIMINGS = 0x03
 CONFIGURE_LANE_ENTRY_THRESHOLD = 0x04
 CONFIGURE_LANE_EXIT_THRESHOLD = 0x05
+CONFIGURE_LANE_ENABLED = 0x06
 ERROR = 0xFE
 ACK = 0xFF
 
@@ -50,6 +51,9 @@ class RFM69NodeCommunication:
             elif command_id == CONFIGURE_LANE_EXIT_THRESHOLD:
                 lane, exit_threshold = struct.unpack("<BH", payload)
                 return commands.ConfigureLaneExitThreshold(lane, exit_threshold)
+            elif command_id == CONFIGURE_LANE_ENABLED:
+                lane, enabled = struct.unpack("<BB", payload)
+                return commands.ConfigureLaneEnabled(lane, enabled)
         except Exception as e:
             print("Process Packets Error: ", e)
 
@@ -69,6 +73,9 @@ class RFM69NodeCommunication:
         elif(isinstance(command, commands.ConfigureLaneExitThreshold)):
             print("Sending exit threshold response:", response)
             data = struct.pack("<BBH",CONFIGURE_LANE_EXIT_THRESHOLD, command.lane, command.exit_threshold)
+        elif(isinstance(command, commands.ConfigureLaneEnabled)):
+            print("Sending lane enabled response:", response)
+            data = struct.pack("<BBB",CONFIGURE_LANE_ENABLED, command.lane, command.enabled)
         else:
             raise ValueError("Command response Not Supported")
            
@@ -76,13 +83,13 @@ class RFM69NodeCommunication:
 
     def send_command(self, command):
         if isinstance(command, commands.NodeTimings):
-            command_id = LANE_TIMINGS
+            command_id = NODE_TIMINGS
 
             payload = struct.pack("<LBB", command.current_time, command.lane_count, command.enabled_lanes)
 
             for lane_timing in command.lane_timings:
                 payload += struct.pack("<HLH", lane_timing.rssi, lane_timing.last_pass, lane_timing.pass_count)
-                
+
         else:
             raise ValueError("Unknown command type")
         

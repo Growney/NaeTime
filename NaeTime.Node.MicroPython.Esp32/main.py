@@ -72,6 +72,15 @@ async def command_loop():
                     node_comms.send_ack_for_command(command)
                 else:
                     node_comms.send_error_for_command(command)
+            elif isinstance(command, commands.ConfigureLaneEnabled):
+                print("Configure Lane Enabled Lane: "+str(command.lane)+" Enabled: "+str(command.enabled))
+                if(command.lane < len(lane_states) and command.lane >= 0):
+                    lane_states[command.lane] = command.enabled == 1
+                    print("Lane Enabled Set")
+                    asyncio.create_task(sound_buzzer(((1,100),(0,100),(1,100),(0,100),(1,100))))
+                    node_comms.send_ack_for_command(command)
+                else:
+                    node_comms.send_error_for_command(command)
             elif isinstance(command, commands.ConfigureNode):
                 print("Configure command received")
                 node_id = command.node_id

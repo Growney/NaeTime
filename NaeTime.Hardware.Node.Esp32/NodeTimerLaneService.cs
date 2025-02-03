@@ -28,4 +28,31 @@ public class NodeTimerLaneService
             await _eventClient.PublishAsync(new NodeTimerLaneRadioFrequencyConfigured(timer.TimerId, frequencyChange.LaneNumber, frequencyChange.FrequencyInMhz)).ConfigureAwait(false);
         }
     }
+    public async Task When(LaneDisabled laneDisabled)
+    {
+        IEnumerable<Messages.Models.SerialEsp32Node>? timers = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.SerialEsp32Node>>("GetAllSerialEsp32NodeTimers");
+        if (timers == null)
+        {
+            return;
+        }
+
+        foreach (Messages.Models.SerialEsp32Node timer in timers)
+        {
+            await _eventClient.PublishAsync(new NodeTimerLaneDisabled(timer.TimerId, laneDisabled.LaneNumber)).ConfigureAwait(false);
+        }
+    }
+
+    public async Task When(LaneEnabled laneEnabled)
+    {
+        IEnumerable<Messages.Models.SerialEsp32Node>? timers = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.SerialEsp32Node>>("GetAllSerialEsp32NodeTimers");
+        if (timers == null)
+        {
+            return;
+        }
+
+        foreach (Messages.Models.SerialEsp32Node timer in timers)
+        {
+            await _eventClient.PublishAsync(new NodeTimerLaneEnabled(timer.TimerId, laneEnabled.LaneNumber)).ConfigureAwait(false);
+        }
+    }
 }

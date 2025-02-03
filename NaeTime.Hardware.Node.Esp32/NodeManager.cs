@@ -75,4 +75,17 @@ internal class NodeManager : IHostedService
         : !connection.IsConnected
             ? Task.CompletedTask
             : connection.SetLaneExitThreshold(threshold.Lane, threshold.Threshold);
+
+    public Task When(NodeTimerLaneEnabled lane)
+        => !_hardwareProcesses.TryGetValue(lane.TimerId, out NodeConnection? connection)
+        ? Task.CompletedTask
+        : !connection.IsConnected
+            ? Task.CompletedTask
+            : connection.SetLaneEnabled(lane.Lane, true);
+    public Task When(NodeTimerLaneDisabled lane)
+        => !_hardwareProcesses.TryGetValue(lane.TimerId, out NodeConnection? connection)
+        ? Task.CompletedTask
+        : !connection.IsConnected
+            ? Task.CompletedTask
+            : connection.SetLaneEnabled(lane.Lane, false);
 }

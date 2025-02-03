@@ -11,6 +11,19 @@ class TuneLane:
     def frequency_in_mhz(self):
         return self._frequency_in_mhz
 
+class ConfigureLaneEnabled:
+    def __init__(self,lane,enabled):
+        self._lane = lane
+        self._enabled = enabled
+    
+    @property
+    def lane(self):
+        return self._lane
+    
+    @property
+    def enabled(self):
+        return self._enabled
+
 class ConfigureLaneEntryThreshold:
     def __init__(self,lane,entry_threshold):
         self._lane = lane
@@ -77,7 +90,6 @@ class NodeTimings:
     @property
     def lane_timings(self):
         return self._lane_timings
-
 
 class LaneTimings:
     def __init__(self,rssi, last_pass, pass_count):

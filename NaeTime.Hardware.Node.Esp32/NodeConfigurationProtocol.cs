@@ -40,23 +40,6 @@ public class NodeConfigurationProtocol : INodeConfigurationProtocol
 
         }
     }
-    private async ValueTask<bool> SendWithWaitForAck(RecordType command, byte lane, byte[] finalisedData, CancellationToken token)
-        => await SendWithWaitForAck((byte)command, lane, finalisedData, token);
-    private async ValueTask<bool> SendWithWaitForAck(byte command, byte lane, byte[] finalisedData, CancellationToken token)
-    {
-        ConcurrentDictionary<byte, TaskCompletionSource<bool>> laneAckWaiting = _laneAckWaiting.GetOrAdd(command, x => new ConcurrentDictionary<byte, TaskCompletionSource<bool>>());
-
-        TaskCompletionSource<bool> tuneAck = laneAckWaiting.AddOrUpdate(lane, x => new TaskCompletionSource<bool>(), (x, t) =>
-        {
-            t.TrySetCanceled();
-            return new TaskCompletionSource<bool>();
-        });
-        TimeOutToken(TimeSpan.FromSeconds(5), tuneAck);
-        await _nodeCommunication.SendAsync(finalisedData, token);
-        bool result = await tuneAck.Task;
-        return result;
-
-    }
 
     private async ValueTask SetNodeThreshold(RecordType commandId, byte lane, ushort threshold, CancellationToken token = default)
     {
@@ -86,6 +69,57 @@ public class NodeConfigurationProtocol : INodeConfigurationProtocol
 
         }
     }
+    public ValueTask SetEntryThreshold(byte lane, ushort threshold, CancellationToken token = default)
+       => SetNodeThreshold(RecordType.CONFIGURE_LANE_ENTRY_THRESHOLD, lane, threshold, token);
+    public ValueTask SetExitThreshold(byte lane, ushort threshold, CancellationToken token = default)
+        => SetNodeThreshold(RecordType.CONFIGURE_LANE_EXIT_THRESHOLD, lane, threshold, token);
+
+    public async ValueTask SetLaneEnabled(byte lane, bool isEnabled, CancellationToken token = default)
+    {
+        using MemoryStream memoryStream = new();
+        using BinaryWriter writer = new(memoryStream);
+
+        byte nodeLane = GetNodeLaneId(lane);
+
+        writer.Write(NodeProtocol.START_OF_RECORD);
+
+        writer.WriteRecordType(RecordType.CONFIGURE_LANE_ENABLED);
+        writer.Write(nodeLane);
+        writer.Write((byte)(isEnabled ? 1 : 0));
+
+        writer.Write(NodeProtocol.END_OF_RECORD);
+        byte[] finalisedData = memoryStream.FinalisePacketData();
+
+        try
+        {
+            while (!await SendWithWaitForAck(RecordType.CONFIGURE_LANE_ENABLED, nodeLane, finalisedData, token))
+            {
+                await Task.Delay(1000);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+
+        }
+    }
+    private async ValueTask<bool> SendWithWaitForAck(RecordType command, byte lane, byte[] finalisedData, CancellationToken token)
+        => await SendWithWaitForAck((byte)command, lane, finalisedData, token);
+    private async ValueTask<bool> SendWithWaitForAck(byte command, byte lane, byte[] finalisedData, CancellationToken token)
+    {
+        ConcurrentDictionary<byte, TaskCompletionSource<bool>> laneAckWaiting = _laneAckWaiting.GetOrAdd(command, x => new ConcurrentDictionary<byte, TaskCompletionSource<bool>>());
+
+        TaskCompletionSource<bool> tuneAck = laneAckWaiting.AddOrUpdate(lane, x => new TaskCompletionSource<bool>(), (x, t) =>
+        {
+            t.TrySetCanceled();
+            return new TaskCompletionSource<bool>();
+        });
+        TimeOutToken(TimeSpan.FromSeconds(5), tuneAck);
+        await _nodeCommunication.SendAsync(finalisedData, token);
+        bool result = await tuneAck.Task;
+        return result;
+
+    }
+
 
     private void TimeOutToken(TimeSpan timeOut, TaskCompletionSource<bool> taskCompletionSource) => Task.Delay(timeOut).ContinueWith(t => taskCompletionSource.TrySetResult(false));
     public void HandleRecordData(ReadOnlySpanReader<byte> recordReader)
@@ -105,7 +139,8 @@ public class NodeConfigurationProtocol : INodeConfigurationProtocol
         {
             RecordType.TUNE_LANE
             or RecordType.CONFIGURE_LANE_ENTRY_THRESHOLD
-            or RecordType.CONFIGURE_LANE_EXIT_THRESHOLD => ackReader.ReadByte(),
+            or RecordType.CONFIGURE_LANE_EXIT_THRESHOLD
+            or RecordType.CONFIGURE_LANE_ENABLED => ackReader.ReadByte(),
             _ => throw new NotImplementedException()
         };
 
@@ -116,8 +151,5 @@ public class NodeConfigurationProtocol : INodeConfigurationProtocol
     }
     public void HandleResponseData(byte response, ReadOnlySpanReader<byte> recordReader) => HandleResponse(recordReader, response == (byte)RecordType.ACK);
 
-    public ValueTask SetEntryThreshold(byte lane, ushort threshold, CancellationToken token = default)
-        => SetNodeThreshold(RecordType.CONFIGURE_LANE_ENTRY_THRESHOLD, lane, threshold, token);
-    public ValueTask SetExitThreshold(byte lane, ushort threshold, CancellationToken token = default)
-        => SetNodeThreshold(RecordType.CONFIGURE_LANE_EXIT_THRESHOLD, lane, threshold, token);
+
 }

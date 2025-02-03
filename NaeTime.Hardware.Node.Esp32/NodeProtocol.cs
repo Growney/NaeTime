@@ -147,6 +147,7 @@ public class NodeProtocol : INodeProtocol
                     case RecordType.TUNE_LANE:
                     case RecordType.CONFIGURE_LANE_ENTRY_THRESHOLD:
                     case RecordType.CONFIGURE_LANE_EXIT_THRESHOLD:
+                    case RecordType.CONFIGURE_LANE_ENABLED:
                         ConfigurationProtocol.HandleResponseData((byte)recordHeader.RecordType, recordReader);
                         break;
                     default:
