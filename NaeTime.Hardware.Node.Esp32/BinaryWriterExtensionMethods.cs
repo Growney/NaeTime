@@ -14,9 +14,10 @@ public static class BinaryWriterExtensionMethods
     {
         CRC16 crc16 = new();
         byte[] data = stream.ToArray();
-        RecordHeader.SetRecordLength(data, (ushort)data.Length);
-        ushort crc = crc16.Calculate(data);
-        RecordHeader.SetRecordCRC(data, crc);
+        Span<byte> packetData = data.AsSpan()[1..^1];
+        RecordHeader.SetRecordLength(packetData, (ushort)data.Length);
+        ushort crc = crc16.Calculate(packetData);
+        RecordHeader.SetRecordCRC(packetData, crc);
         byte[] escapedData = NodeProtocol.DataEscaper.Escape(data);
 
         return escapedData;

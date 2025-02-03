@@ -28,10 +28,16 @@ public class NodeConfigurationProtocol : INodeConfigurationProtocol
 
         writer.Write(NodeProtocol.END_OF_RECORD);
         byte[] finalisedData = memoryStream.FinalisePacketData();
-
-        while (!await SendWithWaitForAck(RecordType.TUNE_LANE, nodeLane, finalisedData, token))
+        try
         {
-            await Task.Delay(500);
+            while (!await SendWithWaitForAck(RecordType.TUNE_LANE, nodeLane, finalisedData, token))
+            {
+                await Task.Delay(500);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+
         }
     }
     private async ValueTask<bool> SendWithWaitForAck(RecordType command, byte lane, byte[] finalisedData, CancellationToken token)
@@ -51,6 +57,36 @@ public class NodeConfigurationProtocol : INodeConfigurationProtocol
         return result;
 
     }
+
+    private async ValueTask SetNodeThreshold(RecordType commandId, byte lane, ushort threshold, CancellationToken token = default)
+    {
+        using MemoryStream memoryStream = new();
+        using BinaryWriter writer = new(memoryStream);
+
+        byte nodeLane = GetNodeLaneId(lane);
+
+        writer.Write(NodeProtocol.START_OF_RECORD);
+
+        writer.WriteRecordType(commandId);
+        writer.Write(nodeLane);
+        writer.Write(threshold);
+
+        writer.Write(NodeProtocol.END_OF_RECORD);
+        byte[] finalisedData = memoryStream.FinalisePacketData();
+
+        try
+        {
+            while (!await SendWithWaitForAck(commandId, nodeLane, finalisedData, token))
+            {
+                await Task.Delay(1000);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+
+        }
+    }
+
     private void TimeOutToken(TimeSpan timeOut, TaskCompletionSource<bool> taskCompletionSource) => Task.Delay(timeOut).ContinueWith(t => taskCompletionSource.TrySetResult(false));
     public void HandleRecordData(ReadOnlySpanReader<byte> recordReader)
     {
@@ -80,27 +116,6 @@ public class NodeConfigurationProtocol : INodeConfigurationProtocol
     }
     public void HandleResponseData(byte response, ReadOnlySpanReader<byte> recordReader) => HandleResponse(recordReader, response == (byte)RecordType.ACK);
 
-    private async ValueTask SetNodeThreshold(RecordType commandId, byte lane, ushort threshold, CancellationToken token = default)
-    {
-        using MemoryStream memoryStream = new();
-        using BinaryWriter writer = new(memoryStream);
-
-        byte nodeLane = GetNodeLaneId(lane);
-
-        writer.Write(NodeProtocol.START_OF_RECORD);
-
-        writer.WriteRecordType(commandId);
-        writer.Write(nodeLane);
-        writer.Write(threshold);
-
-        writer.Write(NodeProtocol.END_OF_RECORD);
-        byte[] finalisedData = memoryStream.FinalisePacketData();
-
-        while (!await SendWithWaitForAck(commandId, nodeLane, finalisedData, token))
-        {
-            await Task.Delay(1000);
-        }
-    }
     public ValueTask SetEntryThreshold(byte lane, ushort threshold, CancellationToken token = default)
         => SetNodeThreshold(RecordType.CONFIGURE_LANE_ENTRY_THRESHOLD, lane, threshold, token);
     public ValueTask SetExitThreshold(byte lane, ushort threshold, CancellationToken token = default)

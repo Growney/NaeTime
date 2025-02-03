@@ -122,9 +122,7 @@ class CRC16:
                     crc >>= 1
                 byte >>= 1
             table.append(crc)
-
-        for i in range(256):
-            print(f"0x{table[i]:04X}, ", end="")
+            
         return table
 
     def reflect(self, data, width):

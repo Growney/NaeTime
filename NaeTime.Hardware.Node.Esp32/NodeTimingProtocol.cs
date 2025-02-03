@@ -25,7 +25,7 @@ public class NodeTimingProtocol : INodeTimingProtocol
 
         ushort? lastRecordPassCount = _lanePassStats.GetOrAdd(lane, (ushort?)null);
 
-        if (lastRecordPassCount != null && passCount != lastRecordPassCount)
+        if (lastRecordPassCount != null && passCount != 0 && passCount != lastRecordPassCount)
         {
             _passQueue.Enqueue(new Pass(lane, lastPassStart, lastPassEnd, time));
         }

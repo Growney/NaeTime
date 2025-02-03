@@ -6,6 +6,13 @@ using NaeTime.PubSub.Abstractions;
 namespace NaeTime.Client.Razor.Components.HardwareComponents;
 public partial class NodeTimerLaneTuner : ComponentBase, IAsyncDisposable
 {
+    private const float _thresholdLineThinkness = 2f;
+    private const float _unsetThresholdLineThinkness = 1f;
+    private const string _entryThresholdHorizontalLineColour = "#198754";
+    private const string _exitThresholdHorizontalLineColour = "#dc3545";
+    private const string _unsetEntryThresholdHorizontalLineColour = "#3ddb92";
+    private const string _unsetExitThresholdHorizontalLineColour = "#e87d88";
+
     [Inject]
     private IEventRegistrarScope RegistrarScope { get; set; } = null!;
     [Inject]
@@ -28,11 +35,21 @@ public partial class NodeTimerLaneTuner : ComponentBase, IAsyncDisposable
     private IJSObjectReference? _chart;
     private IJSObjectReference? _rssiSeries;
 
-    private int _entryThreshold = 40000;
-    private int _exitThreshold = 40000;
+    private IJSObjectReference? _entryThresholdLine;
+    private IJSObjectReference? _exitThresholdLine;
+    private IJSObjectReference? _unsetEntryThresholdLine;
+    private IJSObjectReference? _unsetExitThresholdLine;
+
+    private int _entryThreshold = 28000;
+    private int _exitThreshold = 28000;
+
+    private int _configuredEntryThreshold;
+    private int _configuredExitThreshold;
     protected override Task OnInitializedAsync()
     {
         chartId = GetHashCode();
+        _configuredEntryThreshold = _entryThreshold;
+        _configuredExitThreshold = _exitThreshold;
 
         return base.OnInitializedAsync();
     }
@@ -40,17 +57,19 @@ public partial class NodeTimerLaneTuner : ComponentBase, IAsyncDisposable
     {
         if (firstRender)
         {
-            _chart = await JSRuntime.InvokeAsync<IJSObjectReference>("createRssiSmootheChart", "rssi", chartId);
+
+            _chart = await JSRuntime.InvokeAsync<IJSObjectReference>("createRssiSmootheChart", "rssi", chartId, 0, ushort.MaxValue / 2);
             _rssiSeries = await JSRuntime.InvokeAsync<IJSObjectReference>("addRssiLine", _chart);
+
+            _entryThresholdLine = await JSRuntime.InvokeAsync<IJSObjectReference>("addHorizontalLine", _chart, _entryThreshold, _entryThresholdHorizontalLineColour, _thresholdLineThinkness);
+            _exitThresholdLine = await JSRuntime.InvokeAsync<IJSObjectReference>("addHorizontalLine", _chart, _exitThreshold, _exitThresholdHorizontalLineColour, _thresholdLineThinkness);
+            _unsetEntryThresholdLine = await JSRuntime.InvokeAsync<IJSObjectReference>("addHorizontalLine", _chart, _entryThreshold, _entryThresholdHorizontalLineColour, _unsetThresholdLineThinkness);
+            _unsetExitThresholdLine = await JSRuntime.InvokeAsync<IJSObjectReference>("addHorizontalLine", _chart, _entryThreshold, _exitThresholdHorizontalLineColour, _unsetThresholdLineThinkness);
+
             RegistrarScope.RegisterHub(this);
         }
 
         await base.OnAfterRenderAsync(firstRender);
-    }
-
-    private void OnValueChanged(int[] newValues)
-    {
-
     }
 
     public async ValueTask DisposeAsync()
@@ -81,6 +100,60 @@ public partial class NodeTimerLaneTuner : ComponentBase, IAsyncDisposable
 
         await JSRuntime.InvokeVoidAsync("addValueToLine", _rssiSeries, DateTime.Now, rssiLevelRecorded.Level);
     }
-    public Task SetEntryThreshold() => EventClient.PublishAsync(new NodeTimerEntryThresholdConfigured(TimerId, LaneId, (ushort)_entryThreshold));
-    public Task SetExitThreshold() => EventClient.PublishAsync(new NodeTimerExitThresholdConfigured(TimerId, LaneId, (ushort)_exitThreshold));
+
+    private async Task EntryThresholdValueChanged(int newValue)
+    {
+        if (_unsetEntryThresholdLine == null)
+        {
+            return;
+        }
+
+        _configuredEntryThreshold = newValue;
+        await JSRuntime.InvokeVoidAsync("showHideHorizontalLine", _unsetEntryThresholdLine, _configuredEntryThreshold == _entryThreshold);
+        if (_configuredEntryThreshold != _entryThreshold)
+        {
+            await JSRuntime.InvokeVoidAsync("setLineValue", _unsetEntryThresholdLine, _configuredEntryThreshold);
+        }
+    }
+    public async Task SetEntryThreshold()
+    {
+        if (_entryThresholdLine == null || _unsetEntryThresholdLine == null)
+        {
+            return;
+        }
+
+        _entryThreshold = _configuredEntryThreshold;
+
+        await JSRuntime.InvokeVoidAsync("setLineValue", _entryThresholdLine, _entryThreshold);
+        await JSRuntime.InvokeVoidAsync("showHideHorizontalLine", _unsetEntryThresholdLine, false);
+        await EventClient.PublishAsync(new NodeTimerEntryThresholdConfigured(TimerId, LaneId, (ushort)_entryThreshold));
+    }
+
+    private async Task ExitThresholdValueChanged(int newValue)
+    {
+        if (_unsetEntryThresholdLine == null)
+        {
+            return;
+        }
+
+        _configuredExitThreshold = newValue;
+        await JSRuntime.InvokeVoidAsync("showHideHorizontalLine", _unsetExitThresholdLine, _configuredExitThreshold == _exitThreshold);
+        if (_configuredExitThreshold != _exitThreshold)
+        {
+            await JSRuntime.InvokeVoidAsync("setLineValue", _unsetExitThresholdLine, _configuredExitThreshold);
+        }
+    }
+    public async Task SetExitThreshold()
+    {
+        if (_exitThresholdLine == null || _unsetExitThresholdLine == null)
+        {
+            return;
+        }
+
+        _exitThreshold = _configuredExitThreshold;
+
+        await JSRuntime.InvokeVoidAsync("setLineValue", _exitThresholdLine, _exitThreshold);
+        await JSRuntime.InvokeVoidAsync("showHideHorizontalLine", _unsetExitThresholdLine, false);
+        await EventClient.PublishAsync(new NodeTimerExitThresholdConfigured(TimerId, LaneId, (ushort)_exitThreshold));
+    }
 }

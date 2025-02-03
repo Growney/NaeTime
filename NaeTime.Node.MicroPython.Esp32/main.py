@@ -177,7 +177,7 @@ RADIO_FREQ_MHZ = 433.0
 
 running = True
 node_id = 1
-transmit_delay_ms = 100 #10hz
+transmit_delay_ms = 200 #10hz
 polling_delay_ms = 10 #100hz
 filter_cutoff_frequency = 20
 

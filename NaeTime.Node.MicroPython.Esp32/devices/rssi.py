@@ -5,11 +5,15 @@ class ADCReader:
     def __init__(self, pin, sample_rate, cutoff_frequency):
         self.pin = pin
         self.adc = machine.ADC(machine.Pin(pin))
+        self.adc.atten(machine.ADC.ATTN_11DB)
+        self.adc.width(machine.ADC.WIDTH_12BIT)
         self.filter = filters.LowPassFilter(cutoff_frequency, sample_rate)
     
     def read_value(self):
+        readValue = self.adc.read()
         raw_value = self.adc.read_u16()
         filtered = self.filter.get_value(raw_value)
+        voltage = self.adc.read_uv()
         return filtered
 
 

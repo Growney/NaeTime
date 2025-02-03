@@ -32,7 +32,7 @@ internal struct RecordHeader
         writer.Write(header.RecordLength);
     }
 
-    public static void SetRecordLength(byte[] buffer, ushort recordLength) => BitConverter.GetBytes(recordLength).CopyTo(buffer, LENGTH_START_INDEX);
+    public static void SetRecordLength(Span<byte> buffer, ushort recordLength) => BitConverter.GetBytes(recordLength).AsSpan().CopyTo(buffer.Slice(LENGTH_START_INDEX, sizeof(ushort)));
 
     public static void SetRecordCRC(Span<byte> buffer, ushort crc) => BitConverter.GetBytes(crc).AsSpan().CopyTo(buffer.Slice(CRC_START_INDEX, sizeof(ushort)));
 }
