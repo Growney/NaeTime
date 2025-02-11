@@ -7,8 +7,9 @@ public class NodeProtocol : INodeProtocol
     public const byte START_OF_RECORD = 0x5a;
     public const byte END_OF_RECORD = 0x5b;
     public const byte ESCAPE = 0x5c;
+    public const byte CTRL_C = 0x03; //we must escape this so that it doesn't reset the device when we use std in
     public const byte ESCAPED_ADDER = 0x40;
-    public static readonly DataEscaper DataEscaper = new(ESCAPE, ESCAPED_ADDER, 1, 1, START_OF_RECORD, END_OF_RECORD, ESCAPE);
+    public static readonly DataEscaper DataEscaper = new(ESCAPE, ESCAPED_ADDER, 1, 1, START_OF_RECORD, END_OF_RECORD, ESCAPE, CTRL_C);
 
     private readonly INodeCommunication _communication;
     public INodeTimingProtocol TimingProtocol { get; }

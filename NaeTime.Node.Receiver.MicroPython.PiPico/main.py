@@ -10,6 +10,7 @@ START_OF_RECORD = 0x5a
 END_OF_RECORD = 0x5b
 ESCAPE = 0x5c
 ESCAPED_ADDER = 0x40
+CTRL_C = 0x03
 
 print("Starting device")
 
@@ -74,7 +75,7 @@ async def main_process(rfm69):
       data = bytearray()
       data.append(START_OF_RECORD)
       for byte in packet:
-         if(byte == START_OF_RECORD or byte == END_OF_RECORD or byte == ESCAPE):
+         if(byte == START_OF_RECORD or byte == END_OF_RECORD or byte == ESCAPE or byte == CTRL_C):
             data.append(ESCAPE)
             data.append(byte + ESCAPED_ADDER)
          else:
