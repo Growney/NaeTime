@@ -135,7 +135,10 @@ async def rssi_loop():
     global lane_timings
     global rssi_modules
 
-    lane_last_rssi_read = [0,0,0]
+    lane_last_rssi_read = []
+    for i in range(len(rssi_modules)):
+        lane_last_rssi_read.append(0)
+
     while running:
         try:
             lane_pointer = 0
@@ -188,28 +191,37 @@ DIO0 = 17
 SCK = 48
 MOSI = 38
 MISO = 47
-BUZZER = 10
+BUZZER = 14
 RADIO_FREQ_MHZ = 433.0
 
 running = True
 node_id = 1
 transmit_delay_ms = 100 #10hz
 polling_delay_ms = 10 #100hz
-filter_cutoff_frequency = 20
+filter_cutoff_frequency = 50
 
 buzzer_pin = machine.Pin(BUZZER, machine.Pin.OUT)
 node_comms = RFM69NodeCommunication(CS, RESET, DIO0, SCK, MOSI, MISO, RADIO_FREQ_MHZ, "NaeTime")
 rssi_modules = [
 ADCReader(1, polling_delay_ms,filter_cutoff_frequency),
 ADCReader(2, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(3, polling_delay_ms,filter_cutoff_frequency),
 ADCReader(4, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(11, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(12, polling_delay_ms,filter_cutoff_frequency),
 ]
 rx_modules = [
     Rx5808RegisterCommunication(6,5,9),
     Rx5808RegisterCommunication(6,5,8),
-    Rx5808RegisterCommunication(6,5,7)
+    Rx5808RegisterCommunication(6,5,7),
+    Rx5808RegisterCommunication(6,5,10),
+    Rx5808RegisterCommunication(6,5,44),
+    Rx5808RegisterCommunication(6,5,43)
 ]
 peak_detectors = [
+    PeakDetector(40000,40000),
+    PeakDetector(40000,40000),
+    PeakDetector(40000,40000),
     PeakDetector(40000,40000),
     PeakDetector(40000,40000),
     PeakDetector(40000,40000)
@@ -217,9 +229,16 @@ peak_detectors = [
 
 
 print("Devices Initialized")
+
 #rssi, last_pass_start,last_pass_end,pass_state, pass count
-lane_timings = [(0,0,0,0,0),(0,0,0,0,0),(0,0,0,0,0)]
-lane_states = [True,True,True]
+lane_timings = []
+for i in range(len(rx_modules)):
+    lane_timings.append((0,0,0,0,0))
+
+lane_states = []
+for i in range(len(rx_modules)):
+    lane_states.append(True)
+
 asyncio.run(init_device())
 
 
