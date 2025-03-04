@@ -81,6 +81,27 @@ async def command_loop():
                     node_comms.send_ack_for_command(command)
                 else:
                     node_comms.send_error_for_command(command)
+            elif isinstance(command, commands.InitialiseNode):
+                print("Initialise Node Lane Count: "+str(command.lane_count)+" Enabled Lanes: "+str(command.enabled_lanes))
+                asyncio.create_task(sound_buzzer(((1,1000))))
+                for lane_index in range(len(command.lane_configurations)):
+                    node_comms.send_status_for_command(command)
+                    lane = command.lane_configurations[lane_index]
+                    print("Initialise Lane "+ str(lane_index) +" Frequency: " +str(lane.frequency_in_mhz) + " Entry: "+str(lane.entry_threshold)+" Exit: "+str(lane.exit_threshold))  
+                    peak_detectors[lane_index].entry_threshold = lane.entry_threshold     
+                    peak_detectors[lane_index].exit_threshold = lane.exit_threshold
+
+                    while not rx_modules[lane_index].tune(lane.frequency_in_mhz):
+                        print("Tune Failed")
+                        asyncio.create_task(sound_buzzer(((1,200),(0,200),(1,200))))
+                        await asyncio.sleep_ms(500)
+                        node_comms.send_status_for_command(command)
+                        
+                    print("Tune Successful")                    
+                    asyncio.create_task(sound_buzzer(((1,100),(0,100),(1,100),(0,100),(1,100))))
+                node_comms.send_ack_for_command(command)
+                asyncio.create_task(sound_buzzer(((1,1000),(0,1000),(1,1000))))
+
             elif isinstance(command, commands.ConfigureNode):
                 print("Configure command received")
                 node_id = command.node_id
