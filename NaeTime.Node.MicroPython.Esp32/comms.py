@@ -9,6 +9,8 @@ NODE_TIMINGS = 0x03
 CONFIGURE_LANE_ENTRY_THRESHOLD = 0x04
 CONFIGURE_LANE_EXIT_THRESHOLD = 0x05
 CONFIGURE_LANE_ENABLED = 0x06
+INITIALISE_NODE = 0x07
+STATUS = 0xFD
 ERROR = 0xFE
 ACK = 0xFF
 
@@ -54,6 +56,17 @@ class RFM69NodeCommunication:
             elif command_id == CONFIGURE_LANE_ENABLED:
                 lane, enabled = struct.unpack("<BB", payload)
                 return commands.ConfigureLaneEnabled(lane, enabled)
+            elif command_id == INITIALISE_NODE:
+                node_template = "<BB"
+                node_info_size = struct.calcsize(node_template)
+                enabled_lanes, lane_count = struct.unpack(node_template, payload)
+                lane_infos = []
+                for i in range(lane_count):
+                    lane_template = "<HHH"
+                    lane_info_size = struct.calcsize(lane_template)
+                    frequency_in_mhz, entry_threshold, exit_threshold = struct.unpack(lane_template, payload[node_info_size + i*lane_info_size:])
+                    lane_infos.append(commands.LaneConfiguration(frequency_in_mhz, entry_threshold, exit_threshold))
+                return commands.InitialiseNode(enabled_lanes, lane_count, lane_infos)
         except Exception as e:
             print("Process Packets Error: ", e)
 
@@ -62,6 +75,9 @@ class RFM69NodeCommunication:
 
     def send_error_for_command(self, command):
         self._send_response(ERROR, command)
+
+    def send_status_for_command(self, command):
+        self._send_response(STATUS, command)
         
     def _send_response(self, response, command):
         if(isinstance(command, commands.TuneLane)):
@@ -76,6 +92,9 @@ class RFM69NodeCommunication:
         elif(isinstance(command, commands.ConfigureLaneEnabled)):
             print("Sending lane enabled response:", response)
             data = struct.pack("<BBB",CONFIGURE_LANE_ENABLED, command.lane, command.enabled)
+        elif(isinstance(command, commands.InitialiseNode)):
+            print("Send initialise node response:", response)
+            data = struct.pack("<B",INITIALISE_NODE)
         else:
             raise ValueError("Command response Not Supported")
            
