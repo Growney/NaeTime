@@ -1,8 +1,4 @@
-﻿
-using NaeTime.Management.Messages;
-using NaeTime.Persistence.EntityFramework;
-
-namespace NaeTime.Persistence;
+﻿namespace NaeTime.Management.Persistence.EntityFramework;
 internal class ActiveService
 {
     private readonly NaeTimeDbContext _dbContext;
@@ -41,7 +37,7 @@ internal class ActiveService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<Management.Messages.Models.ActiveSession?> GetActiveSession()
+    public async Task<Messages.Models.ActiveSession?> GetActiveSession()
     {
         ActiveSession? active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
         if (active == null)
@@ -49,9 +45,9 @@ internal class ActiveService
             return null;
         }
 
-        return new Management.Messages.Models.ActiveSession(active.SessionId, active.SessionType switch
+        return new Messages.Models.ActiveSession(active.SessionId, active.SessionType switch
         {
-            SessionType.OpenPractice => Management.Messages.Models.ActiveSession.SessionType.OpenPractice,
+            SessionType.OpenPractice => Messages.Models.ActiveSession.SessionType.OpenPractice,
             _ => throw new NotImplementedException()
         });
     }
