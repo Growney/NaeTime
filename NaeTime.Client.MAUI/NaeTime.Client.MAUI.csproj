@@ -95,13 +95,14 @@
       <ProjectReference Include="..\NaeTime.Client.Razor\NaeTime.Client.Razor.csproj" />
       <ProjectReference Include="..\NaeTime.Hardware.ImmersionRC\NaeTime.Hardware.ImmersionRC.csproj" />
       <ProjectReference Include="..\NaeTime.Hardware.Node.Esp32\NaeTime.Hardware.Node.Esp32.csproj" />
-      <ProjectReference Include="..\NaeTime.Hardware.SQLite\NaeTime.Hardware.SQLite.csproj" />
+      <ProjectReference Include="..\NaeTime.Hardware.Persistence.EntityFramework\NaeTime.Hardware.Persistence.EntityFramework.csproj" />
       <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
-      <ProjectReference Include="..\NaeTime.Management.SQLite\NaeTime.Management.SQLite.csproj" />
-      <ProjectReference Include="..\NaeTime.OpenPractice.SQLite\NaeTime.OpenPractice.SQLite.csproj" />
+      <ProjectReference Include="..\NaeTime.Management.Persistence.EntityFramework\NaeTime.Management.Persistence.EntityFramework.csproj" />
+      <ProjectReference Include="..\NaeTime.OpenPractice.Persistence.EntityFramework\NaeTime.OpenPractice.Persistence.EntityFramework.csproj" />
       <ProjectReference Include="..\NaeTime.OpenPractice\NaeTime.OpenPractice.csproj" />
+      <ProjectReference Include="..\NaeTime.Persistence.SQLite\NaeTime.Persistence.SQLite.csproj" />
       <ProjectReference Include="..\NaeTime.PubSub.InMemory\NaeTime.PubSub.InMemory.csproj" />
-      <ProjectReference Include="..\NaeTime.Timing.SQLite\NaeTime.Timing.SQLite.csproj" />
+      <ProjectReference Include="..\NaeTime.Timing.Persistence.EntityFramework\NaeTime.Timing.Persistence.EntityFramework.csproj" />
       <ProjectReference Include="..\NaeTime.Timing\NaeTime.Timing.csproj" />
     </ItemGroup>
 

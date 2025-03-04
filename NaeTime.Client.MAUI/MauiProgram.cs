@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using NaeTime.Client.MAUI.Lib;
 using NaeTime.Hardware.Node.Esp32.Extensions;
+using NaeTime.Persistence.SQLite.Extensions;
 using Syncfusion.Blazor;
 
 namespace NaeTime.Client.MAUI;
@@ -22,11 +23,13 @@ public static class MauiProgram
 
         builder.Services.AddNaeTimeInMemoryPubSub();
 
+        builder.Services.AddSQLiteDbContext();
+
         //Must add all the SQLite services first so that the service runner creates the databases before the other services start
-        builder.Services.AddSQLiteManagement();
-        builder.Services.AddSQLiteHardware();
-        builder.Services.AddSQLiteTiming();
-        builder.Services.AddSQLiteOpenPractice();
+        builder.Services.AddEntityFrameworkManagement();
+        builder.Services.AddEntityFrameworkHardware();
+        builder.Services.AddEntityFrameworkTiming();
+        builder.Services.AddEntityFrameworkOpenPractice();
 
         //Add Client Configuration Services
         builder.Services.AddLocalClientConfiguration<LocalStorageProvider>();
