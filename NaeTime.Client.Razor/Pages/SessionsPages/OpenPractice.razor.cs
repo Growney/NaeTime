@@ -2,6 +2,7 @@
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.Management.Messages;
+using NaeTime.Management.Messages.Models;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.PubSub.Abstractions;
 
@@ -47,7 +48,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
             _tracks.AddRange(tracksResponse.Select(x => new TrackDetails(x.Id, x.Name, x.MinimumLapTimeMilliseconds, x.MaximumLapTimeMilliseconds, x.Timers, x.AllowedLanes)));
         }
 
-        IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>? activeLaneConfigurations = await RpcClient.InvokeAsync<IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>>("GetActiveLaneConfigurations");
+        IEnumerable<ActiveLaneConfiguration>? activeLaneConfigurations = await RpcClient.InvokeAsync<IEnumerable<ActiveLaneConfiguration>>("GetActiveLaneConfigurations");
 
         if (activeLaneConfigurations != null)
         {

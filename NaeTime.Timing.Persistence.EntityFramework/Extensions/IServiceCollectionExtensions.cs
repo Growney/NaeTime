@@ -6,7 +6,6 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddEntityFrameworkTiming(this IServiceCollection services)
     {
         services.AddEventAndRemoteProcedureCallHub<LaneService>();
-        services.AddEventAndRemoteProcedureCallHub<ActiveTimingService>();
 
         return services;
     }

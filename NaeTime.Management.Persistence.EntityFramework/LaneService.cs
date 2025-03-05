@@ -1,4 +1,6 @@
-﻿namespace NaeTime.Timing.Persistence.EntityFramework;
+﻿using NaeTime.Management.Messages.Models;
+
+namespace NaeTime.Timing.Persistence.EntityFramework;
 internal class LaneService
 {
     private readonly NaeTimeDbContext _dbContext;
@@ -6,6 +8,8 @@ internal class LaneService
     {
         _dbContext = dbContext;
     }
+    public async Task<IEnumerable<ActiveLaneConfiguration>> GetActiveLaneConfigurations() =>
+        await _dbContext.Lanes.Select(x => new Messages.Models.ActiveLaneConfiguration(x.Id, x.BandId, x.FrequencyInMhz, x.IsEnabled)).ToListAsync();
     public async Task When(LaneRadioFrequencyConfigured laneRadioFrequencyConfigured)
     {
         Lane? existing = await _dbContext.Lanes.FindAsync(laneRadioFrequencyConfigured.LaneNumber).ConfigureAwait(false);
