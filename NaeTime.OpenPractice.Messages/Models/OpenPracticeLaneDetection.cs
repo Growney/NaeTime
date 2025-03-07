@@ -1,0 +1,2 @@
+﻿namespace NaeTime.OpenPractice.Messages.Models;
+public record OpenPracticeLaneDetection(Guid Id, Guid SessionId, Guid TimerId, Guid? PilotId, byte TimerIndex, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime, bool IsIncluded);

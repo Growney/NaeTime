@@ -1,7 +1,7 @@
 ﻿using NaeTime.Hardware.Abstractions;
+using NaeTime.Hardware.Messages;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.PubSub.Abstractions;
-using NaeTime.Timing.Messages.Events;
 
 namespace NaeTime.OpenPractice;
 internal class DetectionService
@@ -17,67 +17,62 @@ internal class DetectionService
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
     }
 
-    public async Task When(OpenPracticeSessionDetectionTriggered triggered)
+    public async Task When(TimerDetectionOccured detection)
     {
-        Messages.Models.OpenPracticeSession? session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", triggered.SessionId);
+        Management.Messages.Models.ActiveSession? activeSessionReponse = await _rpcClient.InvokeAsync<Management.Messages.Models.ActiveSession?>("GetActiveSession");
+
+        if (activeSessionReponse == null || activeSessionReponse.Type != Management.Messages.Models.ActiveSession.SessionType.OpenPractice)
+        {
+            return;
+        }
+
+        OpenPractice.Messages.Models.OpenPracticeSession? session = await _rpcClient.InvokeAsync<OpenPractice.Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", activeSessionReponse.SessionId);
 
         if (session == null)
         {
             return;
         }
 
-        await _eventClient.PublishAsync(new SessionDetectionOccured(session.Id, triggered.TimerId, triggered.Lane, session.TrackId, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, null, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
+        Management.Messages.Models.Track? track = await _rpcClient.InvokeAsync<Management.Messages.Models.Track?>("GetTrack", session.TrackId);
+
+        if (track == null)
+        {
+            return;
+        }
+
+        int timerIndex = track.Timers.IndexOf(detection.TimerId);
+
+        if (timerIndex == -1)
+        {
+            return;
+        }
+
+        OpenPractice.Messages.Models.PilotLane? lane = session.ActiveLanes.FirstOrDefault(l => l.Lane == detection.Lane);
+
+        await _eventClient.PublishAsync(new OpenPractice.Messages.Events.OpenPracticeDetectionAdded(Guid.NewGuid(), session.Id, detection.TimerId, lane?.PilotId, (byte)timerIndex, detection.Lane, detection.HardwareTime, detection.SoftwareTime, detection.UtcTime));
     }
-    public async Task When(OpenPracticeSessionInvalidationTriggered triggered)
+
+    public async Task When(OpenPracticeDetectionAdded detection)
     {
-        Messages.Models.OpenPracticeSession? session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", triggered.SessionId);
+        IEnumerable<Messages.Models.OpenPracticeLaneDetection>? pilotLaneDetections = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.OpenPracticeLaneDetection>>("GetOpenPracticeLaneDetections", detection.SessionId, detection.TimerId, detection.Lane);
 
-        if (session == null)
+        if (pilotLaneDetections == null)
         {
             return;
         }
 
-        Timing.Messages.Models.LaneActiveTimings? activeTimings = await _rpcClient.InvokeAsync<Timing.Messages.Models.LaneActiveTimings>("GetLaneActiveTimings", triggered.SessionId, triggered.Lane);
+        List<Messages.Models.OpenPracticeLaneDetection> pilotLaneDetectionsList = new();
 
-
-        if (activeTimings == null)
+        foreach (Messages.Models.OpenPracticeLaneDetection pilotLaneDetection in pilotLaneDetections)
         {
-            return;
+            if (pilotLaneDetection.Id == detection.Id)
+            {
+                return;
+            }
+
+            pilotLaneDetectionsList.Add(pilotLaneDetection);
         }
 
-        if (activeTimings.Lap == null)
-        {
-            return;
-        }
-
-        long finishedSoftwareTime = _softwareTimer.ElapsedMilliseconds;
-        DateTime finishedUtcTime = DateTime.UtcNow;
-
-        long totalTime = CalculateTotalTime(activeTimings.Lap.StartedSoftwareTime, activeTimings.Lap.StartedUtcTime, finishedSoftwareTime, finishedUtcTime);
-
-        await _eventClient.PublishAsync(new LapInvalidated(session.Id, triggered.Lane, activeTimings.LapNumber, activeTimings.Lap.StartedSoftwareTime, activeTimings.Lap.StartedUtcTime, activeTimings.Lap.StartedHardwareTime, finishedSoftwareTime, finishedUtcTime, null, totalTime, LapInvalidated.LapInvalidReason.Cancelled)).ConfigureAwait(false);
-    }
-    private long CalculateTotalTime(long startSoftwareTime, DateTime startUtcTime, long endSoftwareTime, DateTime endUtcTime)
-    {
-        long softwareDifference = endSoftwareTime - startSoftwareTime;
-        if (softwareDifference < 0)
-        {
-            return (long)endUtcTime.Subtract(startUtcTime).TotalMilliseconds;
-        }
-        else
-        {
-            return softwareDifference;
-        }
-    }
-    public async Task When(ActiveOpenPracticeSessionDetectionOccured detection)
-    {
-        Messages.Models.OpenPracticeSession? session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", detection.SessionId);
-
-        if (session == null)
-        {
-            return;
-        }
-
-        await _eventClient.PublishAsync(new SessionDetectionOccured(session.Id, detection.TimerId, detection.Lane, session.TrackId, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds, detection.HardwareTime, detection.SoftwareTime, detection.UtcTime));
+        pilotLaneDetectionsList.Sort((x, y) => x.UtcTime.CompareTo(y.UtcTime));
     }
 }

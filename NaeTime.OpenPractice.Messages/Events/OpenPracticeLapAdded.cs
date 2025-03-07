@@ -1,0 +1,2 @@
+﻿namespace NaeTime.OpenPractice.Messages.Events;
+public record OpenPracticeLapAdded(Guid LapId, Guid SessionId, Guid PilotId, DateTime StartedUtc, DateTime FinishedUtc, long TotalMilliseconds, Guid StartDetection, Guid EndDetection);

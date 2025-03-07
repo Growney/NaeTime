@@ -16,7 +16,7 @@ public class OpenPracticeSessionManager
 
     public async Task When(LapCompleted lapCompleted)
     {
-        Messages.Models.OpenPracticeSession? sessionResponse = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", lapCompleted.SessionId);
+        Messages.Models.OpenPracticeSessionWithLaps? sessionResponse = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSessionWithLaps?>("GetOpenPracticeSession", lapCompleted.SessionId);
 
         if (sessionResponse == null)
         {
@@ -35,7 +35,7 @@ public class OpenPracticeSessionManager
     }
     public async Task When(LapInvalidated lapInvalidated)
     {
-        Messages.Models.OpenPracticeSession? sessionResponse = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", lapInvalidated.SessionId);
+        Messages.Models.OpenPracticeSessionWithLaps? sessionResponse = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSessionWithLaps?>("GetOpenPracticeSession", lapInvalidated.SessionId);
 
         if (sessionResponse == null)
         {

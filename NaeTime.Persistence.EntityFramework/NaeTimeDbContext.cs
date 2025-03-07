@@ -6,6 +6,7 @@ public class NaeTimeDbContext : DbContext
 {
     public DbSet<OpenPracticeSession> OpenPracticeSessions { get; set; }
     public DbSet<OpenPracticeLap> OpenPracticeLaps { get; set; }
+    public DbSet<OpenPracticeLaneDetection> OpenPracticeDetections { get; set; }
     public DbSet<ConsecutiveLapLeaderboardPosition> ConsecutiveLapLeaderboardPositions { get; set; }
     public DbSet<SingleLapLeaderboardPosition> SingleLapLeaderboardPositions { get; set; }
     public DbSet<TotalLapsLeaderboardPosition> TotalLapsLeaderboardPositions { get; set; }
@@ -15,7 +16,6 @@ public class NaeTimeDbContext : DbContext
     public DbSet<ActiveSession> ActiveSession { get; set; }
     public DbSet<EthernetLapRF8Channel> EthernetLapRF8Channels { get; set; }
     public DbSet<TimerStatus> TimerStatuses { get; set; }
-    public DbSet<Detection> Detections { get; set; }
     public DbSet<SerialEsp32Node> SerialEsp32Nodes { get; set; }
     public DbSet<Lane> Lanes { get; set; }
     public DbSet<ActiveTimings> ActiveTimings { get; set; }

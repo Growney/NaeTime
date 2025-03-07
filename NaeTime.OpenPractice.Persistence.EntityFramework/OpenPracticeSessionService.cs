@@ -187,6 +187,20 @@ internal class OpenPracticeSessionService
         OpenPracticeLapStatus.Completed => Messages.Models.LapStatus.Completed,
         _ => throw new NotImplementedException()
     };
+
+    public async Task<Messages.Models.OpenPracticeSession?> GetOpenPracticeSession(Guid sessionId)
+    {
+        OpenPracticeSession? session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
+
+        return session == null
+            ? null
+            : new Messages.Models.OpenPracticeSession(sessionId, session.TrackId,
+                session.Name,
+                session.MinimumLapMilliseconds,
+                session.MaximumLapMilliseconds,
+            session.ActiveLanes.Select(y => new Messages.Models.PilotLane(y.PilotId, y.Lane)),
+            session.TrackedConsecutiveLaps.Select(y => y.LapCap));
+    }
     public async Task<IEnumerable<Messages.Models.OpenPracticeSession>> GetOpenPracticeSessions()
     {
         List<OpenPracticeSession> sessions = await _dbContext.OpenPracticeSessions.ToListAsync().ConfigureAwait(false);
@@ -196,15 +210,17 @@ internal class OpenPracticeSessionService
         {
             List<OpenPracticeLap> laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == session.Id).ToListAsync().ConfigureAwait(false);
 
-            responseSessions.Add(new Messages.Models.OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
-                laps.Select(y => new Messages.Models.Lap(y.Id, y.PilotId, y.StartedUtc, y.FinishedUtc, GetSessionResponseStatus(y.Status), y.TotalMilliseconds)),
+            responseSessions.Add(new Messages.Models.OpenPracticeSession(session.Id, session.TrackId,
+                session.Name,
+                session.MinimumLapMilliseconds,
+                session.MaximumLapMilliseconds,
             session.ActiveLanes.Select(y => new Messages.Models.PilotLane(y.PilotId, y.Lane)),
             session.TrackedConsecutiveLaps.Select(y => y.LapCap)));
         }
 
         return responseSessions;
     }
-    public async Task<Messages.Models.OpenPracticeSession?> GetOpenPracticeSession(Guid sessionId)
+    public async Task<Messages.Models.OpenPracticeSessionWithLaps?> GetOpenPracticeSessionWithLaps(Guid sessionId)
     {
         OpenPracticeSession? session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
 
@@ -215,7 +231,7 @@ internal class OpenPracticeSessionService
 
         List<OpenPracticeLap> laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == sessionId).ToListAsync().ConfigureAwait(false);
 
-        return new Messages.Models.OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
+        return new Messages.Models.OpenPracticeSessionWithLaps(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
                        laps.Select(x => new Messages.Models.Lap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc, GetSessionResponseStatus(x.Status), x.TotalMilliseconds)),
                                   session.ActiveLanes.Select(x => new Messages.Models.PilotLane(x.PilotId, x.Lane)),
                                              session.TrackedConsecutiveLaps.Select(x => x.LapCap));
@@ -248,7 +264,6 @@ internal class OpenPracticeSessionService
             _ => throw new NotImplementedException()
         }, x.TotalMilliseconds));
     }
-
     public async Task<Messages.Models.Lap?> GetOpenPracticeSessionLap(Guid lapId)
     {
         OpenPracticeLap? lap = await _dbContext.OpenPracticeLaps.Where(x => x.Id == lapId).FirstOrDefaultAsync();
@@ -262,7 +277,6 @@ internal class OpenPracticeSessionService
                 _ => throw new NotImplementedException()
             }, lap.TotalMilliseconds);
     }
-
     public async Task<IEnumerable<Messages.Models.Lap>> GetOpenPracticeLaps(IEnumerable<Guid> lapIds)
     {
         List<OpenPracticeLap> laps = await _dbContext.OpenPracticeLaps.Where(x => lapIds.Contains(x.Id)).ToListAsync();
@@ -274,7 +288,6 @@ internal class OpenPracticeSessionService
             _ => throw new NotImplementedException()
         }, x.TotalMilliseconds));
     }
-
     public async Task<IEnumerable<Messages.Models.LapRecord>> GetOpenPracticeSessionLapPilotLapRecords(Guid sessionId, Guid pilotId)
     {
         List<Messages.Models.LapRecord> records = new();
@@ -293,6 +306,11 @@ internal class OpenPracticeSessionService
         }
 
         return records;
+    }
+    public async Task<IEnumerable<Messages.Models.OpenPracticeLaneDetection>> GetOpenPracticeSessionPilotLaneDetections(Guid sessionId, Guid pilotId)
+    {
+        List<OpenPracticeLaneDetection> detections = await _dbContext.OpenPracticeDetections.Where(x => x.SessionId == sessionId && x.PilotId == pilotId).ToListAsync().ConfigureAwait(false);
+        return detections.Select(x => new Messages.Models.OpenPracticeLaneDetection(x.Id, x.SessionId, x.TimerId, x.PilotId, x.TimerIndex, x.Lane, x.HardwareTime, x.SoftwareTime, x.UtcTime, x.IsIncluded));
     }
 }
 

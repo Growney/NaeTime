@@ -61,7 +61,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
             }));
         }
 
-        IEnumerable<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession>? sessions = await RpcClient.InvokeAsync<IEnumerable<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession>>("GetOpenPracticeSessions");
+        IEnumerable<NaeTime.OpenPractice.Messages.Models.OpenPracticeSessionWithLaps>? sessions = await RpcClient.InvokeAsync<IEnumerable<NaeTime.OpenPractice.Messages.Models.OpenPracticeSessionWithLaps>>("GetOpenPracticeSessions");
         if (sessions != null)
         {
             _sessionDetails.AddRange(sessions.Select(x => new SessionDetails
@@ -72,7 +72,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
             }));
         }
 
-
         Management.Messages.Models.ActiveSession? activeSessionReponse = await RpcClient.InvokeAsync<Management.Messages.Models.ActiveSession?>("GetActiveSession");
 
         if (activeSessionReponse != null)
@@ -80,7 +79,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
             _activeSessionId = activeSessionReponse.SessionId;
             await SetupForSession(activeSessionReponse.SessionId);
         }
-
     }
 
     public async Task When(SessionActivated session)
@@ -99,7 +97,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
     {
         _selectedSession = null;
         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-        NaeTime.OpenPractice.Messages.Models.OpenPracticeSession? practiceSessionResponse = await RpcClient.InvokeAsync<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", sessionId);
+        NaeTime.OpenPractice.Messages.Models.OpenPracticeSessionWithLaps? practiceSessionResponse = await RpcClient.InvokeAsync<NaeTime.OpenPractice.Messages.Models.OpenPracticeSessionWithLaps?>("GetOpenPracticeSession", sessionId);
         if (practiceSessionResponse == null)
         {
             return;
