@@ -2,6 +2,7 @@
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
@@ -10,7 +11,7 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
     [Parameter]
     public Guid SessionId { get; set; }
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
     private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
     [Inject]
@@ -23,11 +24,11 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
     {
         EventRegistrarScope.RegisterHub(this);
 
-        IEnumerable<OpenPractice.Messages.Models.SingleLapLeaderboardPosition>? initialPositions = await RpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.SingleLapLeaderboardPosition>>("GetOpenPracticeSessionSingleLapLeaderboardPositions", SessionId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.SingleLapLeaderboardPosition> initialPositions = await Persistence.OpenPractice.GetOpenPracticeSessionSingleLapLeaderboardPositions(SessionId);
 
         if (initialPositions != null)
         {
-            foreach (OpenPractice.Messages.Models.SingleLapLeaderboardPosition position in initialPositions)
+            foreach (Persistence.Abstractions.OpenPractice.SingleLapLeaderboardPosition position in initialPositions)
             {
                 _positions.Add(new SingleLapLeaderboardPosition()
                 {
@@ -40,7 +41,7 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
             }
         }
 
-        IEnumerable<Management.Messages.Models.Pilot>? initialPilots = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
+        IEnumerable<Persistence.Abstractions.Management.Pilot> initialPilots = await Persistence.Management.GetPilots();
 
         if (initialPilots != null)
         {

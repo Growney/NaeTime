@@ -1,29 +1,30 @@
 ﻿using Microsoft.AspNetCore.Components;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Persistence.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.TrackComponents;
 public partial class TrackTuner : ComponentBase
 {
     [Inject]
-    public IRemoteProcedureCallClient RpcClient { get; set; } = default!;
+    public INaeTimePersistence Persistence { get; set; } = default!;
 
     [EditorRequired]
     [Parameter]
     public Guid TrackId { get; set; }
 
-    private readonly List<Hardware.Messages.Models.TimerDetails> _trackTimers = new();
+    private readonly List<NaeTime.Persistence.Abstractions.Hardware.TimerDetails> _trackTimers = new();
     private int _laneCount = 0;
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        Management.Messages.Models.Track? track = await RpcClient.InvokeAsync<Management.Messages.Models.Track>("GetTrack", TrackId);
+
+        Persistence.Abstractions.Management.Track? track = await Persistence.Management.GetTrack();
 
         if (track == null)
         {
             return;
         }
 
-        IEnumerable<Hardware.Messages.Models.TimerDetails>? allTimers = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
+        IEnumerable<NaeTime.Persistence.Abstractions.Hardware.TimerDetails>? allTimers = await Persistence.Hardware.GetAllTimerDetails();
 
         if (allTimers == null)
         {
@@ -39,7 +40,7 @@ public partial class TrackTuner : ComponentBase
 
         foreach (Guid timerId in track.Timers)
         {
-            Hardware.Messages.Models.TimerDetails? timer = allTimers.FirstOrDefault(x => x.Id == timerId);
+            NaeTime.Persistence.Abstractions.Hardware.TimerDetails? timer = allTimers.FirstOrDefault(x => x.Id == timerId);
             if (timer != null)
             {
                 _laneCount = Math.Min(_laneCount, timer.MaxLanes);

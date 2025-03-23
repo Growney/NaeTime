@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Hardware.Messages;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 using System.Net;
 
@@ -8,7 +9,7 @@ namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class UpdateEthernetLapRF8Channel : ComponentBase
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
     private IEventClient EventClient { get; set; } = null!;
     [Inject]
@@ -26,7 +27,7 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
     {
         await base.OnInitializedAsync();
 
-        Hardware.Messages.Models.EthernetLapRF8ChannelTimer? response = await RpcClient.InvokeAsync<Hardware.Messages.Models.EthernetLapRF8ChannelTimer?>("GetEthernetLapRF8ChannelTimer", TimerId);
+        NaeTime.Persistence.Abstractions.Hardware.EthernetLapRF8ChannelTimer? response = await Persistence.Hardware.GetEthernetLapRF8ChannelTimer(TimerId);
 
         if (response == null)
         {

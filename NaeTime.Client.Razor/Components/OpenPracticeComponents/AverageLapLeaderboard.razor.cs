@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
@@ -11,7 +12,7 @@ public partial class AverageLapLeaderboard
     [EditorRequired]
     public Guid SessionId { get; set; }
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
     private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
 
@@ -22,34 +23,27 @@ public partial class AverageLapLeaderboard
     {
         EventRegistrarScope.RegisterHub(this);
 
-        IEnumerable<OpenPractice.Messages.Models.AverageLapLeaderboardPosition>? initialPositions = await RpcClient.InvokeAsync<IEnumerable<NaeTime.OpenPractice.Messages.Models.AverageLapLeaderboardPosition>>("GetOpenPracticeSessionAverageLapLeaderboardPositions", SessionId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.AverageLapLeaderboardPosition> initialPositions = await Persistence.OpenPractice.GetOpenPracticeSessionAverageLapLeaderboardPositions(SessionId);
 
-        if (initialPositions != null)
+        _positions.AddRange(initialPositions.Select(position => new AverageLapLeaderboardPosition()
         {
-            foreach (OpenPractice.Messages.Models.AverageLapLeaderboardPosition position in initialPositions)
-            {
-                _positions.Add(new AverageLapLeaderboardPosition()
-                {
-                    Position = position.Position,
-                    PilotId = position.PilotId,
-                    AverageMilliseconds = position.AverageMilliseconds,
-                    FirstLapCompletionUtc = position.FirstLapCompletion,
-                });
-            }
-        }
+            Position = position.Position,
+            PilotId = position.PilotId,
+            AverageMilliseconds = position.AverageMilliseconds,
+            FirstLapCompletionUtc = position.FirstLapCompletion,
+        }));
 
-        IEnumerable<Management.Messages.Models.Pilot>? initialPilots = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
 
-        if (initialPilots != null)
+        IEnumerable<Persistence.Abstractions.Management.Pilot> initialPilots = await Persistence.Management.GetPilots();
+
+        _pilots.AddRange(initialPilots.Select(x => new Pilot()
         {
-            _pilots.AddRange(initialPilots.Select(x => new Pilot()
-            {
-                Id = x.Id,
-                FirstName = x.FirstName,
-                LastName = x.LastName,
-                CallSign = x.CallSign
-            }));
-        }
+            Id = x.Id,
+            FirstName = x.FirstName,
+            LastName = x.LastName,
+            CallSign = x.CallSign
+        }));
+
 
         await base.OnInitializedAsync();
     }

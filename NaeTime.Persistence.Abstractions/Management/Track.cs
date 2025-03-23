@@ -1,2 +1,2 @@
-﻿namespace NaeTime.Management.Messages.Models;
+﻿namespace NaeTime.Persistence.Abstractions.Management;
 public record Track(Guid Id, string Name, long MinimumLapTimeMilliseconds, long? MaximumLapTimeMilliseconds, IEnumerable<Guid> Timers, byte AllowedLanes);

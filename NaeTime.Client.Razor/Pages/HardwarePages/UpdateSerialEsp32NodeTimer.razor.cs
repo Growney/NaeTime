@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Hardware.Messages;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class UpdateSerialEsp32NodeTimer
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
     private IEventClient EventClient { get; set; } = null!;
     [Inject]
@@ -25,7 +26,7 @@ public partial class UpdateSerialEsp32NodeTimer
     {
         await base.OnInitializedAsync();
 
-        Hardware.Messages.Models.SerialEsp32Node? response = await RpcClient.InvokeAsync<Hardware.Messages.Models.SerialEsp32Node?>("GetSerialEsp32NodeTimer", TimerId);
+        NaeTime.Persistence.Abstractions.Hardware.SerialEsp32Node? response = await Persistence.Hardware.GetSerialEsp32NodeTimer(TimerId);
 
         if (response == null)
         {

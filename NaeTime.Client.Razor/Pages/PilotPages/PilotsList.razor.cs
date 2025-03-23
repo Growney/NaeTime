@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Persistence.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.PilotPages;
 public partial class PilotsList : ComponentBase
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -14,7 +14,7 @@ public partial class PilotsList : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        IEnumerable<Management.Messages.Models.Pilot>? pilotsResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
+        IEnumerable<Persistence.Abstractions.Management.Pilot>? pilotsResponse = await Persistence.Management.GetPilots();
 
         if (pilotsResponse == null)
         {

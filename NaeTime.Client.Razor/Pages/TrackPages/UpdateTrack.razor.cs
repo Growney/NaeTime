@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Management.Messages;
+using NaeTime.Persistence.Abstractions.Management;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
@@ -24,7 +25,7 @@ public partial class UpdateTrack
 
     protected override async Task OnInitializedAsync()
     {
-        Management.Messages.Models.Track? trackResponse = await RpcClient.InvokeAsync<Management.Messages.Models.Track>("GetTrack", TrackId);
+        Persistence.Abstractions.Management.Track? trackResponse = await RpcClient.InvokeAsync<Persistence.Abstractions.Management.Track>("GetTrack", TrackId);
 
         if (trackResponse == null)
         {

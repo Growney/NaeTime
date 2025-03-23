@@ -2,6 +2,7 @@
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 using System.Collections.Concurrent;
 
@@ -15,7 +16,7 @@ public partial class PilotLapList : ComponentBase
     [Parameter]
     public string? PilotName { get; set; }
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
     private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
 
@@ -26,50 +27,44 @@ public partial class PilotLapList : ComponentBase
     {
         EventRegistrarScope.RegisterHub(this);
 
-        IEnumerable<OpenPractice.Messages.Models.Lap>? initialLaps = await RpcClient.InvokeAsync<IEnumerable<NaeTime.OpenPractice.Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", SessionId, PilotId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> initialLaps = await Persistence.OpenPractice.GetPilotOpenPracticeSessionLaps(SessionId, PilotId);
 
-        if (initialLaps != null)
+        _laps.AddRange(initialLaps.Select(x => new OpenPracticeLap()
         {
-            _laps.AddRange(initialLaps.Select(x => new OpenPracticeLap()
+            Id = x.Id,
+            PilotId = x.PilotId,
+            PilotName = null,
+            StartedUtc = x.StartedUtc,
+            FinishedUtc = x.FinishedUtc,
+            Status = x.Status switch
             {
-                Id = x.Id,
-                PilotId = x.PilotId,
-                PilotName = null,
-                StartedUtc = x.StartedUtc,
-                FinishedUtc = x.FinishedUtc,
-                Status = x.Status switch
-                {
-                    OpenPractice.Messages.Models.LapStatus.Invalid => OpenPracticeLapStatus.Invalid,
-                    OpenPractice.Messages.Models.LapStatus.Completed => OpenPracticeLapStatus.Completed,
-                    _ => throw new NotImplementedException()
-                },
-                TotalMilliseconds = x.TotalMilliseconds
-            }));
-        }
+                NaeTime.Persistence.Abstractions.OpenPractice.LapStatus.Invalid => OpenPracticeLapStatus.Invalid,
+                NaeTime.Persistence.Abstractions.OpenPractice.LapStatus.Completed => OpenPracticeLapStatus.Completed,
+                _ => throw new NotImplementedException()
+            },
+            TotalMilliseconds = x.TotalMilliseconds
+        }));
 
-        IEnumerable<OpenPractice.Messages.Models.LapRecord>? lapRecords = await RpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.LapRecord>>("GetOpenPracticeSessionLapPilotLapRecords", SessionId, PilotId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.LapRecord>? lapRecords = await Persistence.OpenPractice.GetOpenPracticeSessionLapPilotLapRecords(SessionId, PilotId);
 
-        if (lapRecords != null)
+        foreach (Persistence.Abstractions.OpenPractice.LapRecord record in lapRecords)
         {
-            foreach (OpenPractice.Messages.Models.LapRecord record in lapRecords)
+            _recordLaps.AddOrUpdate(record.LapCap,
+            (key) =>
             {
-                _recordLaps.AddOrUpdate(record.LapCap,
-                (key) =>
+                ConcurrentBag<Guid> included = new(record.LapIds);
+                return included;
+            },
+            (key, existing) =>
+            {
+                existing.Clear();
+                foreach (Guid lapId in record.LapIds)
                 {
-                    ConcurrentBag<Guid> included = new(record.LapIds);
-                    return included;
-                },
-                (key, existing) =>
-                {
-                    existing.Clear();
-                    foreach (Guid lapId in record.LapIds)
-                    {
-                        existing.Add(lapId);
-                    }
+                    existing.Add(lapId);
+                }
 
-                    return existing;
-                });
-            }
+                return existing;
+            });
         }
 
         await base.OnInitializedAsync();

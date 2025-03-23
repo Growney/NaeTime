@@ -1,2 +1,2 @@
-﻿namespace NaeTime.OpenPractice.Messages.Models;
+﻿namespace NaeTime.Persistence.Abstractions.OpenPractice;
 public record LapRecord(uint LapCap, IEnumerable<Guid> LapIds);

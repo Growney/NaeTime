@@ -11,7 +11,6 @@ public partial class LocalVolume : ComponentBase
     [Inject]
     public ILocalConfigurationRepository LocalConfiguration { get; set; } = null!;
 
-
     protected override async Task OnInitializedAsync()
     {
         SoundConfiguration currentConfiguration = await LocalConfiguration.GetSoundConfigurationAsync();

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.Persistence.Abstractions.Management;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
@@ -14,14 +15,14 @@ public partial class TrackList
 
     protected override async Task OnInitializedAsync()
     {
-        IEnumerable<Management.Messages.Models.Track>? tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Track>>("GetTracks");
+        IEnumerable<Persistence.Abstractions.Management.Track>? tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Persistence.Abstractions.Management.Track>>("GetTracks");
 
         if (tracksResponse == null)
         {
             return;
         }
 
-        foreach (Management.Messages.Models.Track track in tracksResponse)
+        foreach (Persistence.Abstractions.Management.Track track in tracksResponse)
         {
             Track domainTrack = new()
             {

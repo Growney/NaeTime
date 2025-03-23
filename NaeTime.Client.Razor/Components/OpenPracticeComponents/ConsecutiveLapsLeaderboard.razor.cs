@@ -2,6 +2,7 @@
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
@@ -13,7 +14,7 @@ public partial class ConsecutiveLapsLeaderboard : ComponentBase, IDisposable
     [Parameter]
     public uint LapCap { get; set; }
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
     private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
 
@@ -24,36 +25,31 @@ public partial class ConsecutiveLapsLeaderboard : ComponentBase, IDisposable
     {
         EventRegistrarScope.RegisterHub(this);
 
-        IEnumerable<OpenPractice.Messages.Models.ConsecutiveLapLeaderboardPosition>? initialPositions = await RpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.ConsecutiveLapLeaderboardPosition>>("GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions", SessionId, LapCap);
+        IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapLeaderboardPosition> initialPositions = await Persistence.OpenPractice.GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions(SessionId, LapCap);
 
         if (initialPositions != null)
         {
-            foreach (OpenPractice.Messages.Models.ConsecutiveLapLeaderboardPosition position in initialPositions)
+            _positions.AddRange(initialPositions.Select(position => new ConsecutiveLapLeadboardPosition()
             {
-                _positions.Add(new ConsecutiveLapLeadboardPosition()
-                {
-                    Position = position.Position,
-                    PilotId = position.PilotId,
-                    TotalLaps = position.TotalLaps,
-                    TotalMilliseconds = position.TotalMilliseconds,
-                    LastLapCompletionUtc = position.LastLapCompletionUtc,
-                    IncludedLaps = position.IncludedLaps
-                });
+                Position = position.Position,
+                PilotId = position.PilotId,
+                TotalLaps = position.TotalLaps,
+                TotalMilliseconds = position.TotalMilliseconds,
+                LastLapCompletionUtc = position.LastLapCompletionUtc,
+                IncludedLaps = position.IncludedLaps
             }
+            ));
         }
 
-        IEnumerable<Management.Messages.Models.Pilot>? initialPilots = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
+        IEnumerable<Persistence.Abstractions.Management.Pilot> initialPilots = await Persistence.Management.GetPilots();
 
-        if (initialPilots != null)
+        _pilots.AddRange(initialPilots.Select(x => new Pilot()
         {
-            _pilots.AddRange(initialPilots.Select(x => new Pilot()
-            {
-                Id = x.Id,
-                FirstName = x.FirstName,
-                LastName = x.LastName,
-                CallSign = x.CallSign
-            }));
-        }
+            Id = x.Id,
+            FirstName = x.FirstName,
+            LastName = x.LastName,
+            CallSign = x.CallSign
+        }));
 
         await base.OnInitializedAsync();
     }

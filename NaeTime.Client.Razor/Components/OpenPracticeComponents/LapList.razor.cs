@@ -20,7 +20,6 @@ public partial class LapList : ComponentBase
     [Parameter]
     public IEnumerable<LapRecord> LapRecords { get; set; } = Enumerable.Empty<LapRecord>();
 
-
     [Inject]
     private IEventClient EventClient { get; set; } = null!;
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Management.Messages;
+using NaeTime.Persistence.Abstractions.Management;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.PilotPages;
@@ -23,7 +24,7 @@ public partial class UpdatePilot : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        Management.Messages.Models.Pilot? response = await RpcClient.InvokeAsync<Management.Messages.Models.Pilot>("GetPilot", PilotId);
+        Persistence.Abstractions.Management.Pilot? response = await RpcClient.InvokeAsync<Persistence.Abstractions.Management.Pilot>("GetPilot", PilotId);
 
         if (response == null)
         {

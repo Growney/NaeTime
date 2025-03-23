@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 using System.Collections.Concurrent;
 
@@ -12,7 +13,7 @@ public partial class SessionLapGraph
     public Guid SessionId { get; set; }
 
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
     private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
 
@@ -32,11 +33,11 @@ public partial class SessionLapGraph
     {
         EventRegistrarScope.RegisterHub(this);
 
-        IEnumerable<Management.Messages.Models.Pilot>? pilotsResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
+        IEnumerable<Persistence.Abstractions.Management.Pilot> initialPilots = await Persistence.Management.GetPilots();
 
-        if (pilotsResponse != null)
+        if (initialPilots != null)
         {
-            _pilots.AddRange(pilotsResponse.Select(x => new Pilot()
+            _pilots.AddRange(initialPilots.Select(x => new Pilot()
             {
                 Id = x.Id,
                 FirstName = x.FirstName,
@@ -45,11 +46,11 @@ public partial class SessionLapGraph
             }));
         }
 
-        IEnumerable<OpenPractice.Messages.Models.Lap> sessionLaps = await RpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.Lap>>("GetOpenPracticeSessionLaps", SessionId) ?? Enumerable.Empty<OpenPractice.Messages.Models.Lap>();
+        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> sessionLaps = await Persistence.OpenPractice.GetOpenPracticeSessionLaps(SessionId);
 
-        foreach (OpenPractice.Messages.Models.Lap lap in sessionLaps)
+        foreach (Persistence.Abstractions.OpenPractice.Lap lap in sessionLaps)
         {
-            if (lap.Status != OpenPractice.Messages.Models.LapStatus.Completed)
+            if (lap.Status != NaeTime.Persistence.Abstractions.OpenPractice.LapStatus.Completed)
             {
                 continue;
             }
@@ -153,7 +154,7 @@ public partial class SessionLapGraph
         }
         else
         {
-            OpenPractice.Messages.Models.Lap? sessionLap = await RpcClient.InvokeAsync<OpenPractice.Messages.Models.Lap>("GetOpenPracticeSessionLap", lap.LapId);
+            Persistence.Abstractions.OpenPractice.Lap? sessionLap = await Persistence.OpenPractice.GetOpenPracticeSessionLap(lap.LapId);
 
             if (sessionLap == null)
             {
