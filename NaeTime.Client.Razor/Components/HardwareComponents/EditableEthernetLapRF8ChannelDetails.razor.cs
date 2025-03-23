@@ -8,10 +8,7 @@ using NaeTime.PubSub.Abstractions;
 namespace NaeTime.Client.Razor.Components.HardwareComponents;
 public partial class EditableEthernetLapRF8ChannelDetails : ComponentBase
 {
-    [Inject]
-    public IEventRegistrarScope EventRegistrar { get; set; } = null!;
-    [Inject]
-    public IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence
 
     [Parameter]
     [EditorRequired]
