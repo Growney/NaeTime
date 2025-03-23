@@ -63,7 +63,6 @@ internal class LapRFConnection
 
             await _communication.DisconnectAsync(token).ConfigureAwait(false);
         }
-
     }
     private async Task WaitForDetectionsAsync(CancellationToken token)
     {

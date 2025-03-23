@@ -39,7 +39,6 @@ internal class DetectionService
 
         Timing.Messages.Models.LaneActiveTimings? activeTimings = await _rpcClient.InvokeAsync<Timing.Messages.Models.LaneActiveTimings>("GetLaneActiveTimings", triggered.SessionId, triggered.Lane);
 
-
         if (activeTimings == null)
         {
             return;
@@ -60,14 +59,7 @@ internal class DetectionService
     private long CalculateTotalTime(long startSoftwareTime, DateTime startUtcTime, long endSoftwareTime, DateTime endUtcTime)
     {
         long softwareDifference = endSoftwareTime - startSoftwareTime;
-        if (softwareDifference < 0)
-        {
-            return (long)endUtcTime.Subtract(startUtcTime).TotalMilliseconds;
-        }
-        else
-        {
-            return softwareDifference;
-        }
+        return softwareDifference < 0 ? (long)endUtcTime.Subtract(startUtcTime).TotalMilliseconds : softwareDifference;
     }
     public async Task When(ActiveOpenPracticeSessionDetectionOccured detection)
     {
