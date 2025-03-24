@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using NaeTime.Client.Razor.Lib.Models;
 
 namespace NaeTime.Client.Razor.Components.HardwareComponents;
-public partial class EditableSerialEsp32NodeTimerDetails
+public partial class EditableSerialEsp32NodeTimerDetails : ComponentBase
 {
     [Parameter]
     [EditorRequired]

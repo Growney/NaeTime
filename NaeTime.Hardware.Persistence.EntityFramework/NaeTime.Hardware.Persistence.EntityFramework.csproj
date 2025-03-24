@@ -12,4 +12,8 @@
     <ProjectReference Include="..\NaeTime.PubSub.Abstractions\NaeTime.PubSub.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Extensions\" />
+  </ItemGroup>
+
 </Project>

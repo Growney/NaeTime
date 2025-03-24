@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.Persistence.EntityFramework;
 
 namespace NaeTime.Persistence.SQLite.Extensions;
@@ -18,7 +19,7 @@ public static class IServiceCollectionExtensions
 
         services.AddHostedService<SQLiteDatabaseManager<NaeTimeDbContext>>();
         services.AddDbContext<NaeTimeDbContext>(options => options.UseSqlite($"Data Source={dbPath}", x => x.MigrationsAssembly("NaeTime.Persistence.SQLite")), contextLifetime: ServiceLifetime.Transient);
-
+        services.AddScoped<INaeTimePersistence, EntityFrameworkPersistence>();
         return services;
     }
 }

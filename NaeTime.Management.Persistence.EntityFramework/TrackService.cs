@@ -27,21 +27,4 @@ internal class TrackService
 
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
-
-    public async Task<IEnumerable<Messages.Models.Track>> GetTracks()
-    {
-        List<Messages.Models.Track> tracks = await _dbContext.Tracks.Select(x => new Messages.Models.Track(x.Id, x.Name, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds, x.Timers.Select(y => y.TimerId).ToList(), x.AllowedLanes))
-            .ToListAsync().ConfigureAwait(false);
-
-        return tracks;
-    }
-
-    public async Task<Messages.Models.Track?> GetTrack(Guid trackId)
-    {
-        Track? track = await _dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == trackId).ConfigureAwait(false);
-
-        return track == null
-            ? null
-            : new Messages.Models.Track(track.Id, track.Name, track.MinimumLapMilliseconds, track.MaximumLapMilliseconds, track.Timers.Select(x => x.TimerId).ToList(), track.AllowedLanes);
-    }
 }

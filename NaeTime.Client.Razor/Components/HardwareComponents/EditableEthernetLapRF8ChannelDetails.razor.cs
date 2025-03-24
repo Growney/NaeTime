@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using NaeTime.Client.Razor.Lib.Models;
+using NaeTime.Hardware.ImmersionRC.Abstractions;
+using NaeTime.Hardware.ImmersionRC.Models;
 using NaeTime.Hardware.Messages;
-using NaeTime.Persistence.Abstractions;
-using NaeTime.Persistence.Abstractions.Hardware;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.HardwareComponents;
 public partial class EditableEthernetLapRF8ChannelDetails : ComponentBase
 {
     [Inject]
-    private INaeTimePersistence Persistence { get; set; } = null!;
+    private ILapRFManager LapRFManager { get; set; } = null!;
 
     [Inject]
     private IEventRegistrar EventRegistrar { get; set; } = null!;
@@ -32,7 +32,7 @@ public partial class EditableEthernetLapRF8ChannelDetails : ComponentBase
     {
         EventRegistrar.RegisterHub(this);
 
-        IEnumerable<LapRFLaneConfiguration>? laneConfigurations = await Persistence.Hardware.GetEthernetLapRF8ChannelTimerLaneConfigurations(Details.Id);
+        IEnumerable<Hardware.ImmersionRC.Models.LapRFLaneConfiguration>? laneConfigurations = await LapRFManager.GetTimeLaneConfigurations(Details.Id);
 
         if (laneConfigurations != null)
         {
@@ -42,7 +42,7 @@ public partial class EditableEthernetLapRF8ChannelDetails : ComponentBase
             }
         }
 
-        _isConnected = await Persistence.Hardware.IsTimerConnected(Details.Id);
+        _isConnected = await LapRFManager.IsTimerConnected(Details.Id);
 
         await base.OnInitializedAsync();
     }

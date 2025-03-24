@@ -5,12 +5,12 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddOpenPracticeCore(this IServiceCollection services)
     {
-        services.AddEventAndRemoteProcedureCallHub<DetectionService>();
-        services.AddEventAndRemoteProcedureCallHub<OpenPracticeConsecutiveLapsLeaderboardManager>();
-        services.AddEventAndRemoteProcedureCallHub<OpenPracticeSessionManager>();
-        services.AddEventAndRemoteProcedureCallHub<OpenPracticeSingleLapLeaderboardManager>();
-        services.AddEventAndRemoteProcedureCallHub<OpenPracticeTotalLapsLeaderboardManager>();
-        services.AddEventAndRemoteProcedureCallHub<OpenPracticeAverageLapLeaderboardManager>();
+        services.AddEventHub<DetectionService>();
+        services.AddEventHub<OpenPracticeConsecutiveLapsLeaderboardManager>();
+        services.AddEventHub<OpenPracticeSessionManager>();
+        services.AddEventHub<OpenPracticeSingleLapLeaderboardManager>();
+        services.AddEventHub<OpenPracticeTotalLapsLeaderboardManager>();
+        services.AddEventHub<OpenPracticeAverageLapLeaderboardManager>();
 
         return services;
     }

@@ -1,29 +1,28 @@
 ﻿using Microsoft.Extensions.Hosting;
 using NaeTime.Hardware.Abstractions;
 using NaeTime.Hardware.Messages;
-using NaeTime.Hardware.Messages.Models;
 using NaeTime.Hardware.Node.Esp32.Abstractions;
+using NaeTime.Persistence.Abstractions;
+using NaeTime.Persistence.Abstractions.Hardware;
 using NaeTime.PubSub.Abstractions;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Hardware.Node.Esp32;
 internal class NodeManager : IHostedService
 {
-    private readonly IRemoteProcedureCallClient _rpcClient;
+    private readonly INaeTimePersistence _persistence;
     private readonly IEventRegistrarScope _eventRegistrarScope;
-    private readonly IRemoteProcedureCallRegistrar _rpcRegistrar;
     private readonly ISoftwareTimer _softwareTimer;
     private readonly IEventClient _eventClient;
     private readonly INodeConnectionFactory _connectionFactory;
 
     private readonly ConcurrentDictionary<Guid, NodeConnection> _hardwareProcesses = new();
 
-    public NodeManager(INodeConnectionFactory connectionFactory, IRemoteProcedureCallClient rpcClient, IEventRegistrarScope eventRegistrarScope, IRemoteProcedureCallRegistrar rpcRegistrar, ISoftwareTimer softwareTimer, IEventClient eventClient)
+    public NodeManager(INodeConnectionFactory connectionFactory, INaeTimePersistence persistence, IEventRegistrarScope eventRegistrarScope, ISoftwareTimer softwareTimer, IEventClient eventClient)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
+        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
         _eventRegistrarScope = eventRegistrarScope ?? throw new ArgumentNullException(nameof(eventRegistrarScope));
-        _rpcRegistrar = rpcRegistrar ?? throw new ArgumentNullException(nameof(rpcRegistrar));
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
         _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
 
@@ -32,7 +31,7 @@ internal class NodeManager : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        IEnumerable<SerialEsp32Node>? response = await _rpcClient.InvokeAsync<IEnumerable<SerialEsp32Node>>("GetAllSerialEsp32NodeTimers");
+        IEnumerable<SerialEsp32Node>? response = await _persistence.Hardware.GetAllSerialEsp32NodeTimers();
 
         if (response == null)
         {

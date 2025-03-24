@@ -17,7 +17,7 @@ public partial class TrackTuner : ComponentBase
     {
         await base.OnInitializedAsync();
 
-        Persistence.Abstractions.Management.Track? track = await Persistence.Management.GetTrack();
+        Persistence.Abstractions.Management.Track? track = await Persistence.Management.GetTrack(TrackId);
 
         if (track == null)
         {

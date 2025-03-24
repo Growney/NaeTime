@@ -1,4 +1,5 @@
-﻿using NaeTime.PubSub.Abstractions;
+﻿using NaeTime.Persistence.Abstractions;
+using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;
 using NaeTime.Timing.Models;
 
@@ -6,17 +7,17 @@ namespace NaeTime.Timing;
 internal class LapService
 {
     private readonly IEventClient _eventClient;
-    private readonly IRemoteProcedureCallClient _rpcClient;
+    private readonly INaeTimePersistence _persistence;
 
-    public LapService(IEventClient eventClient, IRemoteProcedureCallClient rpcClient)
+    public LapService(IEventClient eventClient, INaeTimePersistence persistence)
     {
         _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
-        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
+        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
     }
 
     public async Task When(SessionDetectionOccured detection)
     {
-        Management.Messages.Models.Track? track = await _rpcClient.InvokeAsync<Management.Messages.Models.Track?>("GetTrack", detection.TrackId);
+        Persistence.Abstractions.Management.Track? track = await _persistence.Management.GetTrack(detection.TrackId);
 
         if (track == null)
         {
@@ -39,7 +40,7 @@ internal class LapService
 
     private async Task HandleDetection(Guid sessionId, long minimumLapMilliseconds, long? maximumLapMilliseconds, byte lane, byte split, byte timerCount, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        Messages.Models.LaneActiveTimings? activeTimingsResponse = await _rpcClient.InvokeAsync<Messages.Models.LaneActiveTimings>("GetLaneActiveTimings", sessionId, lane).ConfigureAwait(false);
+        Persistence.Abstractions.Timing.LaneActiveTimings? activeTimingsResponse = await _persistence.Timing.GetSessionLaneActiveTimings(sessionId, lane).ConfigureAwait(false);
 
         ActiveLap? activeLap = null;
         if (activeTimingsResponse?.Lap != null)

@@ -1,13 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Persistence.Abstractions.Management;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Persistence.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
 public partial class TrackList
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -15,7 +14,7 @@ public partial class TrackList
 
     protected override async Task OnInitializedAsync()
     {
-        IEnumerable<Persistence.Abstractions.Management.Track>? tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Persistence.Abstractions.Management.Track>>("GetTracks");
+        IEnumerable<Persistence.Abstractions.Management.Track>? tracksResponse = await Persistence.Management.GetTracks();
 
         if (tracksResponse == null)
         {

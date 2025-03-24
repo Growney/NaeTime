@@ -36,19 +36,4 @@ internal class ActiveService
 
         await _dbContext.SaveChangesAsync();
     }
-
-    public async Task<Messages.Models.ActiveSession?> GetActiveSession()
-    {
-        ActiveSession? active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
-        if (active == null)
-        {
-            return null;
-        }
-
-        return new Messages.Models.ActiveSession(active.SessionId, active.SessionType switch
-        {
-            SessionType.OpenPractice => Messages.Models.ActiveSession.SessionType.OpenPractice,
-            _ => throw new NotImplementedException()
-        });
-    }
 }

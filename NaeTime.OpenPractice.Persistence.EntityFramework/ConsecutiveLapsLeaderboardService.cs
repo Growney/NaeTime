@@ -7,18 +7,6 @@ internal class ConsecutiveLapsLeaderboardService
     {
         _dbContext = dbContext;
     }
-    public async Task<IEnumerable<Messages.Models.ConsecutiveLapRecord>> GetPilotOpenPracticeSessionConsecutiveLapRecords(Guid sessionId, Guid pilotId)
-    {
-        List<ConsecutiveLapLeaderboardPosition> positions = await _dbContext.ConsecutiveLapLeaderboardPositions.Where(x => x.SessionId == sessionId && x.PilotId == pilotId).ToListAsync();
-
-        return positions.Select(x => new Messages.Models.ConsecutiveLapRecord(x.LapCap, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(x => x.LapId)));
-    }
-    public async Task<IEnumerable<Messages.Models.ConsecutiveLapLeaderboardPosition>> GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions(Guid sessionId, uint lapCap)
-    {
-        List<ConsecutiveLapLeaderboardPosition> positions = await _dbContext.ConsecutiveLapLeaderboardPositions.Where(x => x.SessionId == sessionId && x.LapCap == lapCap).ToListAsync();
-
-        return positions.Select(x => new Messages.Models.ConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(x => x.LapId)));
-    }
     public Task When(ConsecutiveLapLeaderboardRecordReduced reduced)
         => UpdateLapPosition(reduced.SessionId, reduced.LapCap, null, reduced.PilotId, reduced.TotalLaps, reduced.TotalMilliseconds, reduced.LastLapCompletionUtc, reduced.IncludedLaps);
     public Task When(ConsecutiveLapLeaderboardRecordImproved improved)

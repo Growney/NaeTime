@@ -8,21 +8,6 @@ internal class TotalLapLeaderboardService
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<Messages.Models.TotalLapLeaderboardPosition>> GetOpenPracticeSessionTotalLapLeaderboardPositions(Guid sessionId)
-    {
-        List<TotalLapsLeaderboardPosition> positions = await _dbContext.TotalLapsLeaderboardPositions.Where(x => x.SessionId == sessionId).ToListAsync();
-
-        return positions.Select(x => new Messages.Models.TotalLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.FirstLapCompletionUtc));
-    }
-
-    public async Task<Messages.Models.TotalLapRecord?> GetPilotOpenPracticeSessionTotalLapRecord(Guid sessionId, Guid pilotId)
-    {
-        TotalLapsLeaderboardPosition? position = await _dbContext.TotalLapsLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.PilotId == pilotId);
-
-        return position == null
-            ? null
-            : new Messages.Models.TotalLapRecord(position.TotalLaps, position.FirstLapCompletionUtc);
-    }
     public async Task When(TotalLapsLeaderboardPositionRemoved removed)
     {
         TotalLapsLeaderboardPosition? existing = await _dbContext.TotalLapsLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == removed.SessionId && x.PilotId == removed.PilotId);

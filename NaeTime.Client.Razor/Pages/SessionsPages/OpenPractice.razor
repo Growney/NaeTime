@@ -14,9 +14,9 @@
                             <DropdownMenu>
                                 @foreach (var track in _tracks)
                                 {
-                                    <DropdownItem Type="ButtonType.Button" @onclick="() => StartNewSessionOnTrack(Guid.NewGuid(),track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)">@track.Name</DropdownItem>
+                                    <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => StartNewSessionOnTrack(Guid.NewGuid(),track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)">@track.Name</DropdownItem>
                                 }
-                                <DropdownItem Type="ButtonType.Button" @onclick="() => StartSessionOnNewTrack()">[New Track]</DropdownItem>
+                                <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => StartSessionOnNewTrack()">[New Track]</DropdownItem>
                             </DropdownMenu>
                         </Dropdown>
                         <Dropdown>
@@ -24,7 +24,7 @@
                             <DropdownMenu>
                                 @foreach (var session in _sessionDetails)
                                 {
-                                    <DropdownItem Type="ButtonType.Button" @onclick="() => SetupForSession(session.Id)">@session.Name</DropdownItem>
+                                    <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => SetupForSession(session.Id)">@session.Name</DropdownItem>
                                 }
                             </DropdownMenu>
                         </Dropdown>
@@ -108,7 +108,7 @@
                         {
                             if (!_selectedSession.TrackedConsecutiveLaps.Any(x => x == lap))
                             {
-                                <DropdownItem Type="ButtonType.Button" @onclick="() => TrackConsecutiveLaps(_selectedSession.Id,lap)">@lap</DropdownItem>
+                                <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => TrackConsecutiveLaps(_selectedSession.Id,lap)">@lap</DropdownItem>
                             }
                         }
                     }

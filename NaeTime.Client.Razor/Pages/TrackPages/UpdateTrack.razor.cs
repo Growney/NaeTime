@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Management.Messages;
-using NaeTime.Persistence.Abstractions.Management;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
 public partial class UpdateTrack
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
     private IEventClient EventClient { get; set; } = null!;
     [Inject]
@@ -25,7 +25,7 @@ public partial class UpdateTrack
 
     protected override async Task OnInitializedAsync()
     {
-        Persistence.Abstractions.Management.Track? trackResponse = await RpcClient.InvokeAsync<Persistence.Abstractions.Management.Track>("GetTrack", TrackId);
+        Persistence.Abstractions.Management.Track? trackResponse = await Persistence.Management.GetTrack(TrackId);
 
         if (trackResponse == null)
         {
@@ -41,7 +41,7 @@ public partial class UpdateTrack
         };
         _model.AddTimers(trackResponse.Timers);
 
-        IEnumerable<Hardware.Messages.Models.TimerDetails>? timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
+        IEnumerable<Persistence.Abstractions.Hardware.TimerDetails>? timersResponse = await Persistence.Hardware.GetAllTimerDetails();
 
         if (timersResponse == null)
         {
@@ -53,8 +53,8 @@ public partial class UpdateTrack
         _timers.AddRange(timersResponse.Select(x => new TimerDetails(x.Id, x.Name,
             x.Type switch
             {
-                Hardware.Messages.Models.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
-                Hardware.Messages.Models.TimerType.SerialEsp32Node => TimerType.SerialEsp32Node,
+                NaeTime.Persistence.Abstractions.Hardware.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
+                NaeTime.Persistence.Abstractions.Hardware.TimerType.SerialEsp32Node => TimerType.SerialEsp32Node,
                 _ => throw new NotImplementedException()
             }, maxLanes)));
 

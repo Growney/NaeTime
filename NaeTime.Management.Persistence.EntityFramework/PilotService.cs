@@ -33,19 +33,4 @@ internal class PilotService
 
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
-
-    public async Task<IEnumerable<Messages.Models.Pilot>> GetPilots()
-    {
-        List<Messages.Models.Pilot> pilots = await _dbContext.Pilots.Select(x => new Messages.Models.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign))
-            .ToListAsync().ConfigureAwait(false);
-
-        return pilots;
-    }
-
-    public async Task<Messages.Models.Pilot?> GetPilot(Guid pilotId)
-    {
-        Pilot? pilot = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == pilotId).ConfigureAwait(false);
-
-        return pilot == null ? null : new Messages.Models.Pilot(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign);
-    }
 }

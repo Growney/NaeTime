@@ -3,7 +3,7 @@
         @for(byte i=1; i < _laneCount +1; i++)
         {
             <div style="width:190px;">
-                @if(timer.Type == Hardware.Messages.Models.TimerType.SerialEsp32Node)
+                @if(timer.Type == NaeTime.Persistence.Abstractions.Hardware.TimerType.SerialEsp32Node)
                 {
                     <NodeTimerLaneTuner TimerId=timer.Id LaneId=i></NodeTimerLaneTuner>
                 }

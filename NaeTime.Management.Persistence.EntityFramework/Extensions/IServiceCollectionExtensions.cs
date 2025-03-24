@@ -5,9 +5,9 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddEntityFrameworkManagement(this IServiceCollection services)
     {
-        services.AddEventAndRemoteProcedureCallHub<PilotService>();
-        services.AddEventAndRemoteProcedureCallHub<TrackService>();
-        services.AddEventAndRemoteProcedureCallHub<ActiveService>();
+        services.AddEventHub<PilotService>();
+        services.AddEventHub<TrackService>();
+        services.AddEventHub<ActiveService>();
         return services;
     }
 }

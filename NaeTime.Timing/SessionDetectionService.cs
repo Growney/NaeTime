@@ -1,18 +1,18 @@
 ﻿using NaeTime.Hardware.Messages;
-using NaeTime.Management.Messages.Models;
 using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Timing;
 internal class SessionDetectionService
 {
     private readonly IEventClient _eventClient;
-    private readonly IRemoteProcedureCallClient _rpcClient;
+    private readonly INaeTimePersistence _persistence;
 
-    public SessionDetectionService(IEventClient eventClient, IRemoteProcedureCallClient rpcClient)
+    public SessionDetectionService(IEventClient eventClient, INaeTimePersistence persistence)
     {
         _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
-        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
+        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
     }
 
     public Task When(TimerDetectionTriggered triggered) => TriggerTrackDetection(triggered.TimerId, triggered.Lane, null, triggered.SoftwareTime, triggered.UtcTime);
@@ -21,14 +21,14 @@ internal class SessionDetectionService
 
     private async Task TriggerTrackDetection(Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        ActiveSession? activeSessionResponse = await _rpcClient.InvokeAsync<ActiveSession?>("GetActiveSession");
+        Persistence.Abstractions.Management.ActiveSession? activeSessionResponse = await _persistence.Management.GetActiveSession();
 
         if (activeSessionResponse == null)
         {
             return;
         }
 
-        if (activeSessionResponse.Type == ActiveSession.SessionType.OpenPractice)
+        if (activeSessionResponse.Type == Persistence.Abstractions.Management.ActiveSession.SessionType.OpenPractice)
         {
             await _eventClient.PublishAsync(new ActiveOpenPracticeSessionDetectionOccured(activeSessionResponse.SessionId, timerId, lane, hardwareTime, softwareTime, utcTime));
         }

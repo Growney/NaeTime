@@ -1,4 +1,5 @@
 ﻿using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;
 
@@ -6,43 +7,41 @@ namespace NaeTime.OpenPractice;
 public class OpenPracticeSessionManager
 {
     private readonly IEventClient _eventClient;
-    private readonly IRemoteProcedureCallClient _rpcClient;
+    private readonly INaeTimePersistence _persistence;
 
-    public OpenPracticeSessionManager(IEventClient eventClient, IRemoteProcedureCallClient rpcClient)
+    public OpenPracticeSessionManager(IEventClient eventClient, INaeTimePersistence persistence)
     {
         _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
-        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
+        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
     }
 
     public async Task When(LapCompleted lapCompleted)
     {
-        Messages.Models.OpenPracticeSession? sessionResponse = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", lapCompleted.SessionId);
+        Persistence.Abstractions.OpenPractice.OpenPracticeSession? sessionResponse = await _persistence.OpenPractice.GetOpenPracticeSession(lapCompleted.SessionId);
 
         if (sessionResponse == null)
         {
             return;
         }
 
-        Messages.Models.PilotLane? pilotLane = sessionResponse.ActiveLanes.FirstOrDefault(x => x.Lane == lapCompleted.Lane);
+        Persistence.Abstractions.OpenPractice.PilotLane? pilotLane = sessionResponse.ActiveLanes.FirstOrDefault(x => x.Lane == lapCompleted.Lane);
         if (pilotLane == null)
         {
             return;
         }
 
-        Guid newLapId = Guid.NewGuid();
-
         await _eventClient.PublishAsync(new OpenPracticeLapCompleted(Guid.NewGuid(), lapCompleted.SessionId, pilotLane.PilotId, lapCompleted.StartedUtcTime, lapCompleted.FinishedUtcTime, lapCompleted.TotalTime)).ConfigureAwait(false);
     }
     public async Task When(LapInvalidated lapInvalidated)
     {
-        Messages.Models.OpenPracticeSession? sessionResponse = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", lapInvalidated.SessionId);
+        Persistence.Abstractions.OpenPractice.OpenPracticeSession? sessionResponse = await _persistence.OpenPractice.GetOpenPracticeSession(lapInvalidated.SessionId);
 
         if (sessionResponse == null)
         {
             return;
         }
 
-        Messages.Models.PilotLane? pilotLane = sessionResponse.ActiveLanes.FirstOrDefault(x => x.Lane == lapInvalidated.Lane);
+        Persistence.Abstractions.OpenPractice.PilotLane? pilotLane = sessionResponse.ActiveLanes.FirstOrDefault(x => x.Lane == lapInvalidated.Lane);
         if (pilotLane == null)
         {
             return;

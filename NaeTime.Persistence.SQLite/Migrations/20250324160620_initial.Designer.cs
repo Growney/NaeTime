@@ -11,14 +11,14 @@ using NaeTime.Persistence.EntityFramework;
 namespace NaeTime.Persistence.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
-    [Migration("20250304210856_initial")]
+    [Migration("20250324160620_initial")]
     partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.3");
 
             modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.ActiveSession", b =>
                 {
@@ -155,7 +155,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                         .HasColumnType("BLOB");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Port")
@@ -264,11 +263,9 @@ namespace NaeTime.Persistence.SQLite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Port")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -364,7 +361,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

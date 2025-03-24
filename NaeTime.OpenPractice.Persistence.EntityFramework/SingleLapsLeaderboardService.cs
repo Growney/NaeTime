@@ -8,22 +8,6 @@ internal class SingleLapsLeaderboardService
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<Messages.Models.SingleLapLeaderboardPosition>> GetOpenPracticeSessionSingleLapLeaderboardPositions(Guid sessionId)
-    {
-        List<SingleLapLeaderboardPosition> positions = await _dbContext.SingleLapLeaderboardPositions.Where(x => x.SessionId == sessionId).ToListAsync();
-
-        return positions.Select(x => new Messages.Models.SingleLapLeaderboardPosition(x.Position, x.PilotId, x.TotalMilliseconds, x.CompletionUtc, x.LapId));
-    }
-
-    public async Task<Messages.Models.SingleLapRecord?> GetPilotOpenPracticeSessionSingleLapRecord(Guid sessionId, Guid pilotId)
-    {
-        SingleLapLeaderboardPosition? position = await _dbContext.SingleLapLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.PilotId == pilotId);
-
-        return position == null
-            ? null
-            : new Messages.Models.SingleLapRecord(position.TotalMilliseconds, position.CompletionUtc, position.LapId);
-    }
-
     public async Task When(SingleLapLeaderboardPositionRemoved removed)
     {
         SingleLapLeaderboardPosition? existing = await _dbContext.SingleLapLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == removed.SessionId && x.PilotId == removed.PilotId);

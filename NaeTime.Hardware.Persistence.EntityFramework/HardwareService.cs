@@ -1,6 +1,4 @@
-﻿using System.Net;
-
-namespace NaeTime.Hardware.Persistence.EntityFramework;
+﻿namespace NaeTime.Hardware.Persistence.EntityFramework;
 internal class HardwareService
 {
     private readonly NaeTimeDbContext _dbcontext;
@@ -79,49 +77,5 @@ internal class HardwareService
         existingStatus.ConnectionStatusChanged = disconnectedEvent.UtcTime;
 
         await _dbcontext.SaveChangesAsync().ConfigureAwait(false);
-    }
-
-    public async Task<IEnumerable<Messages.Models.SerialEsp32Node>> GetAllSerialEsp32NodeTimers()
-    {
-        List<Messages.Models.SerialEsp32Node> serialNodes = await _dbcontext.SerialEsp32Nodes
-             .Select(x => new Messages.Models.SerialEsp32Node(x.Id, x.Name, x.Port))
-             .ToListAsync().ConfigureAwait(false);
-
-        return serialNodes;
-    }
-
-    public async Task<IEnumerable<Messages.Models.TimerDetails>> GetAllTimerDetails()
-    {
-        List<Messages.Models.TimerDetails> lapRF8Channels = await _dbcontext.EthernetLapRF8Channels
-            .Select(x => new Messages.Models.TimerDetails(x.Id, x.Name, Messages.Models.TimerType.EthernetLapRF8Channel, 8))
-            .ToListAsync().ConfigureAwait(false);
-
-        lapRF8Channels.AddRange(await _dbcontext.SerialEsp32Nodes
-            .Select(x => new Messages.Models.TimerDetails(x.Id, x.Name, Messages.Models.TimerType.SerialEsp32Node, 6))
-            .ToListAsync().ConfigureAwait(false));
-
-        //when there are more timer types will need to add them all to a larger list
-
-        return lapRF8Channels;
-    }
-    public async Task<IEnumerable<Messages.Models.EthernetLapRF8ChannelTimer>> GetAllEthernetLapRF8ChannelTimers()
-    {
-        List<Messages.Models.EthernetLapRF8ChannelTimer> timerDetails = await _dbcontext.EthernetLapRF8Channels
-            .Select(x => new Messages.Models.EthernetLapRF8ChannelTimer(x.Id, x.Name, new IPAddress(x.IpAddress), x.Port))
-            .ToListAsync().ConfigureAwait(false);
-
-        return timerDetails;
-    }
-    public async Task<Messages.Models.EthernetLapRF8ChannelTimer?> GetEthernetLapRF8ChannelTimer(Guid timerId)
-    {
-        EthernetLapRF8Channel? timer = await _dbcontext.EthernetLapRF8Channels.FirstOrDefaultAsync(x => x.Id == timerId).ConfigureAwait(false);
-
-        return timer == null ? null : new Messages.Models.EthernetLapRF8ChannelTimer(timer.Id, timer.Name, new IPAddress(timer.IpAddress), timer.Port);
-    }
-    public async Task<Messages.Models.SerialEsp32Node?> GetSerialEsp32NodeTimer(Guid timerId)
-    {
-        SerialEsp32Node? timer = await _dbcontext.SerialEsp32Nodes.FirstOrDefaultAsync(x => x.Id == timerId).ConfigureAwait(false);
-
-        return timer == null ? null : new Messages.Models.SerialEsp32Node(timer.Id, timer.Name, timer.Port);
     }
 }

@@ -6,8 +6,6 @@ internal class LaneService
     {
         _dbContext = dbContext;
     }
-    public async Task<IEnumerable<Messages.Models.ActiveLaneConfiguration>> GetActiveLaneConfigurations() =>
-        await _dbContext.Lanes.Select(x => new Messages.Models.ActiveLaneConfiguration(x.Id, x.BandId, x.FrequencyInMhz, x.IsEnabled)).ToListAsync();
     public async Task When(LaneRadioFrequencyConfigured laneRadioFrequencyConfigured)
     {
         Lane? existing = await _dbContext.Lanes.FindAsync(laneRadioFrequencyConfigured.LaneNumber).ConfigureAwait(false);

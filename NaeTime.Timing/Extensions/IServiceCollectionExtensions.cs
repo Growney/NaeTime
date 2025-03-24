@@ -5,8 +5,8 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddTimingCore(this IServiceCollection services)
     {
-        services.AddEventAndRemoteProcedureCallHub<SessionDetectionService>();
-        services.AddEventAndRemoteProcedureCallHub<LapService>();
+        services.AddEventHub<SessionDetectionService>();
+        services.AddEventHub<LapService>();
         return services;
     }
 

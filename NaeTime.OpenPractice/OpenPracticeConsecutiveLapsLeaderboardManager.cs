@@ -1,29 +1,30 @@
 ﻿using NaeTime.OpenPractice.Leaderboards;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.OpenPractice.Models;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 namespace NaeTime.OpenPractice;
 public class OpenPracticeConsecutiveLapsLeaderboardManager
 {
     private readonly IEventClient _eventClient;
-    private readonly IRemoteProcedureCallClient _rpcClient;
+    private readonly INaeTimePersistence _persistence;
 
-    public OpenPracticeConsecutiveLapsLeaderboardManager(IEventClient eventClient, IRemoteProcedureCallClient rpcClient)
+    public OpenPracticeConsecutiveLapsLeaderboardManager(IEventClient eventClient, INaeTimePersistence persistence)
     {
         _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
-        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
+        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
     }
 
     public async Task When(OpenPracticeLapCompleted completed)
     {
-        IEnumerable<uint>? sessionTrackedLaps = await _rpcClient.InvokeAsync<IEnumerable<uint>>("GetOpenPracticeSessionTrackedConsecutiveLaps", completed.SessionId);
+        IEnumerable<uint>? sessionTrackedLaps = await _persistence.OpenPractice.GetOpenPracticeSessionTrackedConsecutiveLaps(completed.SessionId);
         if (sessionTrackedLaps == null || !sessionTrackedLaps.Any())
         {
             return;
         }
 
-        IEnumerable<Messages.Models.Lap>? pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", completed.SessionId, completed.PilotId);
-        IEnumerable<Messages.Models.ConsecutiveLapRecord>? pilotLapRecords = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapRecord>>("GetPilotOpenPracticeSessionConsecutiveLapRecords", completed.SessionId, completed.PilotId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> pilotLaps = await _persistence.OpenPractice.GetPilotOpenPracticeSessionLaps(completed.SessionId, completed.PilotId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord> pilotLapRecords = await _persistence.OpenPractice.GetPilotOpenPracticeSessionConsecutiveLapRecords(completed.SessionId, completed.PilotId);
 
         List<Lap> laps = new();
 
@@ -32,8 +33,8 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             laps.AddRange(pilotLaps.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
                                x.Status switch
                                {
-                                   Messages.Models.LapStatus.Invalid => LapStatus.Invalid,
-                                   Messages.Models.LapStatus.Completed => LapStatus.Completed,
+                                   Persistence.Abstractions.OpenPractice.LapStatus.Invalid => LapStatus.Invalid,
+                                   Persistence.Abstractions.OpenPractice.LapStatus.Completed => LapStatus.Completed,
                                    _ => throw new NotImplementedException()
                                }, x.TotalMilliseconds)));
         }
@@ -50,14 +51,14 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        IEnumerable<uint>? sessionTrackedLaps = await _rpcClient.InvokeAsync<IEnumerable<uint>>("GetOpenPracticeSessionTrackedConsecutiveLaps", removed.SessionId);
+        IEnumerable<uint>? sessionTrackedLaps = await _persistence.OpenPractice.GetOpenPracticeSessionTrackedConsecutiveLaps(removed.SessionId);
         if (sessionTrackedLaps == null || !sessionTrackedLaps.Any())
         {
             return;
         }
 
-        IEnumerable<Messages.Models.Lap>? pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", removed.SessionId, removed.PilotId);
-        IEnumerable<Messages.Models.ConsecutiveLapRecord>? pilotLapRecords = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapRecord>>("GetPilotOpenPracticeSessionConsecutiveLapRecords", removed.SessionId, removed.PilotId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> pilotLaps = await _persistence.OpenPractice.GetPilotOpenPracticeSessionLaps(removed.SessionId, removed.PilotId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord> pilotLapRecords = await _persistence.OpenPractice.GetPilotOpenPracticeSessionConsecutiveLapRecords(removed.SessionId, removed.PilotId);
 
         List<Lap> laps = new();
 
@@ -66,8 +67,8 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             laps.AddRange(pilotLaps.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
                                x.Status switch
                                {
-                                   Messages.Models.LapStatus.Invalid => LapStatus.Invalid,
-                                   Messages.Models.LapStatus.Completed => LapStatus.Completed,
+                                   Persistence.Abstractions.OpenPractice.LapStatus.Invalid => LapStatus.Invalid,
+                                   Persistence.Abstractions.OpenPractice.LapStatus.Completed => LapStatus.Completed,
                                    _ => throw new NotImplementedException()
                                }, x.TotalMilliseconds)));
         }
@@ -83,14 +84,14 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
     }
     public async Task When(OpenPracticeLapDisputed disputed)
     {
-        IEnumerable<uint>? sessionTrackedLaps = await _rpcClient.InvokeAsync<IEnumerable<uint>>("GetOpenPracticeSessionTrackedConsecutiveLaps", disputed.SessionId);
-        if (sessionTrackedLaps == null || !sessionTrackedLaps.Any())
+        IEnumerable<uint> sessionTrackedLaps = await _persistence.OpenPractice.GetOpenPracticeSessionTrackedConsecutiveLaps(disputed.SessionId);
+        if (!sessionTrackedLaps.Any())
         {
             return;
         }
 
-        IEnumerable<Messages.Models.Lap>? pilotLaps = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.Lap>>("GetPilotOpenPracticeSessionLaps", disputed.SessionId, disputed.PilotId);
-        IEnumerable<Messages.Models.ConsecutiveLapRecord>? pilotLapRecords = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapRecord>>("GetPilotOpenPracticeSessionConsecutiveLapRecords", disputed.SessionId, disputed.PilotId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> pilotLaps = await _persistence.OpenPractice.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord> pilotLapRecords = await _persistence.OpenPractice.GetPilotOpenPracticeSessionConsecutiveLapRecords(disputed.SessionId, disputed.PilotId);
 
         List<Lap> laps = new();
 
@@ -99,8 +100,8 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
             laps.AddRange(pilotLaps.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
                                x.Status switch
                                {
-                                   Messages.Models.LapStatus.Invalid => LapStatus.Invalid,
-                                   Messages.Models.LapStatus.Completed => LapStatus.Completed,
+                                   Persistence.Abstractions.OpenPractice.LapStatus.Invalid => LapStatus.Invalid,
+                                   Persistence.Abstractions.OpenPractice.LapStatus.Completed => LapStatus.Completed,
                                    _ => throw new NotImplementedException()
                                }, x.TotalMilliseconds)));
         }
@@ -129,13 +130,13 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
 
         await FullTrackAndUpdateTrackedLaps(disputed.SessionId, disputed.PilotId, disputed.LapId, sessionTrackedLaps, pilotLapRecords, laps);
     }
-    private async Task FullTrackAndUpdateTrackedLaps(Guid sessionId, Guid pilotId, Guid triggeringLap, IEnumerable<uint> sessionTrackedLaps, IEnumerable<Messages.Models.ConsecutiveLapRecord>? pilotLapRecords, List<Lap> laps)
+    private async Task FullTrackAndUpdateTrackedLaps(Guid sessionId, Guid pilotId, Guid triggeringLap, IEnumerable<uint> sessionTrackedLaps, IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord>? pilotLapRecords, List<Lap> laps)
     {
         laps.Sort((x, y) => x.FinishedUtc.CompareTo(y.FinishedUtc));
         FastestConsecutiveLapCalculator calculator = new();
         foreach (uint trackedLaps in sessionTrackedLaps)
         {
-            Messages.Models.ConsecutiveLapRecord? pilotsExistingRecord = pilotLapRecords?.FirstOrDefault(x => x.LapCap == trackedLaps);
+            Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord? pilotsExistingRecord = pilotLapRecords?.FirstOrDefault(x => x.LapCap == trackedLaps);
 
             ConsecutiveLapRecord? existingRecord = null;
             if (pilotsExistingRecord != null)
@@ -190,22 +191,19 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
 
     private async Task HandleUpdatedRecord(Guid sessionId, Guid pilotId, Guid triggeringLap, uint lapCap, uint totalLaps, long totalMilliseconds, DateTime lastLapCompletionUtc, IEnumerable<Guid> includedLaps)
     {
-        IEnumerable<Messages.Models.ConsecutiveLapLeaderboardPosition>? existingLeaderboardPositions = await _rpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.ConsecutiveLapLeaderboardPosition>>("GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions", sessionId, lapCap);
+        IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapLeaderboardPosition> existingLeaderboardPositions = await _persistence.OpenPractice.GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions(sessionId, lapCap);
         ConsecutiveLapsLeaderboard existingLeaderboard = new();
         ConsecutiveLapsLeaderboard newLeaderboard = new();
 
-        if (existingLeaderboardPositions != null)
+        foreach (Persistence.Abstractions.OpenPractice.ConsecutiveLapLeaderboardPosition existingLeaderboardPosition in existingLeaderboardPositions)
         {
-            foreach (Messages.Models.ConsecutiveLapLeaderboardPosition existingLeaderboardPosition in existingLeaderboardPositions)
-            {
-                existingLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
-                    new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
+            existingLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
+                new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
 
-                if (existingLeaderboardPosition.PilotId != pilotId)
-                {
-                    newLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
-                    new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
-                }
+            if (existingLeaderboardPosition.PilotId != pilotId)
+            {
+                newLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
+                new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
             }
         }
 
@@ -215,24 +213,22 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
     }
     private async Task HandleRemovedRecord(Guid sessionId, Guid pilotId, Guid triggeringLap, uint lapCap)
     {
-        IEnumerable<Messages.Models.ConsecutiveLapLeaderboardPosition>? existingLeaderboardPositions = await _rpcClient.InvokeAsync<IEnumerable<Messages.Models.ConsecutiveLapLeaderboardPosition>>("GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions", sessionId, lapCap);
+        IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapLeaderboardPosition> existingLeaderboardPositions = await _persistence.OpenPractice.GetOpenPracticeSessionConsecutiveLapsLeaderboardPositions(sessionId, lapCap);
         ConsecutiveLapsLeaderboard existingLeaderboard = new();
         ConsecutiveLapsLeaderboard newLeaderboard = new();
 
-        if (existingLeaderboardPositions != null)
+        foreach (Persistence.Abstractions.OpenPractice.ConsecutiveLapLeaderboardPosition existingLeaderboardPosition in existingLeaderboardPositions)
         {
-            foreach (Messages.Models.ConsecutiveLapLeaderboardPosition existingLeaderboardPosition in existingLeaderboardPositions)
-            {
-                existingLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
-                    new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
+            existingLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
+                new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
 
-                if (existingLeaderboardPosition.PilotId != pilotId)
-                {
-                    newLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
-                    new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
-                }
+            if (existingLeaderboardPosition.PilotId != pilotId)
+            {
+                newLeaderboard.SetFastest(existingLeaderboardPosition.PilotId,
+                new ConsecutiveLapRecord(existingLeaderboardPosition.TotalLaps, existingLeaderboardPosition.TotalMilliseconds, existingLeaderboardPosition.LastLapCompletionUtc, existingLeaderboardPosition.IncludedLaps));
             }
         }
+
 
         await CheckLeaderboards(sessionId, lapCap, pilotId, triggeringLap, existingLeaderboard, newLeaderboard);
     }

@@ -5,11 +5,11 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddEntityFrameworkOpenPractice(this IServiceCollection services)
     {
-        services.AddEventAndRemoteProcedureCallHub<ConsecutiveLapsLeaderboardService>();
-        services.AddEventAndRemoteProcedureCallHub<OpenPracticeSessionService>();
-        services.AddEventAndRemoteProcedureCallHub<SingleLapsLeaderboardService>();
-        services.AddEventAndRemoteProcedureCallHub<TotalLapLeaderboardService>();
-        services.AddEventAndRemoteProcedureCallHub<AverageLapLeaderboardService>();
+        services.AddEventHub<ConsecutiveLapsLeaderboardService>();
+        services.AddEventHub<OpenPracticeSessionService>();
+        services.AddEventHub<SingleLapsLeaderboardService>();
+        services.AddEventHub<TotalLapLeaderboardService>();
+        services.AddEventHub<AverageLapLeaderboardService>();
 
         return services;
     }

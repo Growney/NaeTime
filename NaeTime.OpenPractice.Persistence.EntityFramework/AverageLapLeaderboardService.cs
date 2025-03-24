@@ -8,22 +8,6 @@ internal class AverageLapLeaderboardService
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<Messages.Models.AverageLapLeaderboardPosition>> GetOpenPracticeSessionAverageLapLeaderboardPositions(Guid sessionId)
-    {
-        List<AverageLapLeaderboardPosition> positions = await _dbContext.AverageLapLeaderboardPositions.Where(x => x.SessionId == sessionId).ToListAsync();
-
-        return positions.Select(x => new Messages.Models.AverageLapLeaderboardPosition(x.Position, x.PilotId, x.AverageMilliseconds, x.FirstLapCompletionUtc));
-    }
-
-    public async Task<Messages.Models.AverageLapRecord?> GetPilotOpenPracticeSessionAverageLapRecord(Guid sessionId, Guid pilotId)
-    {
-        AverageLapLeaderboardPosition? position = await _dbContext.AverageLapLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.PilotId == pilotId);
-
-        return position == null
-            ? null
-            : new Messages.Models.AverageLapRecord(position.AverageMilliseconds, position.FirstLapCompletionUtc);
-    }
-
     public async Task When(AverageLapLeaderboardPositionRemoved removed)
     {
         AverageLapLeaderboardPosition? existing = await _dbContext.AverageLapLeaderboardPositions.FirstOrDefaultAsync(x => x.SessionId == removed.SessionId && x.PilotId == removed.PilotId);

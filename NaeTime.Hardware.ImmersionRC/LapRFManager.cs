@@ -1,44 +1,41 @@
 ﻿using Microsoft.Extensions.Hosting;
+using NaeTime.Hardware.ImmersionRC.Abstractions;
+using NaeTime.Hardware.ImmersionRC.Models;
 using NaeTime.Hardware.Messages;
-using NaeTime.Hardware.Messages.Models;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
+using NaeTime.Timing.ImmersionRC;
 using NaeTime.Timing.ImmersionRC.Abstractions;
 using System.Collections.Concurrent;
 
-namespace NaeTime.Timing.ImmersionRC.Hardware;
-internal class LapRFManager : IHostedService
+namespace NaeTime.Hardware.ImmersionRC;
+internal class LapRFManager : IHostedService, ILapRFManager
 {
-    private readonly IRemoteProcedureCallClient _rpcClient;
+    private readonly INaeTimePersistence _persistence;
     private readonly IEventRegistrarScope _eventRegistrarScope;
-    private readonly IRemoteProcedureCallRegistrar _rpcRegistrar;
     private readonly ILapRFConnectionFactory _connectionFactory;
 
     private readonly ConcurrentDictionary<Guid, LapRFConnection> _hardwareProcesses = new();
 
-    public LapRFManager(IRemoteProcedureCallClient rpcClient, IEventRegistrarScope eventRegistrarScope, IRemoteProcedureCallRegistrar rpcRegistrar, ILapRFConnectionFactory connectionFactory)
+    public LapRFManager(INaeTimePersistence persistence, IEventRegistrarScope eventRegistrarScope, ILapRFConnectionFactory connectionFactory)
     {
-        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
+        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
         _eventRegistrarScope = eventRegistrarScope ?? throw new ArgumentNullException(nameof(eventRegistrarScope));
-        _rpcRegistrar = rpcRegistrar ?? throw new ArgumentNullException(nameof(rpcRegistrar));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _eventRegistrarScope.RegisterHub(this);
-
-        _rpcRegistrar.RegisterHandler<Guid, IEnumerable<LapRFLaneConfiguration>>("GetEthernetLapRF8ChannelTimerLaneConfigurations", GetEthernetLapRF8ChannelTimerLaneConfigurations);
-        _rpcRegistrar.RegisterHandler<Guid, byte, LapRFLaneConfiguration?>("GetEthernetLapRF8ChannelTimerLaneConfiguration", GetEthernetLapRF8ChannelTimerLaneConfiguration);
-        _rpcRegistrar.RegisterHandler<Guid, bool>("IsEthernetLapRF8ChannelTimerConnected", IsEthernetLapRF8ChannelTimerConnected);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        IEnumerable<EthernetLapRF8ChannelTimer>? response = await _rpcClient.InvokeAsync<IEnumerable<EthernetLapRF8ChannelTimer>>("GetAllEthernetLapRF8ChannelTimers");
+        IEnumerable<Persistence.Abstractions.Hardware.EthernetLapRF8ChannelTimer> ethernetTimers = await _persistence.Hardware.GetAllEthernetLapRF8ChannelTimers();
 
-        if (response == null)
+        if (ethernetTimers == null)
         {
             return;
         }
 
-        foreach (EthernetLapRF8ChannelTimer device in response)
+        foreach (Persistence.Abstractions.Hardware.EthernetLapRF8ChannelTimer device in ethernetTimers)
         {
             LapRFConnection connection = _connectionFactory.CreateEthernetConnection(device.TimerId, device.IpAddress, device.Port);
             _hardwareProcesses.TryAdd(device.TimerId, connection);
@@ -53,49 +50,6 @@ internal class LapRFManager : IHostedService
 
         _eventRegistrarScope.Dispose();
     }
-
-    private async Task<IEnumerable<LapRFLaneConfiguration>> GetEthernetLapRF8ChannelTimerLaneConfigurations(Guid timerId)
-    {
-        if (!_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection))
-        {
-            return Enumerable.Empty<LapRFLaneConfiguration>();
-        }
-
-        if (!connection.IsConnected)
-        {
-            return Enumerable.Empty<LapRFLaneConfiguration>();
-        }
-
-        IEnumerable<NaeTime.Hardware.ImmersionRC.Models.LapRF8ChannelLaneConfiguration> frequencies = await connection.GetAllLaneConfigurations().ConfigureAwait(false);
-
-        return frequencies.Select(x => new LapRFLaneConfiguration(x.Lane, x.BandId, x.FrequencyInMhz, x.IsEnabled, x.Gain, x.Threshold));
-    }
-    private async Task<LapRFLaneConfiguration?> GetEthernetLapRF8ChannelTimerLaneConfiguration(Guid timerId, byte laneId)
-    {
-        if (!_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection))
-        {
-            return null;
-        }
-
-        if (!connection.IsConnected)
-        {
-            return null;
-        }
-
-        IEnumerable<NaeTime.Hardware.ImmersionRC.Models.LapRF8ChannelLaneConfiguration> frequencies = await connection.GetLaneConfigurations(laneId).ConfigureAwait(false);
-
-        if (!frequencies.Any())
-        {
-            return null;
-        }
-
-        NaeTime.Hardware.ImmersionRC.Models.LapRF8ChannelLaneConfiguration configuration = frequencies.First();
-
-        return new LapRFLaneConfiguration(laneId, configuration.BandId, configuration.FrequencyInMhz, configuration.IsEnabled, configuration.Gain, configuration.Threshold);
-    }
-
-    private async Task<bool> IsEthernetLapRF8ChannelTimerConnected(Guid timerId)
-        => !_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection) ? false : connection.IsConnected;
     public async Task When(EthernetLapRF8ChannelConfigured configured)
     {
         if (_hardwareProcesses.TryGetValue(configured.TimerId, out LapRFConnection? connection))
@@ -138,4 +92,27 @@ internal class LapRFManager : IHostedService
             : !connection.IsConnected
                 ? Task.CompletedTask
                 : connection.SetLaneGain(lane.Lane, lane.Gain);
+    public async Task<LapRFLaneConfiguration?> GetTimerLaneConfiguration(Guid timerId, byte laneId)
+    {
+        if (!_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection))
+        {
+            return null;
+        }
+
+        if (!connection.IsConnected)
+        {
+            return null;
+        }
+
+        IEnumerable<LapRFLaneConfiguration> configs = await connection.GetLaneConfigurations(laneId).ConfigureAwait(false);
+
+        return configs.FirstOrDefault();
+    }
+    public async Task<IEnumerable<LapRFLaneConfiguration>> GetTimeLaneConfigurations(Guid timerId) => !_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection)
+            ? Enumerable.Empty<LapRFLaneConfiguration>()
+            : !connection.IsConnected
+            ? Enumerable.Empty<LapRFLaneConfiguration>()
+            : await connection.GetAllLaneConfigurations().ConfigureAwait(false);
+
+    public Task<bool> IsTimerConnected(Guid timerId) => Task.FromResult(_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection) && connection.IsConnected);
 }

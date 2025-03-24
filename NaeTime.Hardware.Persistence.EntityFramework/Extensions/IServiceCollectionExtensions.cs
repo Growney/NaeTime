@@ -5,8 +5,8 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddEntityFrameworkHardware(this IServiceCollection services)
     {
-        services.AddEventAndRemoteProcedureCallHub<HardwareService>();
-        services.AddEventAndRemoteProcedureCallHub<DetectionService>();
+        services.AddEventHub<HardwareService>();
+        services.AddEventHub<DetectionService>();
         return services;
     }
 }

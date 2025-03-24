@@ -1,5 +1,6 @@
 ﻿using NaeTime.Hardware.Abstractions;
 using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;
 
@@ -7,19 +8,19 @@ namespace NaeTime.OpenPractice;
 internal class DetectionService
 {
     private readonly IEventClient _eventClient;
-    private readonly IRemoteProcedureCallClient _rpcClient;
+    private readonly INaeTimePersistence _persistence;
     private readonly ISoftwareTimer _softwareTimer;
 
-    public DetectionService(IEventClient eventClient, IRemoteProcedureCallClient rpcClient, ISoftwareTimer softwareTimer)
+    public DetectionService(IEventClient eventClient, INaeTimePersistence persistence, ISoftwareTimer softwareTimer)
     {
         _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
-        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
+        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
     }
 
     public async Task When(OpenPracticeSessionDetectionTriggered triggered)
     {
-        Messages.Models.OpenPracticeSession? session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", triggered.SessionId);
+        Persistence.Abstractions.OpenPractice.OpenPracticeSession? session = await _persistence.OpenPractice.GetOpenPracticeSession(triggered.SessionId);
 
         if (session == null)
         {
@@ -30,14 +31,14 @@ internal class DetectionService
     }
     public async Task When(OpenPracticeSessionInvalidationTriggered triggered)
     {
-        Messages.Models.OpenPracticeSession? session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", triggered.SessionId);
+        Persistence.Abstractions.OpenPractice.OpenPracticeSession? session = await _persistence.OpenPractice.GetOpenPracticeSession(triggered.SessionId);
 
         if (session == null)
         {
             return;
         }
 
-        Timing.Messages.Models.LaneActiveTimings? activeTimings = await _rpcClient.InvokeAsync<Timing.Messages.Models.LaneActiveTimings>("GetLaneActiveTimings", triggered.SessionId, triggered.Lane);
+        Persistence.Abstractions.Timing.LaneActiveTimings? activeTimings = await _persistence.Timing.GetSessionLaneActiveTimings(triggered.SessionId, triggered.Lane);
 
         if (activeTimings == null)
         {
@@ -63,7 +64,7 @@ internal class DetectionService
     }
     public async Task When(ActiveOpenPracticeSessionDetectionOccured detection)
     {
-        Messages.Models.OpenPracticeSession? session = await _rpcClient.InvokeAsync<Messages.Models.OpenPracticeSession>("GetOpenPracticeSession", detection.SessionId);
+        Persistence.Abstractions.OpenPractice.OpenPracticeSession? session = await _persistence.OpenPractice.GetOpenPracticeSession(detection.SessionId);
 
         if (session == null)
         {

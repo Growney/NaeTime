@@ -29,7 +29,7 @@
                 <DropdownMenu>
                     @foreach (var pilot in Pilots)
                 {
-                    <DropdownItem Type="ButtonType.Button" @onclick="() => SetPilot(pilot.Id)">@GetPilotString(pilot.Id)</DropdownItem>
+                    <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => SetPilot(pilot.Id)">@GetPilotString(pilot.Id)</DropdownItem>
                 }
             </DropdownMenu>
         </Dropdown>
@@ -46,7 +46,7 @@
                                 <DropdownMenu>
                                     @foreach (var band in Band.Bands)
                                     {
-                                        <DropdownItem Type="ButtonType.Button" @onclick="() => GoToBand(band.Id)">@band.Name</DropdownItem>
+                                        <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => GoToBand(band.Id)">@band.Name</DropdownItem>
                                     }
                                 </DropdownMenu>
                             </Dropdown>
@@ -61,7 +61,7 @@
                                             var band = Band.Bands.First(b => b.Id == Configuration.BandId);
                                             foreach (var frequency in band.Frequencies)
                                             {
-                                                <DropdownItem Type="ButtonType.Button" @onclick="() => GoToFrequency(frequency.FrequencyInMhz)">@frequency.Name</DropdownItem>
+                                                <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => GoToFrequency(frequency.FrequencyInMhz)">@frequency.Name</DropdownItem>
                                             }
                                         }
                                     </DropdownMenu>

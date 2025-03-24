@@ -1,7 +1,7 @@
 ﻿using NaeTime.Announcer.Abstractions;
 using NaeTime.Announcer.Models;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Persistence.Abstractions;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
@@ -14,7 +14,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
 
     private readonly Stopwatch _stopwatch = new();
     private readonly ConcurrentDictionary<Guid, SessionState> _sessionStates = new();
-    private readonly IRemoteProcedureCallClient _rpcClient;
+    private readonly INaeTimePersistence _persistence;
 
     private class ConsecutiveLapRecord
     {
@@ -196,10 +196,10 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
             return pilotIds;
         }
     }
-    public OpenPracticeLapAnnouncer(IRemoteProcedureCallClient rpcClient)
+    public OpenPracticeLapAnnouncer(INaeTimePersistence persistence)
     {
         _stopwatch.Start();
-        _rpcClient = rpcClient;
+        _persistence = persistence;
     }
 
     public async Task<Announcement?> GetNextAnnouncement()
@@ -367,7 +367,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
     }
     private async Task<string> GetLapTimesAnnouncement(IEnumerable<Guid> lapIds)
     {
-        IEnumerable<OpenPractice.Messages.Models.Lap>? laps = await _rpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.Lap>>("GetOpenPracticeLaps", lapIds);
+        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? laps = await _persistence.OpenPractice.GetOpenPracticeLaps(lapIds);
 
         if (laps == null)
         {
@@ -376,7 +376,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
 
         StringBuilder builder = new();
         bool firstLap = true;
-        foreach (OpenPractice.Messages.Models.Lap lap in laps)
+        foreach (Persistence.Abstractions.OpenPractice.Lap lap in laps)
         {
             if (!firstLap)
             {
@@ -391,7 +391,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
     }
     private async Task<string?> GetPilotCallout(Guid pilotId)
     {
-        Management.Messages.Models.Pilot? pilot = await _rpcClient.InvokeAsync<Management.Messages.Models.Pilot>("GetPilot", pilotId);
+        Persistence.Abstractions.Management.Pilot? pilot = await _persistence.Management.GetPilot(pilotId);
 
         if (pilot == null)
         {
@@ -400,7 +400,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
 
         return GetPilotCallout(pilot);
     }
-    private string? GetPilotCallout(Management.Messages.Models.Pilot pilot) => pilot.CallSign ?? pilot.FirstName ?? pilot.LastName;
+    private string? GetPilotCallout(Persistence.Abstractions.Management.Pilot pilot) => pilot.CallSign ?? pilot.FirstName ?? pilot.LastName;
     private string GetLapCallout(long totalMilliseconds, int roundedTo = 3)
     {
         TimeSpan timeSpan = TimeSpan.FromMilliseconds(totalMilliseconds);

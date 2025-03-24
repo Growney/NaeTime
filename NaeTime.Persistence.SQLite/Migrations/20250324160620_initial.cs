@@ -102,7 +102,7 @@ namespace NaeTime.Persistence.SQLite.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: true),
                     IpAddress = table.Column<byte[]>(type: "BLOB", nullable: false),
                     Port = table.Column<int>(type: "INTEGER", nullable: false)
                 },
@@ -176,8 +176,8 @@ namespace NaeTime.Persistence.SQLite.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Port = table.Column<string>(type: "TEXT", nullable: false)
+                    Name = table.Column<string>(type: "TEXT", nullable: true),
+                    Port = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -235,7 +235,7 @@ namespace NaeTime.Persistence.SQLite.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: true),
                     MinimumLapMilliseconds = table.Column<long>(type: "INTEGER", nullable: false),
                     MaximumLapMilliseconds = table.Column<long>(type: "INTEGER", nullable: true),
                     AllowedLanes = table.Column<byte>(type: "INTEGER", nullable: false)
