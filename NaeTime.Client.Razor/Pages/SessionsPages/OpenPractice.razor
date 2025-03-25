@@ -9,25 +9,23 @@
                     <td>
 
                         <h1>Open Practice</h1>
-                        <Dropdown>
-                            <DropdownToggleButton Color="ButtonColor.Primary">Start Session On</DropdownToggleButton>
-                            <DropdownMenu>
+                        <SfSplitButton Content="Start Session On">
+                            <DropDownMenuItems>
                                 @foreach (var track in _tracks)
                                 {
-                                    <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => StartNewSessionOnTrack(Guid.NewGuid(),track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)">@track.Name</DropdownItem>
+                                    <DropDownMenuItem Text=@track.Name @onclick="() => StartNewSessionOnTrack(Guid.NewGuid(),track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)"></DropDownMenuItem>
                                 }
-                                <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => StartSessionOnNewTrack()">[New Track]</DropdownItem>
-                            </DropdownMenu>
-                        </Dropdown>
-                        <Dropdown>
-                            <DropdownToggleButton Color="ButtonColor.Secondary">@GetActiveSessionName()</DropdownToggleButton>
-                            <DropdownMenu>
+                                <DropDownMenuItem Text="[New Track]" @onclick="() => StartSessionOnNewTrack()"></DropDownMenuItem>
+                            </DropDownMenuItems>
+                        </SfSplitButton>
+                        <SfSplitButton Content="@GetActiveSessionName()">
+                            <DropDownMenuItems>
                                 @foreach (var session in _sessionDetails)
                                 {
-                                    <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => SetupForSession(session.Id)">@session.Name</DropdownItem>
+                                    <DropDownMenuItem Text=@session.Name @onclick ="() => SetupForSession(session.Id)"></DropDownMenuItem>
                                 }
-                            </DropdownMenu>
-                        </Dropdown>
+                            </DropDownMenuItems>
+                        </SfSplitButton>
                     </td>
                     @if (_selectedSession != null)
                     {
@@ -46,10 +44,10 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <NumberInput Class="rounded-0 rounded-end" TValue=long ValueChanged="SetSessionMinimumLapTime" Value="_selectedSession.MinimumLapMilliseconds" ValueExpression="() => _selectedSession.MinimumLapMilliseconds"></NumberInput>
+                                        <SfNumericTextBox ShowSpinButton CssClass="rounded-0 rounded-end" TValue=long ValueChanged="SetSessionMinimumLapTime" Value="_selectedSession.MinimumLapMilliseconds" ValueExpression="() => _selectedSession.MinimumLapMilliseconds"></SfNumericTextBox>
                                     </td>
                                     <td>
-                                        <NumberInput Class="rounded-0 rounded-end" TValue=long? ValueChanged="SetSessionMaximumLapTime" Value="_selectedSession.MaximumLapMilliseconds" ValueExpression="() => _selectedSession.MaximumLapMilliseconds"></NumberInput>
+                                        <SfNumericTextBox ShowSpinButton CssClass="rounded-0 rounded-end" TValue=long? ValueChanged="SetSessionMaximumLapTime" Value="_selectedSession.MaximumLapMilliseconds" ValueExpression="() => _selectedSession.MaximumLapMilliseconds"></SfNumericTextBox>
                                     </td>
                                 </tr>
                             </table>
@@ -85,11 +83,11 @@
                 <div>
                     @if (_isLaneConfigCollapsed)
                     {
-                        <Button Class="w-100 p-0" Style="height:15px;font-size:small" Color="ButtonColor.Light" @onclick="@(()=>_isLaneConfigCollapsed = false)"><i class="fa-solid fa-caret-down"></i></Button>
+                        <SfButton CssClass="w-100 p-0" @onclick="@(()=>_isLaneConfigCollapsed = false)"><i class="fa-solid fa-caret-down"></i></SfButton>
                     }
                     else
                     {
-                        <Button Class="w-100 p-0" Style="height:15px;font-size:small" Color="ButtonColor.Light" @onclick="@(()=>_isLaneConfigCollapsed = true)"><i class="fa-solid fa-caret-up"></i></Button>
+                        <SfButton CssClass="w-100 p-0" @onclick="@(()=>_isLaneConfigCollapsed = true)"><i class="fa-solid fa-caret-up"></i></SfButton>
                     }
                 </div>
             }
@@ -99,21 +97,21 @@
 
         @if (!_isLaneConfigCollapsed)
         {
-            <Dropdown Class="mx-1">
-                <DropdownToggleButton Color="ButtonColor.Secondary">Add Consecutive Laps Leaderboard</DropdownToggleButton>
-                <DropdownMenu>
+            <SfSplitButton Content="Add Consecutive Laps Leaderboard">
+                <SplitButtonEvents ItemSelected=TrackConsecutiveLapsSelected></SplitButtonEvents>
+                <DropDownMenuItems>
                     @{
                         uint[] laps = [2, 3, 4, 5, 6, 7, 8, 9, 10];
                         foreach (var lap in laps)
                         {
                             if (!_selectedSession.TrackedConsecutiveLaps.Any(x => x == lap))
                             {
-                                <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => TrackConsecutiveLaps(_selectedSession.Id,lap)">@lap</DropdownItem>
+                                <DropDownMenuItem Id="@(lap.ToString())" Text="@lap.ToString()"></DropDownMenuItem>
                             }
                         }
                     }
-                </DropdownMenu>
-            </Dropdown>
+                </DropDownMenuItems>
+            </SfSplitButton>
         }
         <div class="d-flex flex-wrap justify-content-center">
             <TotalLapsLeaderboard SessionId="_selectedSession.Id"></TotalLapsLeaderboard>

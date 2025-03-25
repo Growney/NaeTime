@@ -6,6 +6,7 @@ using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.Persistence.Abstractions;
 using NaeTime.Persistence.Abstractions.Timing;
 using NaeTime.PubSub.Abstractions;
+using Syncfusion.Blazor.SplitButtons;
 
 namespace NaeTime.Client.Razor.Pages.SessionsPages;
 public partial class OpenPractice : ComponentBase, IDisposable
@@ -247,7 +248,19 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         return EventClient.PublishAsync(new OpenPracticeMaximumLapTimeConfigured(_selectedSession.Id, maximumLapMilliseconds));
     }
-    public Task TrackConsecutiveLaps(Guid sessionId, uint lapCap)
+    public async Task TrackConsecutiveLapsSelected(MenuEventArgs args)
+    {
+        if (args.Item == null)
+        {
+            return;
+        }
+
+        if (uint.TryParse(args.Item.Id, out uint lapCap))
+        {
+            await TrackConsecutiveLaps(lapCap);
+        }
+    }
+    public Task TrackConsecutiveLaps(uint lapCap)
     {
         if (_selectedSession == null)
         {
@@ -260,7 +273,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
         }
 
         _selectedSession.TrackedConsecutiveLaps.Add(lapCap);
-        return EventClient.PublishAsync(new ConsecutiveLapCountTracked(sessionId, lapCap));
+        return EventClient.PublishAsync(new ConsecutiveLapCountTracked(_selectedSession.Id, lapCap));
     }
     public void Dispose() => EventRegistrarScope?.Dispose();
 }

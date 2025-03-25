@@ -1,5 +1,8 @@
 @using NaeTime.Hardware.Frequency
 @using Syncfusion.Blazor.Charts
+@using Syncfusion.Blazor.SplitButtons
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Inputs
 <div class="shadow rounded p-2" style="width: 190px">
     @if (!IsCollapsed)
     {
@@ -7,7 +10,7 @@
             <tbody>
                 <tr>
                     <td class="align-start" style="width:10px">
-                        <Switch ValueChanged="EnabledChanged" Value=Configuration.IsEnabled ValueExpression="()=>Configuration.IsEnabled"></Switch>
+                        <SfSwitch TChecked=bool ValueChange="EnabledSwitchChanged"></SfSwitch>
                     </td>
                     <td>
                         <div class="h4 text-start">
@@ -24,15 +27,15 @@
         </table>
     }
     <div>
-        <Dropdown Class="w-100">
-            <DropdownToggleButton Color="ButtonColor.Primary">@GetPilotString(Configuration.PilotId)</DropdownToggleButton>
-                <DropdownMenu>
-                    @foreach (var pilot in Pilots)
+        <SfDropDownButton CssClass="e-primary e-block" Content=@GetPilotString(Configuration.PilotId) >
+            <DropDownButtonEvents ItemSelected=PilotSelected></DropDownButtonEvents>
+            <DropDownMenuItems>
+                @foreach (var pilot in Pilots)
                 {
-                    <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => SetPilot(pilot.Id)">@GetPilotString(pilot.Id)</DropdownItem>
+                    <DropDownMenuItem s Id="@(pilot.Id.ToString())" Text="@GetPilotString(pilot.Id)"></DropDownMenuItem>
                 }
-            </DropdownMenu>
-        </Dropdown>
+            </DropDownMenuItems>
+        </SfDropDownButton>
     </div>
     @if (!IsCollapsed)
     {
@@ -41,35 +44,35 @@
                 <tbody>
                     <tr>
                         <td class="w-50">
-                            <Dropdown Class="w-100">
-                                <DropdownToggleButton Class="rounded-0 rounded-start" Color="ButtonColor.Secondary">@GetBandString()</DropdownToggleButton>
-                                <DropdownMenu>
+                            <SfDropDownButton CssClass="e-primary e-block" Content=@GetBandString()>
+                                <DropDownButtonEvents ItemSelected=BandSelected></DropDownButtonEvents>
+                                <DropDownMenuItems>
                                     @foreach (var band in Band.Bands)
                                     {
-                                        <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => GoToBand(band.Id)">@band.Name</DropdownItem>
+                                        <DropDownMenuItem Id="@(band.Id.ToString())" Text=@band.ShortName></DropDownMenuItem>
                                     }
-                                </DropdownMenu>
-                            </Dropdown>
+                                </DropDownMenuItems>
+                            </SfDropDownButton>
                         </td>
                         <td class="w-50">
                             @if (Band.Bands.Any(x => x.Id == Configuration.BandId))
                             {
-                                <Dropdown Class="w-100">
-                                    <DropdownToggleButton Class="rounded-0 rounded-end" Color="ButtonColor.Primary">@GetFrequencyString()</DropdownToggleButton>
-                                    <DropdownMenu>
+                                <SfDropDownButton CssClass="e-link e-block" Content=@GetFrequencyString()>
+                                    <DropDownButtonEvents ItemSelected=FrequencySelected></DropDownButtonEvents>
+                                    <DropDownMenuItems>
                                         @{
                                             var band = Band.Bands.First(b => b.Id == Configuration.BandId);
                                             foreach (var frequency in band.Frequencies)
                                             {
-                                                <DropdownItem Type="BlazorBootstrap.DropdownItemType.Button" @onclick="() => GoToFrequency(frequency.FrequencyInMhz)">@frequency.Name</DropdownItem>
+                                                <DropDownMenuItem Id="@(frequency.FrequencyInMhz.ToString())" Text="@frequency.Name"></DropDownMenuItem>
                                             }
                                         }
-                                    </DropdownMenu>
-                                </Dropdown>
+                                    </DropDownMenuItems>
+                                </SfDropDownButton>
                             }
                             else
                             {
-                                <NumberInput Class="rounded-0 rounded-end" TValue=int ValueChanged="GoToFrequency" Value="Configuration.FrequencyInMhz" ValueExpression="() => Configuration.FrequencyInMhz"></NumberInput>
+                                <SfNumericTextBox ShowSpinButton=false TValue=int ValueChanged="GoToFrequency" Value="Configuration.FrequencyInMhz" ValueExpression="() => Configuration.FrequencyInMhz"></SfNumericTextBox>
                             }
                         </td>
                     </tr>
@@ -96,10 +99,10 @@
             <tbody>
                 <tr>
                     <td class="w-50">
-                        <Button Class="w-100 rounded-0 rounded-start" Type="ButtonType.Button" Color="ButtonColor.Success" @onclick="() => TriggerDetection(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></Button>
+                        <SfButton CssClass="e-success w-100 rounded-0 rounded-start" @onclick="() => TriggerDetection(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></SfButton>
                     </td>
                     <td class="w-50">
-                        <Button Class="w-100 rounded-0 rounded-end" Type="ButtonType.Button" Color="ButtonColor.Danger" @onclick="() => TriggerInvalidation(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></Button>
+                        <SfButton CssClass="e-danger w-100 rounded-0 rounded-end" @onclick="() => TriggerInvalidation(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></SfButton>
                     </td>
                 </tr>
             </tbody>

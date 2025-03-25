@@ -6,6 +6,7 @@ using NaeTime.Hardware.Messages;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;
+using Syncfusion.Blazor.SplitButtons;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
 public partial class SessionLaneConfiguration : ComponentBase, IDisposable
@@ -98,6 +99,8 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
 
+    public async Task EnabledSwitchChanged(Syncfusion.Blazor.Buttons.ChangeEventArgs<bool> args) => await EnabledChanged(args.Checked);
+
     public Task EnabledChanged(bool value)
     {
         if (Configuration.IsEnabled == value)
@@ -113,6 +116,18 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
         else
         {
             return EventClient.PublishAsync(new LaneDisabled(Configuration.LaneNumber));
+        }
+    }
+    private async Task BandSelected(MenuEventArgs x)
+    {
+        if (x.Item == null)
+        {
+            return;
+        }
+
+        if (byte.TryParse(x.Item.Id, out byte bandId))
+        {
+            await GoToBand(bandId);
         }
     }
     public Task GoToBand(byte? bandId)
@@ -132,6 +147,18 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
 
         return ChangeFrequency(bandId, newFrequency);
 
+    }
+    private async Task FrequencySelected(MenuEventArgs x)
+    {
+        if (x.Item == null)
+        {
+            return;
+        }
+
+        if (int.TryParse(x.Item.Id, out int bandId))
+        {
+            await GoToFrequency(bandId);
+        }
     }
     public Task GoToFrequency(int value) => ChangeFrequency(Configuration.BandId, value);
 
@@ -171,6 +198,18 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
         }
 
         return $"{Configuration.FrequencyInMhz} Mhz";
+    }
+    private async Task PilotSelected(MenuEventArgs x)
+    {
+        if (x.Item == null)
+        {
+            return;
+        }
+
+        if (Guid.TryParse(x.Item.Id, out Guid pilotId))
+        {
+            await SetPilot(pilotId);
+        }
     }
     private Task SetPilot(Guid pilotId)
     {

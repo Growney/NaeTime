@@ -1,4 +1,5 @@
 ﻿@using Syncfusion.Blazor.Charts
+@using Syncfusion.Blazor.Buttons
 <div style="width:340px;">
     <div class="d-flex">
         @if (!string.IsNullOrWhiteSpace(Header))
@@ -99,13 +100,13 @@
                                 <div class="btn-group">
                                     @if (lap.Status == Lib.Models.OpenPractice.OpenPracticeLapStatus.Completed)
                                     {
-                                        <Button style="min-width:30px;" Color=ButtonColor.Danger @onclick="() => Invalidate(lap.Id,lap.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
+                                        <SfButton CssClass="min-width:30px;" Color=ButtonColor.Danger @onclick="() => Invalidate(lap.Id,lap.PilotId)"><i class="fa-solid fa-exclamation"></i></SfButton>
                                     }
                                     else
                                     {
-                                        <Button style="min-width:30px;" Color=ButtonColor.Success @onclick="() => Validate(lap.Id,lap.PilotId)"><i class="fa-solid fa-check"></i></Button>
+                                        <SfButton CssClass="min-width:30px;" Color=ButtonColor.Success @onclick="() => Validate(lap.Id,lap.PilotId)"><i class="fa-solid fa-check"></i></SfButton>
                                     }
-                                    <Button style="min-width:30px;"  Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></Button>
+                                    <SfButton CssClass="min-width:30px;" Color=ButtonColor.Secondary @onclick="() => Remove(lap.Id,lap.PilotId)"><i class="fa-solid fa-xmark"></i></SfButton>
                                 </div>
                             </td>
                         </tr>
