@@ -25,8 +25,11 @@ public static class MauiProgram
 
         builder.Services.AddSQLiteDbContext();
 
+        builder.Services.AddNaeTimeOrchestrator();
+        builder.Services.AddEntityFrameworkOrchestratorPersistence();
+        builder.Services.AddChannelsOrchestratorDistribution();
+
         //Must add all the SQLite services first so that the service runner creates the databases before the other services start
-        builder.Services.AddEntityFrameworkManagement();
         builder.Services.AddEntityFrameworkHardware();
         builder.Services.AddEntityFrameworkTiming();
         builder.Services.AddEntityFrameworkOpenPractice();

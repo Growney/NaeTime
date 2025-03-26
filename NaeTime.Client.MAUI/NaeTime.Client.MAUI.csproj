@@ -99,9 +99,11 @@
       <ProjectReference Include="..\NaeTime.Hardware.Node.Esp32\NaeTime.Hardware.Node.Esp32.csproj" />
       <ProjectReference Include="..\NaeTime.Hardware.Persistence.EntityFramework\NaeTime.Hardware.Persistence.EntityFramework.csproj" />
       <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
-      <ProjectReference Include="..\NaeTime.Management.Persistence.EntityFramework\NaeTime.Management.Persistence.EntityFramework.csproj" />
       <ProjectReference Include="..\NaeTime.OpenPractice.Persistence.EntityFramework\NaeTime.OpenPractice.Persistence.EntityFramework.csproj" />
       <ProjectReference Include="..\NaeTime.OpenPractice\NaeTime.OpenPractice.csproj" />
+      <ProjectReference Include="..\NaeTime.Orchestrator.Distribution.Channels\NaeTime.Orchestrator.Distribution.Channels.csproj" />
+      <ProjectReference Include="..\NaeTime.Orchestrator.Persistence.EntityFramework\NaeTime.Orchestrator.Persistence.EntityFramework.csproj" />
+      <ProjectReference Include="..\NaeTime.Orchestrator\NaeTime.Orchestrator.csproj" />
       <ProjectReference Include="..\NaeTime.Persistence.SQLite\NaeTime.Persistence.SQLite.csproj" />
       <ProjectReference Include="..\NaeTime.PubSub.InMemory\NaeTime.PubSub.InMemory.csproj" />
       <ProjectReference Include="..\NaeTime.Timing.Persistence.EntityFramework\NaeTime.Timing.Persistence.EntityFramework.csproj" />

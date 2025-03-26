@@ -308,6 +308,9 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Property<DateTime?>("ConnectionStatusChanged")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("TimerId")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("WasConnected")
                         .HasColumnType("INTEGER");
 

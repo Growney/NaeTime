@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Management.Messages;
+using NaeTime.Orchestrator.Abstractions;
 using NaeTime.Persistence.Abstractions;
-using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
 public partial class UpdateTrack
@@ -10,7 +9,7 @@ public partial class UpdateTrack
     [Inject]
     private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
-    private IEventClient EventClient { get; set; } = null!;
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -63,9 +62,8 @@ public partial class UpdateTrack
 
     private async Task HandleValidSubmit(Track track)
     {
-        byte maxLanes = _timers.Where(x => track.Timers.Contains(x.Id)).Max(x => x.MaxLanes);
-
-        await EventClient.PublishAsync(new TrackDetailsChanged(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, maxLanes));
+        await Orchestrator.Management.UpdateTrack(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers);
+        await Orchestrator.CommitAsync();
 
         string returnUrl = ReturnUrl ?? "/track/list";
 

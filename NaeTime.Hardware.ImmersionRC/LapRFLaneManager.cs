@@ -1,6 +1,8 @@
 ﻿using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Models;
 using NaeTime.Hardware.Messages;
+using NaeTime.Orchestrator.Distribution.Abstractions;
+using NaeTime.Orchestrator.Distribution.Abstractions.Events.Hardware;
 using NaeTime.Persistence.Abstractions;
 using NaeTime.Persistence.Abstractions.Hardware;
 using NaeTime.Persistence.Abstractions.Timing;
@@ -8,20 +10,23 @@ using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;
 
 namespace NaeTime.Hardware.ImmersionRC;
-public class LapRFLaneManager
+public class LapRFLaneManager : IDisposable
 {
     private readonly IEventClient _eventClient;
     private readonly INaeTimePersistence _persistence;
     private readonly ILapRFManager _lapRFManager;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    public LapRFLaneManager(IEventClient eventClient, INaeTimePersistence persistence, ILapRFManager lapRFManager)
+    public LapRFLaneManager(IEventClient eventClient, INaeTimePersistence persistence, ILapRFManager lapRFManager, IDistributionReceiver receiver)
     {
         _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
         _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
         _lapRFManager = lapRFManager ?? throw new ArgumentNullException(nameof(lapRFManager));
+
+        _ = receiver.Process<TimerConnected>(_cancellationTokenSource.Token, When);
     }
 
-    public async Task When(TimerConnectionEstablished connectionEstablished)
+    public async Task When(TimerConnected connectionEstablished)
     {
         IEnumerable<ActiveLaneConfiguration>? laneConfigurations = await _persistence.Timing.GetActiveLaneConfigurations();
 
@@ -51,7 +56,7 @@ public class LapRFLaneManager
             if (timerLaneConfigurationReponse != null)
             {
                 //Loop through the lane configuration and update the timer configuration
-                await ReconfigureTimerLanes(connectionEstablished, laneConfigurations, timerLaneConfigurationReponse).ConfigureAwait(false);
+                await ReconfigureTimerLanes(connectionEstablished.TimerId, laneConfigurations, timerLaneConfigurationReponse).ConfigureAwait(false);
 
                 await ReconfigurationLocalFromTimer(laneConfigurations, timerLaneConfigurationReponse).ConfigureAwait(false);
             }
@@ -69,7 +74,7 @@ public class LapRFLaneManager
             }
         }
     }
-    private async Task ReconfigureTimerLanes(TimerConnectionEstablished connectionEstablished, IEnumerable<ActiveLaneConfiguration> laneConfigurations, IEnumerable<LapRFLaneConfiguration> timerLaneConfigurationReponse)
+    private async Task ReconfigureTimerLanes(Guid timerId, IEnumerable<ActiveLaneConfiguration> laneConfigurations, IEnumerable<LapRFLaneConfiguration> timerLaneConfigurationReponse)
     {
         List<TimersLaneConfigured.LaneConfiguration> timerReconfigurations = new();
         foreach (ActiveLaneConfiguration lane in laneConfigurations)
@@ -89,7 +94,7 @@ public class LapRFLaneManager
 
         if (timerReconfigurations.Any())
         {
-            await _eventClient.PublishAsync(new TimersLaneConfigured(connectionEstablished.TimerId, timerReconfigurations)).ConfigureAwait(false);
+            await _eventClient.PublishAsync(new TimersLaneConfigured(timerId, timerReconfigurations)).ConfigureAwait(false);
         }
     }
     public async Task GenerateConfigurationEvents(LapRFLaneConfiguration configuration)
@@ -151,4 +156,6 @@ public class LapRFLaneManager
             }
         }
     }
+
+    public void Dispose() => _cancellationTokenSource.Dispose();
 }

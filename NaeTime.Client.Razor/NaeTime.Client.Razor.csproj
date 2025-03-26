@@ -33,8 +33,9 @@
     <ProjectReference Include="..\NaeTime.Hardware.ImmersionRC\NaeTime.Hardware.ImmersionRC.csproj" />
     <ProjectReference Include="..\NaeTime.Hardware.Messages\NaeTime.Hardware.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
-    <ProjectReference Include="..\NaeTime.Management.Messages\NaeTime.Management.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.OpenPractice.Messages\NaeTime.OpenPractice.Messages.csproj" />
+    <ProjectReference Include="..\NaeTime.Orchestrator.Abstractions\NaeTime.Orchestrator.Abstractions.csproj" />
+    <ProjectReference Include="..\NaeTime.Orchestrator.Distribution.Abstractions\NaeTime.Orchestrator.Distribution.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Persistence.Abstractions\NaeTime.Persistence.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub.Abstractions\NaeTime.PubSub.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Timing.Messages\NaeTime.Timing.Messages.csproj" />

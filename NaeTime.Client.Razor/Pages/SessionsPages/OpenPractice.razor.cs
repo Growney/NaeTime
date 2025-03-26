@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
-using NaeTime.Management.Messages;
 using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.Orchestrator.Abstractions;
+using NaeTime.Orchestrator.Distribution.Abstractions;
+using NaeTime.Orchestrator.Distribution.Abstractions.Events.Management;
 using NaeTime.Persistence.Abstractions;
 using NaeTime.Persistence.Abstractions.Timing;
 using NaeTime.PubSub.Abstractions;
@@ -14,21 +16,40 @@ public partial class OpenPractice : ComponentBase, IDisposable
     [Inject]
     public INaeTimePersistence Persistence { get; set; } = default!;
     [Inject]
+    public IDistributionReceiver Receiver { get; set; } = default!;
+    [Inject]
     public IEventClient EventClient { get; set; } = default!;
     [Inject]
-    public IEventRegistrarScope EventRegistrarScope { get; set; } = default!;
+    public INaeTimeOrchestrator Orchestrator { get; set; } = default!;
 
     private readonly List<LaneConfiguration> _laneConfigurations = new();
     private readonly List<TrackDetails> _tracks = new();
     private readonly List<Pilot> _pilots = new();
     private readonly List<SessionDetails> _sessionDetails = new();
+    private readonly CancellationTokenSource _source = new();
 
     private OpenPracticeSession? _selectedSession;
     private Guid? _activeSessionId;
     private bool _isLaneConfigCollapsed = false;
+    private async Task When(OpenPracticeSessionActivated x)
+    {
+        _activeSessionId = x.SessionId;
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+    }
+    private async Task When(SessionDeactivated x)
+    {
+        if (_activeSessionId != x.SessionId)
+        {
+            return;
+        }
+
+        _activeSessionId = null;
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+    }
     protected override async Task OnInitializedAsync()
     {
-        EventRegistrarScope.RegisterHub(this);
+        _ = Receiver.Process<OpenPracticeSessionActivated>(_source.Token, When);
+        _ = Receiver.Process<SessionDeactivated>(_source.Token, When);
 
         IEnumerable<Persistence.Abstractions.Management.Pilot>? pilotsResponse = await Persistence.Management.GetPilots();
 
@@ -75,19 +96,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
             _activeSessionId = activeSessionReponse.SessionId;
             await SetupForSession(activeSessionReponse.SessionId);
         }
-    }
-
-    public async Task When(SessionActivated session)
-    {
-        _activeSessionId = session.SessionId;
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
-    public async Task When(SessionDeactivated session)
-    {
-        _activeSessionId = null;
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
     private async Task SetupForSession(Guid sessionId)
     {
@@ -171,7 +179,8 @@ public partial class OpenPractice : ComponentBase, IDisposable
         string sessionName = $"Quick Session - {DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}";
         await EventClient.PublishAsync(new OpenPracticeSessionConfigured(sessionId, sessionName, trackId, minimumLapMilliseconds, maximumLapMilliseconds));
 
-        await EventClient.PublishAsync(new SessionActivated(sessionId, SessionActivated.SessionType.OpenPractice));
+        await Orchestrator.Management.ActivateOpenPracticeSession(sessionId);
+        await Orchestrator.CommitAsync();
 
         _sessionDetails.Add(new SessionDetails
         {
@@ -201,7 +210,8 @@ public partial class OpenPractice : ComponentBase, IDisposable
         byte maxLanes = trackTimers.Max(x => x.MaxLanes);
         IEnumerable<Guid> timerIds = trackTimers.Select(x => x.Id);
 
-        await EventClient.PublishAsync(new TrackCreated(newTrackId, $"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds, maxLanes));
+        await Orchestrator.Management.CreateTrack($"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds);
+        await Orchestrator.CommitAsync();
 
         Persistence.Abstractions.Management.Track? track = await Persistence.Management.GetTrack(newTrackId);
 
@@ -275,5 +285,5 @@ public partial class OpenPractice : ComponentBase, IDisposable
         _selectedSession.TrackedConsecutiveLaps.Add(lapCap);
         return EventClient.PublishAsync(new ConsecutiveLapCountTracked(_selectedSession.Id, lapCap));
     }
-    public void Dispose() => EventRegistrarScope?.Dispose();
+    public void Dispose() => _source.Cancel();
 }

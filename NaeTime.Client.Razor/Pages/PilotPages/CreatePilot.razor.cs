@@ -1,13 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Management.Messages;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.PilotPages;
 public partial class CreatePilot : ComponentBase
 {
     [Inject]
-    private IEventClient EventClient { get; set; } = null!;
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -22,14 +21,10 @@ public partial class CreatePilot : ComponentBase
         CallSign = null
     };
 
-    protected override Task OnInitializedAsync()
-    {
-        return base.OnInitializedAsync();
-    }
-
     private async Task HandleValidSubmit(Pilot pilot)
     {
-        await EventClient.PublishAsync(new PilotCreated(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
+        await Orchestrator.Management.CreatePilot(pilot.FirstName, pilot.LastName, pilot.CallSign);
+        await Orchestrator.CommitAsync();
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/pilot/list");
     }

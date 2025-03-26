@@ -44,38 +44,4 @@ internal class HardwareService
 
         await _dbcontext.SaveChangesAsync().ConfigureAwait(false);
     }
-    public async Task When(TimerConnectionEstablished connectionEstablishedEvent)
-    {
-        TimerStatus? existingStatus = await _dbcontext.TimerStatuses.FirstOrDefaultAsync(x => x.Id == connectionEstablishedEvent.TimerId).ConfigureAwait(false);
-        if (existingStatus == null)
-        {
-            existingStatus = new TimerStatus
-            {
-                Id = connectionEstablishedEvent.TimerId,
-            };
-            _dbcontext.TimerStatuses.Add(existingStatus);
-        }
-
-        existingStatus.WasConnected = true;
-        existingStatus.ConnectionStatusChanged = connectionEstablishedEvent.UtcTime;
-
-        await _dbcontext.SaveChangesAsync().ConfigureAwait(false);
-    }
-    public async Task When(TimerDisconnected disconnectedEvent)
-    {
-        TimerStatus? existingStatus = await _dbcontext.TimerStatuses.FirstOrDefaultAsync(x => x.Id == disconnectedEvent.TimerId).ConfigureAwait(false);
-        if (existingStatus == null)
-        {
-            existingStatus = new TimerStatus
-            {
-                Id = disconnectedEvent.TimerId,
-            };
-            _dbcontext.TimerStatuses.Add(existingStatus);
-        }
-
-        existingStatus.WasConnected = false;
-        existingStatus.ConnectionStatusChanged = disconnectedEvent.UtcTime;
-
-        await _dbcontext.SaveChangesAsync().ConfigureAwait(false);
-    }
 }

@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Management.Messages;
+using NaeTime.Orchestrator.Abstractions;
 using NaeTime.Persistence.Abstractions;
-using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.PilotPages;
 public partial class UpdatePilot : ComponentBase
@@ -10,7 +9,7 @@ public partial class UpdatePilot : ComponentBase
     [Inject]
     private INaeTimePersistence Persistence { get; set; } = null!;
     [Inject]
-    private IEventClient EventClient { get; set; } = null!;
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -49,7 +48,8 @@ public partial class UpdatePilot : ComponentBase
             return;
         }
 
-        await EventClient.PublishAsync(new PilotDetailsChanged(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
+        await Orchestrator.Management.UpdatePilot(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign);
+        await Orchestrator.CommitAsync();
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/pilot/list");
     }
