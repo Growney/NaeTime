@@ -9,23 +9,25 @@
                     <td>
 
                         <h1>Open Practice</h1>
-                        <SfSplitButton Content="Start Session On">
+                        <SfDropDownButton Content="Start Session On">
+                            <DropDownButtonEvents ItemSelected=TrackSelectedForNewSession></DropDownButtonEvents>
                             <DropDownMenuItems>
                                 @foreach (var track in _tracks)
                                 {
-                                    <DropDownMenuItem Text=@track.Name @onclick="() => StartNewSessionOnTrack(Guid.NewGuid(),track.Id,track.MinimumLapTimeMilliseconds,track.MaximumLapTimeMilliseconds)"></DropDownMenuItem>
+                                    <DropDownMenuItem Text=@track.Name Id="@track.Id.ToString()" ></DropDownMenuItem>
                                 }
-                                <DropDownMenuItem Text="[New Track]" @onclick="() => StartSessionOnNewTrack()"></DropDownMenuItem>
+                                <DropDownMenuItem Text="[New Track]"></DropDownMenuItem>
                             </DropDownMenuItems>
-                        </SfSplitButton>
-                        <SfSplitButton Content="@GetActiveSessionName()">
+                        </SfDropDownButton>
+                        <SfDropDownButton Content="@GetActiveSessionName()">
+                            <DropDownButtonEvents ItemSelected=SessionSelected></DropDownButtonEvents>
                             <DropDownMenuItems>
                                 @foreach (var session in _sessionDetails)
                                 {
-                                    <DropDownMenuItem Text=@session.Name @onclick ="() => SetupForSession(session.Id)"></DropDownMenuItem>
+                                    <DropDownMenuItem Text=@session.Name Id="@session.Id.ToString()"></DropDownMenuItem>
                                 }
                             </DropDownMenuItems>
-                        </SfSplitButton>
+                        </SfDropDownButton>
                     </td>
                     @if (_selectedSession != null)
                     {

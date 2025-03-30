@@ -158,6 +158,33 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         return _selectedSession.Name;
     }
+    public async Task SessionSelected(MenuEventArgs args)
+    {
+        if (args.Item == null)
+        {
+            return;
+        }
+        if (Guid.TryParse(args.Item.Id, out Guid sessionId))
+        {
+            await SetupForSession(sessionId);
+        }
+    }
+    public async Task TrackSelectedForNewSession(MenuEventArgs args)
+    {
+        if (args.Item == null)
+        {
+            return;
+        }
+
+        if (Guid.TryParse(args.Item.Id, out Guid trackId))
+        {
+            await StartNewSessionOnTrack(Guid.NewGuid(), trackId, 0, null);
+        }
+        else if (string.IsNullOrWhiteSpace(args.Item.Id))
+        {
+            await StartSessionOnNewTrack();
+        }
+    }
     public async Task StartNewSessionOnTrack(Guid sessionId, Guid trackId, long minimumLapMilliseconds, long? maximumLapMilliseconds)
     {
 
