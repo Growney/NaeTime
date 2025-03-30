@@ -217,12 +217,11 @@ public partial class OpenPractice : ComponentBase, IDisposable
             return;
         }
 
-        Guid newTrackId = Guid.NewGuid();
         IEnumerable<NaeTime.Persistence.Abstractions.Hardware.TimerDetails> trackTimers = timers.Take(1);
         byte maxLanes = trackTimers.Max(x => x.MaxLanes);
         IEnumerable<Guid> timerIds = trackTimers.Select(x => x.Id);
 
-        await Orchestrator.Management.CreateTrack($"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds);
+        Guid newTrackId = await Orchestrator.Management.CreateTrack($"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds);
         await Orchestrator.CommitAsync();
 
         Persistence.Abstractions.Management.Track? track = await Persistence.Management.GetTrack(newTrackId);
