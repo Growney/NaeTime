@@ -14,6 +14,11 @@ public static class IServiceCollectionExtensions
 
         services.AddSingleton(x => Channel.CreateUnbounded<OpenPracticeSessionActivated>());
         services.AddSingleton(x => Channel.CreateUnbounded<SessionDeactivated>());
+
+        services.AddSingleton(x => Channel.CreateUnbounded<EthernetLapRF8Configured>());
+        services.AddSingleton(x => Channel.CreateUnbounded<EthernetLapRF8Created>());
+        services.AddSingleton(x => Channel.CreateUnbounded<SerialEsp32NodeConfigured>());
+        services.AddSingleton(x => Channel.CreateUnbounded<SerialEsp32NodeCreated>());
         services.AddSingleton(x => Channel.CreateUnbounded<TimerConnected>());
         services.AddSingleton(x => Channel.CreateUnbounded<TimerDisconnected>());
 

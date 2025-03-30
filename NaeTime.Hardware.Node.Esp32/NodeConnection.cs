@@ -19,7 +19,7 @@ internal class NodeConnection
 
     private readonly Task[] _runningTasks;
 
-    public NodeConnection(Guid timerId, ISoftwareTimer softwareTimer, IEventClient eventClient, INodeCommunication communication, INodeProtocol protocol, INaeTimeOrchestrator orchestrator)
+    public NodeConnection(ISoftwareTimer softwareTimer, IEventClient eventClient, INaeTimeOrchestrator orchestrator, Guid timerId, INodeProtocol protocol, INodeCommunication communication)
     {
         _timerId = timerId;
         _eventClient = eventClient;

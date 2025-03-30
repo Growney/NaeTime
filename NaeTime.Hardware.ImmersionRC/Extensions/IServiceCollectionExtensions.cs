@@ -9,7 +9,7 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddImmersionRCHardware(this IServiceCollection services)
     {
-        services.AddSingleton<LapRFManager>();
+        services.AddSingleton<LapRFManager>(x => ActivatorUtilities.CreateInstance<LapRFManager>(x));
         services.AddSingleton<ILapRFManager>(x => x.GetRequiredService<LapRFManager>());
         services.AddHostedService(x => x.GetRequiredService<LapRFManager>());
         services.AddTransient<ILapRFConnectionFactory, LapRFConnectionFactory>();

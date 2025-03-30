@@ -21,7 +21,7 @@ internal class LapRFConnection
 
     private readonly Task[] _runningTasks;
 
-    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, IEventClient eventClient, ILapRFCommunication communication, ILapRFProtocol protocol, INaeTimeOrchestrator orchestrator)
+    public LapRFConnection(ISoftwareTimer softwareTimer, IEventClient eventClient, INaeTimeOrchestrator orchestrator, Guid timerId, ILapRFProtocol protocol, ILapRFCommunication communication)
     {
         _timerId = timerId;
         _eventClient = eventClient;

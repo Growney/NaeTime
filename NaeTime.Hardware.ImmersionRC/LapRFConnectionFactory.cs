@@ -1,7 +1,5 @@
 ﻿using ImmersionRC.LapRF.Abstractions;
-using NaeTime.Hardware.Abstractions;
-using NaeTime.Orchestrator.Abstractions;
-using NaeTime.PubSub.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using NaeTime.Timing.ImmersionRC.Abstractions;
 using System.Net;
 
@@ -10,23 +8,19 @@ internal class LapRFConnectionFactory : ILapRFConnectionFactory
 {
     private readonly ILapRFCommunicationFactory _communicationFactory;
     private readonly ILapRFProtocolFactory _protocolFactory;
-    private readonly IEventClient _eventClient;
-    private readonly ISoftwareTimer _softwareTimer;
-    private readonly INaeTimeOrchestrator _orchestrator;
+    private readonly IServiceProvider _serviceProvider;
 
-    public LapRFConnectionFactory(ILapRFCommunicationFactory communicationFactory, ILapRFProtocolFactory protocolFactory, IEventClient eventClient, ISoftwareTimer softwareTimer, INaeTimeOrchestrator orchestrator)
+    public LapRFConnectionFactory(ILapRFCommunicationFactory communicationFactory, ILapRFProtocolFactory protocolFactory, IServiceProvider provider)
     {
         _communicationFactory = communicationFactory ?? throw new ArgumentNullException(nameof(communicationFactory));
         _protocolFactory = protocolFactory ?? throw new ArgumentNullException(nameof(protocolFactory));
-        _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
-        _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
-        _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
+        _serviceProvider = provider ?? throw new ArgumentNullException(nameof(provider));
     }
 
     public LapRFConnection CreateEthernetConnection(Guid timerId, IPAddress address, int port)
     {
         ILapRFCommunication communication = _communicationFactory.CreateEthernetCommunication(address, port);
         ILapRFProtocol protocol = _protocolFactory.Create(communication);
-        return new LapRFConnection(timerId, _softwareTimer, _eventClient, communication, protocol, _orchestrator);
+        return ActivatorUtilities.CreateInstance<LapRFConnection>(_serviceProvider, timerId, protocol, communication);
     }
 }

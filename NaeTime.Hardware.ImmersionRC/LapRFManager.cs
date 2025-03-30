@@ -4,7 +4,6 @@ using NaeTime.Hardware.ImmersionRC.Models;
 using NaeTime.Orchestrator.Distribution.Abstractions;
 using NaeTime.Orchestrator.Distribution.Abstractions.Events.Hardware;
 using NaeTime.Persistence.Abstractions;
-using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.ImmersionRC;
 using NaeTime.Timing.ImmersionRC.Abstractions;
 using System.Collections.Concurrent;
@@ -13,22 +12,18 @@ namespace NaeTime.Hardware.ImmersionRC;
 internal class LapRFManager : IHostedService, ILapRFManager, IDisposable
 {
     private readonly INaeTimePersistence _persistence;
-    private readonly IEventRegistrarScope _eventRegistrarScope;
     private readonly ILapRFConnectionFactory _connectionFactory;
     private readonly CancellationTokenSource _source = new();
 
     private readonly ConcurrentDictionary<Guid, LapRFConnection> _hardwareProcesses = new();
 
-    public LapRFManager(INaeTimePersistence persistence, IEventRegistrarScope eventRegistrarScope, ILapRFConnectionFactory connectionFactory, IDistributionReceiver receiver)
+    public LapRFManager(INaeTimePersistence persistence, ILapRFConnectionFactory connectionFactory, IDistributionReceiver receiver)
     {
         _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
-        _eventRegistrarScope = eventRegistrarScope ?? throw new ArgumentNullException(nameof(eventRegistrarScope));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _ = receiver.Process<EthernetLapRF8Created>(_source.Token, When);
         _ = receiver.Process<EthernetLapRF8Configured>(_source.Token, When);
-
-        _eventRegistrarScope.RegisterHub(this);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -52,8 +47,6 @@ internal class LapRFManager : IHostedService, ILapRFManager, IDisposable
         {
             await device.Value.Stop().ConfigureAwait(false);
         }
-
-        _eventRegistrarScope.Dispose();
     }
     public async Task When(EthernetLapRF8Configured configured)
     {

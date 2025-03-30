@@ -1,20 +1,13 @@
-﻿using NaeTime.Hardware.Abstractions;
+﻿using Microsoft.Extensions.DependencyInjection;
 using NaeTime.Hardware.Node.Esp32.Abstractions;
-using NaeTime.Orchestrator.Abstractions;
-using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Hardware.Node.Esp32;
 internal class NodeConnectionFactory : INodeConnectionFactory
 {
-    private readonly IEventClient _eventClient;
-    private readonly ISoftwareTimer _softwareTimer;
-    private readonly INaeTimeOrchestrator _orchestrator;
-
-    public NodeConnectionFactory(IEventClient eventClient, ISoftwareTimer softwareTimer, INaeTimeOrchestrator orchestrator)
+    private readonly IServiceProvider _serviceProvider;
+    public NodeConnectionFactory(IServiceProvider serviceProvider)
     {
-        _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
-        _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
-        _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
+        _serviceProvider = serviceProvider;
     }
 
     public NodeConnection CreateSerialConnection(Guid timerId, string port)
@@ -24,6 +17,6 @@ internal class NodeConnectionFactory : INodeConnectionFactory
         INodeCommunication communication = new NodeSerialCommunication(port);
         INodeConfigurationProtocol configurationProtocol = new NodeConfigurationProtocol(communication);
         INodeProtocol protocol = new NodeProtocol(communication, timingProtocol, configurationProtocol);
-        return new NodeConnection(timerId, _softwareTimer, _eventClient, communication, protocol, _orchestrator);
+        return ActivatorUtilities.CreateInstance<NodeConnection>(_serviceProvider, timerId, protocol, communication);
     }
 }
