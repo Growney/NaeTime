@@ -19,11 +19,11 @@ public class HardwareOrchestrator : IHardwareOrchestrator
     private readonly ILapRFManager _lapRFManager;
     private readonly INodeManager _nodeManager;
 
-    public HardwareOrchestrator(IHardwareOrchestratorPersistence orchestratorPersistence,
-        INaeTimeOrchestratorDistribution distribution,
+    public HardwareOrchestrator(ILapRFManager lapRFManager,
+        INodeManager nodeManager,
         INaeTimePersistence persistence,
-        ILapRFManager lapRFManager,
-        INodeManager nodeManager)
+        IHardwareOrchestratorPersistence orchestratorPersistence,
+        INaeTimeOrchestratorDistribution distribution)
     {
         _orchestratorPersistence = orchestratorPersistence ?? throw new ArgumentNullException(nameof(orchestratorPersistence));
         _distribution = distribution ?? throw new ArgumentNullException(nameof(distribution));

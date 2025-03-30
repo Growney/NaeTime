@@ -7,11 +7,7 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddNaeTimeOrchestrator(this IServiceCollection services)
     {
-        services.AddScoped<IHardwareOrchestrator, HardwareOrchestrator>();
-        services.AddScoped<IManagementOrchestrator, ManagementOrchestrator>();
-        services.AddScoped<INaeTimeOrchestrator, NaeTimeOrchestrator>();
-        services.AddScoped<IOpenPracticeOrchestrator, OpenPracticeOrchestrator>();
-        services.AddScoped<ITimingOrchestrator, TimingOrchestrator>();
+        services.AddTransient<INaeTimeOrchestrator, NaeTimeOrchestrator>();
         return services;
     }
 }
