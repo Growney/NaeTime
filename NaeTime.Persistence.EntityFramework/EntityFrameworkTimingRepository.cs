@@ -11,8 +11,6 @@ public class EntityFrameworkTimingRepository : ITimingRepository
     {
         _dbContext = dbContext;
     }
-    public async Task<IEnumerable<ActiveLaneConfiguration>> GetActiveLaneConfigurations() =>
-        await _dbContext.Lanes.Select(x => new ActiveLaneConfiguration(x.Id, x.BandId, x.FrequencyInMhz, x.IsEnabled)).ToListAsync();
     public async Task<IEnumerable<LaneActiveTimings>> GetSessionActiveTimings(Guid sessionId)
     {
         var timings = await _dbContext.ActiveTimings.Where(x => x.SessionId == sessionId).ToListAsync();

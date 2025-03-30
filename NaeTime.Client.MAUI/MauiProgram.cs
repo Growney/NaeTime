@@ -31,7 +31,6 @@ public static class MauiProgram
 
         //Must add all the SQLite services first so that the service runner creates the databases before the other services start
         builder.Services.AddEntityFrameworkHardware();
-        builder.Services.AddEntityFrameworkTiming();
         builder.Services.AddEntityFrameworkOpenPractice();
 
         //Add Client Configuration Services
@@ -48,9 +47,6 @@ public static class MauiProgram
 
         //Add Open Practice Services
         builder.Services.AddOpenPracticeCore();
-
-        //Add Timing Services
-        builder.Services.AddTimingCore();
 
         builder.Services.AddMauiBlazorWebView();
         builder.Services.AddNaeTimeComponents();

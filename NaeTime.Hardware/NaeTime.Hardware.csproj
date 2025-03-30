@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.Hardware.Messages\NaeTime.Hardware.Messages.csproj" />
-    <ProjectReference Include="..\NaeTime.Timing.Messages\NaeTime.Timing.Messages.csproj" />
   </ItemGroup>
 
 </Project>

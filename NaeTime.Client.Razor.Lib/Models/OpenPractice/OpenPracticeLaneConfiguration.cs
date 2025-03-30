@@ -8,5 +8,5 @@ public class OpenPracticeLaneConfiguration
     public float RssiValue { get; set; }
     public float MaxRssiValue { get; set; }
     public bool IsEnabled { get; set; }
-    public DateTime? LapStarted { get; set; }
+    public DateTime? LastDetection { get; set; }
 }

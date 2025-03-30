@@ -1,4 +1,5 @@
-﻿using NaeTime.Orchestrator.Abstractions;
+﻿using Microsoft.Extensions.DependencyInjection;
+using NaeTime.Orchestrator.Abstractions;
 using NaeTime.Orchestrator.Distribution.Abstractions;
 using NaeTime.Orchestrator.Persistence.Abstractions;
 using NaeTime.Persistence.Abstractions;
@@ -15,15 +16,15 @@ public class NaeTimeOrchestrator : INaeTimeOrchestrator
     private readonly INaeTimeOrchestratorPersistence _persistence;
     private readonly INaeTimeOrchestratorDistribution _distribution;
 
-    public NaeTimeOrchestrator(INaeTimeOrchestratorPersistence orchestratorPersistence, INaeTimePersistence persistence, INaeTimeOrchestratorDistribution distribution)
+    public NaeTimeOrchestrator(INaeTimeOrchestratorPersistence orchestratorPersistence, INaeTimePersistence persistence, INaeTimeOrchestratorDistribution distribution, IServiceProvider serviceProvider)
     {
         _persistence = orchestratorPersistence;
         _distribution = distribution;
 
-        Hardware = new HardwareOrchestrator(orchestratorPersistence.Hardware, distribution);
-        Management = new ManagementOrchestrator(orchestratorPersistence.Management, persistence, distribution);
-        OpenPractice = new OpenPracticeOrchestrator(orchestratorPersistence.OpenPractice, distribution);
-        Timing = new TimingOrchestrator(orchestratorPersistence.Timing, distribution);
+        Hardware = ActivatorUtilities.GetServiceOrCreateInstance<HardwareOrchestrator>(serviceProvider);
+        Management = ActivatorUtilities.GetServiceOrCreateInstance<ManagementOrchestrator>(serviceProvider);
+        OpenPractice = ActivatorUtilities.GetServiceOrCreateInstance<OpenPracticeOrchestrator>(serviceProvider);
+        Timing = ActivatorUtilities.GetServiceOrCreateInstance<TimingOrchestrator>(serviceProvider);
     }
 
     public async Task CommitAsync()

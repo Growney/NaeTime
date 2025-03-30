@@ -22,7 +22,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
     [Inject]
     public INaeTimeOrchestrator Orchestrator { get; set; } = default!;
 
-    private readonly List<LaneConfiguration> _laneConfigurations = new();
+    private readonly List<Lib.Models.OpenPracticeLaneConfiguration> _laneConfigurations = new();
     private readonly List<TrackDetails> _tracks = new();
     private readonly List<Pilot> _pilots = new();
     private readonly List<SessionDetails> _sessionDetails = new();
@@ -65,19 +65,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         _tracks.AddRange(tracks.Select(x => new TrackDetails(x.Id, x.Name, x.MinimumLapTimeMilliseconds, x.MaximumLapTimeMilliseconds, x.Timers, x.AllowedLanes)));
 
-        IEnumerable<ActiveLaneConfiguration>? activeLaneConfigurations = await Persistence.Timing.GetActiveLaneConfigurations();
-
-        if (activeLaneConfigurations != null)
-        {
-            _laneConfigurations.AddRange(activeLaneConfigurations.Select(x => new LaneConfiguration()
-            {
-                LaneNumber = x.Lane,
-                BandId = x.BandId,
-                FrequencyInMhz = x.FrequencyInMhz,
-                IsEnabled = x.IsEnabled
-            }));
-        }
-
         IEnumerable<Persistence.Abstractions.OpenPractice.OpenPracticeSession>? sessions = await Persistence.OpenPractice.GetOpenPracticeSessions();
 
         _sessionDetails.AddRange(sessions.Select(x => new SessionDetails
@@ -86,8 +73,6 @@ public partial class OpenPractice : ComponentBase, IDisposable
             Name = x.Name,
             Type = SessionType.OpenPractice
         }));
-
-
 
         Persistence.Abstractions.Management.ActiveSession? activeSessionReponse = await Persistence.Management.GetActiveSession();
 
@@ -146,21 +131,21 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
-    private IEnumerable<OpenPracticeLaneConfiguration> GetLaneConfigurations(byte allowedLanes, IEnumerable<Persistence.Abstractions.OpenPractice.PilotLane> lanes, IEnumerable<LaneActiveTimings>? timings)
+    private IEnumerable<Lib.Models.OpenPractice.OpenPracticeLaneConfiguration> GetLaneConfigurations(byte allowedLanes, IEnumerable<Persistence.Abstractions.OpenPractice.OpenPracticeLaneConfiguration> lanes, IEnumerable<LaneActiveTimings>? timings)
     {
         for (byte lane = 1; lane <= allowedLanes; lane++)
         {
-            LaneConfiguration? laneConfig = _laneConfigurations.FirstOrDefault(x => x.LaneNumber == lane);
-            Persistence.Abstractions.OpenPractice.PilotLane? pilotLaneConfig = lanes.FirstOrDefault(x => x.Lane == lane);
+            Lib.Models.OpenPracticeLaneConfiguration? laneConfig = _laneConfigurations.FirstOrDefault(x => x.Lane == lane);
+            Persistence.Abstractions.OpenPractice.OpenPracticeLaneConfiguration? pilotLaneConfig = lanes.FirstOrDefault(x => x.Lane == lane);
 
-            yield return new OpenPracticeLaneConfiguration()
+            yield return new Lib.Models.OpenPractice.OpenPracticeLaneConfiguration()
             {
                 LaneNumber = lane,
                 BandId = laneConfig?.BandId,
                 FrequencyInMhz = laneConfig?.FrequencyInMhz ?? 0,
                 IsEnabled = laneConfig?.IsEnabled ?? false,
                 PilotId = pilotLaneConfig?.PilotId,
-                LapStarted = timings?.FirstOrDefault(x => x.Lane == lane)?.Lap?.StartedUtcTime
+                LastDetection = timings?.FirstOrDefault(x => x.Lane == lane)?.Lap?.StartedUtcTime
             };
         }
     }

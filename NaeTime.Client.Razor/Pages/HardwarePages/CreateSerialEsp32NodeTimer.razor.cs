@@ -1,13 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Hardware.Messages;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class CreateSerialEsp32NodeTimer
 {
     [Inject]
-    private IEventClient EventClient { get; set; } = null!;
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -39,7 +38,8 @@ public partial class CreateSerialEsp32NodeTimer
             return;
         }
 
-        await EventClient.PublishAsync(new SerialEsp32NodeConfigured(timer.Id, timer.Name, timer.Port));
+        await Orchestrator.Hardware.CreateSerialEsp32Node(timer.Name, timer.Port);
+        await Orchestrator.CommitAsync();
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/hardware/list");
     }

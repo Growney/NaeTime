@@ -6,9 +6,10 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddEsp32NodeTimers(this IServiceCollection services)
     {
-        services.AddHostedService<NodeManager>();
+        services.AddSingleton<NodeManager>();
+        services.AddSingleton<INodeManager>(x => x.GetRequiredService<NodeManager>());
+        services.AddHostedService<NodeManager>(x => x.GetRequiredService<NodeManager>());
         services.AddTransient<INodeConnectionFactory, NodeConnectionFactory>();
-        services.AddEventHub<NodeTimerLaneService>();
         return services;
     }
 }

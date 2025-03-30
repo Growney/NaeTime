@@ -13,7 +13,6 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<ILapRFManager>(x => x.GetRequiredService<LapRFManager>());
         services.AddHostedService(x => x.GetRequiredService<LapRFManager>());
         services.AddTransient<ILapRFConnectionFactory, LapRFConnectionFactory>();
-        services.AddEventHub<LapRFLaneManager>();
         services.AddImmersionRCLapRF();
         return services;
     }

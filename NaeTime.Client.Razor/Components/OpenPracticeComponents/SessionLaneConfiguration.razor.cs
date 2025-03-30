@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.Hardware.Frequency;
 using NaeTime.Hardware.Messages;
 using NaeTime.OpenPractice.Messages.Events;
+using NaeTime.Orchestrator.Abstractions;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.Messages.Events;
 using Syncfusion.Blazor.SplitButtons;
@@ -15,7 +15,7 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     public IEnumerable<Pilot> Pilots { get; set; } = Enumerable.Empty<Pilot>();
     [Parameter]
     [EditorRequired]
-    public OpenPracticeLaneConfiguration Configuration { get; set; } = null!;
+    public Lib.Models.OpenPractice.OpenPracticeLaneConfiguration Configuration { get; set; } = null!;
     [Parameter]
     [EditorRequired]
     public Guid SessionId { get; set; }
@@ -33,6 +33,8 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     public long? MaximumLapMilliseconds { get; set; }
     [Inject]
     private IEventClient EventClient { get; set; } = null!;
+    [Inject]
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
 
     [Inject]
     private IEventRegistrarScope RegistrarScope { get; set; } = null!;
@@ -66,57 +68,20 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
             _rssiValues.RemoveAt(0);
         }
     }
-    public async Task When(LapStarted started)
-    {
-        if (SessionId != started.SessionId)
-        {
-            return;
-        }
-
-        if (started.Lane != Configuration.LaneNumber)
-        {
-            return;
-        }
-
-        Configuration.LapStarted = started.StartedUtcTime;
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
-    public async Task When(LapInvalidated invalidated)
-    {
-        if (SessionId != invalidated.SessionId)
-        {
-            return;
-        }
-
-        if (invalidated.Lane != Configuration.LaneNumber)
-        {
-            return;
-        }
-
-        Configuration.LapStarted = null;
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
 
     public async Task EnabledSwitchChanged(Syncfusion.Blazor.Buttons.ChangeEventArgs<bool> args) => await EnabledChanged(args.Checked);
 
-    public Task EnabledChanged(bool value)
+    public async Task EnabledChanged(bool value)
     {
         if (Configuration.IsEnabled == value)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         Configuration.IsEnabled = value;
-        if (value)
-        {
-            return EventClient.PublishAsync(new LaneEnabled(Configuration.LaneNumber));
-        }
-        else
-        {
-            return EventClient.PublishAsync(new LaneDisabled(Configuration.LaneNumber));
-        }
+
+        await Orchestrator.Hardware.ConfigureLaneStatus(Configuration.LaneNumber, value);
+        await Orchestrator.CommitAsync();
     }
     private async Task BandSelected(MenuEventArgs x)
     {
@@ -162,16 +127,18 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     }
     public Task GoToFrequency(int value) => ChangeFrequency(Configuration.BandId, value);
 
-    private Task ChangeFrequency(byte? bandId, int frequencyInMhz)
+    private async Task ChangeFrequency(byte? bandId, int frequencyInMhz)
     {
         if (Configuration.BandId == bandId && Configuration.FrequencyInMhz == frequencyInMhz)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         Configuration.BandId = bandId;
         Configuration.FrequencyInMhz = frequencyInMhz;
-        return EventClient.PublishAsync(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, bandId, frequencyInMhz));
+
+        await Orchestrator.OpenPractice.ConfigureLaneRadioFrequency(SessionId, Configuration.LaneNumber, bandId, frequencyInMhz);
+        await Orchestrator.CommitAsync();
     }
     private string GetBandString()
     {
@@ -211,15 +178,17 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
             await SetPilot(pilotId);
         }
     }
-    private Task SetPilot(Guid pilotId)
+    private async Task SetPilot(Guid pilotId)
     {
         if (Configuration.PilotId == pilotId)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         Configuration.PilotId = pilotId;
-        return EventClient.PublishAsync(new OpenPracticeLanePilotSet(SessionId, pilotId, Configuration.LaneNumber));
+
+        await Orchestrator.OpenPractice.ConfigureLanePilot(SessionId, Configuration.LaneNumber, pilotId);
+        await Orchestrator.CommitAsync();
     }
     private string GetPilotString(Guid? pilotId)
     {

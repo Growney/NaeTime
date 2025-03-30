@@ -112,32 +112,6 @@ internal class OpenPracticeSessionService
 
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
-    public async Task When(OpenPracticeLanePilotSet laneSet)
-    {
-        OpenPracticeSession? session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == laneSet.SessionId).ConfigureAwait(false);
-
-        if (session == null)
-        {
-            return;
-        }
-
-        PilotLane? existingLane = session.ActiveLanes.FirstOrDefault(x => x.Lane == laneSet.Lane);
-
-        if (existingLane == null)
-        {
-            existingLane = new PilotLane()
-            {
-                Id = Guid.NewGuid(),
-                Lane = laneSet.Lane,
-            };
-
-            session.ActiveLanes.Add(existingLane);
-        }
-
-        existingLane.PilotId = laneSet.PilotId;
-
-        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
-    }
     public async Task When(ConsecutiveLapCountTracked tracked)
     {
         OpenPracticeSession? session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == tracked.SessionId).ConfigureAwait(false);

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using NaeTime.Hardware.Messages;
+using NaeTime.Orchestrator.Abstractions;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.HardwareComponents;
@@ -17,6 +18,8 @@ public partial class NodeTimerLaneTuner : ComponentBase, IAsyncDisposable
     private IEventRegistrarScope RegistrarScope { get; set; } = null!;
     [Inject]
     private IEventClient EventClient { get; set; } = null!;
+    [Inject]
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
 
     [Parameter]
     public int Width { get; set; } = 170;
@@ -126,7 +129,9 @@ public partial class NodeTimerLaneTuner : ComponentBase, IAsyncDisposable
 
         await JSRuntime.InvokeVoidAsync("setLineValue", _entryThresholdLine, _entryThreshold);
         await JSRuntime.InvokeVoidAsync("showHideHorizontalLine", _unsetEntryThresholdLine, false);
-        await EventClient.PublishAsync(new NodeTimerEntryThresholdConfigured(TimerId, LaneId, (ushort)_entryThreshold));
+
+        await Orchestrator.Hardware.ConfigureNodeEntryThreshold(TimerId, LaneId, (ushort)_entryThreshold);
+        await Orchestrator.CommitAsync();
     }
 
     private async Task ExitThresholdValueChanged(int newValue)
@@ -154,6 +159,8 @@ public partial class NodeTimerLaneTuner : ComponentBase, IAsyncDisposable
 
         await JSRuntime.InvokeVoidAsync("setLineValue", _exitThresholdLine, _exitThreshold);
         await JSRuntime.InvokeVoidAsync("showHideHorizontalLine", _unsetExitThresholdLine, false);
-        await EventClient.PublishAsync(new NodeTimerExitThresholdConfigured(TimerId, LaneId, (ushort)_exitThreshold));
+
+        await Orchestrator.Hardware.ConfigureNodeExitThreshold(TimerId, LaneId, (ushort)_exitThreshold);
+        await Orchestrator.CommitAsync();
     }
 }

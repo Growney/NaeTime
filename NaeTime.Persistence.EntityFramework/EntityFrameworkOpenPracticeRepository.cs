@@ -14,6 +14,7 @@ public class EntityFrameworkOpenPracticeRepository : IOpenPracticeRepository
     public async Task<OpenPracticeSession?> GetOpenPracticeSession(Guid sessionId)
     {
         var session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == sessionId).ConfigureAwait(false);
+        var lanes = await _dbContext.OpenPracticeLaneConfigurations.ToListAsync().ConfigureAwait(false);
 
         if (session == null)
         {
@@ -24,7 +25,7 @@ public class EntityFrameworkOpenPracticeRepository : IOpenPracticeRepository
 
         return new OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
                        laps.Select(x => new Lap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc, GetSessionResponseStatus(x.Status), x.TotalMilliseconds)),
-                                  session.ActiveLanes.Select(x => new PilotLane(x.PilotId, x.Lane)),
+                        lanes.Select(y => new OpenPracticeLaneConfiguration(y.Lane, y.PilotId, y.IsEnabled, y.BandId, y.FrequencyInMhz)),
                                              session.TrackedConsecutiveLaps.Select(x => x.LapCap));
     }
     public async Task<IEnumerable<AverageLapLeaderboardPosition>> GetOpenPracticeSessionAverageLapLeaderboardPositions(Guid sessionId)
@@ -86,6 +87,7 @@ public class EntityFrameworkOpenPracticeRepository : IOpenPracticeRepository
     public async Task<IEnumerable<OpenPracticeSession>> GetOpenPracticeSessions()
     {
         var sessions = await _dbContext.OpenPracticeSessions.ToListAsync().ConfigureAwait(false);
+        var lanes = await _dbContext.OpenPracticeLaneConfigurations.ToListAsync().ConfigureAwait(false);
 
         List<OpenPracticeSession> responseSessions = new();
         foreach (var session in sessions)
@@ -94,7 +96,7 @@ public class EntityFrameworkOpenPracticeRepository : IOpenPracticeRepository
 
             responseSessions.Add(new OpenPracticeSession(session.Id, session.TrackId, session.Name, session.MinimumLapMilliseconds, session.MaximumLapMilliseconds,
                 laps.Select(y => new Lap(y.Id, y.PilotId, y.StartedUtc, y.FinishedUtc, GetSessionResponseStatus(y.Status), y.TotalMilliseconds)),
-            session.ActiveLanes.Select(y => new PilotLane(y.PilotId, y.Lane)),
+            lanes.Select(y => new OpenPracticeLaneConfiguration(y.Lane, y.PilotId, y.IsEnabled, y.BandId, y.FrequencyInMhz)),
             session.TrackedConsecutiveLaps.Select(y => y.LapCap)));
         }
 

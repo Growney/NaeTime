@@ -11,7 +11,6 @@
     <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
     <ProjectReference Include="..\NaeTime.Persistence.Abstractions\NaeTime.Persistence.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub.Abstractions\NaeTime.PubSub.Abstractions.csproj" />
-    <ProjectReference Include="..\NaeTime.Timing.Messages\NaeTime.Timing.Messages.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.Hosting;
 using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Models;
-using NaeTime.Hardware.Messages;
+using NaeTime.Orchestrator.Distribution.Abstractions;
+using NaeTime.Orchestrator.Distribution.Abstractions.Events.Hardware;
 using NaeTime.Persistence.Abstractions;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing.ImmersionRC;
@@ -9,19 +10,23 @@ using NaeTime.Timing.ImmersionRC.Abstractions;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Hardware.ImmersionRC;
-internal class LapRFManager : IHostedService, ILapRFManager
+internal class LapRFManager : IHostedService, ILapRFManager, IDisposable
 {
     private readonly INaeTimePersistence _persistence;
     private readonly IEventRegistrarScope _eventRegistrarScope;
     private readonly ILapRFConnectionFactory _connectionFactory;
+    private readonly CancellationTokenSource _source = new();
 
     private readonly ConcurrentDictionary<Guid, LapRFConnection> _hardwareProcesses = new();
 
-    public LapRFManager(INaeTimePersistence persistence, IEventRegistrarScope eventRegistrarScope, ILapRFConnectionFactory connectionFactory)
+    public LapRFManager(INaeTimePersistence persistence, IEventRegistrarScope eventRegistrarScope, ILapRFConnectionFactory connectionFactory, IDistributionReceiver receiver)
     {
         _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
         _eventRegistrarScope = eventRegistrarScope ?? throw new ArgumentNullException(nameof(eventRegistrarScope));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+
+        _ = receiver.Process<EthernetLapRF8Created>(_source.Token, When);
+        _ = receiver.Process<EthernetLapRF8Configured>(_source.Token, When);
 
         _eventRegistrarScope.RegisterHub(this);
     }
@@ -50,48 +55,31 @@ internal class LapRFManager : IHostedService, ILapRFManager
 
         _eventRegistrarScope.Dispose();
     }
-    public async Task When(EthernetLapRF8ChannelConfigured configured)
+    public async Task When(EthernetLapRF8Configured configured)
     {
-        if (_hardwareProcesses.TryGetValue(configured.TimerId, out LapRFConnection? connection))
+        if (_hardwareProcesses.TryGetValue(configured.Id, out LapRFConnection? connection))
         {
             await connection.Stop().ConfigureAwait(false);
         }
 
-        LapRFConnection newConnection = _connectionFactory.CreateEthernetConnection(configured.TimerId, configured.IpAddress, configured.Port);
+        LapRFConnection newConnection = _connectionFactory.CreateEthernetConnection(configured.Id, configured.IpAddress, configured.Port);
 
-        _hardwareProcesses.AddOrUpdate(configured.TimerId, newConnection,
+        _hardwareProcesses.AddOrUpdate(configured.Id, newConnection,
             (id, existing) => newConnection);
     }
-    public Task When(EthernetLapRF8ChannelTimerLaneEnabled lane)
-        => !_hardwareProcesses.TryGetValue(lane.TimerId, out LapRFConnection? connection)
-            ? Task.CompletedTask
-            : !connection.IsConnected
-                ? Task.CompletedTask
-                : connection.SetLaneStatus(lane.Lane, true);
-    public Task When(EthernetLapRF8ChannelTimerLaneDisabled lane)
-        => !_hardwareProcesses.TryGetValue(lane.TimerId, out LapRFConnection? connection)
-            ? Task.CompletedTask
-            : !connection.IsConnected
-                ? Task.CompletedTask
-                : connection.SetLaneStatus(lane.Lane, false);
-    public Task When(EthernetLapRF8ChannelTimerLaneRadioFrequencyConfigured lane)
-        => !_hardwareProcesses.TryGetValue(lane.TimerId, out LapRFConnection? connection)
-            ? Task.CompletedTask
-            : !connection.IsConnected
-                ? Task.CompletedTask
-                : connection.SetLaneRadioFrequency(lane.Lane, lane.FrequencyInMhz);
-    public Task When(EthernetLapRF8ChannelTimerLaneThresholdConfigured lane)
-        => !_hardwareProcesses.TryGetValue(lane.TimerId, out LapRFConnection? connection)
-            ? Task.CompletedTask
-            : !connection.IsConnected
-                ? Task.CompletedTask
-                : connection.SetLaneThreshold(lane.Lane, lane.Threshold);
-    public Task When(EthernetLapRF8ChannelTimerLaneGainConfigured lane)
-        => !_hardwareProcesses.TryGetValue(lane.TimerId, out LapRFConnection? connection)
-            ? Task.CompletedTask
-            : !connection.IsConnected
-                ? Task.CompletedTask
-                : connection.SetLaneGain(lane.Lane, lane.Gain);
+    public async Task When(EthernetLapRF8Created configured)
+    {
+        if (_hardwareProcesses.TryGetValue(configured.Id, out LapRFConnection? connection))
+        {
+            await connection.Stop().ConfigureAwait(false);
+        }
+
+        LapRFConnection newConnection = _connectionFactory.CreateEthernetConnection(configured.Id, configured.IpAddress, configured.Port);
+
+        _hardwareProcesses.AddOrUpdate(configured.Id, newConnection,
+            (id, existing) => newConnection);
+    }
+
     public async Task<LapRFLaneConfiguration?> GetTimerLaneConfiguration(Guid timerId, byte laneId)
     {
         if (!_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection))
@@ -115,4 +103,45 @@ internal class LapRFManager : IHostedService, ILapRFManager
             : await connection.GetAllLaneConfigurations().ConfigureAwait(false);
 
     public Task<bool> IsTimerConnected(Guid timerId) => Task.FromResult(_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection) && connection.IsConnected);
+    public void Dispose() => _source.Cancel();
+    public async Task<bool> ConfigureLaneStatus(Guid timerId, byte laneId, bool isEnabled)
+    {
+        if (!_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection))
+        {
+            return false;
+        }
+
+        await connection.SetLaneStatus(laneId, isEnabled);
+        return true;
+    }
+    public async Task<bool> ConfigureLaneRadioFrequency(Guid timerId, byte laneId, byte? bandId, int frequencyInMhz)
+    {
+        if (!_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection))
+        {
+            return false;
+        }
+
+        await connection.SetLaneRadioFrequency(laneId, frequencyInMhz);
+        return true;
+    }
+    public async Task<bool> ConfigureLaneGain(Guid timerId, byte laneId, ushort gain)
+    {
+        if (!_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection))
+        {
+            return false;
+        }
+
+        await connection.SetLaneGain(laneId, gain);
+        return true;
+    }
+    public async Task<bool> ConfigureLaneThreshold(Guid timerId, byte laneId, float threshold)
+    {
+        if (!_hardwareProcesses.TryGetValue(timerId, out LapRFConnection? connection))
+        {
+            return false;
+        }
+
+        await connection.SetLaneThreshold(laneId, threshold);
+        return true;
+    }
 }

@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Persistence.Abstractions.OpenPractice;
-public record OpenPracticeSession(Guid Id, Guid TrackId, string? Name, long MinimumLapMilliseconds, long? MaximumLapMilliseconds, IEnumerable<Lap> Laps, IEnumerable<PilotLane> ActiveLanes, IEnumerable<uint> TrackedConsecutiveLaps);
+public record OpenPracticeSession(Guid Id, Guid TrackId, string? Name, long MinimumLapMilliseconds, long? MaximumLapMilliseconds, IEnumerable<Lap> Laps, IEnumerable<OpenPracticeLaneConfiguration> ActiveLanes, IEnumerable<uint> TrackedConsecutiveLaps);

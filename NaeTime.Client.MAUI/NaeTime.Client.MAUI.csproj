@@ -106,8 +106,6 @@
       <ProjectReference Include="..\NaeTime.Orchestrator\NaeTime.Orchestrator.csproj" />
       <ProjectReference Include="..\NaeTime.Persistence.SQLite\NaeTime.Persistence.SQLite.csproj" />
       <ProjectReference Include="..\NaeTime.PubSub.InMemory\NaeTime.PubSub.InMemory.csproj" />
-      <ProjectReference Include="..\NaeTime.Timing.Persistence.EntityFramework\NaeTime.Timing.Persistence.EntityFramework.csproj" />
-      <ProjectReference Include="..\NaeTime.Timing\NaeTime.Timing.csproj" />
     </ItemGroup>
 
     <ItemGroup>
