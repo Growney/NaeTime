@@ -20,17 +20,10 @@ public class ChannelsDistributionReceiver : IDistributionReceiver
         try
         {
             object unboxedChannel = _activeChannels.GetOrAdd(typeof(T), _ => _serviceProvider.GetRequiredService<Channel<T>>());
-            if (unboxedChannel is not Channel<T> channel)
-            {
-                throw new InvalidOperationException("Channel was not of the expected type");
-            }
 
-            if (!await channel.Reader.WaitToReadAsync(token))
-            {
-                return default;
-            }
-
-            return await channel.Reader.ReadAsync(token);
+            return unboxedChannel is not Channel<T> channel
+                ? throw new InvalidOperationException("Channel was not of the expected type")
+                : !await channel.Reader.WaitToReadAsync(token) ? default : await channel.Reader.ReadAsync(token);
         }
         catch (OperationCanceledException)
         {
