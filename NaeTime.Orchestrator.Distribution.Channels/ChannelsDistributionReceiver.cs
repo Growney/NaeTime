@@ -17,17 +17,24 @@ public class ChannelsDistributionReceiver : IDistributionReceiver
 
     public async ValueTask<T?> WaitForNextAsync<T>(CancellationToken token)
     {
-        object unboxedChannel = _activeChannels.GetOrAdd(typeof(T), _ => _serviceProvider.GetRequiredService<Channel<T>>());
-        if (unboxedChannel is not Channel<T> channel)
+        try
         {
-            throw new InvalidOperationException("Channel was not of the expected type");
-        }
+            object unboxedChannel = _activeChannels.GetOrAdd(typeof(T), _ => _serviceProvider.GetRequiredService<Channel<T>>());
+            if (unboxedChannel is not Channel<T> channel)
+            {
+                throw new InvalidOperationException("Channel was not of the expected type");
+            }
 
-        if (!await channel.Reader.WaitToReadAsync(token))
+            if (!await channel.Reader.WaitToReadAsync(token))
+            {
+                return default;
+            }
+
+            return await channel.Reader.ReadAsync(token);
+        }
+        catch (OperationCanceledException)
         {
             return default;
         }
-
-        return await channel.Reader.ReadAsync(token);
     }
 }
