@@ -112,17 +112,53 @@ namespace NaeTime.Persistence.SQLite.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Lanes",
+                name: "LapRFConfigurations",
                 columns: table => new
                 {
-                    Id = table.Column<byte>(type: "INTEGER", nullable: false),
-                    BandId = table.Column<byte>(type: "INTEGER", nullable: true),
-                    FrequencyInMhz = table.Column<int>(type: "INTEGER", nullable: false),
-                    IsEnabled = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Lane = table.Column<byte>(type: "INTEGER", nullable: false),
+                    DesiredGain = table.Column<ushort>(type: "INTEGER", nullable: true),
+                    DesiredThreshold = table.Column<float>(type: "REAL", nullable: true),
+                    ActualGain = table.Column<ushort>(type: "INTEGER", nullable: true),
+                    ActualThreshold = table.Column<float>(type: "REAL", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Lanes", x => x.Id);
+                    table.PrimaryKey("PK_LapRFConfigurations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "NodeLaneConfigurations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Lane = table.Column<byte>(type: "INTEGER", nullable: false),
+                    ActualFrequency = table.Column<int>(type: "INTEGER", nullable: true),
+                    DesiredEntryThreshold = table.Column<ushort>(type: "INTEGER", nullable: true),
+                    DesiredExitThreshold = table.Column<ushort>(type: "INTEGER", nullable: true),
+                    ActualEntryThreshold = table.Column<ushort>(type: "INTEGER", nullable: true),
+                    ActualExitThreshold = table.Column<ushort>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NodeLaneConfigurations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OpenPracticeLaneConfigurations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    SessionId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Lane = table.Column<byte>(type: "INTEGER", nullable: false),
+                    PilotId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    IsEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    BandId = table.Column<byte>(type: "INTEGER", nullable: true),
+                    FrequencyInMhz = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OpenPracticeLaneConfigurations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -202,10 +238,43 @@ namespace NaeTime.Persistence.SQLite.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SystemLaneConfigurations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LaneId = table.Column<byte>(type: "INTEGER", nullable: false),
+                    IsEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Frequency = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SystemLaneConfigurations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TimerLaneConfigurations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LaneId = table.Column<byte>(type: "INTEGER", nullable: false),
+                    DesiredIsEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DesiredBandId = table.Column<byte>(type: "INTEGER", nullable: true),
+                    DesiredFrequencyInMhz = table.Column<int>(type: "INTEGER", nullable: true),
+                    ActualIsEnabled = table.Column<bool>(type: "INTEGER", nullable: true),
+                    ActualBandId = table.Column<byte>(type: "INTEGER", nullable: true),
+                    ActualFrequencyInMhz = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TimerLaneConfigurations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "TimerStatuses",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    TimerId = table.Column<Guid>(type: "TEXT", nullable: false),
                     ConnectionStatusChanged = table.Column<DateTime>(type: "TEXT", nullable: true),
                     WasConnected = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
@@ -260,26 +329,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                         name: "FK_IncludedLap_ConsecutiveLapLeaderboardPositions_ConsecutiveLapLeaderboardPositionId",
                         column: x => x.ConsecutiveLapLeaderboardPositionId,
                         principalTable: "ConsecutiveLapLeaderboardPositions",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PilotLane",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    OpenPracticeSessionId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    PilotId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Lane = table.Column<byte>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PilotLane", x => new { x.OpenPracticeSessionId, x.Id });
-                    table.ForeignKey(
-                        name: "FK_PilotLane_OpenPracticeSessions_OpenPracticeSessionId",
-                        column: x => x.OpenPracticeSessionId,
-                        principalTable: "OpenPracticeSessions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -345,13 +394,16 @@ namespace NaeTime.Persistence.SQLite.Migrations
                 name: "IncludedLap");
 
             migrationBuilder.DropTable(
-                name: "Lanes");
+                name: "LapRFConfigurations");
+
+            migrationBuilder.DropTable(
+                name: "NodeLaneConfigurations");
+
+            migrationBuilder.DropTable(
+                name: "OpenPracticeLaneConfigurations");
 
             migrationBuilder.DropTable(
                 name: "OpenPracticeLaps");
-
-            migrationBuilder.DropTable(
-                name: "PilotLane");
 
             migrationBuilder.DropTable(
                 name: "Pilots");
@@ -361,6 +413,12 @@ namespace NaeTime.Persistence.SQLite.Migrations
 
             migrationBuilder.DropTable(
                 name: "SingleLapLeaderboardPositions");
+
+            migrationBuilder.DropTable(
+                name: "SystemLaneConfigurations");
+
+            migrationBuilder.DropTable(
+                name: "TimerLaneConfigurations");
 
             migrationBuilder.DropTable(
                 name: "TimerStatuses");

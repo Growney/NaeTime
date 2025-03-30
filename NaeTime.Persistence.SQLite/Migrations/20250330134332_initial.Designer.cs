@@ -11,8 +11,8 @@ using NaeTime.Persistence.EntityFramework;
 namespace NaeTime.Persistence.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
-    [Migration("20250326204105_multipletimerstatus")]
-    partial class multipletimerstatus
+    [Migration("20250330134332_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -165,23 +165,88 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.ToTable("EthernetLapRF8Channels");
                 });
 
-            modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.Lane", b =>
+            modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.LapRFLaneConfiguration", b =>
                 {
-                    b.Property<byte>("Id")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ushort?>("ActualGain")
                         .HasColumnType("INTEGER");
+
+                    b.Property<float?>("ActualThreshold")
+                        .HasColumnType("REAL");
+
+                    b.Property<ushort?>("DesiredGain")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<float?>("DesiredThreshold")
+                        .HasColumnType("REAL");
+
+                    b.Property<byte>("Lane")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LapRFConfigurations");
+                });
+
+            modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.NodeLaneConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ushort?>("ActualEntryThreshold")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ushort?>("ActualExitThreshold")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ActualFrequency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ushort?>("DesiredEntryThreshold")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ushort?>("DesiredExitThreshold")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte>("Lane")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("NodeLaneConfigurations");
+                });
+
+            modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.OpenPracticeLaneConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
 
                     b.Property<byte?>("BandId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("FrequencyInMhz")
+                    b.Property<int?>("FrequencyInMhz")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("INTEGER");
 
+                    b.Property<byte>("Lane")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("PilotId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Lanes");
+                    b.ToTable("OpenPracticeLaneConfigurations");
                 });
 
             modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.OpenPracticeLap", b =>
@@ -300,6 +365,58 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SingleLapLeaderboardPositions");
+                });
+
+            modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.SystemLaneConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Frequency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte>("LaneId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SystemLaneConfigurations");
+                });
+
+            modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.TimerLaneConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte?>("ActualBandId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ActualFrequencyInMhz")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool?>("ActualIsEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte?>("DesiredBandId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DesiredFrequencyInMhz")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("DesiredIsEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<byte>("LaneId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TimerLaneConfigurations");
                 });
 
             modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.TimerStatus", b =>
@@ -455,29 +572,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
 
             modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.OpenPracticeSession", b =>
                 {
-                    b.OwnsMany("NaeTime.Persistence.EntityFramework.Models.PilotLane", "ActiveLanes", b1 =>
-                        {
-                            b1.Property<Guid>("OpenPracticeSessionId")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("TEXT");
-
-                            b1.Property<byte>("Lane")
-                                .HasColumnType("INTEGER");
-
-                            b1.Property<Guid>("PilotId")
-                                .HasColumnType("TEXT");
-
-                            b1.HasKey("OpenPracticeSessionId", "Id");
-
-                            b1.ToTable("PilotLane");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OpenPracticeSessionId");
-                        });
-
                     b.OwnsMany("NaeTime.Persistence.EntityFramework.Models.TrackedConsecutiveLaps", "TrackedConsecutiveLaps", b1 =>
                         {
                             b1.Property<Guid>("OpenPracticeSessionId")
@@ -497,8 +591,6 @@ namespace NaeTime.Persistence.SQLite.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("OpenPracticeSessionId");
                         });
-
-                    b.Navigation("ActiveLanes");
 
                     b.Navigation("TrackedConsecutiveLaps");
                 });
