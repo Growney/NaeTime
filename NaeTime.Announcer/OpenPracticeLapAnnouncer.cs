@@ -376,7 +376,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
 
         StringBuilder builder = new();
         bool firstLap = true;
-        foreach (Persistence.Abstractions.OpenPractice.Lap lap in laps)
+        foreach (OpenPractice.Messages.Models.Lap lap in laps.OrderBy(x => x.FinishedUtc))
         {
             if (!firstLap)
             {
