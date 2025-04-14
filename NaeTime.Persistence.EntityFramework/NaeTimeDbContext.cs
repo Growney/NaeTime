@@ -43,5 +43,15 @@ public class NaeTimeDbContext : DbContext
 
         timings.OwnsOne(t => t.ActiveLap).WithOwner().HasForeignKey(x => x.ActiveTimingsId);
         timings.OwnsOne(t => t.ActiveSplit).WithOwner().HasForeignKey(x => x.ActiveTimingsId);
+
+
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TimerLaneConfiguration> timerLane = modelBuilder.Entity<TimerLaneConfiguration>();
+        timerLane.HasKey(x => new { x.Id, x.LaneId });
+
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<LapRFLaneConfiguration> lapRFLane = modelBuilder.Entity<LapRFLaneConfiguration>();
+        lapRFLane.HasKey(x => new { x.Id, x.Lane });
+
+        Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<NodeLaneConfiguration> nodeLane = modelBuilder.Entity<NodeLaneConfiguration>();
+        lapRFLane.HasKey(x => new { x.Id, x.Lane });
     }
 }

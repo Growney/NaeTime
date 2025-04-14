@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
@@ -12,7 +12,7 @@ public partial class AverageLapLeaderboard
     [EditorRequired]
     public Guid SessionId { get; set; }
     [Inject]
-    private INaeTimePersistence Persistence { get; set; } = null!;
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
     [Inject]
     private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
 
@@ -23,7 +23,7 @@ public partial class AverageLapLeaderboard
     {
         EventRegistrarScope.RegisterHub(this);
 
-        IEnumerable<Persistence.Abstractions.OpenPractice.AverageLapLeaderboardPosition> initialPositions = await Persistence.OpenPractice.GetOpenPracticeSessionAverageLapLeaderboardPositions(SessionId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.AverageLapLeaderboardPosition> initialPositions = await Orchestrator.OpenPractice.GetOpenPracticeSessionAverageLapLeaderboardPositions(SessionId);
 
         _positions.AddRange(initialPositions.Select(position => new AverageLapLeaderboardPosition()
         {
@@ -34,7 +34,7 @@ public partial class AverageLapLeaderboard
         }));
 
 
-        IEnumerable<Persistence.Abstractions.Management.Pilot> initialPilots = await Persistence.Management.GetPilots();
+        IEnumerable<Persistence.Abstractions.Management.Pilot> initialPilots = await Orchestrator.Management.GetPilots();
 
         _pilots.AddRange(initialPilots.Select(x => new Pilot()
         {

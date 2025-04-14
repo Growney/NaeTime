@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using NaeTime.Persistence.Abstractions.Hardware;
+using System.Net;
 
 namespace NaeTime.Orchestrator.Abstractions;
 
@@ -21,4 +22,15 @@ public interface IHardwareOrchestrator
 
     public Task ConfigureNodeEntryThreshold(Guid timerId, byte lane, ushort threshold);
     public Task ConfigureNodeExitThreshold(Guid timerId, byte lane, ushort threshold);
+
+    public LaneConfiguration GetDefaultConfiguration(byte lane);
+    public Task<IEnumerable<LaneConfiguration>> GetLaneConfigurations(IEnumerable<Guid> includedTimers);
+    public Task<byte> GetTimersMaxLanes(IEnumerable<Guid> timerIds);
+    public Task<SerialEsp32Node?> GetSerialEsp32NodeTimer(Guid timerId);
+    public Task<EthernetLapRF8ChannelTimer?> GetEthernetLapRF8ChannelTimer(Guid timerId);
+    public Task<IEnumerable<EthernetLapRF8ChannelTimer>> GetAllEthernetLapRF8ChannelTimers();
+    public Task<IEnumerable<SerialEsp32Node>> GetAllSerialEsp32NodeTimers();
+    public Task<IEnumerable<TimerDetails>> GetAllTimerDetails();
+    public Task<IEnumerable<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerId);
+    public Task<TimerDetails?> GetTimerDetails(Guid timerId);
 }

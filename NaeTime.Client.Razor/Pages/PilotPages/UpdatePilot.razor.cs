@@ -23,7 +23,7 @@ public partial class UpdatePilot : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        Persistence.Abstractions.Management.Pilot? response = await Persistence.Management.GetPilot(PilotId);
+        Persistence.Abstractions.Management.Pilot? response = await Orchestrator.Management.GetPilot(PilotId);
 
         if (response == null)
         {

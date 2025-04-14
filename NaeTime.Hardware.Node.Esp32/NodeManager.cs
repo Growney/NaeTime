@@ -1,21 +1,21 @@
 ﻿using Microsoft.Extensions.Hosting;
 using NaeTime.Hardware.Node.Esp32.Abstractions;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Persistence.Abstractions;
 using NaeTime.Persistence.Abstractions.Hardware;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Hardware.Node.Esp32;
 internal class NodeManager : IHostedService, INodeManager
 {
-    private readonly INaeTimePersistence _persistence;
+    private readonly INaeTimeOrchestratorPersistence _orchestrator;
     private readonly INodeConnectionFactory _connectionFactory;
 
     private readonly ConcurrentDictionary<Guid, NodeConnection> _hardwareProcesses = new();
 
-    public NodeManager(INodeConnectionFactory connectionFactory, INaeTimePersistence persistence)
+    public NodeManager(INodeConnectionFactory connectionFactory, INaeTimeOrchestratorPersistence orchestrator)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
+        _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
     }
 
     public async Task<bool> ConfigureLaneEntryThreshold(Guid timerId, byte laneId, ushort threshold)
@@ -85,7 +85,7 @@ internal class NodeManager : IHostedService, INodeManager
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        IEnumerable<SerialEsp32Node>? response = await _persistence.Hardware.GetAllSerialEsp32NodeTimers();
+        IEnumerable<SerialEsp32Node>? response = await _orchestrator.Hardware.GetAllSerialEsp32NodeTimers();
 
         if (response == null)
         {

@@ -11,8 +11,8 @@ using NaeTime.Persistence.EntityFramework;
 namespace NaeTime.Persistence.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
-    [Migration("20250330134332_initial")]
-    partial class initial
+    [Migration("20250413182522_nullablesystemlaneenabled")]
+    partial class nullablesystemlaneenabled
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -168,8 +168,10 @@ namespace NaeTime.Persistence.SQLite.Migrations
             modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.LapRFLaneConfiguration", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<byte>("Lane")
+                        .HasColumnType("INTEGER");
 
                     b.Property<ushort?>("ActualGain")
                         .HasColumnType("INTEGER");
@@ -183,10 +185,7 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Property<float?>("DesiredThreshold")
                         .HasColumnType("REAL");
 
-                    b.Property<byte>("Lane")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
+                    b.HasKey("Id", "Lane");
 
                     b.ToTable("LapRFConfigurations");
                 });
@@ -373,10 +372,13 @@ namespace NaeTime.Persistence.SQLite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<byte?>("BandId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("Frequency")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsEnabled")
+                    b.Property<bool?>("IsEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<byte>("LaneId")
@@ -390,8 +392,10 @@ namespace NaeTime.Persistence.SQLite.Migrations
             modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.TimerLaneConfiguration", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<byte>("LaneId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<byte?>("ActualBandId")
                         .HasColumnType("INTEGER");
@@ -411,10 +415,7 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Property<bool>("DesiredIsEnabled")
                         .HasColumnType("INTEGER");
 
-                    b.Property<byte>("LaneId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
+                    b.HasKey("Id", "LaneId");
 
                     b.ToTable("TimerLaneConfigurations");
                 });

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 using NaeTime.PubSub.Abstractions;
 using System.Collections.Concurrent;
 
@@ -13,7 +13,7 @@ public partial class SessionLapGraph
     public Guid SessionId { get; set; }
 
     [Inject]
-    private INaeTimePersistence Persistence { get; set; } = null!;
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
     [Inject]
     private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
 
@@ -33,7 +33,7 @@ public partial class SessionLapGraph
     {
         EventRegistrarScope.RegisterHub(this);
 
-        IEnumerable<Persistence.Abstractions.Management.Pilot> initialPilots = await Persistence.Management.GetPilots();
+        IEnumerable<Persistence.Abstractions.Management.Pilot> initialPilots = await Orchestrator.Management.GetPilots();
 
         if (initialPilots != null)
         {
@@ -46,7 +46,7 @@ public partial class SessionLapGraph
             }));
         }
 
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> sessionLaps = await Persistence.OpenPractice.GetOpenPracticeSessionLaps(SessionId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> sessionLaps = await Orchestrator.OpenPractice.GetOpenPracticeSessionLaps(SessionId);
 
         foreach (Persistence.Abstractions.OpenPractice.Lap lap in sessionLaps)
         {
@@ -154,7 +154,7 @@ public partial class SessionLapGraph
         }
         else
         {
-            Persistence.Abstractions.OpenPractice.Lap? sessionLap = await Persistence.OpenPractice.GetOpenPracticeSessionLap(lap.LapId);
+            Persistence.Abstractions.OpenPractice.Lap? sessionLap = await Orchestrator.OpenPractice.GetOpenPracticeSessionLap(lap.LapId);
 
             if (sessionLap == null)
             {

@@ -1,5 +1,5 @@
 ﻿namespace NaeTime.Orchestrator.Abstractions;
 
-public interface ITimingOrchestrator
+public interface ITimingCommandOrchestrator
 {
 }

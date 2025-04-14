@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class HardwareList : ComponentBase
 {
     [Inject]
-    private INaeTimePersistence Persistence { get; set; } = null!;
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -16,7 +16,7 @@ public partial class HardwareList : ComponentBase
     {
         await base.OnInitializedAsync();
 
-        IEnumerable<NaeTime.Persistence.Abstractions.Hardware.TimerDetails>? timersResponse = await Persistence.Hardware.GetAllTimerDetails();
+        IEnumerable<NaeTime.Persistence.Abstractions.Hardware.TimerDetails>? timersResponse = await Orchestrator.Hardware.GetAllTimerDetails();
 
         if (timersResponse == null)
         {
@@ -29,7 +29,7 @@ public partial class HardwareList : ComponentBase
                 NaeTime.Persistence.Abstractions.Hardware.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
                 NaeTime.Persistence.Abstractions.Hardware.TimerType.SerialEsp32Node => TimerType.SerialEsp32Node,
                 _ => throw new NotImplementedException()
-            }, x.MaxLanes)));
+            })));
 
     }
 

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NaeTime.Persistence.EntityFramework;
 
@@ -10,9 +11,11 @@ using NaeTime.Persistence.EntityFramework;
 namespace NaeTime.Persistence.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
-    partial class NaeTimeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250413130158_initial")]
+    partial class initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.3");
@@ -165,10 +168,8 @@ namespace NaeTime.Persistence.SQLite.Migrations
             modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.LapRFLaneConfiguration", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
-
-                    b.Property<byte>("Lane")
-                        .HasColumnType("INTEGER");
 
                     b.Property<ushort?>("ActualGain")
                         .HasColumnType("INTEGER");
@@ -182,7 +183,10 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Property<float?>("DesiredThreshold")
                         .HasColumnType("REAL");
 
-                    b.HasKey("Id", "Lane");
+                    b.Property<byte>("Lane")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
 
                     b.ToTable("LapRFConfigurations");
                 });
@@ -375,7 +379,7 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Property<int?>("Frequency")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool?>("IsEnabled")
+                    b.Property<bool>("IsEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<byte>("LaneId")
@@ -389,10 +393,8 @@ namespace NaeTime.Persistence.SQLite.Migrations
             modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.TimerLaneConfiguration", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
-
-                    b.Property<byte>("LaneId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<byte?>("ActualBandId")
                         .HasColumnType("INTEGER");
@@ -412,7 +414,10 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Property<bool>("DesiredIsEnabled")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Id", "LaneId");
+                    b.Property<byte>("LaneId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
 
                     b.ToTable("TimerLaneConfigurations");
                 });

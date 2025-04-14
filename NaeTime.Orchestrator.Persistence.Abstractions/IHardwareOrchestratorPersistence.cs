@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using NaeTime.Persistence.Abstractions.Hardware;
+using System.Net;
 
 namespace NaeTime.Orchestrator.Persistence.Abstractions;
 
@@ -12,7 +13,7 @@ public interface IHardwareOrchestratorPersistence
     public Task<bool> ConfigureSerialEsp32Node(Guid id, string name, string comPort);
 
     public Task ConfigureSystemDesiredLaneStatus(byte lane, bool isEnabled);
-    public Task ConfigureSystemDesiredLaneRadioFrequency(byte lane, int frequencyInMhz);
+    public Task ConfigureSystemDesiredLaneRadioFrequency(byte lane, byte? bandId, int frequencyInMhz);
 
     public Task ConfigureDesiredTimerLaneStatus(Guid timerId, byte lane, bool isEnabled);
     public Task StoreTimerActualLaneStatus(Guid timerId, byte lane, bool isEnabled);
@@ -28,4 +29,13 @@ public interface IHardwareOrchestratorPersistence
     public Task StoreActualNodeEntryThreshold(Guid timerId, byte lane, ushort threshold);
     public Task ConfigureDesiredNodeExitThreshold(Guid timerId, byte lane, ushort threshold);
     public Task StoreActualNodeExitThreshold(Guid timerId, byte lane, ushort threshold);
+
+    public Task<IEnumerable<LaneConfiguration>> GetLaneConfigurations(IEnumerable<Guid> includedTimers);
+    public Task<SerialEsp32Node?> GetSerialEsp32NodeTimer(Guid timerId);
+    public Task<EthernetLapRF8ChannelTimer?> GetEthernetLapRF8ChannelTimer(Guid timerId);
+    public Task<IEnumerable<EthernetLapRF8ChannelTimer>> GetAllEthernetLapRF8ChannelTimers();
+    public Task<IEnumerable<SerialEsp32Node>> GetAllSerialEsp32NodeTimers();
+    public Task<IEnumerable<TimerDetails>> GetAllTimerDetails();
+    public Task<IEnumerable<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerId);
+    public Task<TimerDetails?> GetTimerDetails(Guid timerId);
 }

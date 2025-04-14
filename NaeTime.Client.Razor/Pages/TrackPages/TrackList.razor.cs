@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
 public partial class TrackList
 {
     [Inject]
-    private INaeTimePersistence Persistence { get; set; } = null!;
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -14,7 +14,7 @@ public partial class TrackList
 
     protected override async Task OnInitializedAsync()
     {
-        IEnumerable<Persistence.Abstractions.Management.Track>? tracksResponse = await Persistence.Management.GetTracks();
+        IEnumerable<Persistence.Abstractions.Management.Track>? tracksResponse = await Orchestrator.Management.GetTracks();
 
         if (tracksResponse == null)
         {

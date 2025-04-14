@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NaeTime.Orchestrator.Persistence.Abstractions;
+using NaeTime.Persistence.Abstractions.Management;
 using NaeTime.Persistence.EntityFramework;
-using NaeTime.Persistence.EntityFramework.Models;
 
 namespace NaeTime.Orchestrator.Persistence.EntityFramework;
 
@@ -16,11 +16,11 @@ public class ManagementOrchestratorPersistence : IManagementOrchestratorPersiste
 
     public async Task ActivateOpenPracticeSession(Guid sessionId)
     {
-        ActiveSession? active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
+        NaeTime.Persistence.EntityFramework.Models.ActiveSession? active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
 
         if (active == null)
         {
-            active = new ActiveSession
+            active = new NaeTime.Persistence.EntityFramework.Models.ActiveSession
             {
                 Id = Guid.NewGuid(),
             };
@@ -28,11 +28,11 @@ public class ManagementOrchestratorPersistence : IManagementOrchestratorPersiste
         }
 
         active.SessionId = sessionId;
-        active.SessionType = SessionType.OpenPractice;
+        active.SessionType = NaeTime.Persistence.EntityFramework.Models.SessionType.OpenPractice;
     }
     public Task<Guid> CreatePilot(string? firstname, string? lastname, string? callsign)
     {
-        Pilot pilot = new()
+        NaeTime.Persistence.EntityFramework.Models.Pilot pilot = new()
         {
             Id = Guid.NewGuid(),
             FirstName = firstname,
@@ -44,13 +44,13 @@ public class ManagementOrchestratorPersistence : IManagementOrchestratorPersiste
     }
     public Task<Guid> CreateTrack(string? name, long MinimumLapMilliseconds, long? MaximumLapMilliseconds, IEnumerable<Guid> timers)
     {
-        Track track = new()
+        NaeTime.Persistence.EntityFramework.Models.Track track = new()
         {
             Id = Guid.NewGuid(),
             Name = name,
             MinimumLapMilliseconds = MinimumLapMilliseconds,
             MaximumLapMilliseconds = MaximumLapMilliseconds,
-            Timers = timers.Select(x => new TrackTimer()
+            Timers = timers.Select(x => new NaeTime.Persistence.EntityFramework.Models.TrackTimer()
             {
                 Id = Guid.NewGuid(),
                 TimerId = x,
@@ -61,7 +61,7 @@ public class ManagementOrchestratorPersistence : IManagementOrchestratorPersiste
     }
     public Task<bool> UpdatePilot(Guid pilotId, string? firstname, string? lastname, string? callsign)
     {
-        Pilot? pilot = _dbContext.Pilots.Find(pilotId);
+        NaeTime.Persistence.EntityFramework.Models.Pilot? pilot = _dbContext.Pilots.Find(pilotId);
         if (pilot == null)
         {
             return Task.FromResult(false);
@@ -75,7 +75,7 @@ public class ManagementOrchestratorPersistence : IManagementOrchestratorPersiste
 
     public Task<bool> UpdateTrack(Guid trackId, string? name, long MinimumLapMilliseconds, long? MaximumLapMilliseconds, IEnumerable<Guid> timers)
     {
-        Track? track = _dbContext.Tracks.Find(trackId);
+        NaeTime.Persistence.EntityFramework.Models.Track? track = _dbContext.Tracks.FirstOrDefault(x => x.Id == trackId);
         if (track == null)
         {
             return Task.FromResult(false);
@@ -84,7 +84,7 @@ public class ManagementOrchestratorPersistence : IManagementOrchestratorPersiste
         track.Name = name;
         track.MinimumLapMilliseconds = MinimumLapMilliseconds;
         track.MaximumLapMilliseconds = MaximumLapMilliseconds;
-        track.Timers = timers.Select(x => new TrackTimer()
+        track.Timers = timers.Select(x => new NaeTime.Persistence.EntityFramework.Models.TrackTimer()
         {
             Id = Guid.NewGuid(),
             TimerId = x,
@@ -93,4 +93,51 @@ public class ManagementOrchestratorPersistence : IManagementOrchestratorPersiste
 
         return Task.FromResult(true);
     }
+
+    public Task<Guid> CreateOpenPracticeSession(string name, Guid trackId, long minimumLapMilliseconds, long? maximumLapMilliseconds)
+    {
+        NaeTime.Persistence.EntityFramework.Models.OpenPracticeSession session = new()
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            TrackId = trackId,
+            MinimumLapMilliseconds = minimumLapMilliseconds,
+            MaximumLapMilliseconds = maximumLapMilliseconds,
+        };
+        _dbContext.OpenPracticeSessions.Add(session);
+        return Task.FromResult(session.Id);
+    }
+
+    public async Task<ActiveSession?> GetActiveSession()
+    {
+        var active = await _dbContext.ActiveSession.FirstOrDefaultAsync();
+        if (active == null)
+        {
+            return null;
+        }
+
+        return new ActiveSession(active.SessionId, active.SessionType switch
+        {
+            NaeTime.Persistence.EntityFramework.Models.SessionType.OpenPractice => ActiveSession.SessionType.OpenPractice,
+            _ => throw new NotImplementedException()
+        });
+    }
+
+    public async Task<Pilot?> GetPilot(Guid pilotId)
+    {
+        var pilot = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == pilotId).ConfigureAwait(false);
+
+        return pilot == null ? null : new Pilot(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign);
+    }
+    public async Task<IEnumerable<Pilot>> GetPilots() => await _dbContext.Pilots.Select(x => new Pilot(x.Id, x.FirstName, x.LastName, x.CallSign)).ToListAsync();
+    public async Task<Track?> GetTrack(Guid trackId)
+    {
+        var track = await _dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == trackId).ConfigureAwait(false);
+
+        return track == null
+            ? null
+            : new Track(track.Id, track.Name, track.MinimumLapMilliseconds, track.MaximumLapMilliseconds, track.Timers.Select(x => x.TimerId).ToList(), track.AllowedLanes);
+    }
+    public async Task<IEnumerable<Track>> GetTracks() => await _dbContext.Tracks.Select(x => new Track(x.Id, x.Name, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds, x.Timers.Select(y => y.TimerId).ToList(), x.AllowedLanes)).ToListAsync();
+
 }

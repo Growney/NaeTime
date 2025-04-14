@@ -25,7 +25,7 @@ public partial class UpdateSerialEsp32NodeTimer
     {
         await base.OnInitializedAsync();
 
-        NaeTime.Persistence.Abstractions.Hardware.SerialEsp32Node? response = await Persistence.Hardware.GetSerialEsp32NodeTimer(TimerId);
+        NaeTime.Persistence.Abstractions.Hardware.SerialEsp32Node? response = await Orchestrator.Hardware.GetSerialEsp32NodeTimer(TimerId);
 
         if (response == null)
         {

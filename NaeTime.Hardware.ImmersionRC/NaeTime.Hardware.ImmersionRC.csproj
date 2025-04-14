@@ -16,6 +16,7 @@
     <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
     <ProjectReference Include="..\NaeTime.Orchestrator.Abstractions\NaeTime.Orchestrator.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Orchestrator.Distribution.Abstractions\NaeTime.Orchestrator.Distribution.Abstractions.csproj" />
+    <ProjectReference Include="..\NaeTime.Orchestrator.Persistence.Abstractions\NaeTime.Orchestrator.Persistence.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Persistence.Abstractions\NaeTime.Persistence.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub.Abstractions\NaeTime.PubSub.Abstractions.csproj" />
   </ItemGroup>

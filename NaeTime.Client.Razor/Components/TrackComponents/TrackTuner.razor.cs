@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Components;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.TrackComponents;
 public partial class TrackTuner : ComponentBase
 {
     [Inject]
-    public INaeTimePersistence Persistence { get; set; } = default!;
+    public INaeTimeOrchestrator Orchestrator { get; set; } = default!;
 
     [EditorRequired]
     [Parameter]
@@ -16,36 +16,8 @@ public partial class TrackTuner : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-
-        Persistence.Abstractions.Management.Track? track = await Persistence.Management.GetTrack(TrackId);
-
-        if (track == null)
-        {
-            return;
-        }
-
-        IEnumerable<NaeTime.Persistence.Abstractions.Hardware.TimerDetails>? allTimers = await Persistence.Hardware.GetAllTimerDetails();
-
-        if (allTimers == null)
-        {
-            return;
-        }
-
-        if (allTimers.Any())
-        {
-            _laneCount = 8;
-        }
-
-        _laneCount = 8;
-
-        foreach (Guid timerId in track.Timers)
-        {
-            NaeTime.Persistence.Abstractions.Hardware.TimerDetails? timer = allTimers.FirstOrDefault(x => x.Id == timerId);
-            if (timer != null)
-            {
-                _laneCount = Math.Min(_laneCount, timer.MaxLanes);
-                _trackTimers.Add(timer);
-            }
-        }
+        _trackTimers.Clear();
+        _trackTimers.AddRange(await Orchestrator.Management.GetTrackTimers(TrackId));
+        _laneCount = await Orchestrator.Management.GetTrackAllowedLanes(TrackId);
     }
 }

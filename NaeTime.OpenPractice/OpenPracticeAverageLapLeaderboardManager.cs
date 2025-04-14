@@ -1,23 +1,23 @@
 ﻿using NaeTime.OpenPractice.Leaderboards;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.OpenPractice;
 internal class OpenPracticeAverageLapLeaderboardManager : LeaderboardManager<AverageLapRecord>
 {
     private readonly IEventClient _eventClient;
-    private readonly INaeTimePersistence _persistence;
+    private readonly INaeTimeOrchestrator _orchestrator;
 
-    public OpenPracticeAverageLapLeaderboardManager(IEventClient eventClient, INaeTimePersistence persistence)
+    public OpenPracticeAverageLapLeaderboardManager(IEventClient eventClient, INaeTimeOrchestrator orchestrator)
     {
         _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
-        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
+        _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
     }
 
     public async Task When(OpenPracticeLapCompleted completed)
     {
-        var pilotLaps = await _persistence.OpenPractice.GetPilotOpenPracticeSessionLaps(completed.SessionId, completed.PilotId);
+        var pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(completed.SessionId, completed.PilotId);
 
         var validLaps = pilotLaps?.Where(x => x.Status == Persistence.Abstractions.OpenPractice.LapStatus.Completed && x.Id != completed.LapId).ToList() ?? new List<Persistence.Abstractions.OpenPractice.Lap>();
 
@@ -40,7 +40,7 @@ internal class OpenPracticeAverageLapLeaderboardManager : LeaderboardManager<Ave
     }
     public async Task When(OpenPracticeLapDisputed disputed)
     {
-        var pilotLaps = await _persistence.OpenPractice.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
+        var pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
 
         Persistence.Abstractions.OpenPractice.Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == disputed.LapId);
         IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? validLaps = pilotLaps?.Where(x => x.Status == Persistence.Abstractions.OpenPractice.LapStatus.Completed
@@ -62,7 +62,7 @@ internal class OpenPracticeAverageLapLeaderboardManager : LeaderboardManager<Ave
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        var pilotLaps = await _persistence.OpenPractice.GetPilotOpenPracticeSessionLaps(removed.SessionId, removed.PilotId);
+        var pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(removed.SessionId, removed.PilotId);
 
         Persistence.Abstractions.OpenPractice.Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == removed.LapId);
         IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? validLaps = pilotLaps?.Where(x => x.Status == Persistence.Abstractions.OpenPractice.LapStatus.Completed && x.Id != lap?.Id);
@@ -87,7 +87,7 @@ internal class OpenPracticeAverageLapLeaderboardManager : LeaderboardManager<Ave
 
     protected override async Task<IEnumerable<LeaderboardPosition<AverageLapRecord>>> GetExistingPositions(Guid sessionId)
     {
-        IEnumerable<Persistence.Abstractions.OpenPractice.AverageLapLeaderboardPosition>? response = await _persistence.OpenPractice.GetOpenPracticeSessionAverageLapLeaderboardPositions(sessionId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.AverageLapLeaderboardPosition>? response = await _orchestrator.OpenPractice.GetOpenPracticeSessionAverageLapLeaderboardPositions(sessionId);
 
         return response?.Select(x => new LeaderboardPosition<AverageLapRecord>(x.PilotId, x.Position, new AverageLapRecord(x.AverageMilliseconds, x.FirstLapCompletion))) ?? Enumerable.Empty<LeaderboardPosition<AverageLapRecord>>();
     }

@@ -1,7 +1,7 @@
 ﻿using NaeTime.OpenPractice.Leaderboards;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.OpenPractice.Models;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing;
 
@@ -9,17 +9,17 @@ namespace NaeTime.OpenPractice;
 public class OpenPracticeSingleLapLeaderboardManager
 {
     private readonly IEventClient _eventClient;
-    private readonly INaeTimePersistence _persistence;
+    private readonly INaeTimeOrchestrator _orchestrator;
 
-    public OpenPracticeSingleLapLeaderboardManager(IEventClient eventClient, INaeTimePersistence persistence)
+    public OpenPracticeSingleLapLeaderboardManager(IEventClient eventClient, INaeTimeOrchestrator orchestrator)
     {
         _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
-        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
+        _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
     }
 
     public async Task When(OpenPracticeLapCompleted completed)
     {
-        Persistence.Abstractions.OpenPractice.SingleLapRecord? existingRecord = await _persistence.OpenPractice.GetPilotOpenPracticeSessionSingleLapRecord(completed.SessionId, completed.PilotId);
+        Persistence.Abstractions.OpenPractice.SingleLapRecord? existingRecord = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionSingleLapRecord(completed.SessionId, completed.PilotId);
 
         if (existingRecord == null)
         {
@@ -35,12 +35,12 @@ public class OpenPracticeSingleLapLeaderboardManager
     }
     public async Task When(OpenPracticeLapDisputed disputed)
     {
-        Persistence.Abstractions.OpenPractice.SingleLapRecord? existingRecord = await _persistence.OpenPractice.GetPilotOpenPracticeSessionSingleLapRecord(disputed.SessionId, disputed.PilotId);
+        Persistence.Abstractions.OpenPractice.SingleLapRecord? existingRecord = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionSingleLapRecord(disputed.SessionId, disputed.PilotId);
 
         //When its changed to completed its like we have a new lap se we need to check it against the existing record
         if (disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed)
         {
-            IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? pilotLaps = await _persistence.OpenPractice.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
+            IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
 
             Persistence.Abstractions.OpenPractice.Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == disputed.LapId);
             if (lap == null)
@@ -72,7 +72,7 @@ public class OpenPracticeSingleLapLeaderboardManager
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        Persistence.Abstractions.OpenPractice.SingleLapRecord? existingRecord = await _persistence.OpenPractice.GetPilotOpenPracticeSessionSingleLapRecord(removed.SessionId, removed.PilotId);
+        Persistence.Abstractions.OpenPractice.SingleLapRecord? existingRecord = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionSingleLapRecord(removed.SessionId, removed.PilotId);
 
         if (existingRecord == null)
         {
@@ -100,7 +100,7 @@ public class OpenPracticeSingleLapLeaderboardManager
 
 
         //The pilot no longer has a new fastest so we need to redo the leaderboard without them in it
-        IEnumerable<Persistence.Abstractions.OpenPractice.SingleLapLeaderboardPosition>? existingPositions = await _persistence.OpenPractice.GetOpenPracticeSessionSingleLapLeaderboardPositions(sessionId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.SingleLapLeaderboardPosition>? existingPositions = await _orchestrator.OpenPractice.GetOpenPracticeSessionSingleLapLeaderboardPositions(sessionId);
 
         SingleLapLeaderboard existingLeaderboard = new();
         SingleLapLeaderboard newLeaderboard = new();
@@ -140,7 +140,7 @@ public class OpenPracticeSingleLapLeaderboardManager
     }
     private async Task<SingleLapRecord?> CalculatePilotsFastestSingle(Guid sessionId, Guid pilotId, Guid? excludedLapId)
     {
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? pilotLaps = await _persistence.OpenPractice.GetPilotOpenPracticeSessionLaps(sessionId, pilotId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(sessionId, pilotId);
 
         if (pilotLaps == null)
         {
@@ -153,7 +153,7 @@ public class OpenPracticeSingleLapLeaderboardManager
     }
     public async Task HandleUpdatedRecord(Guid sessionId, Guid pilotId, long totalMilliseconds, DateTime completionUtc, Guid lapId)
     {
-        IEnumerable<Persistence.Abstractions.OpenPractice.SingleLapLeaderboardPosition>? existingPositions = await _persistence.OpenPractice.GetOpenPracticeSessionSingleLapLeaderboardPositions(sessionId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.SingleLapLeaderboardPosition>? existingPositions = await _orchestrator.OpenPractice.GetOpenPracticeSessionSingleLapLeaderboardPositions(sessionId);
 
         SingleLapLeaderboard existingLeaderboard = new();
         SingleLapLeaderboard newLeaderboard = new();

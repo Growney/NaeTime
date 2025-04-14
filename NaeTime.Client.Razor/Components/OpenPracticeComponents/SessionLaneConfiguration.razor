@@ -10,7 +10,7 @@
             <tbody>
                 <tr>
                     <td class="align-start" style="width:10px">
-                        <SfSwitch TChecked=bool ValueChange="EnabledSwitchChanged"></SfSwitch>
+                        <SfSwitch @bind-Checked="@Configuration.IsEnabled" TChecked=bool ValueChange="EnabledSwitchChanged"></SfSwitch>
                     </td>
                     <td>
                         <div class="h4 text-start">

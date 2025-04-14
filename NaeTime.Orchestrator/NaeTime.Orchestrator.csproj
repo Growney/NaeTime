@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.Hardware.ImmersionRC\NaeTime.Hardware.ImmersionRC.csproj" />
     <ProjectReference Include="..\NaeTime.Hardware.Node.Esp32\NaeTime.Hardware.Node.Esp32.csproj" />
+    <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
     <ProjectReference Include="..\NaeTime.Orchestrator.Abstractions\NaeTime.Orchestrator.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Orchestrator.Distribution.Abstractions\NaeTime.Orchestrator.Distribution.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Orchestrator.Persistence.Abstractions\NaeTime.Orchestrator.Persistence.Abstractions.csproj" />

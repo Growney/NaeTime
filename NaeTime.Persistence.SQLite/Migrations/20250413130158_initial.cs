@@ -244,7 +244,8 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     LaneId = table.Column<byte>(type: "INTEGER", nullable: false),
                     IsEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Frequency = table.Column<int>(type: "INTEGER", nullable: true)
+                    Frequency = table.Column<int>(type: "INTEGER", nullable: true),
+                    BandId = table.Column<byte>(type: "INTEGER", nullable: true)
                 },
                 constraints: table =>
                 {

@@ -26,7 +26,7 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
     {
         await base.OnInitializedAsync();
 
-        NaeTime.Persistence.Abstractions.Hardware.EthernetLapRF8ChannelTimer? response = await Persistence.Hardware.GetEthernetLapRF8ChannelTimer(TimerId);
+        NaeTime.Persistence.Abstractions.Hardware.EthernetLapRF8ChannelTimer? response = await Orchestrator.Hardware.GetEthernetLapRF8ChannelTimer(TimerId);
 
         if (response == null)
         {

@@ -1,4 +1,5 @@
-﻿using NaeTime.Hardware.ImmersionRC.Abstractions;
+﻿using NaeTime.Hardware.Frequency;
+using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Hardware.Node.Esp32.Abstractions;
 using NaeTime.Orchestrator.Abstractions;
 using NaeTime.Orchestrator.Distribution.Abstractions;
@@ -87,7 +88,7 @@ public class HardwareOrchestrator : IHardwareOrchestrator
     }
     private async Task SetTimersLaneStatus(byte lane, bool isEnabled)
     {
-        IEnumerable<TimerDetails> timerDetails = await _persistence.Hardware.GetAllTimerDetails();
+        IEnumerable<TimerDetails> timerDetails = await _orchestratorPersistence.GetAllTimerDetails();
 
         foreach (TimerDetails timerDetail in timerDetails)
         {
@@ -111,8 +112,12 @@ public class HardwareOrchestrator : IHardwareOrchestrator
     public async Task ConfigureTimerLaneStatus(Guid timerId, byte lane, bool isEnabled)
     {
         await _orchestratorPersistence.ConfigureDesiredTimerLaneStatus(timerId, lane, isEnabled);
-        TimerType timerType = await _persistence.Hardware.GetTimerType(timerId);
-        bool tuneResult = timerType switch
+        TimerDetails? details = await _orchestratorPersistence.GetTimerDetails(timerId);
+        if (details == null)
+        {
+            return;
+        }
+        bool tuneResult = details.Type switch
         {
             TimerType.EthernetLapRF8Channel => await _lapRFManager.ConfigureLaneStatus(timerId, lane, isEnabled),
             TimerType.SerialEsp32Node => await _nodeManager.ConfigureLaneStatus(timerId, lane, isEnabled),
@@ -126,9 +131,9 @@ public class HardwareOrchestrator : IHardwareOrchestrator
     }
     public async Task ConfigureLaneRadioFrequency(byte lane, byte? bandId, int frequencyInMhz)
     {
-        await _orchestratorPersistence.ConfigureSystemDesiredLaneRadioFrequency(lane, frequencyInMhz);
+        await _orchestratorPersistence.ConfigureSystemDesiredLaneRadioFrequency(lane, bandId, frequencyInMhz);
 
-        IEnumerable<TimerDetails> timerDetails = await _persistence.Hardware.GetAllTimerDetails();
+        IEnumerable<TimerDetails> timerDetails = await _orchestratorPersistence.GetAllTimerDetails();
 
         foreach (TimerDetails timerDetail in timerDetails)
         {
@@ -151,9 +156,12 @@ public class HardwareOrchestrator : IHardwareOrchestrator
     {
         await _orchestratorPersistence.ConfigureDesiredTimerLaneRadioFrequency(timerId, lane, bandId, frequencyInMhz);
 
-        TimerType timerType = await _persistence.Hardware.GetTimerType(timerId);
-
-        bool tuneResult = timerType switch
+        TimerDetails? details = await _orchestratorPersistence.GetTimerDetails(timerId);
+        if (details == null)
+        {
+            return;
+        }
+        bool tuneResult = details.Type switch
         {
             TimerType.EthernetLapRF8Channel => await _lapRFManager.ConfigureLaneRadioFrequency(timerId, lane, bandId, frequencyInMhz),
             TimerType.SerialEsp32Node => await _nodeManager.ConfigureLaneRadioFrequency(timerId, lane, bandId, frequencyInMhz),
@@ -211,4 +219,83 @@ public class HardwareOrchestrator : IHardwareOrchestrator
             await _orchestratorPersistence.StoreActualNodeExitThreshold(timerId, lane, threshold);
         }
     }
+    private byte GetTimerMaxLanes(TimerDetails details)
+        => details.Type switch
+        {
+            TimerType.EthernetLapRF8Channel => 8,
+            TimerType.SerialEsp32Node => 6,
+            _ => throw new NotImplementedException(),
+        };
+    private byte? GetDefaultBandId(byte lane)
+        => Hardware.Frequency.Band.R.Id;
+    private int GetDefaultFrequency(byte lane)
+    {
+        Band band = Hardware.Frequency.Band.R;
+        if (lane < 0 || lane >= band.Frequencies.Count())
+        {
+            return band.Frequencies.ElementAt(0).FrequencyInMhz;
+        }
+        return band.Frequencies.ElementAt(lane).FrequencyInMhz;
+    }
+    public LaneConfiguration GetDefaultConfiguration(byte lane) => new(lane, true, GetDefaultBandId(lane), GetDefaultFrequency(lane), Enumerable.Empty<TimerLaneConfiguredField>());
+
+    public async Task<IEnumerable<LaneConfiguration>> GetLaneConfigurations(IEnumerable<Guid> includedTimers)
+    {
+        int maxLanes = await GetTimersMaxLanes(includedTimers);
+        IEnumerable<LaneConfiguration> storedConfigs = await _orchestratorPersistence.GetLaneConfigurations(includedTimers);
+        Dictionary<byte, LaneConfiguration> indexedLaneConfigurations = storedConfigs.ToDictionary(x => x.Lane);
+
+        List<LaneConfiguration> lanes = new(maxLanes);
+
+        for (byte i = 0; i < maxLanes; i++)
+        {
+            indexedLaneConfigurations.TryGetValue((byte)i, out LaneConfiguration? laneConfiguration);
+            LaneConfiguration laneDefault = GetDefaultConfiguration(i);
+            laneConfiguration ??= laneDefault;
+
+            LaneConfiguration defaultedConfig = new(i, laneConfiguration.IsEnabled ?? laneDefault.IsEnabled, laneConfiguration.BandId ?? laneDefault.BandId, laneConfiguration.FrequencyInMhz ?? laneDefault.FrequencyInMhz, laneConfiguration.Fields);
+
+            lanes.Add(defaultedConfig);
+        }
+
+        return lanes;
+    }
+    public async Task<byte> GetTimersMaxLanes(IEnumerable<Guid> timerIds)
+    {
+        IEnumerable<TimerDetails> details = await _orchestratorPersistence.GetTimerDetails(timerIds);
+
+        if (!details.Any())
+        {
+            return 0;
+        }
+
+        byte maxLanes = byte.MaxValue;
+
+        foreach (TimerDetails timer in details)
+        {
+            maxLanes = Math.Min(maxLanes, GetTimerMaxLanes(timer));
+        }
+
+        return maxLanes;
+    }
+    public Task<SerialEsp32Node?> GetSerialEsp32NodeTimer(Guid timerId) =>
+         _orchestratorPersistence.GetSerialEsp32NodeTimer(timerId);
+
+    public Task<EthernetLapRF8ChannelTimer?> GetEthernetLapRF8ChannelTimer(Guid timerId) =>
+         _orchestratorPersistence.GetEthernetLapRF8ChannelTimer(timerId);
+
+    public Task<IEnumerable<EthernetLapRF8ChannelTimer>> GetAllEthernetLapRF8ChannelTimers() =>
+         _orchestratorPersistence.GetAllEthernetLapRF8ChannelTimers();
+
+    public Task<IEnumerable<SerialEsp32Node>> GetAllSerialEsp32NodeTimers() =>
+         _orchestratorPersistence.GetAllSerialEsp32NodeTimers();
+
+    public Task<IEnumerable<TimerDetails>> GetAllTimerDetails() =>
+         _orchestratorPersistence.GetAllTimerDetails();
+
+    public Task<IEnumerable<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerIds) =>
+         _orchestratorPersistence.GetTimerDetails(timerIds);
+
+    public Task<TimerDetails?> GetTimerDetails(Guid timerId) =>
+         _orchestratorPersistence.GetTimerDetails(timerId);
 }

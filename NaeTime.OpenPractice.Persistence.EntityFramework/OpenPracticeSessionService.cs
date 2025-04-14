@@ -36,26 +36,6 @@ internal class OpenPracticeSessionService
 
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
-    public async Task When(OpenPracticeSessionConfigured configured)
-    {
-        OpenPracticeSession? existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == configured.SessionId).ConfigureAwait(false);
-
-        if (existing == null)
-        {
-            existing = new OpenPracticeSession
-            {
-                Id = configured.SessionId,
-            };
-            _dbContext.OpenPracticeSessions.Add(existing);
-        }
-
-        existing.Name = configured.Name;
-        existing.TrackId = configured.TrackId;
-        existing.MinimumLapMilliseconds = configured.MinimumLapMilliseconds;
-        existing.MaximumLapMilliseconds = configured.MaximumLapMilliseconds;
-
-        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
-    }
     public async Task When(OpenPracticeMaximumLapTimeConfigured configured)
     {
         OpenPracticeSession? existing = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == configured.SessionId).ConfigureAwait(false);

@@ -1,7 +1,7 @@
 ﻿using NaeTime.Announcer.Abstractions;
 using NaeTime.Announcer.Models;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
@@ -14,7 +14,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
 
     private readonly Stopwatch _stopwatch = new();
     private readonly ConcurrentDictionary<Guid, SessionState> _sessionStates = new();
-    private readonly INaeTimePersistence _persistence;
+    private readonly INaeTimeOrchestrator _orchestrator;
 
     private class ConsecutiveLapRecord
     {
@@ -196,10 +196,10 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
             return pilotIds;
         }
     }
-    public OpenPracticeLapAnnouncer(INaeTimePersistence persistence)
+    public OpenPracticeLapAnnouncer(INaeTimeOrchestrator orchestrator)
     {
         _stopwatch.Start();
-        _persistence = persistence;
+        _orchestrator = orchestrator;
     }
 
     public async Task<Announcement?> GetNextAnnouncement()
@@ -367,7 +367,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
     }
     private async Task<string> GetLapTimesAnnouncement(IEnumerable<Guid> lapIds)
     {
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? laps = await _persistence.OpenPractice.GetOpenPracticeLaps(lapIds);
+        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? laps = await _orchestrator.OpenPractice.GetOpenPracticeLaps(lapIds);
 
         if (laps == null)
         {
@@ -376,7 +376,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
 
         StringBuilder builder = new();
         bool firstLap = true;
-        foreach (OpenPractice.Messages.Models.Lap lap in laps.OrderBy(x => x.FinishedUtc))
+        foreach (Persistence.Abstractions.OpenPractice.Lap lap in laps.OrderBy(x => x.FinishedUtc))
         {
             if (!firstLap)
             {
@@ -391,7 +391,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
     }
     private async Task<string?> GetPilotCallout(Guid pilotId)
     {
-        Persistence.Abstractions.Management.Pilot? pilot = await _persistence.Management.GetPilot(pilotId);
+        Persistence.Abstractions.Management.Pilot? pilot = await _orchestrator.Management.GetPilot(pilotId);
 
         if (pilot == null)
         {

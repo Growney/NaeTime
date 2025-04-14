@@ -2,7 +2,7 @@
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Abstractions;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
@@ -11,7 +11,7 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
     [Parameter]
     public Guid SessionId { get; set; }
     [Inject]
-    private INaeTimePersistence Persistence { get; set; } = null!;
+    private INaeTimeOrchestrator Orchestrator { get; set; } = null!;
     [Inject]
     private IEventRegistrarScope EventRegistrarScope { get; set; } = null!;
     [Inject]
@@ -24,7 +24,7 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
     {
         EventRegistrarScope.RegisterHub(this);
 
-        IEnumerable<Persistence.Abstractions.OpenPractice.SingleLapLeaderboardPosition> initialPositions = await Persistence.OpenPractice.GetOpenPracticeSessionSingleLapLeaderboardPositions(SessionId);
+        IEnumerable<Persistence.Abstractions.OpenPractice.SingleLapLeaderboardPosition> initialPositions = await Orchestrator.OpenPractice.GetOpenPracticeSessionSingleLapLeaderboardPositions(SessionId);
 
         if (initialPositions != null)
         {
@@ -41,7 +41,7 @@ public partial class SingleLapLeaderboard : ComponentBase, IDisposable
             }
         }
 
-        IEnumerable<Persistence.Abstractions.Management.Pilot> initialPilots = await Persistence.Management.GetPilots();
+        IEnumerable<Persistence.Abstractions.Management.Pilot> initialPilots = await Orchestrator.Management.GetPilots();
 
         if (initialPilots != null)
         {

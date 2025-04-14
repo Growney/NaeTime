@@ -3,7 +3,7 @@ using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Models;
 using NaeTime.Orchestrator.Distribution.Abstractions;
 using NaeTime.Orchestrator.Distribution.Abstractions.Events.Hardware;
-using NaeTime.Persistence.Abstractions;
+using NaeTime.Orchestrator.Persistence.Abstractions;
 using NaeTime.Timing.ImmersionRC;
 using NaeTime.Timing.ImmersionRC.Abstractions;
 using System.Collections.Concurrent;
@@ -11,15 +11,15 @@ using System.Collections.Concurrent;
 namespace NaeTime.Hardware.ImmersionRC;
 internal class LapRFManager : IHostedService, ILapRFManager, IDisposable
 {
-    private readonly INaeTimePersistence _persistence;
+    private readonly INaeTimeOrchestratorPersistence _orchestrator;
     private readonly ILapRFConnectionFactory _connectionFactory;
     private readonly CancellationTokenSource _source = new();
 
     private readonly ConcurrentDictionary<Guid, LapRFConnection> _hardwareProcesses = new();
 
-    public LapRFManager(INaeTimePersistence persistence, ILapRFConnectionFactory connectionFactory, IDistributionReceiver receiver)
+    public LapRFManager(INaeTimeOrchestratorPersistence orchestrator, ILapRFConnectionFactory connectionFactory, IDistributionReceiver receiver)
     {
-        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
+        _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
         _ = receiver.Process<EthernetLapRF8Created>(_source.Token, When);
@@ -28,7 +28,7 @@ internal class LapRFManager : IHostedService, ILapRFManager, IDisposable
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        IEnumerable<Persistence.Abstractions.Hardware.EthernetLapRF8ChannelTimer> ethernetTimers = await _persistence.Hardware.GetAllEthernetLapRF8ChannelTimers();
+        IEnumerable<Persistence.Abstractions.Hardware.EthernetLapRF8ChannelTimer> ethernetTimers = await _orchestrator.Hardware.GetAllEthernetLapRF8ChannelTimers();
 
         if (ethernetTimers == null)
         {

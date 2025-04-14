@@ -4,7 +4,7 @@ using NaeTime.Orchestrator.Persistence.Abstractions;
 
 namespace NaeTime.Orchestrator;
 
-public class TimingOrchestrator : ITimingOrchestrator
+public class TimingOrchestrator : ITimingCommandOrchestrator
 {
     private readonly ITimingOrchestratorPersistence _persistence;
     private readonly INaeTimeOrchestratorDistribution _distribution;

@@ -73,11 +73,6 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
 
     public async Task EnabledChanged(bool value)
     {
-        if (Configuration.IsEnabled == value)
-        {
-            return;
-        }
-
         Configuration.IsEnabled = value;
 
         await Orchestrator.Hardware.ConfigureLaneStatus(Configuration.LaneNumber, value);
