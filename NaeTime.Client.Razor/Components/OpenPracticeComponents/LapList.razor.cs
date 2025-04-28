@@ -48,7 +48,7 @@ public partial class LapList : ComponentBase
 
         lap.Status = OpenPracticeLapStatus.Completed;
 
-        return EventClient.PublishAsync(new OpenPracticeLapDisputed(SessionId, lapId, pilotId, OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed));
+        return EventClient.PublishAsync(new OpenPracticeLapDisputed(SessionId, lapId, pilotId, OpenPracticeLapDisputed.OpenPracticeLapStatus.Valid));
     }
 
     private string GetStandardDeviation(int? topLaps)

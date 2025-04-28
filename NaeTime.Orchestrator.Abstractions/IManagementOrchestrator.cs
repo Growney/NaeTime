@@ -18,5 +18,6 @@ public interface IManagementOrchestrator
     public Task<IEnumerable<Track>> GetTracks();
     public Task<ActiveSession?> GetActiveSession();
     public Task<int> GetTrackAllowedLanes(Guid trackId);
-    public Task<IEnumerable<TimerDetails>> GetTrackTimers(Guid trackId);
+    public Task<List<TimerDetails>> GetTrackTimers(Guid trackId);
+    public Task<int> GetTrackTimerIndex(Guid trackId, Guid timerId);
 }

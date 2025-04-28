@@ -43,7 +43,19 @@ public class OpenPracticeOrchestrator : IOpenPracticeOrchestrator
             await _hardware.ConfigureLaneStatus(lane, isEnabled);
         }
     }
-
+    public async Task<OpenPracticeLaneConfiguration> GetLaneConfiguration(Guid sessionId, byte lane)
+    {
+        OpenPracticeSession? session = await _orchestratorPersistence.GetOpenPracticeSession(sessionId);
+        if (session == null)
+        {
+            throw new InvalidOperationException($"Session {sessionId} not found");
+        }
+        PilotLaneConfiguration? pilotLaneConfiguration = await _orchestratorPersistence.GetLaneConfiguration(sessionId, lane);
+        IEnumerable<TimerDetails> timers = await _managementOrchestrator.GetTrackTimers(session.TrackId);
+        IEnumerable<Guid> timerIds = timers.Select(x => x.Id);
+        LaneConfiguration laneConfiguration = await _hardware.GetLaneConfiguration(timerIds, lane);
+        return new OpenPracticeLaneConfiguration(lane, pilotLaneConfiguration?.PilotId, laneConfiguration);
+    }
     public async Task<IEnumerable<OpenPracticeLaneConfiguration>> GetLaneConfigurations(Guid sessionId)
     {
         OpenPracticeSession? session = await _orchestratorPersistence.GetOpenPracticeSession(sessionId);
@@ -85,17 +97,9 @@ public class OpenPracticeOrchestrator : IOpenPracticeOrchestrator
     public Task<IEnumerable<ConsecutiveLapRecord>> GetPilotOpenPracticeSessionConsecutiveLapRecords(Guid sessionId, Guid pilotId) =>
         _orchestratorPersistence.GetPilotOpenPracticeSessionConsecutiveLapRecords(sessionId, pilotId);
 
-    public Task<IEnumerable<Lap>> GetPilotOpenPracticeSessionLaps(Guid sessionId, Guid pilotId) =>
-        _orchestratorPersistence.GetPilotOpenPracticeSessionLaps(sessionId, pilotId);
 
     public Task<IEnumerable<LapRecord>> GetOpenPracticeSessionLapPilotLapRecords(Guid sessionId, Guid pilotId) =>
         _orchestratorPersistence.GetOpenPracticeSessionLapPilotLapRecords(sessionId, pilotId);
-
-    public Task<IEnumerable<Lap>> GetOpenPracticeSessionLaps(Guid sessionId) =>
-        _orchestratorPersistence.GetOpenPracticeSessionLaps(sessionId);
-
-    public Task<Lap?> GetOpenPracticeSessionLap(Guid lapId) =>
-        _orchestratorPersistence.GetOpenPracticeSessionLap(lapId);
 
     public Task<IEnumerable<SingleLapLeaderboardPosition>> GetOpenPracticeSessionSingleLapLeaderboardPositions(Guid sessionId) =>
         _orchestratorPersistence.GetOpenPracticeSessionSingleLapLeaderboardPositions(sessionId);
@@ -117,7 +121,4 @@ public class OpenPracticeOrchestrator : IOpenPracticeOrchestrator
 
     public Task<IEnumerable<uint>> GetOpenPracticeSessionTrackedConsecutiveLaps(Guid sessionId) =>
         _orchestratorPersistence.GetOpenPracticeSessionTrackedConsecutiveLaps(sessionId);
-
-    public Task<IEnumerable<Lap>> GetOpenPracticeLaps(IEnumerable<Guid> lapIds) =>
-        _orchestratorPersistence.GetOpenPracticeLaps(lapIds);
 }

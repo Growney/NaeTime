@@ -101,14 +101,14 @@ internal class NodeConnection
         {
             try
             {
-                Pass? nullablePassingRecord = await _protocol.TimingProtocol.WaitForNextPassAsync(token).ConfigureAwait(false);
-                if (nullablePassingRecord == null)
+                Pass? passingRecord = await _protocol.TimingProtocol.WaitForNextPassAsync(token).ConfigureAwait(false);
+                if (passingRecord == null)
                 {
                     continue;
                 }
-                Pass passingRecord = nullablePassingRecord.Value;
-                TimerDetectionOccured detection = new(_timerId, passingRecord.Lane, passingRecord.Time, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
-                await _eventClient.PublishAsync(detection).ConfigureAwait(false);
+
+                await _orchestrator.Hardware.AddTimerDetection(_timerId, passingRecord.Lane, passingRecord.Time, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow).ConfigureAwait(false);
+                await _orchestrator.CommitAsync().ConfigureAwait(false);
             }
             catch
             {

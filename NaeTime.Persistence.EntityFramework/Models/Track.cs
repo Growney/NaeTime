@@ -6,5 +6,4 @@ public class Track
     public long MinimumLapMilliseconds { get; set; }
     public long? MaximumLapMilliseconds { get; set; }
     public List<TrackTimer> Timers { get; set; } = new();
-    public byte AllowedLanes { get; set; }
 }

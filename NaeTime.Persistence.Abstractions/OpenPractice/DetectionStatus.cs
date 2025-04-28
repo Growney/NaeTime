@@ -1,6 +1,6 @@
 ﻿namespace NaeTime.Persistence.Abstractions.OpenPractice;
-public enum LapStatus
+public enum DetectionStatus
 {
+    Valid,
     Invalid,
-    Completed
 }

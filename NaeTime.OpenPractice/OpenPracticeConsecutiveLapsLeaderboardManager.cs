@@ -15,121 +15,121 @@ public class OpenPracticeConsecutiveLapsLeaderboardManager
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
     }
 
-    public async Task When(OpenPracticeLapCompleted completed)
-    {
-        IEnumerable<uint>? sessionTrackedLaps = await _orchestrator.OpenPractice.GetOpenPracticeSessionTrackedConsecutiveLaps(completed.SessionId);
-        if (sessionTrackedLaps == null || !sessionTrackedLaps.Any())
-        {
-            return;
-        }
+    //public async Task When(OpenPracticeLapCompleted completed)
+    //{
+    //    IEnumerable<uint>? sessionTrackedLaps = await _orchestrator.OpenPractice.GetOpenPracticeSessionTrackedConsecutiveLaps(completed.SessionId);
+    //    if (sessionTrackedLaps == null || !sessionTrackedLaps.Any())
+    //    {
+    //        return;
+    //    }
 
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(completed.SessionId, completed.PilotId);
-        IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord> pilotLapRecords = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionConsecutiveLapRecords(completed.SessionId, completed.PilotId);
+    //    IEnumerable<Persistence.Abstractions.OpenPractice.OpenPracticeLap> pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(completed.SessionId, completed.PilotId);
+    //    IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord> pilotLapRecords = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionConsecutiveLapRecords(completed.SessionId, completed.PilotId);
 
-        List<Lap> laps = new();
+    //    List<Lap> laps = new();
 
-        if (pilotLaps?.Any() ?? false)
-        {
-            laps.AddRange(pilotLaps.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
-                               x.Status switch
-                               {
-                                   Persistence.Abstractions.OpenPractice.LapStatus.Invalid => LapStatus.Invalid,
-                                   Persistence.Abstractions.OpenPractice.LapStatus.Completed => LapStatus.Completed,
-                                   _ => throw new NotImplementedException()
-                               }, x.TotalMilliseconds)));
-        }
+    //    if (pilotLaps?.Any() ?? false)
+    //    {
+    //        laps.AddRange(pilotLaps.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
+    //                           x.Status switch
+    //                           {
+    //                               Persistence.Abstractions.OpenPractice.LapStatus.Invalid => LapStatus.Invalid,
+    //                               Persistence.Abstractions.OpenPractice.LapStatus.Completed => LapStatus.Completed,
+    //                               _ => throw new NotImplementedException()
+    //                           }, x.TotalMilliseconds)));
+    //    }
 
-        //Check that its not been added already
-        if (!laps.Any(x => x.LapId == completed.LapId))
-        {
-            laps.Add(new Lap(completed.LapId, completed.StartedUtc, completed.FinishedUtc, LapStatus.Completed, completed.TotalMilliseconds));
-        }
+    //    //Check that its not been added already
+    //    if (!laps.Any(x => x.LapId == completed.LapId))
+    //    {
+    //        laps.Add(new Lap(completed.LapId, completed.StartedUtc, completed.FinishedUtc, LapStatus.Completed, completed.TotalMilliseconds));
+    //    }
 
-        laps.Sort((x, y) => x.FinishedUtc.CompareTo(y.FinishedUtc));
+    //    laps.Sort((x, y) => x.FinishedUtc.CompareTo(y.FinishedUtc));
 
-        await FullTrackAndUpdateTrackedLaps(completed.SessionId, completed.PilotId, completed.LapId, sessionTrackedLaps, pilotLapRecords, laps);
-    }
-    public async Task When(OpenPracticeLapRemoved removed)
-    {
-        IEnumerable<uint>? sessionTrackedLaps = await _orchestrator.OpenPractice.GetOpenPracticeSessionTrackedConsecutiveLaps(removed.SessionId);
-        if (sessionTrackedLaps == null || !sessionTrackedLaps.Any())
-        {
-            return;
-        }
+    //    await FullTrackAndUpdateTrackedLaps(completed.SessionId, completed.PilotId, completed.LapId, sessionTrackedLaps, pilotLapRecords, laps);
+    //}
+    //public async Task When(OpenPracticeLapRemoved removed)
+    //{
+    //    IEnumerable<uint>? sessionTrackedLaps = await _orchestrator.OpenPractice.GetOpenPracticeSessionTrackedConsecutiveLaps(removed.SessionId);
+    //    if (sessionTrackedLaps == null || !sessionTrackedLaps.Any())
+    //    {
+    //        return;
+    //    }
 
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(removed.SessionId, removed.PilotId);
-        IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord> pilotLapRecords = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionConsecutiveLapRecords(removed.SessionId, removed.PilotId);
+    //    IEnumerable<Persistence.Abstractions.OpenPractice.OpenPracticeLap> pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(removed.SessionId, removed.PilotId);
+    //    IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord> pilotLapRecords = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionConsecutiveLapRecords(removed.SessionId, removed.PilotId);
 
-        List<Lap> laps = new();
+    //    List<Lap> laps = new();
 
-        if (pilotLaps?.Any() ?? false)
-        {
-            laps.AddRange(pilotLaps.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
-                               x.Status switch
-                               {
-                                   Persistence.Abstractions.OpenPractice.LapStatus.Invalid => LapStatus.Invalid,
-                                   Persistence.Abstractions.OpenPractice.LapStatus.Completed => LapStatus.Completed,
-                                   _ => throw new NotImplementedException()
-                               }, x.TotalMilliseconds)));
-        }
+    //    if (pilotLaps?.Any() ?? false)
+    //    {
+    //        laps.AddRange(pilotLaps.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
+    //                           x.Status switch
+    //                           {
+    //                               Persistence.Abstractions.OpenPractice.LapStatus.Invalid => LapStatus.Invalid,
+    //                               Persistence.Abstractions.OpenPractice.LapStatus.Completed => LapStatus.Completed,
+    //                               _ => throw new NotImplementedException()
+    //                           }, x.TotalMilliseconds)));
+    //    }
 
-        //Check that its not been removed already
-        int removeIndex = laps.FindIndex(x => x.LapId == removed.LapId);
-        if (removeIndex != -1)
-        {
-            laps.RemoveAt(removeIndex);
-        }
+    //    //Check that its not been removed already
+    //    int removeIndex = laps.FindIndex(x => x.LapId == removed.LapId);
+    //    if (removeIndex != -1)
+    //    {
+    //        laps.RemoveAt(removeIndex);
+    //    }
 
-        await FullTrackAndUpdateTrackedLaps(removed.SessionId, removed.PilotId, removed.LapId, sessionTrackedLaps, pilotLapRecords, laps);
-    }
-    public async Task When(OpenPracticeLapDisputed disputed)
-    {
-        IEnumerable<uint> sessionTrackedLaps = await _orchestrator.OpenPractice.GetOpenPracticeSessionTrackedConsecutiveLaps(disputed.SessionId);
-        if (!sessionTrackedLaps.Any())
-        {
-            return;
-        }
+    //    await FullTrackAndUpdateTrackedLaps(removed.SessionId, removed.PilotId, removed.LapId, sessionTrackedLaps, pilotLapRecords, laps);
+    //}
+    //public async Task When(OpenPracticeLapDisputed disputed)
+    //{
+    //    IEnumerable<uint> sessionTrackedLaps = await _orchestrator.OpenPractice.GetOpenPracticeSessionTrackedConsecutiveLaps(disputed.SessionId);
+    //    if (!sessionTrackedLaps.Any())
+    //    {
+    //        return;
+    //    }
 
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
-        IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord> pilotLapRecords = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionConsecutiveLapRecords(disputed.SessionId, disputed.PilotId);
+    //    IEnumerable<Persistence.Abstractions.OpenPractice.OpenPracticeLap> pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
+    //    IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord> pilotLapRecords = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionConsecutiveLapRecords(disputed.SessionId, disputed.PilotId);
 
-        List<Lap> laps = new();
+    //    List<Lap> laps = new();
 
-        if (pilotLaps?.Any() ?? false)
-        {
-            laps.AddRange(pilotLaps.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
-                               x.Status switch
-                               {
-                                   Persistence.Abstractions.OpenPractice.LapStatus.Invalid => LapStatus.Invalid,
-                                   Persistence.Abstractions.OpenPractice.LapStatus.Completed => LapStatus.Completed,
-                                   _ => throw new NotImplementedException()
-                               }, x.TotalMilliseconds)));
-        }
+    //    if (pilotLaps?.Any() ?? false)
+    //    {
+    //        laps.AddRange(pilotLaps.Select(x => new Lap(x.Id, x.StartedUtc, x.FinishedUtc,
+    //                           x.Status switch
+    //                           {
+    //                               Persistence.Abstractions.OpenPractice.LapStatus.Invalid => LapStatus.Invalid,
+    //                               Persistence.Abstractions.OpenPractice.LapStatus.Completed => LapStatus.Completed,
+    //                               _ => throw new NotImplementedException()
+    //                           }, x.TotalMilliseconds)));
+    //    }
 
-        int existingLapIndex = laps.FindIndex(x => x.LapId == disputed.LapId);
+    //    int existingLapIndex = laps.FindIndex(x => x.LapId == disputed.LapId);
 
-        //We have no record of this lap so we can't do anything
-        if (existingLapIndex < 0)
-        {
-            return;
-        }
+    //    //We have no record of this lap so we can't do anything
+    //    if (existingLapIndex < 0)
+    //    {
+    //        return;
+    //    }
 
-        LapStatus desiredStatus = disputed.ActualStatus switch
-        {
-            OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid => LapStatus.Invalid,
-            OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed => LapStatus.Completed,
-            _ => throw new NotImplementedException()
-        };
+    //    LapStatus desiredStatus = disputed.ActualStatus switch
+    //    {
+    //        OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid => LapStatus.Invalid,
+    //        OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed => LapStatus.Completed,
+    //        _ => throw new NotImplementedException()
+    //    };
 
-        Lap existingLap = laps[existingLapIndex];
-        if (existingLap.Status != desiredStatus)
-        {
-            laps.RemoveAt(existingLapIndex);
-            laps.Add(new Lap(existingLap.LapId, existingLap.StartedUtc, existingLap.FinishedUtc, desiredStatus, existingLap.TotalMilliseconds));
-        }
+    //    Lap existingLap = laps[existingLapIndex];
+    //    if (existingLap.Status != desiredStatus)
+    //    {
+    //        laps.RemoveAt(existingLapIndex);
+    //        laps.Add(new Lap(existingLap.LapId, existingLap.StartedUtc, existingLap.FinishedUtc, desiredStatus, existingLap.TotalMilliseconds));
+    //    }
 
-        await FullTrackAndUpdateTrackedLaps(disputed.SessionId, disputed.PilotId, disputed.LapId, sessionTrackedLaps, pilotLapRecords, laps);
-    }
+    //    await FullTrackAndUpdateTrackedLaps(disputed.SessionId, disputed.PilotId, disputed.LapId, sessionTrackedLaps, pilotLapRecords, laps);
+    //}
     private async Task FullTrackAndUpdateTrackedLaps(Guid sessionId, Guid pilotId, Guid triggeringLap, IEnumerable<uint> sessionTrackedLaps, IEnumerable<Persistence.Abstractions.OpenPractice.ConsecutiveLapRecord>? pilotLapRecords, List<Lap> laps)
     {
         laps.Sort((x, y) => x.FinishedUtc.CompareTo(y.FinishedUtc));

@@ -31,11 +31,12 @@ public interface IHardwareOrchestratorPersistence
     public Task StoreActualNodeExitThreshold(Guid timerId, byte lane, ushort threshold);
 
     public Task<IEnumerable<LaneConfiguration>> GetLaneConfigurations(IEnumerable<Guid> includedTimers);
+    public Task<LaneConfiguration> GetLaneConfiguration(IEnumerable<Guid> includedTimers, byte lane);
     public Task<SerialEsp32Node?> GetSerialEsp32NodeTimer(Guid timerId);
     public Task<EthernetLapRF8ChannelTimer?> GetEthernetLapRF8ChannelTimer(Guid timerId);
     public Task<IEnumerable<EthernetLapRF8ChannelTimer>> GetAllEthernetLapRF8ChannelTimers();
     public Task<IEnumerable<SerialEsp32Node>> GetAllSerialEsp32NodeTimers();
     public Task<IEnumerable<TimerDetails>> GetAllTimerDetails();
-    public Task<IEnumerable<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerId);
+    public Task<List<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerId);
     public Task<TimerDetails?> GetTimerDetails(Guid timerId);
 }

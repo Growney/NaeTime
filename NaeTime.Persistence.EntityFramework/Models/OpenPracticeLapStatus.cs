@@ -2,5 +2,6 @@
 public enum OpenPracticeLapStatus
 {
     Invalid,
-    Completed
+    Valid,
+    Incomplete,
 }

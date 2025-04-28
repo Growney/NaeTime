@@ -97,19 +97,7 @@ public class OpenPracticeOrchestratorPersistence : IOpenPracticeOrchestratorPers
 
         return positions.Select(x => new ConsecutiveLapLeaderboardPosition(x.Position, x.PilotId, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(x => x.LapId)));
     }
-    public async Task<Lap?> GetOpenPracticeSessionLap(Guid lapId)
-    {
-        var lap = await _dbContext.OpenPracticeLaps.Where(x => x.Id == lapId).FirstOrDefaultAsync();
 
-        return lap == null
-            ? null
-            : new Lap(lap.Id, lap.PilotId, lap.StartedUtc, lap.FinishedUtc, lap.Status switch
-            {
-                NaeTime.Persistence.EntityFramework.Models.OpenPracticeLapStatus.Invalid => LapStatus.Invalid,
-                NaeTime.Persistence.EntityFramework.Models.OpenPracticeLapStatus.Completed => LapStatus.Completed,
-                _ => throw new NotImplementedException()
-            }, lap.TotalMilliseconds);
-    }
     public async Task<IEnumerable<LapRecord>> GetOpenPracticeSessionLapPilotLapRecords(Guid sessionId, Guid pilotId)
     {
         List<LapRecord> records = new();
@@ -129,18 +117,7 @@ public class OpenPracticeOrchestratorPersistence : IOpenPracticeOrchestratorPers
 
         return records;
     }
-    public async Task<IEnumerable<Lap>> GetOpenPracticeSessionLaps(Guid sessionId)
-    {
-        var laps = await _dbContext.OpenPracticeLaps.Where(x => x.SessionId == sessionId).ToListAsync();
 
-        return laps.Select(x => new Lap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc, x.Status switch
-        {
-            NaeTime.Persistence.EntityFramework.Models.OpenPracticeLapStatus.Invalid => LapStatus.Invalid,
-            NaeTime.Persistence.EntityFramework.Models.OpenPracticeLapStatus.Completed => LapStatus.Completed,
-            _ => throw new NotImplementedException()
-        }, x.TotalMilliseconds));
-
-    }
     public async Task<IEnumerable<OpenPracticeSession>> GetOpenPracticeSessions()
     {
         var sessions = await _dbContext.OpenPracticeSessions.ToListAsync().ConfigureAwait(false);
@@ -153,12 +130,6 @@ public class OpenPracticeOrchestratorPersistence : IOpenPracticeOrchestratorPers
 
         return responseSessions;
     }
-    private LapStatus GetSessionResponseStatus(NaeTime.Persistence.EntityFramework.Models.OpenPracticeLapStatus status) => status switch
-    {
-        NaeTime.Persistence.EntityFramework.Models.OpenPracticeLapStatus.Invalid => LapStatus.Invalid,
-        NaeTime.Persistence.EntityFramework.Models.OpenPracticeLapStatus.Completed => LapStatus.Completed,
-        _ => throw new NotImplementedException()
-    };
     public async Task<IEnumerable<SingleLapLeaderboardPosition>> GetOpenPracticeSessionSingleLapLeaderboardPositions(Guid sessionId)
     {
         var positions = await _dbContext.SingleLapLeaderboardPositions.Where(x => x.SessionId == sessionId).ToListAsync();
@@ -186,17 +157,6 @@ public class OpenPracticeOrchestratorPersistence : IOpenPracticeOrchestratorPers
 
         return positions.Select(x => new ConsecutiveLapRecord(x.LapCap, x.TotalLaps, x.TotalMilliseconds, x.LastLapCompletionUtc, x.IncludedLaps.Select(x => x.LapId)));
     }
-    public async Task<IEnumerable<Lap>> GetPilotOpenPracticeSessionLaps(Guid sessionId, Guid pilotId)
-    {
-        var laps = await _dbContext.OpenPracticeLaps.Where(x => x.PilotId == pilotId && x.SessionId == sessionId).ToListAsync();
-
-        return laps.Select(x => new Lap(x.Id, pilotId, x.StartedUtc, x.FinishedUtc, x.Status switch
-        {
-            NaeTime.Persistence.EntityFramework.Models.OpenPracticeLapStatus.Invalid => LapStatus.Invalid,
-            NaeTime.Persistence.EntityFramework.Models.OpenPracticeLapStatus.Completed => LapStatus.Completed,
-            _ => throw new NotImplementedException()
-        }, x.TotalMilliseconds));
-    }
 
     public async Task<IEnumerable<uint>> GetOpenPracticeSessionTrackedConsecutiveLaps(Guid sessionId)
     {
@@ -223,5 +183,10 @@ public class OpenPracticeOrchestratorPersistence : IOpenPracticeOrchestratorPers
             : new TotalLapRecord(position.TotalLaps, position.FirstLapCompletionUtc);
     }
 
-    public async Task<IEnumerable<Lap>> GetOpenPracticeLaps(IEnumerable<Guid> lapIds) => await _dbContext.OpenPracticeLaps.Where(x => lapIds.Contains(x.Id)).Select(x => new Lap(x.Id, x.PilotId, x.StartedUtc, x.FinishedUtc, GetSessionResponseStatus(x.Status), x.TotalMilliseconds)).ToListAsync();
+    public async Task<PilotLaneConfiguration> GetLaneConfiguration(Guid sessionId, byte lane)
+    {
+        var config = await _dbContext.OpenPracticeLaneConfigurations.FirstOrDefaultAsync(x => x.SessionId == sessionId && x.Lane == lane);
+
+        return new PilotLaneConfiguration(lane, config?.PilotId);
+    }
 }

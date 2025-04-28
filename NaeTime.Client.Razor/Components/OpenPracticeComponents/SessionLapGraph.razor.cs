@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.Orchestrator.Abstractions;
+using NaeTime.Persistence.Abstractions.Timing.Extensions;
 using NaeTime.PubSub.Abstractions;
 using System.Collections.Concurrent;
 
@@ -46,11 +47,11 @@ public partial class SessionLapGraph
             }));
         }
 
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> sessionLaps = await Orchestrator.OpenPractice.GetOpenPracticeSessionLaps(SessionId);
+        IEnumerable<Persistence.Abstractions.Timing.Lap> sessionLaps = await Orchestrator.Timing.GetOpenPracticeSessionLaps(SessionId);
 
-        foreach (Persistence.Abstractions.OpenPractice.Lap lap in sessionLaps)
+        foreach (Persistence.Abstractions.Timing.Lap lap in sessionLaps)
         {
-            if (lap.Status != NaeTime.Persistence.Abstractions.OpenPractice.LapStatus.Completed)
+            if (lap.Status != Persistence.Abstractions.Timing.LapStatus.Valid)
             {
                 continue;
             }
@@ -61,8 +62,8 @@ public partial class SessionLapGraph
             {
                 LapId = lap.Id,
                 LapNumber = pilotLapTimes.Count + 1,
-                TotalSeconds = lap.TotalMilliseconds / 1000.0,
-                LapCompleted = lap.FinishedUtc
+                TotalSeconds = IDetectionExtensions.TimeBetween(lap.EntryDetection, lap.ExitDetection).TotalSeconds,
+                LapCompleted = lap.ExitDetection?.UtcTime ?? lap.EntryDetection.UtcTime
             });
         }
 
@@ -154,7 +155,7 @@ public partial class SessionLapGraph
         }
         else
         {
-            Persistence.Abstractions.OpenPractice.Lap? sessionLap = await Orchestrator.OpenPractice.GetOpenPracticeSessionLap(lap.LapId);
+            Persistence.Abstractions.Timing.Lap? sessionLap = await Orchestrator.Timing.GetOpenPracticeSessionLap(lap.LapId);
 
             if (sessionLap == null)
             {
@@ -164,8 +165,8 @@ public partial class SessionLapGraph
             pilotLapTimes.Add(new LapTime()
             {
                 LapId = sessionLap.Id,
-                TotalSeconds = sessionLap.TotalMilliseconds / 1000,
-                LapCompleted = sessionLap.FinishedUtc
+                TotalSeconds = IDetectionExtensions.TimeBetween(sessionLap.EntryDetection, sessionLap.ExitDetection).TotalSeconds,
+                LapCompleted = sessionLap.ExitDetection?.UtcTime ?? sessionLap.EntryDetection.UtcTime
             });
 
         }

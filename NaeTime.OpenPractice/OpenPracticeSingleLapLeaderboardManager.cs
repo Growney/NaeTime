@@ -1,7 +1,7 @@
 ﻿using NaeTime.OpenPractice.Leaderboards;
 using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.OpenPractice.Models;
 using NaeTime.Orchestrator.Abstractions;
+using NaeTime.Persistence.Abstractions.Timing.Extensions;
 using NaeTime.PubSub.Abstractions;
 using NaeTime.Timing;
 
@@ -33,43 +33,43 @@ public class OpenPracticeSingleLapLeaderboardManager
             }
         }
     }
-    public async Task When(OpenPracticeLapDisputed disputed)
-    {
-        Persistence.Abstractions.OpenPractice.SingleLapRecord? existingRecord = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionSingleLapRecord(disputed.SessionId, disputed.PilotId);
+    //public async Task When(OpenPracticeLapDisputed disputed)
+    //{
+    //    Persistence.Abstractions.OpenPractice.SingleLapRecord? existingRecord = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionSingleLapRecord(disputed.SessionId, disputed.PilotId);
 
-        //When its changed to completed its like we have a new lap se we need to check it against the existing record
-        if (disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed)
-        {
-            IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
+    //    //When its changed to completed its like we have a new lap se we need to check it against the existing record
+    //    if (disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed)
+    //    {
+    //        IEnumerable<Persistence.Abstractions.OpenPractice.OpenPracticeLap>? pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
 
-            Persistence.Abstractions.OpenPractice.Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == disputed.LapId);
-            if (lap == null)
-            {
-                return;
-            }
-            //We have no existing record so it must be a new record
-            if (existingRecord == null)
-            {
-                await HandleUpdatedRecord(disputed.SessionId, disputed.PilotId, lap.TotalMilliseconds, lap.FinishedUtc, lap.Id);
-                return;
-            }
+    //        Persistence.Abstractions.OpenPractice.OpenPracticeLap? lap = pilotLaps?.FirstOrDefault(x => x.Id == disputed.LapId);
+    //        if (lap == null)
+    //        {
+    //            return;
+    //        }
+    //        //We have no existing record so it must be a new record
+    //        if (existingRecord == null)
+    //        {
+    //            await HandleUpdatedRecord(disputed.SessionId, disputed.PilotId, lap.TotalMilliseconds, lap.FinishedUtc, lap.Id);
+    //            return;
+    //        }
 
-            if (ComparePositions(existingRecord.TotalMilliseconds, existingRecord.CompletionUtc, lap.TotalMilliseconds, lap.FinishedUtc) > 0)
-            {
-                await HandleUpdatedRecord(disputed.SessionId, disputed.PilotId, lap.TotalMilliseconds, lap.FinishedUtc, lap.Id);
-            }
-        }
-        else
-        {
-            //We have no existing record or its not the current record holding lap
-            if (existingRecord != null && existingRecord.LapId != disputed.LapId)
-            {
-                return;
-            }
+    //        if (ComparePositions(existingRecord.TotalMilliseconds, existingRecord.CompletionUtc, lap.TotalMilliseconds, lap.FinishedUtc) > 0)
+    //        {
+    //            await HandleUpdatedRecord(disputed.SessionId, disputed.PilotId, lap.TotalMilliseconds, lap.FinishedUtc, lap.Id);
+    //        }
+    //    }
+    //    else
+    //    {
+    //        //We have no existing record or its not the current record holding lap
+    //        if (existingRecord != null && existingRecord.LapId != disputed.LapId)
+    //        {
+    //            return;
+    //        }
 
-            await HandleRemovedRecord(disputed.SessionId, disputed.PilotId, disputed.LapId);
-        }
-    }
+    //        await HandleRemovedRecord(disputed.SessionId, disputed.PilotId, disputed.LapId);
+    //    }
+    //}
     public async Task When(OpenPracticeLapRemoved removed)
     {
         Persistence.Abstractions.OpenPractice.SingleLapRecord? existingRecord = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionSingleLapRecord(removed.SessionId, removed.PilotId);
@@ -121,26 +121,31 @@ public class OpenPracticeSingleLapLeaderboardManager
         await CheckLeaderboards(sessionId, pilotId, existingLeaderboard, newLeaderboard);
     }
 
-    private IEnumerable<Lap> GetLaps(IEnumerable<Persistence.Abstractions.OpenPractice.Lap> response, Guid? excludedLapId)
+    private IEnumerable<NaeTime.OpenPractice.Models.Lap> GetLaps(IEnumerable<Persistence.Abstractions.Timing.Lap> response, Guid? excludedLapId)
     {
-        foreach (Persistence.Abstractions.OpenPractice.Lap lap in response)
+        foreach (Persistence.Abstractions.Timing.Lap lap in response)
         {
             if (excludedLapId.HasValue && lap.Id == excludedLapId)
             {
                 continue;
             }
 
-            yield return new Lap(lap.Id, lap.StartedUtc, lap.FinishedUtc, lap.Status switch
+            if (lap.ExitDetection == null)
             {
-                Persistence.Abstractions.OpenPractice.LapStatus.Invalid => LapStatus.Invalid,
-                Persistence.Abstractions.OpenPractice.LapStatus.Completed => LapStatus.Completed,
+                continue;
+            }
+
+            yield return new NaeTime.OpenPractice.Models.Lap(lap.Id, lap.EntryDetection.UtcTime, lap.ExitDetection.UtcTime, lap.Status switch
+            {
+                Persistence.Abstractions.Timing.LapStatus.Invalid => NaeTime.OpenPractice.Models.LapStatus.Invalid,
+                Persistence.Abstractions.Timing.LapStatus.Valid => NaeTime.OpenPractice.Models.LapStatus.Completed,
                 _ => throw new NotImplementedException()
-            }, lap.TotalMilliseconds);
+            }, IDetectionExtensions.MillisecondsBetween(lap.EntryDetection, lap.ExitDetection));
         }
     }
     private async Task<SingleLapRecord?> CalculatePilotsFastestSingle(Guid sessionId, Guid pilotId, Guid? excludedLapId)
     {
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(sessionId, pilotId);
+        IEnumerable<Persistence.Abstractions.Timing.Lap>? pilotLaps = await _orchestrator.Timing.GetPilotOpenPracticeSessionLaps(sessionId, pilotId);
 
         if (pilotLaps == null)
         {

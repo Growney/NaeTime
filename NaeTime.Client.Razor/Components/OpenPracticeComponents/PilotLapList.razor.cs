@@ -3,6 +3,7 @@ using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.Orchestrator.Abstractions;
+using NaeTime.Persistence.Abstractions.Timing.Extensions;
 using NaeTime.PubSub.Abstractions;
 using System.Collections.Concurrent;
 
@@ -27,22 +28,22 @@ public partial class PilotLapList : ComponentBase
     {
         EventRegistrarScope.RegisterHub(this);
 
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap> initialLaps = await Orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(SessionId, PilotId);
+        IEnumerable<Persistence.Abstractions.Timing.Lap> initialLaps = await Orchestrator.Timing.GetPilotOpenPracticeSessionLaps(SessionId, PilotId);
 
         _laps.AddRange(initialLaps.Select(x => new OpenPracticeLap()
         {
             Id = x.Id,
             PilotId = x.PilotId,
             PilotName = null,
-            StartedUtc = x.StartedUtc,
-            FinishedUtc = x.FinishedUtc,
+            StartedUtc = x.EntryDetection.UtcTime,
+            FinishedUtc = x.ExitDetection?.UtcTime ?? x.EntryDetection.UtcTime,
             Status = x.Status switch
             {
-                NaeTime.Persistence.Abstractions.OpenPractice.LapStatus.Invalid => OpenPracticeLapStatus.Invalid,
-                NaeTime.Persistence.Abstractions.OpenPractice.LapStatus.Completed => OpenPracticeLapStatus.Completed,
+                Persistence.Abstractions.Timing.LapStatus.Invalid => OpenPracticeLapStatus.Invalid,
+                Persistence.Abstractions.Timing.LapStatus.Valid => OpenPracticeLapStatus.Completed,
                 _ => throw new NotImplementedException()
             },
-            TotalMilliseconds = x.TotalMilliseconds
+            TotalMilliseconds = IDetectionExtensions.MillisecondsBetween(x.EntryDetection, x.ExitDetection)
         }));
 
         IEnumerable<Persistence.Abstractions.OpenPractice.LapRecord>? lapRecords = await Orchestrator.OpenPractice.GetOpenPracticeSessionLapPilotLapRecords(SessionId, PilotId);
@@ -164,7 +165,7 @@ public partial class PilotLapList : ComponentBase
         _laps[lapIndex].Status = lap.ActualStatus switch
         {
             OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid => OpenPracticeLapStatus.Invalid,
-            OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed => OpenPracticeLapStatus.Completed,
+            OpenPracticeLapDisputed.OpenPracticeLapStatus.Valid => OpenPracticeLapStatus.Completed,
             _ => throw new NotImplementedException()
         };
 

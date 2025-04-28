@@ -4,6 +4,7 @@ public record OpenPracticeLapDisputed(Guid SessionId, Guid LapId, Guid PilotId, 
     public enum OpenPracticeLapStatus
     {
         Invalid,
-        Completed
+        Valid,
+        Incomplete
     }
 }

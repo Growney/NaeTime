@@ -23,6 +23,7 @@ public class NaeTimeDbContext : DbContext
     public DbSet<Detection> Detections { get; set; }
     public DbSet<SerialEsp32Node> SerialEsp32Nodes { get; set; }
     public DbSet<ActiveTimings> ActiveTimings { get; set; }
+    public DbSet<OpenPracticeDetection> OpenPracticeDetections { get; set; }
     public NaeTimeDbContext(DbContextOptions<NaeTimeDbContext> options) : base(options)
     {
     }

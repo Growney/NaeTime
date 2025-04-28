@@ -73,14 +73,21 @@ public class ManagementOrchestrator : IManagementOrchestrator
 
         return await _hardwareOrchestrator.GetTimersMaxLanes(track.Timers);
     }
-    public async Task<IEnumerable<TimerDetails>> GetTrackTimers(Guid trackId)
+    public async Task<List<TimerDetails>> GetTrackTimers(Guid trackId)
     {
 
         Track? track = await _managementPersistence.GetTrack(trackId);
         if (track == null)
         {
-            return Enumerable.Empty<TimerDetails>();
+            return new();
         }
         return await _hardwareOrchestrator.GetTimerDetails(track.Timers);
+    }
+
+    public async Task<int> GetTrackTimerIndex(Guid trackId, Guid timerId)
+    {
+        List<TimerDetails> timers = await GetTrackTimers(trackId);
+
+        return timers.Select(x => x.Id).ToList().IndexOf(timerId);
     }
 }

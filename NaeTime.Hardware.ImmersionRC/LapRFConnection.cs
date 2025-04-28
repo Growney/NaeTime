@@ -75,18 +75,15 @@ internal class LapRFConnection
         {
             try
             {
-                Pass? nullablePassingRecord = await _protocol.PassingRecordProtocol.WaitForNextPassAsync(token).ConfigureAwait(false);
+                Pass? passingRecord = await _protocol.PassingRecordProtocol.WaitForNextPassAsync(token).ConfigureAwait(false);
 
-                if (nullablePassingRecord == null)
+                if (passingRecord == null)
                 {
                     continue;
                 }
 
-                Pass passingRecord = nullablePassingRecord.Value;
-
-                TimerDetectionOccured detection = new(_timerId, passingRecord.PilotId, passingRecord.RealTimeClockTime / 1000, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
-
-                await _eventClient.PublishAsync(detection).ConfigureAwait(false);
+                await _orchestrator.Hardware.AddTimerDetection(_timerId, (byte)(passingRecord.PilotId - 1), passingRecord.RealTimeClockTime / 1000, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
+                await _orchestrator.CommitAsync().ConfigureAwait(false);
             }
             catch
             {

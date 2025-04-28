@@ -1,6 +1,7 @@
 ﻿using NaeTime.OpenPractice.Leaderboards;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.Orchestrator.Abstractions;
+using NaeTime.Persistence.Abstractions.Timing;
 using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.OpenPractice;
@@ -16,29 +17,29 @@ internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<Tota
     }
     public async Task When(OpenPracticeLapCompleted completed)
     {
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(completed.SessionId, completed.PilotId);
+        IEnumerable<Lap>? pilotLaps = await _orchestrator.Timing.GetPilotOpenPracticeSessionLaps(completed.SessionId, completed.PilotId);
 
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? validLaps = pilotLaps?.Where(x => x.Status == Persistence.Abstractions.OpenPractice.LapStatus.Completed && x.Id != completed.LapId);
+        IEnumerable<Lap>? validLaps = pilotLaps?.Where(x => x.Status == LapStatus.Valid && x.Id != completed.LapId);
         int lapCount = validLaps?.Count() ?? 0;
 
         lapCount++;
 
-        Persistence.Abstractions.OpenPractice.Lap? firstLap = validLaps?.FirstOrDefault();
-        DateTime firstLapCompletionUtc = firstLap?.FinishedUtc ?? completed.StartedUtc;
+        Lap? firstLap = validLaps?.FirstOrDefault();
+        DateTime firstLapCompletionUtc = firstLap?.ExitDetection?.UtcTime ?? completed.StartedUtc;
 
         await HandleUpdatedRecord(completed.SessionId, completed.PilotId, new TotalLapRecord(lapCount, firstLapCompletionUtc));
     }
     public async Task When(OpenPracticeLapDisputed disputed)
     {
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
+        IEnumerable<Lap>? pilotLaps = await _orchestrator.Timing.GetPilotOpenPracticeSessionLaps(disputed.SessionId, disputed.PilotId);
 
-        Persistence.Abstractions.OpenPractice.Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == disputed.LapId);
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? validLaps = pilotLaps?.Where(x => x.Status == Persistence.Abstractions.OpenPractice.LapStatus.Completed
-        && (x.Id != disputed.LapId || disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed));
+        Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == disputed.LapId);
+        IEnumerable<Lap>? validLaps = pilotLaps?.Where(x => x.Status == LapStatus.Valid
+        && (x.Id != disputed.LapId || disputed.ActualStatus == OpenPracticeLapDisputed.OpenPracticeLapStatus.Valid));
         int lapCount = validLaps?.Count() ?? 0;
 
-        Persistence.Abstractions.OpenPractice.Lap? firstLap = validLaps?.FirstOrDefault();
-        DateTime? firstLapCompletionUtc = firstLap?.FinishedUtc ?? lap?.StartedUtc;
+        Lap? firstLap = validLaps?.FirstOrDefault();
+        DateTime? firstLapCompletionUtc = firstLap?.ExitDetection?.UtcTime ?? lap?.EntryDetection.UtcTime;
 
         if (firstLapCompletionUtc == null)
         {
@@ -51,14 +52,14 @@ internal class OpenPracticeTotalLapsLeaderboardManager : LeaderboardManager<Tota
     }
     public async Task When(OpenPracticeLapRemoved removed)
     {
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? pilotLaps = await _orchestrator.OpenPractice.GetPilotOpenPracticeSessionLaps(removed.SessionId, removed.PilotId);
+        IEnumerable<Lap>? pilotLaps = await _orchestrator.Timing.GetPilotOpenPracticeSessionLaps(removed.SessionId, removed.PilotId);
 
-        Persistence.Abstractions.OpenPractice.Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == removed.LapId);
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? validLaps = pilotLaps?.Where(x => x.Status == Persistence.Abstractions.OpenPractice.LapStatus.Completed && x.Id != lap?.Id);
+        Lap? lap = pilotLaps?.FirstOrDefault(x => x.Id == removed.LapId);
+        IEnumerable<Lap>? validLaps = pilotLaps?.Where(x => x.Status == LapStatus.Valid && x.Id != lap?.Id);
         int lapCount = validLaps?.Count() ?? 0;
 
-        Persistence.Abstractions.OpenPractice.Lap? firstLap = validLaps?.FirstOrDefault();
-        DateTime? firstLapCompletionUtc = firstLap?.FinishedUtc ?? lap?.StartedUtc;
+        Lap? firstLap = validLaps?.FirstOrDefault();
+        DateTime? firstLapCompletionUtc = firstLap?.ExitDetection?.UtcTime ?? lap?.EntryDetection?.UtcTime;
 
         if (firstLapCompletionUtc == null)
         {

@@ -1,5 +1,5 @@
 ﻿namespace ImmersionRC.LapRF;
-public struct Pass
+public class Pass
 {
     public Pass(uint passingNumber, byte pilotId, uint transponderId, uint timestamp, ulong realTimeClockTime)
     {

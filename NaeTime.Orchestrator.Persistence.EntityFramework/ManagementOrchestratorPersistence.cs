@@ -50,10 +50,11 @@ public class ManagementOrchestratorPersistence : IManagementOrchestratorPersiste
             Name = name,
             MinimumLapMilliseconds = MinimumLapMilliseconds,
             MaximumLapMilliseconds = MaximumLapMilliseconds,
-            Timers = timers.Select(x => new NaeTime.Persistence.EntityFramework.Models.TrackTimer()
+            Timers = timers.Select((timerId, index) => new NaeTime.Persistence.EntityFramework.Models.TrackTimer()
             {
                 Id = Guid.NewGuid(),
-                TimerId = x,
+                TimerId = timerId,
+                OrdinalPosition = index,
             }).ToList(),
         };
         _dbContext.Tracks.Add(track);
@@ -84,11 +85,12 @@ public class ManagementOrchestratorPersistence : IManagementOrchestratorPersiste
         track.Name = name;
         track.MinimumLapMilliseconds = MinimumLapMilliseconds;
         track.MaximumLapMilliseconds = MaximumLapMilliseconds;
-        track.Timers = timers.Select(x => new NaeTime.Persistence.EntityFramework.Models.TrackTimer()
+        track.Timers = timers.Select((timerId, index) => new NaeTime.Persistence.EntityFramework.Models.TrackTimer()
         {
             Id = Guid.NewGuid(),
-            TimerId = x,
-            TrackId = trackId
+            TimerId = timerId,
+            TrackId = trackId,
+            OrdinalPosition = index,
         }).ToList();
 
         return Task.FromResult(true);
@@ -136,8 +138,8 @@ public class ManagementOrchestratorPersistence : IManagementOrchestratorPersiste
 
         return track == null
             ? null
-            : new Track(track.Id, track.Name, track.MinimumLapMilliseconds, track.MaximumLapMilliseconds, track.Timers.Select(x => x.TimerId).ToList(), track.AllowedLanes);
+            : new Track(track.Id, track.Name, track.MinimumLapMilliseconds, track.MaximumLapMilliseconds, track.Timers.OrderBy(x => x.OrdinalPosition).Select(x => x.TimerId).ToList());
     }
-    public async Task<IEnumerable<Track>> GetTracks() => await _dbContext.Tracks.Select(x => new Track(x.Id, x.Name, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds, x.Timers.Select(y => y.TimerId).ToList(), x.AllowedLanes)).ToListAsync();
+    public async Task<IEnumerable<Track>> GetTracks() => await _dbContext.Tracks.Select(x => new Track(x.Id, x.Name, x.MinimumLapMilliseconds, x.MaximumLapMilliseconds, x.Timers.OrderBy(y => y.OrdinalPosition).Select(y => y.TimerId).ToList())).ToListAsync();
 
 }

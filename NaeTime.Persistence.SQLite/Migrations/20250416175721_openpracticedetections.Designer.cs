@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NaeTime.Persistence.EntityFramework;
 
@@ -10,9 +11,11 @@ using NaeTime.Persistence.EntityFramework;
 namespace NaeTime.Persistence.SQLite.Migrations
 {
     [DbContext(typeof(NaeTimeDbContext))]
-    partial class NaeTimeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250416175721_openpracticedetections")]
+    partial class openpracticedetections
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.3");
@@ -289,10 +292,7 @@ namespace NaeTime.Persistence.SQLite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("EntryDetectionId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ExitDetectionId")
+                    b.Property<DateTime>("FinishedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("PilotId")
@@ -301,7 +301,13 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.Property<Guid>("SessionId")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("StartedUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("TotalMilliseconds")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

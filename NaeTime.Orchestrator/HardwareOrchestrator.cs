@@ -260,22 +260,24 @@ public class HardwareOrchestrator : IHardwareOrchestrator
 
         return lanes;
     }
+    public async Task<LaneConfiguration> GetLaneConfiguration(IEnumerable<Guid> includedTimers, byte lane)
+    {
+        LaneConfiguration storedConfig = await _orchestratorPersistence.GetLaneConfiguration(includedTimers, lane);
+        LaneConfiguration defaultConfig = GetDefaultConfiguration(lane);
+        return new(lane, storedConfig.IsEnabled ?? defaultConfig.IsEnabled, storedConfig.BandId ?? defaultConfig.BandId, storedConfig.FrequencyInMhz ?? defaultConfig.FrequencyInMhz, storedConfig.Fields);
+    }
     public async Task<byte> GetTimersMaxLanes(IEnumerable<Guid> timerIds)
     {
         IEnumerable<TimerDetails> details = await _orchestratorPersistence.GetTimerDetails(timerIds);
-
         if (!details.Any())
         {
             return 0;
         }
-
         byte maxLanes = byte.MaxValue;
-
         foreach (TimerDetails timer in details)
         {
             maxLanes = Math.Min(maxLanes, GetTimerMaxLanes(timer));
         }
-
         return maxLanes;
     }
     public Task<SerialEsp32Node?> GetSerialEsp32NodeTimer(Guid timerId) =>
@@ -293,9 +295,14 @@ public class HardwareOrchestrator : IHardwareOrchestrator
     public Task<IEnumerable<TimerDetails>> GetAllTimerDetails() =>
          _orchestratorPersistence.GetAllTimerDetails();
 
-    public Task<IEnumerable<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerIds) =>
+    public Task<List<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerIds) =>
          _orchestratorPersistence.GetTimerDetails(timerIds);
 
     public Task<TimerDetails?> GetTimerDetails(Guid timerId) =>
          _orchestratorPersistence.GetTimerDetails(timerId);
+    public Task AddTimerDetection(Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
+    {
+        _distribution.Distribute(new TimerDetectionOccured(timerId, lane, hardwareTime, softwareTime, utcTime));
+        return Task.CompletedTask;
+    }
 }

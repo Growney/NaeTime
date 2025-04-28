@@ -370,17 +370,35 @@ public class HardwareOrchestratorPersistence : IHardwareOrchestratorPersistence
 
         return lapRF8Channels;
     }
-    public async Task<IEnumerable<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerIds)
+    public async Task<List<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerIds)
     {
-        List<TimerDetails> lapRF8Channels = await _dbContext.EthernetLapRF8Channels
+        Dictionary<Guid, TimerDetails> lapRF8Channels = await _dbContext.EthernetLapRF8Channels
                 .Where(x => timerIds.Contains(x.Id))
                 .Select(x => new TimerDetails(x.Id, x.Name, TimerType.EthernetLapRF8Channel))
-                .ToListAsync().ConfigureAwait(false);
-        lapRF8Channels.AddRange(await _dbContext.SerialEsp32Nodes
+                .ToDictionaryAsync(x => x.Id).ConfigureAwait(false);
+
+        Dictionary<Guid, TimerDetails> nodeTimers = await _dbContext.SerialEsp32Nodes
             .Where(x => timerIds.Contains(x.Id))
             .Select(x => new TimerDetails(x.Id, x.Name, TimerType.SerialEsp32Node))
-            .ToListAsync().ConfigureAwait(false));
-        return lapRF8Channels;
+            .ToDictionaryAsync(x => x.Id).ConfigureAwait(false);
+
+        List<TimerDetails> detailsInOrder = new();
+        foreach (Guid timerId in timerIds)
+        {
+            if (lapRF8Channels.TryGetValue(timerId, out TimerDetails? timerDetails))
+            {
+                detailsInOrder.Add(timerDetails);
+            }
+            else if (nodeTimers.TryGetValue(timerId, out timerDetails))
+            {
+                detailsInOrder.Add(timerDetails);
+            }
+            else
+            {
+                throw new KeyNotFoundException($"Timer with ID {timerId} not found.");
+            }
+        }
+        return detailsInOrder;
     }
     public async Task<TimerDetails?> GetTimerDetails(Guid timerId)
     {
@@ -493,5 +511,43 @@ public class HardwareOrchestratorPersistence : IHardwareOrchestratorPersistence
         }
 
         return laneConfigurations;
+    }
+
+    public async Task<LaneConfiguration> GetLaneConfiguration(IEnumerable<Guid> includedTimers, byte lane)
+    {
+        NaeTime.Persistence.EntityFramework.Models.SystemLaneConfiguration? systemLaneConfiguration = await _dbContext.SystemLaneConfigurations.FirstOrDefaultAsync(x => x.LaneId == lane);
+
+        IEnumerable<NaeTime.Persistence.EntityFramework.Models.TimerLaneConfiguration> timerLaneConfiguration = await _dbContext.TimerLaneConfigurations.Where(x => includedTimers.Contains(x.Id) && x.LaneId == lane).ToListAsync();
+
+        IEnumerable<NaeTime.Persistence.EntityFramework.Models.NodeLaneConfiguration> nodeLaneConfiguration = await _dbContext.NodeLaneConfigurations.Where(x => includedTimers.Contains(x.Id) && x.Lane == lane).ToListAsync();
+
+        IEnumerable<NaeTime.Persistence.EntityFramework.Models.LapRFLaneConfiguration> lapRFLaneConfiguration = await _dbContext.LapRFConfigurations.Where(x => includedTimers.Contains(x.Id) && x.Lane == lane).ToListAsync();
+
+        List<LaneConfiguration> laneConfigurations = new();
+        bool? isEnabled = systemLaneConfiguration?.IsEnabled;
+        int? frequency = systemLaneConfiguration?.Frequency;
+        byte? bandId = systemLaneConfiguration?.BandId;
+
+        List<TimerLaneConfiguredField> fields = new();
+        foreach (NaeTime.Persistence.EntityFramework.Models.TimerLaneConfiguration timerLane in timerLaneConfiguration)
+        {
+            fields.Add(new TimerLaneConfiguredField(lane, timerLane.Id, timerLane.DesiredIsEnabled, timerLane.ActualIsEnabled, TimerLaneField.IsEnabled));
+            fields.Add(new TimerLaneConfiguredField(lane, timerLane.Id, timerLane.DesiredFrequencyInMhz, timerLane.ActualFrequencyInMhz, TimerLaneField.Frequency));
+            fields.Add(new TimerLaneConfiguredField(lane, timerLane.Id, timerLane.DesiredBandId, timerLane.ActualBandId, TimerLaneField.BandId));
+        }
+
+        foreach (NaeTime.Persistence.EntityFramework.Models.NodeLaneConfiguration nodeLane in nodeLaneConfiguration)
+        {
+            fields.Add(new TimerLaneConfiguredField(lane, nodeLane.Id, nodeLane.DesiredEntryThreshold, nodeLane.ActualEntryThreshold, TimerLaneField.EntryThreshold));
+            fields.Add(new TimerLaneConfiguredField(lane, nodeLane.Id, nodeLane.DesiredExitThreshold, nodeLane.ActualExitThreshold, TimerLaneField.ExitThreshold));
+        }
+
+        foreach (NaeTime.Persistence.EntityFramework.Models.LapRFLaneConfiguration lapRFLane in lapRFLaneConfiguration)
+        {
+            fields.Add(new TimerLaneConfiguredField(lane, lapRFLane.Id, lapRFLane.DesiredGain, lapRFLane.ActualGain, TimerLaneField.Gain));
+            fields.Add(new TimerLaneConfiguredField(lane, lapRFLane.Id, lapRFLane.DesiredThreshold, lapRFLane.ActualThreshold, TimerLaneField.Threshold));
+        }
+
+        return new LaneConfiguration(lane, isEnabled, bandId, frequency, fields);
     }
 }

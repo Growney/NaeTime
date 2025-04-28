@@ -59,7 +59,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
 
         IEnumerable<Persistence.Abstractions.Management.Track> tracks = await Orchestrator.Management.GetTracks();
 
-        _tracks.AddRange(tracks.Select(x => new TrackDetails(x.Id, x.Name, x.MinimumLapTimeMilliseconds, x.MaximumLapTimeMilliseconds, x.Timers, x.AllowedLanes)));
+        _tracks.AddRange(tracks.Select(x => new TrackDetails(x.Id, x.Name, x.MinimumLapTimeMilliseconds, x.MaximumLapTimeMilliseconds, x.Timers)));
 
         IEnumerable<Persistence.Abstractions.OpenPractice.OpenPracticeSession>? sessions = await Orchestrator.OpenPractice.GetOpenPracticeSessions();
 
@@ -198,7 +198,7 @@ public partial class OpenPractice : ComponentBase, IDisposable
             return;
         }
 
-        _tracks.Add(new TrackDetails(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, track.AllowedLanes));
+        _tracks.Add(new TrackDetails(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers));
 
         await StartNewSessionOnTrack(newTrackId, 0, null);
     }

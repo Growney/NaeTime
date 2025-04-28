@@ -2,6 +2,8 @@
 using NaeTime.Announcer.Models;
 using NaeTime.OpenPractice.Messages.Events;
 using NaeTime.Orchestrator.Abstractions;
+using NaeTime.Persistence.Abstractions.Timing;
+using NaeTime.Persistence.Abstractions.Timing.Extensions;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
@@ -367,7 +369,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
     }
     private async Task<string> GetLapTimesAnnouncement(IEnumerable<Guid> lapIds)
     {
-        IEnumerable<Persistence.Abstractions.OpenPractice.Lap>? laps = await _orchestrator.OpenPractice.GetOpenPracticeLaps(lapIds);
+        IEnumerable<Lap>? laps = await _orchestrator.Timing.GetOpenPracticeLaps(lapIds);
 
         if (laps == null)
         {
@@ -376,14 +378,14 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
 
         StringBuilder builder = new();
         bool firstLap = true;
-        foreach (Persistence.Abstractions.OpenPractice.Lap lap in laps.OrderBy(x => x.FinishedUtc))
+        foreach (Lap lap in laps.OrderBy(x => x.ExitDetection?.UtcTime ?? x.EntryDetection.UtcTime))
         {
             if (!firstLap)
             {
                 builder.Append(", ");
             }
 
-            builder.Append(GetLapCallout(lap.TotalMilliseconds, 1));
+            builder.Append(GetLapCallout(IDetectionExtensions.MillisecondsBetween(lap.EntryDetection, lap.EntryDetection), 1));
             firstLap = false;
         }
 

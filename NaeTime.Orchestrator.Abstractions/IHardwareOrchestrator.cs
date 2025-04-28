@@ -5,6 +5,7 @@ namespace NaeTime.Orchestrator.Abstractions;
 
 public interface IHardwareOrchestrator
 {
+    public Task AddTimerDetection(Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime);
     public Task DisconnectTimer(Guid timerId, DateTime disconnectionTime);
     public Task ConnectTimer(Guid timerId, DateTime connectionTime);
     public Task<Guid> CreateSerialEsp32Node(string name, string comPort);
@@ -25,12 +26,13 @@ public interface IHardwareOrchestrator
 
     public LaneConfiguration GetDefaultConfiguration(byte lane);
     public Task<IEnumerable<LaneConfiguration>> GetLaneConfigurations(IEnumerable<Guid> includedTimers);
+    public Task<LaneConfiguration> GetLaneConfiguration(IEnumerable<Guid> includedTimers, byte lane);
     public Task<byte> GetTimersMaxLanes(IEnumerable<Guid> timerIds);
     public Task<SerialEsp32Node?> GetSerialEsp32NodeTimer(Guid timerId);
     public Task<EthernetLapRF8ChannelTimer?> GetEthernetLapRF8ChannelTimer(Guid timerId);
     public Task<IEnumerable<EthernetLapRF8ChannelTimer>> GetAllEthernetLapRF8ChannelTimers();
     public Task<IEnumerable<SerialEsp32Node>> GetAllSerialEsp32NodeTimers();
     public Task<IEnumerable<TimerDetails>> GetAllTimerDetails();
-    public Task<IEnumerable<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerId);
+    public Task<List<TimerDetails>> GetTimerDetails(IEnumerable<Guid> timerId);
     public Task<TimerDetails?> GetTimerDetails(Guid timerId);
 }

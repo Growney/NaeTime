@@ -18,7 +18,8 @@ internal class OpenPracticeSessionService
         existing.Status = lap.ActualStatus switch
         {
             OpenPracticeLapDisputed.OpenPracticeLapStatus.Invalid => OpenPracticeLapStatus.Invalid,
-            OpenPracticeLapDisputed.OpenPracticeLapStatus.Completed => OpenPracticeLapStatus.Completed,
+            OpenPracticeLapDisputed.OpenPracticeLapStatus.Valid => OpenPracticeLapStatus.Valid,
+            OpenPracticeLapDisputed.OpenPracticeLapStatus.Incomplete => OpenPracticeLapStatus.Incomplete,
             _ => throw new NotImplementedException()
         };
 
@@ -62,36 +63,7 @@ internal class OpenPracticeSessionService
 
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
-    public async Task When(OpenPracticeLapCompleted openPracticeLapCompleted)
-    {
-        _dbContext.OpenPracticeLaps.Add(new OpenPracticeLap
-        {
-            Id = openPracticeLapCompleted.LapId,
-            SessionId = openPracticeLapCompleted.SessionId,
-            PilotId = openPracticeLapCompleted.PilotId,
-            Status = OpenPracticeLapStatus.Completed,
-            StartedUtc = openPracticeLapCompleted.StartedUtc,
-            FinishedUtc = openPracticeLapCompleted.FinishedUtc,
-            TotalMilliseconds = openPracticeLapCompleted.TotalMilliseconds
-        });
 
-        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
-    }
-    public async Task When(OpenPracticeLapInvalidated openPracticeLapInvalidated)
-    {
-        _dbContext.OpenPracticeLaps.Add(new OpenPracticeLap
-        {
-            Id = openPracticeLapInvalidated.LapId,
-            SessionId = openPracticeLapInvalidated.SessionId,
-            PilotId = openPracticeLapInvalidated.PilotId,
-            Status = OpenPracticeLapStatus.Invalid,
-            StartedUtc = openPracticeLapInvalidated.StartedUtc,
-            FinishedUtc = openPracticeLapInvalidated.FinishedUtc,
-            TotalMilliseconds = openPracticeLapInvalidated.TotalMilliseconds
-        });
-
-        await _dbContext.SaveChangesAsync().ConfigureAwait(false);
-    }
     public async Task When(ConsecutiveLapCountTracked tracked)
     {
         OpenPracticeSession? session = await _dbContext.OpenPracticeSessions.FirstOrDefaultAsync(x => x.Id == tracked.SessionId).ConfigureAwait(false);
