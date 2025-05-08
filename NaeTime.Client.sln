@@ -79,6 +79,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Management.Persiste
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Hardware.Persistence.EntityFramework", "NaeTime.Hardware.Persistence.EntityFramework\NaeTime.Hardware.Persistence.EntityFramework.csproj", "{B1245A1B-6F7B-43C7-82F9-002642B79573}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ELRS.Backpack", "ELRS.Backpack\ELRS.Backpack.csproj", "{4CE54507-DCEC-43BA-B0FD-0BA5D4B317E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -199,6 +201,10 @@ Global
 		{B1245A1B-6F7B-43C7-82F9-002642B79573}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B1245A1B-6F7B-43C7-82F9-002642B79573}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B1245A1B-6F7B-43C7-82F9-002642B79573}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CE54507-DCEC-43BA-B0FD-0BA5D4B317E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CE54507-DCEC-43BA-B0FD-0BA5D4B317E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CE54507-DCEC-43BA-B0FD-0BA5D4B317E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CE54507-DCEC-43BA-B0FD-0BA5D4B317E9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -239,6 +245,7 @@ Global
 		{02A6A559-310C-4D4B-8261-9F6CA7C17253} = {05F53D82-3CE2-4CD2-B230-3AA29F9584EB}
 		{1F5BCC7B-CF80-4429-B1C9-B2D46172EA07} = {7D9B917E-C797-467F-A921-AB468C5EC231}
 		{B1245A1B-6F7B-43C7-82F9-002642B79573} = {63D26510-EF4F-4018-B9DA-750A17E00448}
+		{4CE54507-DCEC-43BA-B0FD-0BA5D4B317E9} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {82CDEC6F-9E00-4506-834F-C4B29556E773}
