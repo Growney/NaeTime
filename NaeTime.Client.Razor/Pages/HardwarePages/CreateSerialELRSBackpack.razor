@@ -1,0 +1,6 @@
+@page "/hardware/serialelrsbackpack/create"
+@layout WithReturn
+@if (_model != null)
+{
+    <EditableSerialELRSBackpackDetails Details="_model" OnValidSubmit="HandleValidSubmit"></EditableSerialELRSBackpackDetails>
+}

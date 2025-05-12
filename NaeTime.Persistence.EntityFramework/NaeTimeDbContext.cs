@@ -19,6 +19,7 @@ public class NaeTimeDbContext : DbContext
     public DbSet<SerialEsp32Node> SerialEsp32Nodes { get; set; }
     public DbSet<Lane> Lanes { get; set; }
     public DbSet<ActiveTimings> ActiveTimings { get; set; }
+    public DbSet<SerialELRSBackpack> SerialELRSBackpacks { get; set; }
     public NaeTimeDbContext(DbContextOptions<NaeTimeDbContext> options) : base(options)
     {
     }

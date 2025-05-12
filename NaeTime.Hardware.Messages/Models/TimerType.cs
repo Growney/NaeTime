@@ -2,5 +2,6 @@
 public enum TimerType
 {
     EthernetLapRF8Channel,
-    SerialEsp32Node
+    SerialEsp32Node,
+    SerialELRSBackpack,
 }

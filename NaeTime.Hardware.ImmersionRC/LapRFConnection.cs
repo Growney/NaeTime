@@ -50,6 +50,10 @@ internal class LapRFConnection
 
                 await runTask;
             }
+            catch (OperationCanceledException)
+            {
+
+            }
             catch
             {
                 await Task.Delay(1000).ConfigureAwait(false);

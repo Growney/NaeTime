@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Maui.LifecycleEvents;
 using NaeTime.Client.MAUI.Lib;
 using NaeTime.Hardware.Node.Esp32.Extensions;
 using NaeTime.Persistence.SQLite.Extensions;
@@ -9,17 +11,48 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        ServiceRunner? runner = null;
+
         MauiAppBuilder builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+            })
+            .ConfigureLifecycleEvents(x =>
+            {
+#if WINDOWS
+                x.AddWindows(windows =>
+                {
+                    windows.OnClosed(async (window, args) => 
+                    {
+                        try
+                        {
+                            if(runner != null)
+                            {
+                                await runner.DisposeAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Handle exception
+                        }
+                        finally
+                        {
+                        }
+                    });
+                });
+#endif
             });
 
         builder.Services.AddSyncfusionBlazor();
 
-        builder.Services.AddSingleton<ServiceRunner>();
+        builder.Services.AddSingleton<ServiceRunner>(serviceProvider =>
+        {
+            runner = new ServiceRunner(serviceProvider.GetServices<IHostedService>());
+            return runner;
+        });
 
         builder.Services.AddNaeTimeInMemoryPubSub();
 
@@ -41,6 +74,7 @@ public static class MauiProgram
         builder.Services.AddHardwareCore();
         builder.Services.AddImmersionRCHardware();
         builder.Services.AddEsp32NodeTimers();
+        builder.Services.AddBackpack();
         //Add Management Services
 
         //Add Open Practice Services

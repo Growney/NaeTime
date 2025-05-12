@@ -5,4 +5,5 @@ public class Pilot
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? CallSign { get; set; }
+    public string? BindingPhrase { get; set; }
 }

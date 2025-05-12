@@ -14,7 +14,14 @@ public class ServiceRunner : IAsyncDisposable
     {
         foreach (IHostedService service in _services)
         {
-            await service.StopAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                await service.StopAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+
+            }
         }
     }
 

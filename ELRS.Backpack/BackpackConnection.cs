@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using NaeTime.Collections;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Ports;
 using System.Text;
@@ -7,15 +8,21 @@ namespace ELRS.Backpack;
 
 internal class BackpackConnection : IBackpackConnection
 {
-    private const int _baudRate = 115200;
+    private const int _baudRate = 460800;
     private readonly string _commPort;
     private SerialPort? _serialPort;
 
-    private readonly ConcurrentQueue<(byte[]? Uid, BackpackCommand command, TaskCompletionSource<byte[]> response)> _commandQueue = new();
+    private readonly AwaitableQueue<(byte[]? Uid, BackpackCommand command, TaskCompletionSource<BackpackCommand?> response)> _commandQueue = new(1000);
+    private readonly ConcurrentDictionary<BackpackCommands, List<TaskCompletionSource<BackpackCommand?>>> _responseQueue = new();
+    private readonly IBackpackCommandSerializer _serializer;
 
-    public BackpackConnection(string commPort)
+    //Set it to something so that it doesn't match and empty or a valid Uid and gets set on the first command
+    private byte[] _currentUId = [1];
+
+    public BackpackConnection(string commPort, IBackpackCommandSerializer serializer)
     {
         _commPort = commPort ?? throw new ArgumentNullException(nameof(commPort));
+        _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
     }
 
     public Task ConnectAsync(CancellationToken token)
@@ -35,6 +42,118 @@ internal class BackpackConnection : IBackpackConnection
         return Task.CompletedTask;
     }
 
+    public async Task Run(CancellationToken token)
+    {
+        Task[] tasks = [RunCommandLoop(token), RunReceiveLoop(token)];
+
+        try
+        {
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+        }
+        finally
+        {
+            _serialPort?.Close();
+            _serialPort?.Dispose();
+            _serialPort = null;
+        }
+    }
+
+    private async Task RunCommandLoop(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
+        {
+            if (_serialPort == null)
+            {
+                break;
+            }
+
+            (byte[]? UId, BackpackCommand command, TaskCompletionSource<BackpackCommand?> response) = await _commandQueue.WaitForDequeueAsync(token).ConfigureAwait(false);
+
+            byte[] commandUId = UId ?? Array.Empty<byte>();
+            if (!_currentUId.SequenceEqual(commandUId))
+            {
+                BackpackCommand uidCommand = CreateUIdCommand(commandUId);
+                await SendCommand(uidCommand).ConfigureAwait(false);
+                _currentUId = commandUId;
+            }
+
+            if (command.ShouldAwaitResponse)
+            {
+                List<TaskCompletionSource<BackpackCommand?>> responseSources = _responseQueue.GetOrAdd(command.Function, _ => new List<TaskCompletionSource<BackpackCommand?>>());
+                responseSources.Add(response);
+            }
+
+            await SendCommand(command).ConfigureAwait(false);
+            await Task.Delay(250);
+            if (!command.ShouldAwaitResponse)
+            {
+                response.TrySetResult(null);
+            }
+        }
+    }
+    private async Task RunReceiveLoop(CancellationToken token)
+    {
+        ThrowIfNotConnected(_serialPort);
+        byte[] receiveBuffer = new byte[512];
+        while (!token.IsCancellationRequested)
+        {
+            await _serialPort.BaseStream.ReadExactlyAsync(receiveBuffer, 0, BackpackCommand.HeaderSize, cancellationToken: token).ConfigureAwait(false);
+
+            if (receiveBuffer[(int)BackpackCommand.HeaderLocation.Start] != BackpackCommand.StartingCharacter
+                || receiveBuffer[(int)BackpackCommand.HeaderLocation.Version] != BackpackCommand.Version
+                || receiveBuffer[(int)BackpackCommand.HeaderLocation.Type] != (byte)CommandType.Response)
+            {
+                continue;
+            }
+
+            byte flag = receiveBuffer[(int)BackpackCommand.HeaderLocation.Flag];
+            BackpackCommands command = (BackpackCommands)receiveBuffer[(int)BackpackCommand.HeaderLocation.Function];
+            byte[] payloadSizeBytes = receiveBuffer.AsSpan().Slice((int)BackpackCommand.HeaderLocation.PayloadSize, 2).ToArray();
+            ushort payloadSize = BitConverter.ToUInt16(payloadSizeBytes);
+
+            await _serialPort.BaseStream.ReadExactlyAsync(receiveBuffer, BackpackCommand.HeaderSize, payloadSize + BackpackCommand.CrcSize, cancellationToken: token).ConfigureAwait(false);
+
+            byte[] payload = receiveBuffer.AsSpan().Slice(BackpackCommand.HeaderSize, payloadSize).ToArray();
+            byte crc = receiveBuffer[BackpackCommand.HeaderSize + payloadSize];
+
+            //TODO Add CRC check
+
+            BackpackCommand backpackCommand = new()
+            {
+                Function = command,
+                Flag = flag,
+                Type = CommandType.Response,
+                Payload = payload,
+            };
+
+            if (_responseQueue.TryGetValue(command, out var tasksWaitingForResponse))
+            {
+                foreach (TaskCompletionSource<BackpackCommand> task in tasksWaitingForResponse)
+                {
+                    task.TrySetResult(backpackCommand);
+                }
+            }
+        }
+    }
+
+    private BackpackCommand CreateUIdCommand(byte[] uId) => new()
+    {
+        Function = BackpackCommands.SetUid,
+        Payload = [1, .. uId]
+    };
+    private BackpackCommand CreateClearUId() => new()
+    {
+        Function = BackpackCommands.SetUid,
+        Payload = [0],
+    };
+
+    private Task SendCommand(BackpackCommand command)
+    {
+        ThrowIfNotConnected(_serialPort);
+        byte[] bytes = _serializer.Serialize(command);
+        return _serialPort.BaseStream.WriteAsync(bytes, 0, bytes.Length);
+    }
+
     private static void ThrowIfNotConnected([NotNull] SerialPort? connection)
     {
         if (connection is null)
@@ -42,17 +161,17 @@ internal class BackpackConnection : IBackpackConnection
             throw new InvalidOperationException("Serial port not connected");
         }
     }
-    private Task<byte[]> SendWithResult(byte[]? UId, BackpackCommand command)
+    private Task<BackpackCommand> SendWithResult(byte[]? UId, BackpackCommand command)
     {
         ThrowIfNotConnected(_serialPort);
-        var completionSource = new TaskCompletionSource<byte[]>();
+        var completionSource = new TaskCompletionSource<BackpackCommand>();
         _commandQueue.Enqueue((UId, command, completionSource));
         return completionSource.Task;
     }
     private Task Send(byte[]? UId, BackpackCommand command)
     {
         ThrowIfNotConnected(_serialPort);
-        var completionSource = new TaskCompletionSource<byte[]>();
+        TaskCompletionSource<BackpackCommand> completionSource = new();
         _commandQueue.Enqueue((UId, command, completionSource));
         return completionSource.Task;
     }
@@ -67,7 +186,8 @@ internal class BackpackConnection : IBackpackConnection
             ShouldAwaitResponse = true,
         };
 
-        byte[] responsePayload = await SendWithResult(UId, command);
+        BackpackCommand responseCommand = await SendWithResult(UId, command);
+        byte[] responsePayload = responseCommand.Payload;
 
         if (responsePayload.Length != 1)
         {
@@ -76,7 +196,7 @@ internal class BackpackConnection : IBackpackConnection
 
         return responsePayload[0];
     }
-    public Task<ushort> GetBatteryVoltage(byte[] UId)
+    public async Task<ushort> GetBatteryVoltage(byte[] UId)
     {
         ThrowIfNotConnected(_serialPort);
         BackpackCommand command = new()
@@ -85,14 +205,16 @@ internal class BackpackConnection : IBackpackConnection
             Type = CommandType.Request,
             ShouldAwaitResponse = true,
         };
-        byte[] responsePayload = SendWithResult(UId, command).Result;
+
+        BackpackCommand responseCommand = await SendWithResult(UId, command);
+        byte[] responsePayload = responseCommand.Payload;
 
         if (responsePayload.Length != 2)
         {
             throw new InvalidOperationException("Invalid response length");
         }
 
-        return Task.FromResult(BitConverter.ToUInt16(responsePayload));
+        return BitConverter.ToUInt16(responsePayload);
     }
     public async Task<ushort> GetFrequency(byte[] UId)
     {
@@ -104,7 +226,8 @@ internal class BackpackConnection : IBackpackConnection
             ShouldAwaitResponse = true,
         };
 
-        byte[] responsePayload = await SendWithResult(UId, command);
+        BackpackCommand responseCommand = await SendWithResult(UId, command);
+        byte[] responsePayload = responseCommand.Payload;
 
         if (responsePayload.Length != 2)
         {
@@ -122,7 +245,10 @@ internal class BackpackConnection : IBackpackConnection
             Type = CommandType.Request,
             ShouldAwaitResponse = true,
         };
-        byte[] responsePayload = await SendWithResult(UId, command);
+
+        BackpackCommand responseCommand = await SendWithResult(UId, command);
+        byte[] responsePayload = responseCommand.Payload;
+
         if (responsePayload.Length != 1)
         {
             throw new InvalidOperationException("Invalid response length");
@@ -139,7 +265,10 @@ internal class BackpackConnection : IBackpackConnection
             Type = CommandType.Request,
             ShouldAwaitResponse = true,
         };
-        byte[] responsePayload = await SendWithResult(UId, command);
+
+        BackpackCommand responseCommand = await SendWithResult(UId, command);
+        byte[] responsePayload = responseCommand.Payload;
+
         if (responsePayload.Length != 1)
         {
             throw new InvalidOperationException("Invalid response length");
@@ -156,7 +285,9 @@ internal class BackpackConnection : IBackpackConnection
             Type = CommandType.Request,
             ShouldAwaitResponse = true,
         };
-        byte[] responsePayload = await SendWithResult(null, command);
+
+        BackpackCommand responseCommand = await SendWithResult(null, command);
+        byte[] responsePayload = responseCommand.Payload;
         if (responsePayload.Length != 7)
         {
             throw new InvalidOperationException("Invalid response length");
@@ -177,7 +308,9 @@ internal class BackpackConnection : IBackpackConnection
             Type = CommandType.Request,
             ShouldAwaitResponse = true,
         };
-        byte[] responsePayload = await SendWithResult(null, command);
+
+        BackpackCommand responseCommand = await SendWithResult(null, command);
+        byte[] responsePayload = responseCommand.Payload;
 
         if (responsePayload.Length != 2)
         {
@@ -195,7 +328,10 @@ internal class BackpackConnection : IBackpackConnection
             Type = CommandType.Request,
             ShouldAwaitResponse = true,
         };
-        byte[] responsePayload = await SendWithResult(UId, command);
+
+        BackpackCommand responseCommand = await SendWithResult(UId, command);
+        byte[] responsePayload = responseCommand.Payload;
+
         if (responsePayload.Length != 1)
         {
             throw new InvalidOperationException("Invalid response length");
@@ -212,7 +348,10 @@ internal class BackpackConnection : IBackpackConnection
             Type = CommandType.Request,
             ShouldAwaitResponse = true,
         };
-        byte[] responsePayload = await SendWithResult(UId, command);
+
+        BackpackCommand responseCommand = await SendWithResult(UId, command);
+        byte[] responsePayload = responseCommand.Payload;
+
         if (responsePayload.Length != 2)
         {
             throw new InvalidOperationException("Invalid response length");
@@ -294,17 +433,22 @@ internal class BackpackConnection : IBackpackConnection
     }
     private Task SendOSDCommand(byte[] UId, DisplayportCommand command, string? message, OSDPresentation presentation, byte row, byte column)
     {
+        byte[] payload = command switch
+        {
+            DisplayportCommand.WriteString => [(byte)command, (byte)row, (byte)column, (byte)presentation, .. Encoding.ASCII.GetBytes(message ?? string.Empty)],
+            _ => [(byte)command]
+        };
+
         ThrowIfNotConnected(_serialPort);
         BackpackCommand backpackCommand = new()
         {
             Function = BackpackCommands.SetOSDElement,
             Type = CommandType.Request,
-            ShouldAwaitResponse = true,
-            Payload = [(byte)command, (byte)row, (byte)column, (byte)presentation, .. Encoding.ASCII.GetBytes(message ?? string.Empty)],
+            ShouldAwaitResponse = false,
+            Payload = payload,
         };
         return Send(UId, backpackCommand);
     }
-
     public async Task SetOSDElement(byte[] UId, string message, OSDPresentation presentation, byte row, byte column, TimeSpan duration)
     {
         await SendOSDCommand(UId, DisplayportCommand.ClearScreen, null, OSDPresentation.None, row, column);

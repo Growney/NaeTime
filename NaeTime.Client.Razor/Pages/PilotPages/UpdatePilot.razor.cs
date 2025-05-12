@@ -36,6 +36,7 @@ public partial class UpdatePilot : ComponentBase
             FirstName = response.FirstName,
             LastName = response.LastName,
             CallSign = response.CallSign,
+            BindingPhrase = response.BindingPhrase
         };
 
         await base.OnInitializedAsync();
@@ -48,7 +49,7 @@ public partial class UpdatePilot : ComponentBase
             return;
         }
 
-        await EventClient.PublishAsync(new PilotDetailsChanged(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
+        await EventClient.PublishAsync(new PilotDetailsChanged(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign, pilot.BindingPhrase));
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/pilot/list");
     }

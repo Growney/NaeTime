@@ -28,6 +28,7 @@ public partial class HardwareList : ComponentBase
             {
                 Hardware.Messages.Models.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
                 Hardware.Messages.Models.TimerType.SerialEsp32Node => TimerType.SerialEsp32Node,
+                Hardware.Messages.Models.TimerType.SerialELRSBackpack => TimerType.SerialELRSBackpack,
                 _ => throw new NotImplementedException()
             }, x.MaxLanes)));
 
@@ -43,6 +44,9 @@ public partial class HardwareList : ComponentBase
             case TimerType.SerialEsp32Node:
                 NavigationManager.NavigateTo($"/hardware/serialesp32node/update/{details.Id}");
                 break;
+            case TimerType.SerialELRSBackpack:
+                NavigationManager.NavigateTo($"/hardware/serialelrsbackpack/update/{details.Id}");
+                break;
             default:
                 break;
         }
@@ -54,5 +58,9 @@ public partial class HardwareList : ComponentBase
     private void NavigateToCreateSerialEsp32Node()
     {
         NavigationManager.NavigateTo("/hardware/serialesp32node/create");
+    }
+    private void NavigateToCreateSerialELRSBackpack()
+    {
+        NavigationManager.NavigateTo("/hardware/serialelrsbackpack/create");
     }
 }

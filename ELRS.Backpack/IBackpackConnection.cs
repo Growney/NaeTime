@@ -4,6 +4,8 @@ public interface IBackpackConnection
 {
     public Task ConnectAsync(CancellationToken token);
 
+    public Task Run(CancellationToken token);
+
     public Task<byte> GetBandChannelIndex(byte[] UId);
     public Task SetBandChannelIndex(byte[] UId, byte channelIndex);
     public Task<ushort> GetFrequency(byte[] UId);

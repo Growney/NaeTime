@@ -20,20 +20,27 @@ public class Announcer : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false);
-            foreach (IAnnouncmentProvider provider in _providers)
+            try
             {
-                //Doing it this way allows for the first provider to have priority, BUT could end up with a provider blocking the others constantly if they are constantly returning announcements may need to look at a better way to handle this.
-                Announcement? nextAnnouncement;
-                do
-                {
-                    nextAnnouncement = await provider.GetNextAnnouncement();
-                    if (nextAnnouncement != null)
-                    {
-                        await Announce(nextAnnouncement);
-                    }
 
-                } while (nextAnnouncement != null);
+                await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false);
+                foreach (IAnnouncmentProvider provider in _providers)
+                {
+                    //Doing it this way allows for the first provider to have priority, BUT could end up with a provider blocking the others constantly if they are constantly returning announcements may need to look at a better way to handle this.
+                    Announcement? nextAnnouncement;
+                    do
+                    {
+                        nextAnnouncement = await provider.GetNextAnnouncement();
+                        if (nextAnnouncement != null)
+                        {
+                            await Announce(nextAnnouncement);
+                        }
+
+                    } while (nextAnnouncement != null);
+                }
+            }
+            catch (OperationCanceledException)
+            {
             }
         }
     }

@@ -240,6 +240,9 @@ namespace NaeTime.Persistence.SQLite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("BindingPhrase")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("CallSign")
                         .HasColumnType("TEXT");
 
@@ -252,6 +255,24 @@ namespace NaeTime.Persistence.SQLite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Pilots");
+                });
+
+            modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.SerialELRSBackpack", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Port")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SerialELRSBackpacks");
                 });
 
             modelBuilder.Entity("NaeTime.Persistence.EntityFramework.Models.SerialEsp32Node", b =>

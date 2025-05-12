@@ -15,7 +15,8 @@ internal class PilotService
             Id = pilot.PilotId,
             FirstName = pilot.FirstName,
             LastName = pilot.LastName,
-            CallSign = pilot.CallSign
+            CallSign = pilot.CallSign,
+            BindingPhrase = pilot.BindingPhrase,
         });
         await _dbContext.SaveChangesAsync();
     }
@@ -30,13 +31,14 @@ internal class PilotService
         existing.FirstName = pilot.FirstName;
         existing.LastName = pilot.LastName;
         existing.CallSign = pilot.CallSign;
+        existing.BindingPhrase = pilot.BindingPhrase;
 
         await _dbContext.SaveChangesAsync().ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Messages.Models.Pilot>> GetPilots()
     {
-        List<Messages.Models.Pilot> pilots = await _dbContext.Pilots.Select(x => new Messages.Models.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign))
+        List<Messages.Models.Pilot> pilots = await _dbContext.Pilots.Select(x => new Messages.Models.Pilot(x.Id, x.FirstName, x.LastName, x.CallSign, x.BindingPhrase))
             .ToListAsync().ConfigureAwait(false);
 
         return pilots;
@@ -46,6 +48,6 @@ internal class PilotService
     {
         Pilot? pilot = await _dbContext.Pilots.FirstOrDefaultAsync(x => x.Id == pilotId).ConfigureAwait(false);
 
-        return pilot == null ? null : new Messages.Models.Pilot(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign);
+        return pilot == null ? null : new Messages.Models.Pilot(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign, pilot.BindingPhrase);
     }
 }
