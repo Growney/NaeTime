@@ -62,33 +62,46 @@ internal class BackpackConnection : IBackpackConnection
     {
         while (!token.IsCancellationRequested)
         {
-            if (_serialPort == null)
+            try
             {
-                break;
+                if (_serialPort == null)
+                {
+                    break;
+                }
+
+                (byte[]? UId, BackpackCommand command, TaskCompletionSource<BackpackCommand?> response) = await _commandQueue.WaitForDequeueAsync(token).ConfigureAwait(false);
+
+                if (command == null)
+                {
+                    continue;
+                }
+
+                byte[] commandUId = UId ?? Array.Empty<byte>();
+                if (!_currentUId.SequenceEqual(commandUId))
+                {
+                    BackpackCommand uidCommand = CreateUIdCommand(commandUId);
+                    await SendCommand(uidCommand).ConfigureAwait(false);
+                    _currentUId = commandUId;
+                }
+
+                if (command.ShouldAwaitResponse)
+                {
+                    List<TaskCompletionSource<BackpackCommand?>> responseSources = _responseQueue.GetOrAdd(command.Function, _ => new List<TaskCompletionSource<BackpackCommand?>>());
+                    responseSources.Add(response);
+                }
+
+                await SendCommand(command).ConfigureAwait(false);
+                if (!command.ShouldAwaitResponse)
+                {
+                    response.TrySetResult(null);
+                }
+                await Task.Delay(250);
+            }
+            finally
+            {
+
             }
 
-            (byte[]? UId, BackpackCommand command, TaskCompletionSource<BackpackCommand?> response) = await _commandQueue.WaitForDequeueAsync(token).ConfigureAwait(false);
-
-            byte[] commandUId = UId ?? Array.Empty<byte>();
-            if (!_currentUId.SequenceEqual(commandUId))
-            {
-                BackpackCommand uidCommand = CreateUIdCommand(commandUId);
-                await SendCommand(uidCommand).ConfigureAwait(false);
-                _currentUId = commandUId;
-            }
-
-            if (command.ShouldAwaitResponse)
-            {
-                List<TaskCompletionSource<BackpackCommand?>> responseSources = _responseQueue.GetOrAdd(command.Function, _ => new List<TaskCompletionSource<BackpackCommand?>>());
-                responseSources.Add(response);
-            }
-
-            await SendCommand(command).ConfigureAwait(false);
-            await Task.Delay(250);
-            if (!command.ShouldAwaitResponse)
-            {
-                response.TrySetResult(null);
-            }
         }
     }
     private async Task RunReceiveLoop(CancellationToken token)
