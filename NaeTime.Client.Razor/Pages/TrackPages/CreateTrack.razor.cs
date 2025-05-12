@@ -34,7 +34,7 @@ public partial class CreateTrack
             return;
         }
 
-        _timers.AddRange(timersResponse.Select(x => new TimerDetails(x.Id, x.Name,
+        _timers.AddRange(timersResponse.Where(x => x.Type != Hardware.Messages.Models.TimerType.SerialELRSBackpack).Select(x => new TimerDetails(x.Id, x.Name,
             x.Type switch
             {
                 Query.Abstractions.Models.DetectorType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,

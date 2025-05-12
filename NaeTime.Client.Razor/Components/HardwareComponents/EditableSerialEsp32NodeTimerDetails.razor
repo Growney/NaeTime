@@ -8,14 +8,14 @@
     <Microsoft.AspNetCore.Components.Forms.EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit">
         <DataAnnotationsValidator />
         <div>
-
+            <label>Name</label>
             <div>
                 <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.Name" />
                 <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.Name)" />
             </div>
         </div>
         <div class="mt-2">
-            <label>Ip Address</label>
+            <label>Serial Port</label>
             <div>
                 <Microsoft.AspNetCore.Components.Forms.InputText @bind-Value="Details.Port" />
                 <Microsoft.AspNetCore.Components.Forms.ValidationMessage For="@(() => Details.Port)" />

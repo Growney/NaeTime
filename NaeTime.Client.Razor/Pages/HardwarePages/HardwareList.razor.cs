@@ -39,6 +39,9 @@ public partial class HardwareList : ComponentBase
             case TimerType.SerialEsp32Node:
                 NavigationManager.NavigateTo($"/hardware/serialesp32node/update/{details.Id}");
                 break;
+            case TimerType.SerialELRSBackpack:
+                NavigationManager.NavigateTo($"/hardware/serialelrsbackpack/update/{details.Id}");
+                break;
             default:
                 break;
         }
@@ -50,5 +53,9 @@ public partial class HardwareList : ComponentBase
     private void NavigateToCreateSerialEsp32Node()
     {
         NavigationManager.NavigateTo("/hardware/serialesp32node/create");
+    }
+    private void NavigateToCreateSerialELRSBackpack()
+    {
+        NavigationManager.NavigateTo("/hardware/serialelrsbackpack/create");
     }
 }

@@ -9,7 +9,22 @@ internal class HardwareService
     {
         _dbcontext = dbcontext;
     }
+    public async Task When(SerialELRSBackpackConfigured configuredEvent)
+    {
+        SerialELRSBackpack? existingHardware = await _dbcontext.SerialELRSBackpacks.FirstOrDefaultAsync(x => x.Id == configuredEvent.Id).ConfigureAwait(false);
+        if (existingHardware == null)
+        {
+            existingHardware = new SerialELRSBackpack
+            {
+                Id = configuredEvent.Id,
+            };
+            _dbcontext.SerialELRSBackpacks.Add(existingHardware);
+        }
 
+        existingHardware.Name = configuredEvent.Name;
+        existingHardware.Port = configuredEvent.Port;
+        await _dbcontext.SaveChangesAsync().ConfigureAwait(false);
+    }
     public async Task When(SerialEsp32NodeConfigured configuredEvent)
     {
         SerialEsp32Node? existingTimer = await _dbcontext.SerialEsp32Nodes.FirstOrDefaultAsync(x => x.Id == configuredEvent.TimerId).ConfigureAwait(false);
@@ -90,6 +105,15 @@ internal class HardwareService
         return serialNodes;
     }
 
+    public async Task<IEnumerable<Messages.Models.SerialELRSBackpack>> GetAllELRSBackpacks()
+    {
+        List<Messages.Models.SerialELRSBackpack> backpacks = await _dbcontext.SerialELRSBackpacks
+            .Select(x => new Messages.Models.SerialELRSBackpack(x.Id, x.Name, x.Port))
+            .ToListAsync().ConfigureAwait(false);
+        return backpacks;
+    }
+
+
     public async Task<IEnumerable<Messages.Models.TimerDetails>> GetAllTimerDetails()
     {
         List<Messages.Models.TimerDetails> lapRF8Channels = await _dbcontext.EthernetLapRF8Channels
@@ -100,6 +124,9 @@ internal class HardwareService
             .Select(x => new Messages.Models.TimerDetails(x.Id, x.Name, Messages.Models.TimerType.SerialEsp32Node, 6))
             .ToListAsync().ConfigureAwait(false));
 
+        lapRF8Channels.AddRange(await _dbcontext.SerialELRSBackpacks
+            .Select(x => new Messages.Models.TimerDetails(x.Id, x.Name, Messages.Models.TimerType.SerialELRSBackpack, 0))
+            .ToListAsync().ConfigureAwait(false));
         //when there are more timer types will need to add them all to a larger list
 
         return lapRF8Channels;
@@ -123,5 +150,11 @@ internal class HardwareService
         SerialEsp32Node? timer = await _dbcontext.SerialEsp32Nodes.FirstOrDefaultAsync(x => x.Id == timerId).ConfigureAwait(false);
 
         return timer == null ? null : new Messages.Models.SerialEsp32Node(timer.Id, timer.Name, timer.Port);
+    }
+    public async Task<Messages.Models.SerialELRSBackpack?> GetSerialELRSBackpack(Guid timerId)
+    {
+        SerialELRSBackpack? device = await _dbcontext.SerialELRSBackpacks.FirstOrDefaultAsync(x => x.Id == timerId).ConfigureAwait(false);
+
+        return device == null ? null : new Messages.Models.SerialELRSBackpack(device.Id, device.Name, device.Port);
     }
 }
