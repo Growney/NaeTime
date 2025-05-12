@@ -83,6 +83,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ELRS.Backpack", "ELRS.Backp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Hardware.ELRS", "NaeTime.Hardware.ELRS\NaeTime.Hardware.ELRS.csproj", "{02378053-0223-4B8E-827A-6131968210A3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackpackTester", "BackpackTester\BackpackTester.csproj", "{037A10B9-A02F-C8B1-AE76-98DB631EE8ED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -211,6 +213,10 @@ Global
 		{02378053-0223-4B8E-827A-6131968210A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02378053-0223-4B8E-827A-6131968210A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02378053-0223-4B8E-827A-6131968210A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{037A10B9-A02F-C8B1-AE76-98DB631EE8ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{037A10B9-A02F-C8B1-AE76-98DB631EE8ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{037A10B9-A02F-C8B1-AE76-98DB631EE8ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{037A10B9-A02F-C8B1-AE76-98DB631EE8ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
