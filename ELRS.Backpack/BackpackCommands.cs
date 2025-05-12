@@ -1,6 +1,6 @@
 ﻿namespace ELRS.Backpack;
 
-internal enum BackpackCommands
+public enum BackpackCommands
 {
     GetBandChannelIndex = 0x0300,
     SetBandChannelIndex = 0x0301,

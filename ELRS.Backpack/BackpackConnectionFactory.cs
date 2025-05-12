@@ -1,7 +1,7 @@
 ﻿
 namespace ELRS.Backpack;
 
-internal class BackpackConnectionFactory : IBackpackConnectionFactory
+public class BackpackConnectionFactory : IBackpackConnectionFactory
 {
     private readonly IBackpackCommandSerializer _commandSerializer;
 
