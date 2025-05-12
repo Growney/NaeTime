@@ -1,6 +1,6 @@
 ﻿namespace ELRS.Backpack;
 
-internal class BackpackCommand
+public class BackpackCommand
 {
     public enum HeaderLocation : byte
     {

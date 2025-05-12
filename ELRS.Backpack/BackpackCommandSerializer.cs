@@ -1,6 +1,6 @@
 ﻿namespace ELRS.Backpack;
 
-internal class BackpackCommandSerializer : IBackpackCommandSerializer
+public class BackpackCommandSerializer : IBackpackCommandSerializer
 {
     public byte[] Serialize(BackpackCommand command)
     {
