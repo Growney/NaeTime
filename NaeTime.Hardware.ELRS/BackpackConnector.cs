@@ -60,7 +60,6 @@ public class BackpackConnector
         {
             throw new InvalidOperationException("Not connected");
         }
-        string version = await _connection.GetVersion();
-        await _connection.SetOSDElement(uid, ((int)Math.Round(lap.TotalSeconds, 2)).ToString(), OSDPresentation.Info, 3, 0, TimeSpan.FromSeconds(5));
+        _ = _connection.SetOSDElement(uid, $"Lap:{Math.Round(lap.TotalSeconds, 2)}", OSDPresentation.None, 0, 20, TimeSpan.FromSeconds(5));
     }
 }

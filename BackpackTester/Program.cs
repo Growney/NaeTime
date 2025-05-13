@@ -40,9 +40,11 @@ byte[] uId = HashPhrase("bindphrasehere");
 
 Console.WriteLine("Setting OSD");
 await connection.SetOSDElement(uId,"HELLO", OSDPresentation.Info, 3,0,TimeSpan.FromSeconds(5));
+await connection.SetOSDElement(uId, "31.14", OSDPresentation.None, 3, 0, TimeSpan.FromSeconds(5));
 
 Console.WriteLine("Stopping connection");
 cancellationTokenSource.Cancel();
 
 Console.WriteLine("Waiting For Stop");
 await running;
+Console.WriteLine("Stopped");

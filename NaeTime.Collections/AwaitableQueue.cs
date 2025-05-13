@@ -39,4 +39,21 @@ public class AwaitableQueue<T>(int maxSize) : IDisposable
 
         return _queue.TryDequeue(out T? item) ? item : default;
     }
+
+    public async Task<T[]> WaitForDequeueAsync(int count, CancellationToken cancellationToken = default)
+    {
+        T[] items = new T[count];
+        int insertIndex = 0;
+        while (insertIndex < count && !cancellationToken.IsCancellationRequested)
+        {
+            T? item = await WaitForDequeueAsync(cancellationToken);
+            if (item != null)
+            {
+                items[insertIndex] = item;
+                insertIndex++;
+            }
+        }
+
+        return items.ToArray();
+    }
 }
