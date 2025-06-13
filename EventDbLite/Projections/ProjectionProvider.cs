@@ -1,0 +1,40 @@
+﻿using EventDbLite.Abstractions;
+using EventDbLite.Streams;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace EventDbLite.Projections;
+
+public class ProjectionProvider : IProjectionProvider
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IEventStreamConnection _connection;
+    private readonly IEventSerializer _eventSerializer;
+    private readonly IHandlerProvider _handlerProvider;
+
+    public ProjectionProvider(IServiceProvider serviceProvider, IEventStreamConnection connection, IEventSerializer eventSerializer, IHandlerProvider aggregateHandlerProvider)
+    {
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
+        _handlerProvider = aggregateHandlerProvider ?? throw new ArgumentNullException(nameof(aggregateHandlerProvider));
+    }
+
+    public async Task<T> Load<T>(string? streamName = null) where T : Projection
+    {
+        T projection = ActivatorUtilities.CreateInstance<T>(_serviceProvider);
+
+        projection.EventSerializer = _eventSerializer;
+        projection.HandlerProvider = _handlerProvider;
+
+        IAsyncEnumerable<StreamEvent> streamEvents = (streamName is null)
+            ? _connection.ReadAllStreamEvents(StreamDirection.Forward, StreamPosition.Beginning)
+            : _connection.ReadStreamEvents(streamName, StreamDirection.Forward, StreamPosition.Beginning);
+
+        await foreach (StreamEvent streamEvent in streamEvents)
+        {
+            projection.Raise(streamEvent);
+        }
+
+        return projection;
+    }
+}
