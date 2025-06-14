@@ -4,6 +4,7 @@ using EventDbLite.Connections;
 using EventDbLite.Events;
 using EventDbLite.Handlers;
 using EventDbLite.Projections;
+using EventDbLite.Reactions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventDbLite.Extensions;
@@ -22,6 +23,12 @@ public static class IServiceCollectionExtensions
         services.AddScoped<IEventStreamConnection, EventStreamConnection>();
         services.AddScoped<IAggregateRepository, AggregateRepository>();
         services.AddScoped<IProjectionProvider, ProjectionProvider>();
+        services.AddScoped<IReactionProvider>(provider =>
+        {
+            IStreamSubscription streamSubscription = provider.GetRequiredService<IStreamSubscription>();
+            IEventSerializer eventSerializer = provider.GetRequiredService<IEventSerializer>();
+            return new ReactionProvider(streamSubscription, eventSerializer);
+        });
 
         services.AddHostedService<LiveProjectionService>();
         return services;
