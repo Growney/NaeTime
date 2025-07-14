@@ -1,5 +1,4 @@
 ﻿using EventDbLite.Abstractions;
-using EventDbLite.Events;
 using System.Collections.Concurrent;
 using System.Reflection;
 

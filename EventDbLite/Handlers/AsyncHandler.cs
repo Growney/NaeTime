@@ -1,13 +1,13 @@
-﻿namespace EventDbLite.Events;
+﻿namespace EventDbLite.Handlers;
 
-public class Handler
+public class AsyncHandler
 {
-    public Handler(Action<object> action, Type targetType)
+    public AsyncHandler(Func<object, Task> action, Type targetType)
     {
         Action = action ?? throw new ArgumentNullException(nameof(action));
         TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
     }
 
-    public Action<object> Action { get; }
+    public Func<object, Task> Action { get; }
     public Type TargetType { get; }
 }

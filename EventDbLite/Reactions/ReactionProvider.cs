@@ -142,6 +142,15 @@ public class ReactionProvider : IReactionProvider, IDisposable
 
     public IDisposable On<T>(Func<T, Task> handler)
     {
+        Guid handlerId = Guid.NewGuid();
+
+        Type targetType = typeof(T);
+
+        string identifier = _eventSerializer.GetIdentifier(targetType);
+
+        ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>> handlerBag = _handlers.GetOrAdd(identifier, _ => new ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>>());
+        ConcurrentDictionary<Guid, ReactionHandler> handlers = handlerBag.GetOrAdd(targetType, _ => new ConcurrentDictionary<Guid, ReactionHandler>());
+
         Task Handler(object obj)
         {
             if (obj is T typedObj)
@@ -150,16 +159,6 @@ public class ReactionProvider : IReactionProvider, IDisposable
             }
             return Task.CompletedTask;
         }
-
-        Guid handlerId = Guid.NewGuid();
-
-        Type targetType = typeof(T);
-
-        string identifier = _eventSerializer.GetIdentifier(targetType);
-
-        var handlerBag = _handlers.GetOrAdd(identifier, _ => new ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>>());
-        var handlers = handlerBag.GetOrAdd(targetType, _ => new ConcurrentDictionary<Guid, ReactionHandler>());
-
         void OnDispose()
         {
             handlers.TryRemove(handlerId, out _);

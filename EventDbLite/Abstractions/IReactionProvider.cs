@@ -1,8 +1,7 @@
-﻿namespace EventDbLite.Abstractions
+﻿namespace EventDbLite.Abstractions;
+
+public interface IReactionProvider
 {
-    public interface IReactionProvider
-    {
-        IDisposable On<T>(Func<T, Task> handler);
-        IAsyncEnumerable<T> GetEvents<T>(CancellationToken cancellationToken);
-    }
+    IDisposable On<T>(Func<T, Task> handler);
+    IAsyncEnumerable<T> GetEvents<T>(CancellationToken cancellationToken);
 }

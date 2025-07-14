@@ -5,6 +5,7 @@ using EventDbLite.Events;
 using EventDbLite.Handlers;
 using EventDbLite.Projections;
 using EventDbLite.Reactions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventDbLite.Extensions;
@@ -14,6 +15,13 @@ public static class IServiceCollectionExtensions
 
     public static IServiceCollection AddEventDbLite(this IServiceCollection services)
     {
+        services.AddDbContext<EventDbLiteContext>(options =>
+        {
+            options.UseSqlite("Data Source=eventdblite.db;Cache=Shared;Pooling=true;Max Pool Size=100;")
+                   .EnableSensitiveDataLogging()
+                   .EnableDetailedErrors();
+        });
+
         services.AddSingleton<IEventStoreLite, EventStoreLite>();
 
         services.AddSingleton<IEventSerializer, JsonEventSerializer>();
