@@ -37,4 +37,19 @@ public class ProjectionProvider : IProjectionProvider
 
         return projection;
     }
+
+    public async Task Refresh<T>(T projection) where T : Projection
+    {
+        projection.EventSerializer = _eventSerializer;
+        projection.HandlerProvider = _handlerProvider;
+
+        IAsyncEnumerable<StreamEvent> streamEvents = (projection.StreamName is null)
+            ? _connection.ReadAllStreamEvents(StreamDirection.Forward, StreamPosition.WithVersion(projection.GlobalOrdinal))
+            : _connection.ReadStreamEvents(projection.StreamName, StreamDirection.Forward, StreamPosition.WithVersion(projection.GlobalOrdinal));
+
+        await foreach (StreamEvent streamEvent in streamEvents)
+        {
+            projection.Raise(streamEvent);
+        }
+    }
 }

@@ -9,9 +9,16 @@ public class Projection
 {
     internal IEventSerializer? EventSerializer { get; set; }
     internal IHandlerProvider? HandlerProvider { get; set; }
+    internal string? StreamName { get; set; }
+    public long GlobalOrdinal { get; private set; }
 
     internal void Raise(StreamEvent streamEvent)
     {
+        if (streamEvent.GlobalOrdinal <= GlobalOrdinal)
+        {
+            return; // Ignore events that are not newer than the current state
+        }
+
         if (EventSerializer is null)
         {
             throw new InvalidOperationException("Event serializer must not be null");
@@ -34,5 +41,7 @@ public class Projection
             ?? throw new InvalidOperationException($"Failed to deserialize event payload for identifier '{metadata.Identifier}'");
 
         handler.Action(payload);
+
+        GlobalOrdinal = streamEvent.GlobalOrdinal;
     }
 }

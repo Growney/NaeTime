@@ -15,10 +15,10 @@ internal class HandlerProvider : IHandlerProvider
         _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
     }
 
-    private Dictionary<string, (Type targetType, Action<object, object> handler)> RegisterAggregateRoot(Type aggregateRootType)
+    private Dictionary<string, (Type targetType, Action<object, object> handler)> RegisterHandler(Type aggregateRootType)
     {
         Dictionary<string, (Type targetType, Action<object, object> handler)> handlerMethods = new();
-        foreach (MethodInfo method in aggregateRootType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+        foreach (MethodInfo method in aggregateRootType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
         {
             if (method.Name != "When")
             {
@@ -68,7 +68,7 @@ internal class HandlerProvider : IHandlerProvider
     {
         Type handlerType = handler.GetType();
 
-        Dictionary<string, (Type targetType, Action<object, object> handler)> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterAggregateRoot);
+        Dictionary<string, (Type targetType, Action<object, object> handler)> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterHandler);
 
         handlerMethods.TryGetValue(identifier, out (Type targetType, Action<object, object> handler) method);
 

@@ -197,5 +197,4 @@ public class ReactionProvider : IReactionProvider, IDisposable
             buffers.TryRemove(waiterId, out _);
         }
     }
-
 }

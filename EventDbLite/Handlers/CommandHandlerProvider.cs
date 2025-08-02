@@ -15,7 +15,7 @@ public class CommandHandlerProvider : ICommandHandlerProvider
         _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
     }
 
-    private Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)> RegisterAggregateRoot(Type commandControllerType)
+    private Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)> RegisterHandler(Type commandControllerType)
     {
         Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)> handlerMethods = new();
         foreach (MethodInfo method in commandControllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
@@ -86,7 +86,7 @@ public class CommandHandlerProvider : ICommandHandlerProvider
     {
         Type handlerType = handler.GetType();
 
-        Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterAggregateRoot);
+        Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterHandler);
 
         handlerMethods.TryGetValue(identifier, out (Type targetType, Func<object, object, Task<bool>> handler) method);
 
