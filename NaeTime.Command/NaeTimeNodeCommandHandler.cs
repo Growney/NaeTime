@@ -12,9 +12,9 @@ public class NaeTimeNodeCommandHandler : INaeTimeNodeCommandHandler
         _repository = repository;
     }
 
-    public async Task ConfigureSerialEsp32Node(Guid id, string name, string port)
+    public async Task ConfigureSerialEsp32Node(Guid id, string name, string port, byte lanes)
     {
-        NaeTimeNode aggregate = new NaeTimeNode(id, name, port);
+        NaeTimeNode aggregate = _repository.CreateNew(() => new NaeTimeNode(id, name, port, lanes));
         await _repository.Save(aggregate);
     }
 

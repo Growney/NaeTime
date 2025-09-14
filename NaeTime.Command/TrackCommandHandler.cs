@@ -31,7 +31,7 @@ public class TrackCommandHandler : ITrackCommandHandler
     {
         await ThrowIfDetectorDoesNotExist(detectors);
 
-        Track track = new(id, detectors, name);
+        Track track = _repository.CreateNew(() => new Track(id, detectors, name));
 
         await _repository.Save(track);
     }

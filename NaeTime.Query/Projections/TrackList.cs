@@ -1,4 +1,5 @@
 using NaeTime.Query.Abstractions;
+using NaeTime.Query.Abstractions.Models;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
@@ -23,4 +24,20 @@ public class TrackList
         _hardwareQueryHandler = hardwareQueryHandler;
     }
 
+    public async Task<Track?> GetTrack(Guid id)
+    {
+        _tracks.TryGetValue(id, out var listTrack);
+
+        if (listTrack == null)
+        {
+            return null;
+        }
+
+        IEnumerable<Detector> detectors = await _hardwareQueryHandler.GetDetectors(listTrack.DetectorIds);
+
+        byte maxLanes = detectors.Any() ? detectors.Max(d => d.SupportedLanes) : (byte)0;
+
+        return new Track(id, listTrack.Name, detectors.ToArray(), maxLanes);
+
+    }
 }

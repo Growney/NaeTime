@@ -157,6 +157,7 @@ public class OpenPracticeSession : AggregateRoot
     public OpenPracticeSession Clone(Guid newId, string newName)
     {
         OpenPracticeSession clone = new(newId, _trackId, newName);
+        Clone(clone);
         CloneLanes(clone);
 
         return clone;
@@ -164,6 +165,7 @@ public class OpenPracticeSession : AggregateRoot
     public OpenPracticeSession Clone(Guid newId, Guid newTrackId, string newName)
     {
         OpenPracticeSession clone = new(newId, newTrackId, newName);
+        Clone(clone);
         CloneLanes(clone);
 
         return clone;

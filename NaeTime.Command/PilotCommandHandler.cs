@@ -46,7 +46,7 @@ public class PilotCommandHandler : IPilotCommandHandler
 
     public async Task CreatePilot(Guid id, string? firstName, string? lastName, string? callSign, string? bindingPhrase)
     {
-        Pilot pilot = new(id);
+        Pilot pilot = _repository.CreateNew(() => new Pilot(id));
 
         if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
         {

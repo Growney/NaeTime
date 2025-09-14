@@ -99,7 +99,7 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
             throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
         }
 
-        OpenPracticeSession session = new(id, trackId, name);
+        OpenPracticeSession session = _repository.CreateNew(() => new OpenPracticeSession(id, trackId, name));
         session.ConfigureDefaultLanes(track.MaxLanes);
 
         await _repository.Save(session);

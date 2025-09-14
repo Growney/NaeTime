@@ -26,8 +26,7 @@ public class UnitTest1 : IDisposable
     public void Dispose() => _context.Database.EnsureDeleted();
 
     private long ReadCurrentVersion(EventStreamConnection connection, string streamName)
-        => connection.ReadStreamEvents(streamName, StreamDirection.Forward).ToBlockingEnumerable().OrderByDescending(x => x.StreamOrdinal).Select(x => x.StreamOrdinal).FirstOrDefault();
-
+        => connection.ReadStreamEvents(streamName, StreamDirection.Forward, StreamPosition.Beginning).ToBlockingEnumerable().OrderByDescending(x => x.StreamOrdinal).Select(x => x.StreamOrdinal).FirstOrDefault();
 
     [Fact]
     public async Task Test1()

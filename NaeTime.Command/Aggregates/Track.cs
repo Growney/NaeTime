@@ -17,7 +17,7 @@ public class Track : AggregateRoot
 
     public Track(Guid id, Guid[] detectors, string name)
     {
-        Raise(new TrackDesigned(id));
+        Raise(new TrackDesigned(id, name, detectors));
         for (byte i = 0; i < detectors.Length; i++)
         {
             Raise(new TrackDetectorAdded(id, detectors[i], i));

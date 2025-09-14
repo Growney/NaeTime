@@ -13,6 +13,5 @@ public class TrackQueryHandler : ITrackQueryHandler
         _trackList = trackList;
     }
 
-    public Task<Track?> GetTrack(Guid id)
-        => Task.FromResult(_trackList.GetTrack(id));
+    public Task<Track?> GetTrack(Guid id) => _trackList.GetTrack(id);
 }

@@ -76,4 +76,10 @@ public abstract class AggregateRoot
 
         Version++;
     }
+
+    protected void Clone(AggregateRoot root)
+    {
+        root.HandlerProvider = HandlerProvider;
+        root.EventSerializer = EventSerializer;
+    }
 }

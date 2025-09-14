@@ -18,6 +18,12 @@ public class AggregateRepository : IAggregateRepository
 
     private string GetStreamName<T>(Guid id) where T : AggregateRoot => $"{typeof(T).Name}-{id}";
 
+    private void Initialize(AggregateRoot aggregateRoot)
+    {
+        aggregateRoot.EventSerializer = _eventSerializer;
+        aggregateRoot.HandlerProvider = _aggregateHandlerProvider;
+    }
+
     public async Task<T?> Get<T>(Guid id) where T : AggregateRoot, new()
     {
 
@@ -32,9 +38,7 @@ public class AggregateRepository : IAggregateRepository
             if (aggregateRoot == null)
             {
                 aggregateRoot = new();
-
-                aggregateRoot.EventSerializer = _eventSerializer;
-                aggregateRoot.HandlerProvider = _aggregateHandlerProvider;
+                Initialize(aggregateRoot);
             }
 
             aggregateRoot.Raise(streamEvent);
@@ -49,5 +53,12 @@ public class AggregateRepository : IAggregateRepository
         string streamName = GetStreamName<T>(aggregateRoot.Id);
 
         return _connection.AppendToStreamAsync(streamName, raisedEvents, StreamPosition.WithVersion(aggregateRoot.Version));
+    }
+
+    public T CreateNew<T>(Func<T> constructor) where T : AggregateRoot
+    {
+        T aggregateRoot = constructor();
+        Initialize(aggregateRoot);
+        return aggregateRoot;
     }
 }

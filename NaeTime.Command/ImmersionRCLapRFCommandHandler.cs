@@ -99,7 +99,7 @@ public class ImmersionRCLapRFCommandHandler : IImmersionRCLapRFCommandHandler
 
     public async Task RegisterNetworkLapRF8Channel(Guid id, string name, IPAddress address, ushort port)
     {
-        ImmersionRCLapRF aggregate = new(id, name, address, port, 8);
+        ImmersionRCLapRF aggregate = _repository.CreateNew(() => new ImmersionRCLapRF(id, name, address, port, 8));
         await _repository.Save(aggregate);
     }
 

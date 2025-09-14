@@ -25,9 +25,9 @@ public class NaeTimeNode : AggregateRoot
 
     public NaeTimeNode() { }
 
-    public NaeTimeNode(Guid id, string name, string port)
+    public NaeTimeNode(Guid id, string name, string port, byte lanes)
     {
-        Raise(new NaeTimeNodeSerialEsp32NodeConfigured(id, name, port));
+        Raise(new NaeTimeNodeSerialEsp32NodeConfigured(id, name, port, lanes));
     }
 
     private LaneInfo GetLaneInfo(byte lane)
