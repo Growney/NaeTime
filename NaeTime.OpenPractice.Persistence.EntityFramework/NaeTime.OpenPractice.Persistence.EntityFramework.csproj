@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NaeTime.OpenPractice.Messages\NaeTime.OpenPractice.Messages.csproj" />
     <ProjectReference Include="..\NaeTime.Persistence.EntityFramework\NaeTime.Persistence.EntityFramework.csproj" />
     <ProjectReference Include="..\NaeTime.PubSub.Abstractions\NaeTime.PubSub.Abstractions.csproj" />
   </ItemGroup>
