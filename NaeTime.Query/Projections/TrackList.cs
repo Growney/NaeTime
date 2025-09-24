@@ -11,7 +11,7 @@ public class TrackList
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public Guid[] DetectorIds { get; set; } = Array.Empty<Guid>();
-        public long MinimumLapMilliseconds { get; set; }
+        public long? MinimumLapMilliseconds { get; set; }
         public long? MaximumLapMilliseconds { get; set; }
     }
 
@@ -37,7 +37,17 @@ public class TrackList
 
         byte maxLanes = detectors.Any() ? detectors.Max(d => d.SupportedLanes) : (byte)0;
 
-        return new Track(id, listTrack.Name, detectors.ToArray(), maxLanes);
+        return new Track(id, listTrack.Name, detectors.ToArray(), maxLanes, listTrack.MinimumLapMilliseconds, listTrack.MaximumLapMilliseconds);
 
+    }
+    public async Task<IEnumerable<Track>> GetTracks()
+    {
+        var tasks = _tracks.Values.Select(async listTrack =>
+        {
+            IEnumerable<Detector> detectors = await _hardwareQueryHandler.GetDetectors(listTrack.DetectorIds);
+            byte maxLanes = detectors.Any() ? detectors.Max(d => d.SupportedLanes) : (byte)0;
+            return new Track(listTrack.Id, listTrack.Name, detectors.ToArray(), maxLanes, (int)listTrack.MinimumLapMilliseconds, (int)(listTrack.MaximumLapMilliseconds ?? int.MaxValue));
+        });
+        return await Task.WhenAll(tasks);
     }
 }

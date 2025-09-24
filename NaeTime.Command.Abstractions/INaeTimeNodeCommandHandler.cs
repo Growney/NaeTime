@@ -2,6 +2,8 @@
 public interface INaeTimeNodeCommandHandler
 {
     Task ConfigureSerialEsp32Node(Guid id, string name, string port, byte lanes);
+    Task ReconfigureSerialNode(Guid id, string port);
+    Task RenameDevice(Guid id, string name);
     Task RequestEnableLane(Guid id, byte lane);
     Task RequestDisableLane(Guid id, byte lane);
     Task ConfirmLaneEnabled(Guid id, byte lane);

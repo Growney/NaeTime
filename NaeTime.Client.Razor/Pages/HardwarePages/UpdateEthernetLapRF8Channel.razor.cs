@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Hardware.Messages;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Command.Abstractions;
+using NaeTime.Query.Abstractions;
 using System.Net;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class UpdateEthernetLapRF8Channel : ComponentBase
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private IImmersionRCLapRFCommandHandler ImmersionRCLapRFCommandHandler { get; set; } = null!;
     [Inject]
-    private IEventClient EventClient { get; set; } = null!;
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -26,19 +26,21 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
     {
         await base.OnInitializedAsync();
 
-        Hardware.Messages.Models.EthernetLapRF8ChannelTimer? response = await RpcClient.InvokeAsync<Hardware.Messages.Models.EthernetLapRF8ChannelTimer?>("GetEthernetLapRF8ChannelTimer", TimerId);
+        Query.Abstractions.Models.Ethernet8ChannelImmersionRCLapRF? timer = await HardwareQueryHandler.GetEthernet8ChannelImmersionRCLapRF(TimerId);
 
-        if (response == null)
+
+        if (timer == null)
         {
+            NavigationManager.NavigateTo(ReturnUrl ?? "/hardware/list");
             return;
         }
 
         _model = new EthernetLapRF8Channel
         {
-            Id = response.TimerId,
-            Name = response.Name,
-            IpAddress = response.IpAddress.ToString(),
-            Port = response.Port
+            Id = timer.Id,
+            Name = timer.Name,
+            IpAddress = timer.IPAddress.ToString(),
+            Port = timer.Port
         };
     }
 
@@ -59,8 +61,8 @@ public partial class UpdateEthernetLapRF8Channel : ComponentBase
             return;
         }
 
-
-        await EventClient.PublishAsync(new EthernetLapRF8ChannelConfigured(timer.Id, timer.Name, validIP, timer.Port));
+        await ImmersionRCLapRFCommandHandler.RenameDevice(TimerId, timer.Name);
+        await ImmersionRCLapRFCommandHandler.ReconfigureNetworkDevice(TimerId, validIP, (ushort)timer.Port);
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/hardware/list");
     }

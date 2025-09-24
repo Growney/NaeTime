@@ -164,4 +164,18 @@ public class NaeTimeNodeCommandHandler : INaeTimeNodeCommandHandler
         aggregate.MarkAsDisconnected();
         await _repository.Save(aggregate);
     }
+
+    public async Task ReconfigureSerialNode(Guid id, string port)
+    {
+        NaeTimeNode aggregate = await _repository.Get<NaeTimeNode>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.ReconfigureSerialNode(port);
+        await _repository.Save(aggregate);
+    }
+
+    public async Task RenameDevice(Guid id, string name)
+    {
+        NaeTimeNode aggregate = await _repository.Get<NaeTimeNode>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.RenameDevice(name);
+        await _repository.Save(aggregate);
+    }
 }

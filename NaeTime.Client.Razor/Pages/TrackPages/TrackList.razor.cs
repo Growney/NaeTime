@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Query.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
 public partial class TrackList
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -14,23 +14,18 @@ public partial class TrackList
 
     protected override async Task OnInitializedAsync()
     {
-        IEnumerable<Management.Messages.Models.Track>? tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Track>>("GetTracks");
+        var tracks = await TrackQueryHandler.GetAllTracks();
 
-        if (tracksResponse == null)
-        {
-            return;
-        }
-
-        foreach (Management.Messages.Models.Track track in tracksResponse)
+        foreach (var track in tracks)
         {
             Track domainTrack = new()
             {
                 Id = track.Id,
                 Name = track.Name,
                 MaximumLapTimeMilliseconds = track.MaximumLapTimeMilliseconds,
-                MinimumLapTimeMilliseconds = track.MinimumLapTimeMilliseconds,
+                MinimumLapTimeMilliseconds = track.MinimumLapTimeMilliseconds
             };
-            domainTrack.AddTimers(track.Timers);
+            domainTrack.AddTimers(track.Detectors.Select(x => x.Id));
 
             _tracks.Add(domainTrack);
         }

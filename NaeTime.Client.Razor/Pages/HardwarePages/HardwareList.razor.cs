@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Query.Abstractions;
+using NaeTime.Query.Abstractions.Models;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class HardwareList : ComponentBase
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -16,20 +17,15 @@ public partial class HardwareList : ComponentBase
     {
         await base.OnInitializedAsync();
 
-        IEnumerable<Hardware.Messages.Models.TimerDetails>? timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
+        var timers = await HardwareQueryHandler.GetAllDetectors();
 
-        if (timersResponse == null)
-        {
-            return;
-        }
-
-        _timers.AddRange(timersResponse.Select(x => new TimerDetails(x.Id, x.Name,
+        _timers.AddRange(timers.Select(x => new TimerDetails(x.Id, x.Name,
             x.Type switch
             {
-                Hardware.Messages.Models.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
-                Hardware.Messages.Models.TimerType.SerialEsp32Node => TimerType.SerialEsp32Node,
+                Query.Abstractions.Models.DetectorType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
+                DetectorType.NaeTimeSerial => TimerType.SerialEsp32Node,
                 _ => throw new NotImplementedException()
-            }, x.MaxLanes)));
+            }, x.SupportedLanes)));
 
     }
 

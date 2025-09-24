@@ -1,19 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
-using NaeTime.Management.Messages;
-using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Query.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.SessionsPages;
-public partial class OpenPractice : ComponentBase, IDisposable
+public partial class OpenPractice : ComponentBase
 {
     [Inject]
-    public IRemoteProcedureCallClient RpcClient { get; set; } = default!;
+    private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
     [Inject]
-    public IEventClient EventClient { get; set; } = default!;
-    [Inject]
-    public IEventRegistrarScope EventRegistrarScope { get; set; } = default!;
+    private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
 
     private readonly List<LaneConfiguration> _laneConfigurations = new();
     private readonly List<TrackDetails> _tracks = new();
@@ -25,142 +21,129 @@ public partial class OpenPractice : ComponentBase, IDisposable
     private bool _isLaneConfigCollapsed = false;
     protected override async Task OnInitializedAsync()
     {
-        EventRegistrarScope.RegisterHub(this);
+        //IEnumerable<Management.Messages.Models.Pilot>? pilotsResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
 
-        IEnumerable<Management.Messages.Models.Pilot>? pilotsResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
+        //if (pilotsResponse != null)
+        //{
+        //    _pilots.AddRange(pilotsResponse.Select(x => new Pilot()
+        //    {
+        //        Id = x.Id,
+        //        FirstName = x.FirstName,
+        //        LastName = x.LastName,
+        //        CallSign = x.CallSign
+        //    }));
+        //}
 
-        if (pilotsResponse != null)
-        {
-            _pilots.AddRange(pilotsResponse.Select(x => new Pilot()
-            {
-                Id = x.Id,
-                FirstName = x.FirstName,
-                LastName = x.LastName,
-                CallSign = x.CallSign
-            }));
-        }
+        //IEnumerable<Management.Messages.Models.Track>? tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Track>>("GetTracks");
 
-        IEnumerable<Management.Messages.Models.Track>? tracksResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Track>>("GetTracks");
+        //if (tracksResponse != null)
+        //{
+        //    _tracks.AddRange(tracksResponse.Select(x => new TrackDetails(x.Id, x.Name, x.MinimumLapTimeMilliseconds, x.MaximumLapTimeMilliseconds, x.Timers, x.AllowedLanes)));
+        //}
 
-        if (tracksResponse != null)
-        {
-            _tracks.AddRange(tracksResponse.Select(x => new TrackDetails(x.Id, x.Name, x.MinimumLapTimeMilliseconds, x.MaximumLapTimeMilliseconds, x.Timers, x.AllowedLanes)));
-        }
+        //IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>? activeLaneConfigurations = await RpcClient.InvokeAsync<IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>>("GetActiveLaneConfigurations");
 
-        IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>? activeLaneConfigurations = await RpcClient.InvokeAsync<IEnumerable<Timing.Messages.Models.ActiveLaneConfiguration>>("GetActiveLaneConfigurations");
+        //if (activeLaneConfigurations != null)
+        //{
+        //    _laneConfigurations.AddRange(activeLaneConfigurations.Select(x => new LaneConfiguration()
+        //    {
+        //        LaneNumber = x.Lane,
+        //        BandId = x.BandId,
+        //        FrequencyInMhz = x.FrequencyInMhz,
+        //        IsEnabled = x.IsEnabled
+        //    }));
+        //}
 
-        if (activeLaneConfigurations != null)
-        {
-            _laneConfigurations.AddRange(activeLaneConfigurations.Select(x => new LaneConfiguration()
-            {
-                LaneNumber = x.Lane,
-                BandId = x.BandId,
-                FrequencyInMhz = x.FrequencyInMhz,
-                IsEnabled = x.IsEnabled
-            }));
-        }
-
-        IEnumerable<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession>? sessions = await RpcClient.InvokeAsync<IEnumerable<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession>>("GetOpenPracticeSessions");
-        if (sessions != null)
-        {
-            _sessionDetails.AddRange(sessions.Select(x => new SessionDetails
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Type = SessionType.OpenPractice
-            }));
-        }
+        //IEnumerable<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession>? sessions = await RpcClient.InvokeAsync<IEnumerable<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession>>("GetOpenPracticeSessions");
+        //if (sessions != null)
+        //{
+        //    _sessionDetails.AddRange(sessions.Select(x => new SessionDetails
+        //    {
+        //        Id = x.Id,
+        //        Name = x.Name,
+        //        Type = SessionType.OpenPractice
+        //    }));
+        //}
 
 
-        Management.Messages.Models.ActiveSession? activeSessionReponse = await RpcClient.InvokeAsync<Management.Messages.Models.ActiveSession?>("GetActiveSession");
+        //Management.Messages.Models.ActiveSession? activeSessionReponse = await RpcClient.InvokeAsync<Management.Messages.Models.ActiveSession?>("GetActiveSession");
 
-        if (activeSessionReponse != null)
-        {
-            _activeSessionId = activeSessionReponse.SessionId;
-            await SetupForSession(activeSessionReponse.SessionId);
-        }
+        //if (activeSessionReponse != null)
+        //{
+        //    _activeSessionId = activeSessionReponse.SessionId;
+        //    await SetupForSession(activeSessionReponse.SessionId);
+        //}
 
     }
 
-    public async Task When(SessionActivated session)
-    {
-        _activeSessionId = session.SessionId;
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
-    public async Task When(SessionDeactivated session)
-    {
-        _activeSessionId = null;
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
     private async Task SetupForSession(Guid sessionId)
     {
-        _selectedSession = null;
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-        NaeTime.OpenPractice.Messages.Models.OpenPracticeSession? practiceSessionResponse = await RpcClient.InvokeAsync<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", sessionId);
-        if (practiceSessionResponse == null)
-        {
-            return;
-        }
+        //_selectedSession = null;
+        //await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+        //NaeTime.OpenPractice.Messages.Models.OpenPracticeSession? practiceSessionResponse = await RpcClient.InvokeAsync<NaeTime.OpenPractice.Messages.Models.OpenPracticeSession?>("GetOpenPracticeSession", sessionId);
+        //if (practiceSessionResponse == null)
+        //{
+        //    return;
+        //}
 
-        Management.Messages.Models.Track? track = await RpcClient.InvokeAsync<Management.Messages.Models.Track?>("GetTrack", practiceSessionResponse.TrackId);
+        //Management.Messages.Models.Track? track = await RpcClient.InvokeAsync<Management.Messages.Models.Track?>("GetTrack", practiceSessionResponse.TrackId);
 
-        if (track == null)
-        {
-            return;
-        }
+        //if (track == null)
+        //{
+        //    return;
+        //}
 
-        IEnumerable<Timing.Messages.Models.LaneActiveTimings>? timings = await RpcClient.InvokeAsync<IEnumerable<Timing.Messages.Models.LaneActiveTimings>>("GetSessionActiveTimings", sessionId);
+        //IEnumerable<Timing.Messages.Models.LaneActiveTimings>? timings = await RpcClient.InvokeAsync<IEnumerable<Timing.Messages.Models.LaneActiveTimings>>("GetSessionActiveTimings", sessionId);
 
-        byte allowedLanes = track.AllowedLanes;
+        //byte allowedLanes = track.AllowedLanes;
 
-        _selectedSession = new OpenPracticeSession
-        {
-            Id = practiceSessionResponse.Id,
-            TrackId = practiceSessionResponse.TrackId,
-            Name = practiceSessionResponse.Name,
-            MinimumLapMilliseconds = practiceSessionResponse.MinimumLapMilliseconds,
-            MaximumLapMilliseconds = practiceSessionResponse.MaximumLapMilliseconds,
-            Lanes = GetLaneConfigurations(allowedLanes, practiceSessionResponse.ActiveLanes, timings).ToList(),
-            Laps = practiceSessionResponse.Laps.Select(x => new OpenPracticeLap()
-            {
-                Id = x.Id,
-                PilotId = x.PilotId,
-                PilotName = _pilots.FirstOrDefault(y => y.Id == x.PilotId)?.CallSign,
-                StartedUtc = x.StartedUtc,
-                FinishedUtc = x.FinishedUtc,
-                TotalMilliseconds = x.TotalMilliseconds,
-                Status = x.Status switch
-                {
-                    NaeTime.OpenPractice.Messages.Models.LapStatus.Completed => OpenPracticeLapStatus.Completed,
-                    NaeTime.OpenPractice.Messages.Models.LapStatus.Invalid => OpenPracticeLapStatus.Invalid,
-                    _ => throw new NotImplementedException()
-                }
-            }).ToList(),
-            TrackedConsecutiveLaps = practiceSessionResponse.TrackedConsecutiveLaps.ToList()
-        };
+        //_selectedSession = new OpenPracticeSession
+        //{
+        //    Id = practiceSessionResponse.Id,
+        //    TrackId = practiceSessionResponse.TrackId,
+        //    Name = practiceSessionResponse.Name,
+        //    MinimumLapMilliseconds = practiceSessionResponse.MinimumLapMilliseconds,
+        //    MaximumLapMilliseconds = practiceSessionResponse.MaximumLapMilliseconds,
+        //    Lanes = GetLaneConfigurations(allowedLanes, practiceSessionResponse.ActiveLanes, timings).ToList(),
+        //    Laps = practiceSessionResponse.Laps.Select(x => new OpenPracticeLap()
+        //    {
+        //        Id = x.Id,
+        //        PilotId = x.PilotId,
+        //        PilotName = _pilots.FirstOrDefault(y => y.Id == x.PilotId)?.CallSign,
+        //        StartedUtc = x.StartedUtc,
+        //        FinishedUtc = x.FinishedUtc,
+        //        TotalMilliseconds = x.TotalMilliseconds,
+        //        Status = x.Status switch
+        //        {
+        //            NaeTime.OpenPractice.Messages.Models.LapStatus.Completed => OpenPracticeLapStatus.Completed,
+        //            NaeTime.OpenPractice.Messages.Models.LapStatus.Invalid => OpenPracticeLapStatus.Invalid,
+        //            _ => throw new NotImplementedException()
+        //        }
+        //    }).ToList(),
+        //    TrackedConsecutiveLaps = practiceSessionResponse.TrackedConsecutiveLaps.ToList()
+        //};
 
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+        //await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+        throw new NotImplementedException();
     }
-    private IEnumerable<OpenPracticeLaneConfiguration> GetLaneConfigurations(byte allowedLanes, IEnumerable<NaeTime.OpenPractice.Messages.Models.PilotLane> lanes, IEnumerable<Timing.Messages.Models.LaneActiveTimings>? timings)
-    {
-        for (byte lane = 1; lane <= allowedLanes; lane++)
-        {
-            LaneConfiguration? laneConfig = _laneConfigurations.FirstOrDefault(x => x.LaneNumber == lane);
-            NaeTime.OpenPractice.Messages.Models.PilotLane? pilotLaneConfig = lanes.FirstOrDefault(x => x.Lane == lane);
+    //private IEnumerable<OpenPracticeLaneConfiguration> GetLaneConfigurations(byte allowedLanes, IEnumerable<NaeTime.OpenPractice.Messages.Models.PilotLane> lanes, IEnumerable<Timing.Messages.Models.LaneActiveTimings>? timings)
+    //{
+    //    for (byte lane = 1; lane <= allowedLanes; lane++)
+    //    {
+    //        LaneConfiguration? laneConfig = _laneConfigurations.FirstOrDefault(x => x.LaneNumber == lane);
+    //        NaeTime.OpenPractice.Messages.Models.PilotLane? pilotLaneConfig = lanes.FirstOrDefault(x => x.Lane == lane);
 
-            yield return new OpenPracticeLaneConfiguration()
-            {
-                LaneNumber = lane,
-                BandId = laneConfig?.BandId,
-                FrequencyInMhz = laneConfig?.FrequencyInMhz ?? 0,
-                IsEnabled = laneConfig?.IsEnabled ?? false,
-                PilotId = pilotLaneConfig?.PilotId,
-                LapStarted = timings?.FirstOrDefault(x => x.Lane == lane)?.Lap?.StartedUtcTime
-            };
-        }
-    }
+    //        yield return new OpenPracticeLaneConfiguration()
+    //        {
+    //            LaneNumber = lane,
+    //            BandId = laneConfig?.BandId,
+    //            FrequencyInMhz = laneConfig?.FrequencyInMhz ?? 0,
+    //            IsEnabled = laneConfig?.IsEnabled ?? false,
+    //            PilotId = pilotLaneConfig?.PilotId,
+    //            LapStarted = timings?.FirstOrDefault(x => x.Lane == lane)?.Lap?.StartedUtcTime
+    //        };
+    //    }
+    //}
     public string? GetActiveSessionName()
     {
         if (_selectedSession == null)
@@ -173,100 +156,105 @@ public partial class OpenPractice : ComponentBase, IDisposable
     public async Task StartNewSessionOnTrack(Guid sessionId, Guid trackId, long minimumLapMilliseconds, long? maximumLapMilliseconds)
     {
 
-        string sessionName = $"Quick Session - {DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}";
-        await EventClient.PublishAsync(new OpenPracticeSessionConfigured(sessionId, sessionName, trackId, minimumLapMilliseconds, maximumLapMilliseconds));
+        //string sessionName = $"Quick Session - {DateTime.Now.ToShortDateString()} - {DateTime.Now.ToShortTimeString()}";
+        //await EventClient.PublishAsync(new OpenPracticeSessionConfigured(sessionId, sessionName, trackId, minimumLapMilliseconds, maximumLapMilliseconds));
 
-        await EventClient.PublishAsync(new SessionActivated(sessionId, SessionActivated.SessionType.OpenPractice));
+        //await EventClient.PublishAsync(new SessionActivated(sessionId, SessionActivated.SessionType.OpenPractice));
 
-        _sessionDetails.Add(new SessionDetails
-        {
-            Id = sessionId,
-            Name = sessionName,
-            Type = SessionType.OpenPractice
-        });
+        //_sessionDetails.Add(new SessionDetails
+        //{
+        //    Id = sessionId,
+        //    Name = sessionName,
+        //    Type = SessionType.OpenPractice
+        //});
 
-        await SetupForSession(sessionId);
+        //await SetupForSession(sessionId);
+        throw new NotImplementedException();
     }
     public async Task StartSessionOnNewTrack()
     {
-        IEnumerable<Hardware.Messages.Models.TimerDetails>? timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
+        //IEnumerable<Hardware.Messages.Models.TimerDetails>? timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
 
-        if (timersResponse == null)
-        {
-            return;
-        }
+        //if (timersResponse == null)
+        //{
+        //    return;
+        //}
 
-        if (!timersResponse.Any())
-        {
-            return;
-        }
+        //if (!timersResponse.Any())
+        //{
+        //    return;
+        //}
 
-        Guid newTrackId = Guid.NewGuid();
-        IEnumerable<Hardware.Messages.Models.TimerDetails> trackTimers = timersResponse.Take(1);
-        byte maxLanes = trackTimers.Max(x => x.MaxLanes);
-        IEnumerable<Guid> timerIds = trackTimers.Select(x => x.Id);
+        //Guid newTrackId = Guid.NewGuid();
+        //IEnumerable<Hardware.Messages.Models.TimerDetails> trackTimers = timersResponse.Take(1);
+        //byte maxLanes = trackTimers.Max(x => x.MaxLanes);
+        //IEnumerable<Guid> timerIds = trackTimers.Select(x => x.Id);
 
-        await EventClient.PublishAsync(new TrackCreated(newTrackId, $"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds, maxLanes));
+        //await EventClient.PublishAsync(new TrackCreated(newTrackId, $"Quick Track -{DateTime.Now.ToShortDateString()} {DateTime.Now.ToShortTimeString()}", 0, null, timerIds, maxLanes));
 
-        Management.Messages.Models.Track? track = await RpcClient.InvokeAsync<Management.Messages.Models.Track?>("GetTrack", newTrackId);
+        //Management.Messages.Models.Track? track = await RpcClient.InvokeAsync<Management.Messages.Models.Track?>("GetTrack", newTrackId);
 
-        if (track == null)
-        {
-            return;
-        }
+        //if (track == null)
+        //{
+        //    return;
+        //}
 
-        _tracks.Add(new TrackDetails(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, track.AllowedLanes));
+        //_tracks.Add(new TrackDetails(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, track.AllowedLanes));
 
-        Guid sessionId = Guid.NewGuid();
+        //Guid sessionId = Guid.NewGuid();
 
-        await StartNewSessionOnTrack(sessionId, newTrackId, 0, null);
+        //await StartNewSessionOnTrack(sessionId, newTrackId, 0, null);
+        throw new NotImplementedException();
     }
     public Task SetSessionMinimumLapTime(long minimumLapMilliseconds)
     {
-        if (_selectedSession == null)
-        {
-            return Task.CompletedTask;
-        }
+        //if (_selectedSession == null)
+        //{
+        //    return Task.CompletedTask;
+        //}
 
-        if (_selectedSession.MinimumLapMilliseconds == minimumLapMilliseconds)
-        {
-            return Task.CompletedTask;
-        }
+        //if (_selectedSession.MinimumLapMilliseconds == minimumLapMilliseconds)
+        //{
+        //    return Task.CompletedTask;
+        //}
 
-        _selectedSession.MinimumLapMilliseconds = minimumLapMilliseconds;
+        //_selectedSession.MinimumLapMilliseconds = minimumLapMilliseconds;
 
-        return EventClient.PublishAsync(new OpenPracticeMinimumLapTimeConfigured(_selectedSession.Id, minimumLapMilliseconds));
+        //return EventClient.PublishAsync(new OpenPracticeMinimumLapTimeConfigured(_selectedSession.Id, minimumLapMilliseconds));
+        throw new NotImplementedException();
     }
     public Task SetSessionMaximumLapTime(long? maximumLapMilliseconds)
     {
-        if (_selectedSession == null)
-        {
-            return Task.CompletedTask;
-        }
+        //if (_selectedSession == null)
+        //{
+        //    return Task.CompletedTask;
+        //}
 
-        if (_selectedSession.MaximumLapMilliseconds == maximumLapMilliseconds)
-        {
-            return Task.CompletedTask;
-        }
+        //if (_selectedSession.MaximumLapMilliseconds == maximumLapMilliseconds)
+        //{
+        //    return Task.CompletedTask;
+        //}
 
-        _selectedSession.MaximumLapMilliseconds = maximumLapMilliseconds;
+        //_selectedSession.MaximumLapMilliseconds = maximumLapMilliseconds;
 
-        return EventClient.PublishAsync(new OpenPracticeMaximumLapTimeConfigured(_selectedSession.Id, maximumLapMilliseconds));
+        //return EventClient.PublishAsync(new OpenPracticeMaximumLapTimeConfigured(_selectedSession.Id, maximumLapMilliseconds));
+        throw new NotImplementedException();
     }
     public Task TrackConsecutiveLaps(Guid sessionId, uint lapCap)
     {
-        if (_selectedSession == null)
-        {
-            return Task.CompletedTask;
-        }
+        //if (_selectedSession == null)
+        //{
+        //    return Task.CompletedTask;
+        //}
 
-        if (_selectedSession.TrackedConsecutiveLaps.Any(x => x == lapCap))
-        {
-            return Task.CompletedTask;
-        }
+        //if (_selectedSession.TrackedConsecutiveLaps.Any(x => x == lapCap))
+        //{
+        //    return Task.CompletedTask;
+        //}
 
-        _selectedSession.TrackedConsecutiveLaps.Add(lapCap);
-        return EventClient.PublishAsync(new ConsecutiveLapCountTracked(sessionId, lapCap));
+        //_selectedSession.TrackedConsecutiveLaps.Add(lapCap);
+        //return EventClient.PublishAsync(new ConsecutiveLapCountTracked(sessionId, lapCap));
+
+        throw new NotImplementedException();
     }
-    public void Dispose() => EventRegistrarScope?.Dispose();
 }

@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Query.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.PilotPages;
 public partial class PilotsList : ComponentBase
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -14,19 +14,14 @@ public partial class PilotsList : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        IEnumerable<Management.Messages.Models.Pilot>? pilotsResponse = await RpcClient.InvokeAsync<IEnumerable<Management.Messages.Models.Pilot>>("GetPilots");
+        IEnumerable<Query.Abstractions.Models.Pilot> pilots = await PilotQueryHandler.GetAllPilots();
 
-        if (pilotsResponse == null)
-        {
-            return;
-        }
-
-        _pilots.AddRange(pilotsResponse.Select(x => new Pilot()
+        _pilots.AddRange(pilots.Select(x => new Pilot()
         {
             Id = x.Id,
-            FirstName = x.FirstName,
-            LastName = x.LastName,
-            CallSign = x.CallSign,
+            FirstName = x.Firstname,
+            LastName = x.Lastname,
+            CallSign = x.Callsign,
         }));
 
         await base.OnInitializedAsync();

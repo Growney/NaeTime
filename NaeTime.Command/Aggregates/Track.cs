@@ -115,6 +115,14 @@ public class Track : AggregateRoot
     {
         Raise(new TrackPilotMinimumLapTimeConfigured(Id, pilotId, minimumMilliseconds));
     }
+    public void ResetMaximumLapTime()
+    {
+        Raise(new TrackMaximumLapTimeReset(Id));
+    }
+    public void ResetMinimumLapTime()
+    {
+        Raise(new TrackMinimumLapTimeReset(Id));
+    }
     private void When(TrackPilotMaximumLapTimeConfigured configured)
     {
         _pilotMaximumTimes[configured.PilotId] = configured.MaximumMilliseconds;

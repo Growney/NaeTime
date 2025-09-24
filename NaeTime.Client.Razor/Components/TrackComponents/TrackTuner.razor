@@ -1,13 +1,19 @@
-﻿@foreach(var timer in _trackTimers){
-    <div class="lane-container">
-        @for(byte i=1; i < _laneCount +1; i++)
-        {
-            <div style="width:190px;">
-                @if(timer.Type == Hardware.Messages.Models.TimerType.SerialEsp32Node)
-                {
-                    <NodeTimerLaneTuner TimerId=timer.Id LaneId=i></NodeTimerLaneTuner>
-                }
-            </div>
-        }
-    </div>
+﻿@using NaeTime.Query.Abstractions.Models
+
+@if(_track != null)
+{
+    @foreach (Detector timer in _track.Detectors)
+    {
+        <div class="lane-container">
+            @for (byte i = 1; i < _track.MaxLanes + 1; i++)
+            {
+                <div style="width:190px;">
+                    @if (timer.Type == DetectorType.NaeTimeSerial)
+                    {
+                        <NodeTimerLaneTuner TimerId=timer.Id LaneId=i></NodeTimerLaneTuner>
+                    }
+                </div>
+            }
+        </div>
+    }
 }

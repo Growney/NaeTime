@@ -1,18 +1,11 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Hardware.Messages;
-using NaeTime.PubSub.Abstractions;
-using NaeTime.Timing.Messages.Events;
 using Syncfusion.Blazor.Inputs;
 using Syncfusion.Blazor.LinearGauge;
 
 namespace NaeTime.Client.Razor.Components.HardwareComponents;
 public partial class LapRFChannelTuner
 {
-    [Inject]
-    public IEventRegistrarScope EventRegistrar { get; set; } = null!;
-    [Inject]
-    private IEventClient EventClient { get; set; } = null!;
-
     [Parameter]
     [EditorRequired]
     public Guid TimerId { get; set; }
@@ -38,14 +31,11 @@ public partial class LapRFChannelTuner
 
     protected override void OnInitialized()
     {
-        EventRegistrar.RegisterHub(this);
         base.OnInitialized();
     }
     public async void UpdateThreshold(ValueChangeEventArgs args)
     {
         Threshold = (float)args.Value;
-
-        await EventClient.PublishAsync(new EthernetLapRF8ChannelTimerLaneThresholdConfigured(TimerId, Lane, Threshold.Value));
     }
     public Task EnabledChanged(bool value)
     {
@@ -56,20 +46,11 @@ public partial class LapRFChannelTuner
 
         IsEnabled = value;
 
-        if (value)
-        {
-            return EventClient.PublishAsync(new LaneEnabled(Lane));
-        }
-        else
-        {
-            return EventClient.PublishAsync(new LaneDisabled(Lane));
-        }
+        return Task.CompletedTask;
     }
     public async void UpdateGain(SliderChangeEventArgs<ushort?> args)
     {
         Gain = args.Value ?? 0;
-
-        await EventClient.PublishAsync(new EthernetLapRF8ChannelTimerLaneGainConfigured(TimerId, Lane, Gain.Value));
     }
     public async Task When(RssiLevelRecorded recorded)
     {

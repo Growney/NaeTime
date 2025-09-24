@@ -1,7 +1,5 @@
 ﻿using NaeTime.Announcer.Abstractions;
 using NaeTime.Announcer.Models;
-using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.PubSub.Abstractions;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
@@ -14,7 +12,6 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
 
     private readonly Stopwatch _stopwatch = new();
     private readonly ConcurrentDictionary<Guid, SessionState> _sessionStates = new();
-    private readonly IRemoteProcedureCallClient _rpcClient;
 
     private class ConsecutiveLapRecord
     {
@@ -196,10 +193,9 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
             return pilotIds;
         }
     }
-    public OpenPracticeLapAnnouncer(IRemoteProcedureCallClient rpcClient)
+    public OpenPracticeLapAnnouncer()
     {
         _stopwatch.Start();
-        _rpcClient = rpcClient;
     }
 
     public async Task<Announcement?> GetNextAnnouncement()
@@ -290,7 +286,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
     }
     private async Task<string?> GeneratePilotRecordAnnouncement(SessionState state, Guid pilotId)
     {
-        string? callout = await GetPilotCallout(pilotId);
+        string? callout = "Not implemented";
 
         if (string.IsNullOrWhiteSpace(callout))
         {
@@ -367,40 +363,11 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
     }
     private async Task<string> GetLapTimesAnnouncement(IEnumerable<Guid> lapIds)
     {
-        IEnumerable<OpenPractice.Messages.Models.Lap>? laps = await _rpcClient.InvokeAsync<IEnumerable<OpenPractice.Messages.Models.Lap>>("GetOpenPracticeLaps", lapIds);
-
-        if (laps == null)
-        {
-            return string.Empty;
-        }
-
         StringBuilder builder = new();
-        bool firstLap = true;
-        foreach (OpenPractice.Messages.Models.Lap lap in laps)
-        {
-            if (!firstLap)
-            {
-                builder.Append(", ");
-            }
-
-            builder.Append(GetLapCallout(lap.TotalMilliseconds, 1));
-            firstLap = false;
-        }
 
         return builder.ToString();
     }
-    private async Task<string?> GetPilotCallout(Guid pilotId)
-    {
-        Management.Messages.Models.Pilot? pilot = await _rpcClient.InvokeAsync<Management.Messages.Models.Pilot>("GetPilot", pilotId);
 
-        if (pilot == null)
-        {
-            return null;
-        }
-
-        return GetPilotCallout(pilot);
-    }
-    private string? GetPilotCallout(Management.Messages.Models.Pilot pilot) => pilot.CallSign ?? pilot.FirstName ?? pilot.LastName;
     private string GetLapCallout(long totalMilliseconds, int roundedTo = 3)
     {
         TimeSpan timeSpan = TimeSpan.FromMilliseconds(totalMilliseconds);
@@ -422,137 +389,5 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
             isFirstLap = false;
         }
         return builder.ToString();
-    }
-
-    public void When(ConsecutiveLapLeaderboardPositionImproved improved)
-    {
-        SessionState state = _sessionStates.GetOrAdd(improved.SessionId, _ => new SessionState());
-
-        ConsecutiveLapRecord record = new()
-        {
-            PilotId = improved.PilotId,
-            LapCap = improved.LapCap,
-            Laps = improved.TotalLaps,
-            TotalMilliseconds = improved.TotalMilliseconds,
-            IncludedLaps = improved.IncludedLaps
-        };
-
-        //Ignore it when they have not yet reached the consecutive lap cap
-        if (improved.LapCap != improved.TotalLaps)
-        {
-            return;
-        }
-
-        if (improved.NewPosition == 0)
-        {
-            state.ConsecutiveLapRecordHolder.AddOrUpdate(improved.LapCap, record, (key, toUpdate) => record);
-        }
-
-        state.PilotConsecutiveLapRecords.AddOrUpdate(improved.PilotId,
-        (pilotId) =>
-        {
-            ConcurrentDictionary<uint, ConsecutiveLapRecord> newDictionary = new();
-            newDictionary.AddOrUpdate(record.LapCap, record, (key, toUpdate) => record);
-            return newDictionary;
-        },
-        (key, toUpdate) =>
-        {
-            toUpdate.AddOrUpdate(record.LapCap, record, (key, toUpdate) => record);
-            return toUpdate;
-        });
-
-
-        state.TickState(_stopwatch.ElapsedMilliseconds);
-    }
-    public void When(ConsecutiveLapLeaderboardRecordImproved improved)
-    {
-        SessionState state = _sessionStates.GetOrAdd(improved.SessionId, _ => new SessionState());
-
-        ConsecutiveLapRecord record = new()
-        {
-            PilotId = improved.PilotId,
-            LapCap = improved.LapCap,
-            Laps = improved.TotalLaps,
-            TotalMilliseconds = improved.TotalMilliseconds,
-            IncludedLaps = improved.IncludedLaps
-        };
-
-        //Ignore it when they have not yet reached the consecutive lap cap
-        if (improved.LapCap != improved.TotalLaps)
-        {
-            return;
-        }
-
-        if (improved.Position == 0)
-        {
-            state.ConsecutiveLapRecordHolder.AddOrUpdate(improved.LapCap, record, (key, toUpdate) => record);
-        }
-
-        state.PilotConsecutiveLapRecords.AddOrUpdate(improved.PilotId,
-        (pilotId) =>
-        {
-            ConcurrentDictionary<uint, ConsecutiveLapRecord> newDictionary = new();
-            newDictionary.AddOrUpdate(record.LapCap, record, (key, toUpdate) => record);
-            return newDictionary;
-        },
-        (key, toUpdate) =>
-        {
-            toUpdate.AddOrUpdate(record.LapCap, record, (key, toUpdate) => record);
-            return toUpdate;
-        });
-
-        state.TickState(_stopwatch.ElapsedMilliseconds);
-    }
-    public void When(SingleLapLeaderboardPositionImproved improved)
-    {
-        SessionState state = _sessionStates.GetOrAdd(improved.SessionId, _ => new SessionState());
-
-        SingleLapTime record = new()
-        {
-            PilotId = improved.PilotId,
-            TotalMilliseconds = improved.TotalMilliseconds
-        };
-
-        if (improved.NewPosition == 0)
-        {
-            state.SingleLapRecordHolder = record;
-        }
-
-        state.PilotLapRecord.AddOrUpdate(improved.PilotId, record, (key, toUpdate) => record);
-
-        state.TickState(_stopwatch.ElapsedMilliseconds);
-    }
-    public void When(SingleLapLeaderboardRecordImproved improved)
-    {
-        SessionState state = _sessionStates.GetOrAdd(improved.SessionId, _ => new SessionState());
-
-        SingleLapTime record = new()
-        {
-            PilotId = improved.PilotId,
-            TotalMilliseconds = improved.TotalMilliseconds
-        };
-
-        if (improved.Position == 0)
-        {
-            state.SingleLapRecordHolder = record;
-        }
-
-        state.PilotLapRecord.AddOrUpdate(improved.PilotId, record, (key, toUpdate) => record);
-
-        state.TickState(_stopwatch.ElapsedMilliseconds);
-    }
-    public void When(OpenPracticeLapCompleted lapCompleted)
-    {
-        SessionState state = _sessionStates.GetOrAdd(lapCompleted.SessionId, _ => new SessionState());
-
-        SingleLapTime record = new()
-        {
-            PilotId = lapCompleted.PilotId,
-            TotalMilliseconds = lapCompleted.TotalMilliseconds
-        };
-
-        state.PilotLaps.Enqueue(record);
-
-        state.TickState(_stopwatch.ElapsedMilliseconds);
     }
 }

@@ -4,4 +4,5 @@ namespace NaeTime.Query.Abstractions;
 public interface ITrackQueryHandler
 {
     Task<Track?> GetTrack(Guid id);
+    Task<IEnumerable<Track>> GetAllTracks();
 }

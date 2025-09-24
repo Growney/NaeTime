@@ -1,15 +1,16 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Hardware.Messages;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Command.Abstractions;
+using NaeTime.Query.Abstractions;
+using NaeTime.Query.Abstractions.Models;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class UpdateSerialEsp32NodeTimer
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private INaeTimeNodeCommandHandler NaeTimeNodeCommandHandler { get; set; } = null!;
     [Inject]
-    private IEventClient EventClient { get; set; } = null!;
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -25,18 +26,19 @@ public partial class UpdateSerialEsp32NodeTimer
     {
         await base.OnInitializedAsync();
 
-        Hardware.Messages.Models.SerialEsp32Node? response = await RpcClient.InvokeAsync<Hardware.Messages.Models.SerialEsp32Node?>("GetSerialEsp32NodeTimer", TimerId);
+        SerialNaeTimeNode? timer = await HardwareQueryHandler.GetSerialNaeTimeNode(TimerId);
 
-        if (response == null)
+        if (timer == null)
         {
+            NavigationManager.NavigateTo(ReturnUrl ?? "/hardware/list");
             return;
         }
 
         _model = new SerialEsp32Node
         {
-            Id = response.TimerId,
-            Name = response.Name,
-            Port = response.Port
+            Id = timer.Id,
+            Name = timer.Name,
+            Port = timer.Port
         };
     }
 
@@ -57,8 +59,8 @@ public partial class UpdateSerialEsp32NodeTimer
             return;
         }
 
-
-        await EventClient.PublishAsync(new SerialEsp32NodeConfigured(timer.Id, timer.Name, timer.Port));
+        await NaeTimeNodeCommandHandler.RenameDevice(TimerId, timer.Name);
+        await NaeTimeNodeCommandHandler.ReconfigureSerialNode(TimerId, timer.Port);
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/hardware/list");
     }

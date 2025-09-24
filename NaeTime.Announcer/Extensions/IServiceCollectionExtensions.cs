@@ -15,9 +15,6 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IAnnouncmentProvider>(serviceProvider => serviceProvider.GetRequiredService<OpenPracticeLapAnnouncer>());
         services.AddSingleton<IAnnouncmentProvider>(serviceProvider => serviceProvider.GetRequiredService<HardwareAnnouncerService>());
 
-        services.AddEventAndRemoteProcedureCallHub<OpenPracticeLapAnnouncer>(NaeTime.PubSub.Abstractions.HubLifetime.Service);
-        services.AddEventAndRemoteProcedureCallHub<HardwareAnnouncerService>(NaeTime.PubSub.Abstractions.HubLifetime.Service);
-
         return services;
     }
 }

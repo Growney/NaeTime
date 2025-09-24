@@ -31,7 +31,7 @@
                             @($"{TimeSpan.FromMilliseconds(position.TotalMilliseconds):m\\:ss\\:fff}")
                         </td>
                         <td>
-                            <Button style="min-width:30px;" Size=Size.Small Color=ButtonColor.Danger @onclick="() => Invalidate(position.LapId,position.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
+                            <Button style="min-width:30px;" Size=ButtonSize.Small Color=ButtonColor.Danger @onclick="() => Invalidate(position.LapId,position.PilotId)"><i class="fa-solid fa-exclamation"></i></Button>
                         </td>
                     </tr>
                 }

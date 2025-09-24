@@ -1,15 +1,16 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
 using NaeTime.Client.Razor.Lib.Models.OpenPractice;
+using NaeTime.Command.Abstractions;
 using NaeTime.Hardware.Frequency;
 using NaeTime.Hardware.Messages;
-using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.PubSub.Abstractions;
-using NaeTime.Timing.Messages.Events;
 
 namespace NaeTime.Client.Razor.Components.OpenPracticeComponents;
-public partial class SessionLaneConfiguration : ComponentBase, IDisposable
+public partial class SessionLaneConfiguration : ComponentBase
 {
+    [Inject]
+    private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
+
     [Parameter]
     public IEnumerable<Pilot> Pilots { get; set; } = Enumerable.Empty<Pilot>();
     [Parameter]
@@ -30,20 +31,8 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
     public bool IsCollapsed { get; set; }
     [Parameter]
     public long? MaximumLapMilliseconds { get; set; }
-    [Inject]
-    private IEventClient EventClient { get; set; } = null!;
-
-    [Inject]
-    private IEventRegistrarScope RegistrarScope { get; set; } = null!;
 
     private readonly List<RssiLevelRecorded> _rssiValues = new();
-
-    protected override Task OnInitializedAsync()
-    {
-        RegistrarScope.RegisterHub(this);
-
-        return base.OnInitializedAsync();
-    }
 
     public async Task When(RssiLevelRecorded rssiLevelRecorded)
     {
@@ -65,38 +54,6 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
             _rssiValues.RemoveAt(0);
         }
     }
-    public async Task When(LapStarted started)
-    {
-        if (SessionId != started.SessionId)
-        {
-            return;
-        }
-
-        if (started.Lane != Configuration.LaneNumber)
-        {
-            return;
-        }
-
-        Configuration.LapStarted = started.StartedUtcTime;
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
-    public async Task When(LapInvalidated invalidated)
-    {
-        if (SessionId != invalidated.SessionId)
-        {
-            return;
-        }
-
-        if (invalidated.Lane != Configuration.LaneNumber)
-        {
-            return;
-        }
-
-        Configuration.LapStarted = null;
-
-        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-    }
 
     public Task EnabledChanged(bool value)
     {
@@ -106,13 +63,14 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
         }
 
         Configuration.IsEnabled = value;
+
         if (value)
         {
-            return EventClient.PublishAsync(new LaneEnabled(Configuration.LaneNumber));
+            return OpenPracticeCommandHandler.EnableLane(SessionId, Configuration.LaneNumber);
         }
         else
         {
-            return EventClient.PublishAsync(new LaneDisabled(Configuration.LaneNumber));
+            return OpenPracticeCommandHandler.DisableLane(SessionId, Configuration.LaneNumber);
         }
     }
     public Task GoToBand(byte? bandId)
@@ -144,7 +102,8 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
 
         Configuration.BandId = bandId;
         Configuration.FrequencyInMhz = frequencyInMhz;
-        return EventClient.PublishAsync(new LaneRadioFrequencyConfigured(Configuration.LaneNumber, bandId, frequencyInMhz));
+
+        return OpenPracticeCommandHandler.TuneLane(SessionId, Configuration.LaneNumber, bandId, frequencyInMhz);
     }
     private string GetBandString()
     {
@@ -180,7 +139,8 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
         }
 
         Configuration.PilotId = pilotId;
-        return EventClient.PublishAsync(new OpenPracticeLanePilotSet(SessionId, pilotId, Configuration.LaneNumber));
+
+        return OpenPracticeCommandHandler.SetLanePilot(SessionId, Configuration.LaneNumber, pilotId);
     }
     private string GetPilotString(Guid? pilotId)
     {
@@ -193,8 +153,7 @@ public partial class SessionLaneConfiguration : ComponentBase, IDisposable
 
         return pilot.CallSign ?? $"{pilot.FirstName} {pilot.LastName}";
     }
-    private Task TriggerDetection(Guid timerId) => EventClient.PublishAsync(new OpenPracticeSessionDetectionTriggered(SessionId, Configuration.LaneNumber, timerId));
+    private Task TriggerDetection(Guid timerId) => Task.CompletedTask;
 
-    private Task TriggerInvalidation(Guid timerId) => EventClient.PublishAsync(new OpenPracticeSessionInvalidationTriggered(SessionId, Configuration.LaneNumber));
-    public void Dispose() => RegistrarScope?.Dispose();
+    private Task TriggerInvalidation(Guid timerId) => Task.CompletedTask;
 }

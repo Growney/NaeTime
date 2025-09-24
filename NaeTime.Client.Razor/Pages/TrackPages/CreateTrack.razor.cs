@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Management.Messages;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Command.Abstractions;
+using NaeTime.Query.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
 public partial class CreateTrack
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private ITrackCommandHandler TrackCommandHandler { get; set; } = null!;
     [Inject]
-    private IEventClient EventClient { get; set; } = null!;
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -27,7 +27,7 @@ public partial class CreateTrack
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        IEnumerable<Hardware.Messages.Models.TimerDetails>? timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
+        IEnumerable<Query.Abstractions.Models.Detector> timersResponse = await HardwareQueryHandler.GetAllDetectors();
 
         if (timersResponse == null)
         {
@@ -37,18 +37,16 @@ public partial class CreateTrack
         _timers.AddRange(timersResponse.Select(x => new TimerDetails(x.Id, x.Name,
             x.Type switch
             {
-                Hardware.Messages.Models.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
-                Hardware.Messages.Models.TimerType.SerialEsp32Node => TimerType.SerialEsp32Node,
+                Query.Abstractions.Models.DetectorType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
+                Query.Abstractions.Models.DetectorType.NaeTimeSerial => TimerType.SerialEsp32Node,
                 _ => throw new NotImplementedException()
-            }, x.MaxLanes)));
+            }, x.SupportedLanes)));
 
     }
 
     private async Task HandleValidSubmit(Track track)
     {
-        byte maxLanes = _timers.Where(x => track.Timers.Contains(x.Id)).Max(x => x.MaxLanes);
-
-        await EventClient.PublishAsync(new TrackCreated(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, maxLanes));
+        await TrackCommandHandler.DesignTrack(track.Id, track.Name, track.Timers.ToArray());
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/track/list");
     }

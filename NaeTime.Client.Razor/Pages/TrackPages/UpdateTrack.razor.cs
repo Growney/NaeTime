@@ -1,15 +1,17 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Management.Messages;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Command.Abstractions;
+using NaeTime.Query.Abstractions;
 
 namespace NaeTime.Client.Razor.Pages.TrackPages;
 public partial class UpdateTrack
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
     [Inject]
-    private IEventClient EventClient { get; set; } = null!;
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+    [Inject]
+    private ITrackCommandHandler TrackCommandHandler { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -24,47 +26,61 @@ public partial class UpdateTrack
 
     protected override async Task OnInitializedAsync()
     {
-        Management.Messages.Models.Track? trackResponse = await RpcClient.InvokeAsync<Management.Messages.Models.Track>("GetTrack", TrackId);
+        var track = await TrackQueryHandler.GetTrack(TrackId);
 
-        if (trackResponse == null)
+        if (track == null)
         {
+            NavigationManager.NavigateTo("/track/list");
             return;
         }
 
         _model = new Track()
         {
-            Id = trackResponse.Id,
-            Name = trackResponse.Name,
-            MaximumLapTimeMilliseconds = trackResponse.MaximumLapTimeMilliseconds,
-            MinimumLapTimeMilliseconds = trackResponse.MinimumLapTimeMilliseconds,
+            Id = track.Id,
+            Name = track.Name,
+            MaximumLapTimeMilliseconds = track.MaximumLapTimeMilliseconds,
+            MinimumLapTimeMilliseconds = track.MinimumLapTimeMilliseconds,
         };
-        _model.AddTimers(trackResponse.Timers);
+        _model.AddTimers(track.Detectors.Select(x => x.Id));
 
-        IEnumerable<Hardware.Messages.Models.TimerDetails>? timersResponse = await RpcClient.InvokeAsync<IEnumerable<Hardware.Messages.Models.TimerDetails>>("GetAllTimerDetails");
+        IEnumerable<Query.Abstractions.Models.Detector> timers = await HardwareQueryHandler.GetAllDetectors();
 
-        if (timersResponse == null)
+        if (timers == null)
         {
             return;
         }
 
-        byte maxLanes = timersResponse.Max(x => x.MaxLanes);
-
-        _timers.AddRange(timersResponse.Select(x => new TimerDetails(x.Id, x.Name,
+        _timers.AddRange(timers.Select(x => new TimerDetails(x.Id, x.Name,
             x.Type switch
             {
-                Hardware.Messages.Models.TimerType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
-                Hardware.Messages.Models.TimerType.SerialEsp32Node => TimerType.SerialEsp32Node,
+                Query.Abstractions.Models.DetectorType.EthernetLapRF8Channel => TimerType.EthernetLapRF8Channel,
+                Query.Abstractions.Models.DetectorType.NaeTimeSerial => TimerType.SerialEsp32Node,
                 _ => throw new NotImplementedException()
-            }, maxLanes)));
+            }, x.SupportedLanes)));
 
         await base.OnInitializedAsync();
     }
 
     private async Task HandleValidSubmit(Track track)
     {
-        byte maxLanes = _timers.Where(x => track.Timers.Contains(x.Id)).Max(x => x.MaxLanes);
-
-        await EventClient.PublishAsync(new TrackDetailsChanged(track.Id, track.Name, track.MinimumLapTimeMilliseconds, track.MaximumLapTimeMilliseconds, track.Timers, maxLanes));
+        await TrackCommandHandler.RenameTrack(track.Id, track.Name);
+        await TrackCommandHandler.ReorderTrackDetectors(track.Id, track.Timers.ToArray());
+        if (track.MaximumLapTimeMilliseconds.HasValue)
+        {
+            await TrackCommandHandler.SetMaximumLapTime(track.Id, track.MaximumLapTimeMilliseconds.Value);
+        }
+        else
+        {
+            await TrackCommandHandler.ResetMaximumLapTime(track.Id);
+        }
+        if (track.MinimumLapTimeMilliseconds.HasValue)
+        {
+            await TrackCommandHandler.SetMinimumLapTime(track.Id, track.MinimumLapTimeMilliseconds.Value);
+        }
+        else
+        {
+            await TrackCommandHandler.ResetMinimumLapTime(track.Id);
+        }
 
         string returnUrl = ReturnUrl ?? "/track/list";
 

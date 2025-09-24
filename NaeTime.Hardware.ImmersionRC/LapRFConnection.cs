@@ -2,8 +2,6 @@
 using ImmersionRC.LapRF.Abstractions;
 using NaeTime.Hardware.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Models;
-using NaeTime.Hardware.Messages;
-using NaeTime.PubSub.Abstractions;
 
 namespace NaeTime.Timing.ImmersionRC;
 internal class LapRFConnection
@@ -11,7 +9,6 @@ internal class LapRFConnection
     private readonly ILapRFCommunication _communication;
     private readonly ILapRFProtocol _protocol;
     private readonly ISoftwareTimer _softwareTimer;
-    private readonly IEventClient _eventClient;
     private readonly Guid _timerId;
 
     private readonly CancellationTokenSource _cancellationTokenSource;
@@ -19,10 +16,9 @@ internal class LapRFConnection
 
     private readonly Task[] _runningTasks;
 
-    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, IEventClient eventClient, ILapRFCommunication communication, ILapRFProtocol protocol)
+    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol)
     {
         _timerId = timerId;
-        _eventClient = eventClient;
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
         _communication = communication ?? throw new ArgumentNullException(nameof(communication));
         _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
@@ -46,7 +42,6 @@ internal class LapRFConnection
                 //We must start the run task before we dispatch the connection established as data may be requested when the connection is established
                 System.Runtime.CompilerServices.ConfiguredTaskAwaitable runTask = _protocol.RunAsync(token).ConfigureAwait(false);
 
-                await _eventClient.PublishAsync(new TimerConnectionEstablished(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
 
                 await runTask;
             }
@@ -58,7 +53,6 @@ internal class LapRFConnection
             if (IsConnected)
             {
                 IsConnected = false;
-                await _eventClient.PublishAsync(new TimerDisconnected(_timerId, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
             }
 
             await _communication.DisconnectAsync(token).ConfigureAwait(false);
@@ -79,10 +73,6 @@ internal class LapRFConnection
                 }
 
                 Pass passingRecord = nullablePassingRecord.Value;
-
-                TimerDetectionOccured detection = new(_timerId, passingRecord.PilotId, passingRecord.RealTimeClockTime / 1000, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
-
-                await _eventClient.PublishAsync(detection).ConfigureAwait(false);
             }
             catch
             {
@@ -105,9 +95,6 @@ internal class LapRFConnection
 
                 ReceivedSignalStrengthIndicator status = nullableStatus.Value;
 
-                RssiLevelRecorded level = new(_timerId, status.TransponderId, status.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow, status.Level);
-
-                await _eventClient.PublishAsync(level).ConfigureAwait(false);
             }
             catch
             {

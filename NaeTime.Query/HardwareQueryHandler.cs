@@ -21,4 +21,14 @@ public class HardwareQueryHandler : IHardwareQueryHandler
 
     public Task<IEnumerable<Detector>> GetDetectors(IEnumerable<Guid> ids)
          => Task.FromResult(_detectorList.GetDetectors(ids));
+
+    public Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<SerialNaeTimeNode?> GetSerialNaeTimeNode(Guid id)
+    {
+        throw new NotImplementedException();
+    }
 }

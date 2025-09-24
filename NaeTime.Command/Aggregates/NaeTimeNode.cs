@@ -246,4 +246,16 @@ public class NaeTimeNode : AggregateRoot
     {
         Raise(new NaeTimeNodeTimerDisconnected(Id));
     }
+
+    public void RenameDevice(string name)
+    {
+        if (_name == name) return;
+        Raise(new NaeTimeNodeRenamed(Id, name));
+    }
+
+    public void ReconfigureSerialNode(string port)
+    {
+        if (_port == port) return;
+        Raise(new NaeTimeNodeSerialEsp32ConfigurationChanged(Id, port));
+    }
 }

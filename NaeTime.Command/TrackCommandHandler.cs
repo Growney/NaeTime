@@ -19,11 +19,7 @@ public class TrackCommandHandler : ITrackCommandHandler
     {
         foreach (Guid detectorId in detectors)
         {
-            Query.Abstractions.Models.Detector? detector = await _hardwareQueryHandler.GetDetector(detectorId);
-            if (detector == null)
-            {
-                throw new ArgumentException($"Detector with ID {detectorId} does not exist.", nameof(detectors));
-            }
+            Query.Abstractions.Models.Detector? detector = await _hardwareQueryHandler.GetDetector(detectorId) ?? throw new ArgumentException($"Detector with ID {detectorId} does not exist.", nameof(detectors));
         }
     }
 
@@ -38,23 +34,14 @@ public class TrackCommandHandler : ITrackCommandHandler
 
     public async Task RenameTrack(Guid id, string name)
     {
-        Track? track = await _repository.Get<Track>(id);
-        if (track == null)
-        {
-            throw new ArgumentException($"Track with ID {id} does not exist.", nameof(id));
-        }
+        Track? track = await _repository.Get<Track>(id) ?? throw new ArgumentException($"Track with ID {id} does not exist.", nameof(id));
         track.Rename(name);
         await _repository.Save(track);
     }
 
     public async Task ReorderTrackDetectors(Guid trackId, Guid[] detectors)
     {
-        Track? track = await _repository.Get<Track>(trackId);
-        if (track == null)
-        {
-            throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        }
-
+        Track? track = await _repository.Get<Track>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
         await ThrowIfDetectorDoesNotExist(detectors);
 
         track.ReorderDetectors(detectors);
@@ -63,67 +50,57 @@ public class TrackCommandHandler : ITrackCommandHandler
 
     public async Task ResetPilotMaximumLapTime(Guid trackId, Guid pilotId)
     {
-        Track? track = await _repository.Get<Track>(trackId);
-        if (track == null)
-        {
-            throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        }
+        Track? track = await _repository.Get<Track>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
         track.ResetPilotMaximumTimeLapTime(pilotId);
         await _repository.Save(track);
     }
 
     public async Task ResetPilotMinimumLapTime(Guid trackId, Guid pilotId)
     {
-        Track? track = await _repository.Get<Track>(trackId);
-        if (track == null)
-        {
-            throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        }
+        Track? track = await _repository.Get<Track>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
         track.ResetPilotMinimumTimeLapTime(pilotId);
         await _repository.Save(track);
     }
 
     public async Task SetMaximumLapTime(Guid trackId, long milliseconds)
     {
-        Track? track = await _repository.Get<Track>(trackId);
-        if (track == null)
-        {
-            throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        }
+        Track? track = await _repository.Get<Track>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
         track.SetMaximumLapTime(milliseconds);
         await _repository.Save(track);
     }
 
     public async Task SetMinimumLapTime(Guid trackId, long milliseconds)
     {
-        Track? track = await _repository.Get<Track>(trackId);
-        if (track == null)
-        {
-            throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        }
+        Track? track = await _repository.Get<Track>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
         track.SetMinimumLapTime(milliseconds);
         await _repository.Save(track);
     }
 
     public async Task SetPilotMaximumLapTime(Guid trackId, Guid pilotId, long milliseconds)
     {
-        Track? track = await _repository.Get<Track>(trackId);
-        if (track == null)
-        {
-            throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        }
+        Track? track = await _repository.Get<Track>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
         track.SetPilotMaximumLapTime(pilotId, milliseconds);
         await _repository.Save(track);
     }
 
     public async Task SetPilotMinimumLapTime(Guid trackId, Guid pilotId, long milliseconds)
     {
-        Track? track = await _repository.Get<Track>(trackId);
-        if (track == null)
-        {
-            throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        }
+        Track? track = await _repository.Get<Track>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
         track.SetPilotMinimumLapTime(pilotId, milliseconds);
         await _repository.Save(track);
+    }
+
+    public async Task ResetMaximumLapTime(Guid trackId)
+    {
+        Track track = await _repository.Get<Track>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
+        track.ResetMaximumLapTime();
+        await _repository.Save(track);
+    }
+
+    public Task ResetMinimumLapTime(Guid trackId)
+    {
+        Track track = _repository.Get<Track>(trackId).Result ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
+        track.ResetMinimumLapTime();
+        return _repository.Save(track);
     }
 }

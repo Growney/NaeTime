@@ -1,15 +1,14 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Management.Messages;
-using NaeTime.PubSub.Abstractions;
-
+using NaeTime.Command.Abstractions;
+using NaeTime.Query.Abstractions;
 namespace NaeTime.Client.Razor.Pages.PilotPages;
 public partial class UpdatePilot : ComponentBase
 {
     [Inject]
-    private IRemoteProcedureCallClient RpcClient { get; set; } = null!;
+    private IPilotCommandHandler PilotCommandHandler { get; set; } = null!;
     [Inject]
-    private IEventClient EventClient { get; set; } = null!;
+    private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -23,19 +22,20 @@ public partial class UpdatePilot : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        Management.Messages.Models.Pilot? response = await RpcClient.InvokeAsync<Management.Messages.Models.Pilot>("GetPilot", PilotId);
+        var pilot = await PilotQueryHandler.GetPilotById(PilotId);
 
-        if (response == null)
+        if (pilot == null)
         {
+            NavigationManager.NavigateTo(ReturnUrl ?? "/pilot/list");
             return;
         }
 
         _model = new()
         {
-            Id = response.Id,
-            FirstName = response.FirstName,
-            LastName = response.LastName,
-            CallSign = response.CallSign,
+            Id = pilot.Id,
+            FirstName = pilot.Firstname,
+            LastName = pilot.Lastname,
+            CallSign = pilot.Callsign,
         };
 
         await base.OnInitializedAsync();
@@ -48,7 +48,8 @@ public partial class UpdatePilot : ComponentBase
             return;
         }
 
-        await EventClient.PublishAsync(new PilotDetailsChanged(pilot.Id, pilot.FirstName, pilot.LastName, pilot.CallSign));
+        await PilotCommandHandler.RenamePilot(pilot.Id, pilot.FirstName, pilot.LastName);
+        await PilotCommandHandler.ChangePilotCallsign(pilot.Id, pilot.CallSign);
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/pilot/list");
     }

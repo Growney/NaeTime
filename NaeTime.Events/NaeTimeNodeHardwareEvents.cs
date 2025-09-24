@@ -1,7 +1,9 @@
 ﻿namespace NaeTime.Events;
 
 public record NaeTimeNodeSerialEsp32NodeConfigured(Guid TimerId, string Name, string Port, byte Lanes);
+public record NaeTimeNodeSerialEsp32ConfigurationChanged(Guid TimerId, string Port);
 
+public record NaeTimeNodeRenamed(Guid TimerId, string Name);
 public record NaeTimeNodeLaneEnableRequested(Guid TimerId, byte Lane);
 public record NaeTimeNodeLaneDisableRequested(Guid TimerId, byte Lane);
 public record NaeTimeNodeLaneEnabled(Guid TimerId, byte Lane);

@@ -5,6 +5,8 @@ public record TrackDetectorRemoved(Guid TrackId, Guid DetectorId);
 public record TrackDetectorMoved(Guid TrackId, Guid DetectorId, byte OrdinalPosition);
 public record TrackDesigned(Guid TrackId, string Name, Guid[] DetectorIds);
 
+public record TrackMaximumLapTimeReset(Guid SessionId);
+public record TrackMinimumLapTimeReset(Guid SessionId);
 public record TrackMaximumLapTimeConfigured(Guid SessionId, long MaximumMilliseconds);
 public record TrackMinimumLapTimeConfigured(Guid SessionId, long MinimumMilliseconds);
 public record TrackPilotMaximumLapTimeReset(Guid SessionId, Guid PilotId);

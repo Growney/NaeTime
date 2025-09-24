@@ -1,14 +1,13 @@
 ﻿using Microsoft.AspNetCore.Components;
 using NaeTime.Client.Razor.Lib.Models;
-using NaeTime.Hardware.Messages;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Command.Abstractions;
 using System.Net;
 
 namespace NaeTime.Client.Razor.Pages.HardwarePages;
 public partial class CreateEthernetLapRF8Channel : ComponentBase
 {
     [Inject]
-    private IEventClient EventClient { get; set; } = null!;
+    private IImmersionRCLapRFCommandHandler ImmersionRCLapRFCommandHandler { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
 
@@ -41,7 +40,7 @@ public partial class CreateEthernetLapRF8Channel : ComponentBase
             return;
         }
 
-        await EventClient.PublishAsync(new EthernetLapRF8ChannelConfigured(timer.Id, timer.Name, validIP, timer.Port));
+        await ImmersionRCLapRFCommandHandler.RegisterNetworkLapRF8Channel(timer.Id, timer.Name, validIP, (ushort)timer.Port);
 
         NavigationManager.NavigateTo(ReturnUrl ?? "/hardware/list");
     }
