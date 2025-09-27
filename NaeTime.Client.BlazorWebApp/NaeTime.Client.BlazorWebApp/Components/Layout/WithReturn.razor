@@ -1,0 +1,34 @@
+﻿@inherits LayoutComponentBase
+@layout MainLayout
+
+<div class="content-grid">
+    @if (!string.IsNullOrEmpty(ReturnUrl))
+    {
+        <div class="back-button">
+            <a @onclick="GoBack">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+        </div>
+    }
+    <div class="backed-content">
+        @Body
+    </div>
+</div>
+
+
+@code{
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = null!;
+
+    public void GoBack()
+    {
+        if(!string.IsNullOrWhiteSpace(ReturnUrl))
+        {
+            NavigationManager.NavigateTo(ReturnUrl);
+        }
+    }
+}

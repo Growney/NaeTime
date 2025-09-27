@@ -1,10 +1,11 @@
+using EventDbLite.Projections;
 using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
 
-public class DetectorList
+public class DetectorList : Projection
 {
     private readonly ConcurrentDictionary<Guid, Detector> _detectors = new();
 
@@ -35,7 +36,7 @@ public class DetectorList
             _detectors[e.TimerId] = detector with { Name = e.Name };
     }
 
-    public IEnumerable<Detector> GetAllDetectors() => _detectors.Values;
+    public IEnumerable<Detector> GetDetectors() => _detectors.Values;
     public Detector? GetDetector(Guid id) => _detectors.TryGetValue(id, out var detector) ? detector : null;
     public IEnumerable<Detector> GetDetectors(IEnumerable<Guid> ids)
     {

@@ -1,0 +1,76 @@
+﻿@page "/hardware/ethernetimmersionrclaprf/create"
+@using System.Net
+
+@if(_immersionRCLapRF != null)
+{
+    <div>
+        <a class="btn btn-primary" href="/pilot/list"><i class="fa-solid fa-backward-step"></i></a>
+    </div>
+    <div>
+        <label>
+            Name:
+            <input @bind="_immersionRCLapRF.Name"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            IP Address:
+            <input @bind="_immersionRCLapRF.IPAddress"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            Port:
+            <input type="number" @bind="_immersionRCLapRF.Port"> </input>
+        </label>
+    </div>
+    <div>
+        <button class="btn btn-primary" @onclick="Create">Create</button>
+    </div>
+}
+
+@code {
+    [Inject]
+    private IImmersionRCLapRFCommandHandler ImmersionRCLapRFCommandHandler { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private NaeTime.Client.Models.EthernetImmersionRCLapRF? _immersionRCLapRF;
+
+    protected override void OnInitialized()
+    {
+        _immersionRCLapRF = new NaeTime.Client.Models.EthernetImmersionRCLapRF()
+            {
+                Id = Guid.NewGuid(),
+                Port = 5403,
+                IPAddress = "192.168.1.2"
+            };
+    }
+
+    private async Task Create()
+    {
+        if(_immersionRCLapRF == null)
+        {
+            return;
+        }
+
+        if(string.IsNullOrEmpty(_immersionRCLapRF.Name))
+        {
+            return;
+        }
+
+        if(!IPAddress.TryParse(_immersionRCLapRF.IPAddress, out IPAddress? parsedAddress))
+        {
+            return;
+        }
+        if (_immersionRCLapRF.Port < 1 || _immersionRCLapRF.Port > 65535)
+        {
+            return;
+        }
+
+        await ImmersionRCLapRFCommandHandler.RegisterNetworkLapRF8Channel(_immersionRCLapRF.Id, _immersionRCLapRF.Name, parsedAddress, _immersionRCLapRF.Port);
+
+        NavigationManager.NavigateTo($"/hardware/ethernetimmersionrclaprf/{_immersionRCLapRF.Id}");
+    }
+}

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventDbLite\EventDbLite.csproj" />
+    <ProjectReference Include="..\NaeTime.Client.Razor\NaeTime.Client.Razor.csproj" />
+    <ProjectReference Include="..\NaeTime.Command\NaeTime.Command.csproj" />
+    <ProjectReference Include="..\NaeTime.Query\NaeTime.Query.csproj" />
+  </ItemGroup>
+
+</Project>

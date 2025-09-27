@@ -1,0 +1,99 @@
+﻿@page "/hardware/ethernetimmersionrclaprf/{id:guid}"
+
+@if(_immersionRCLapRF != null)
+{
+    <div>
+        <a class="btn btn-primary" href="/hardware/list"><i class="fa-solid fa-backward-step"></i></a>
+    </div>
+    <div>
+        <label>
+            Name:
+            <input @bind:get="_immersionRCLapRF.Name" @bind:set="x=> NameChanged(x)"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            IP Address:
+            <input @bind:get="_immersionRCLapRF.IPAddress" @bind:set="x=> IPAddressChanged(x)"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            Port:
+            <input type="number" @bind:get="_immersionRCLapRF.Port" @bind:set="x=> PortChanged(x)"> </input>
+        </label>
+    </div>
+
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [Inject]
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+    [Inject]
+    private IImmersionRCLapRFCommandHandler ImmersionRCLapRFCommandHandler { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private NaeTime.Client.Models.EthernetImmersionRCLapRF? _immersionRCLapRF;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _immersionRCLapRF = ImmersionRCLapRFProjector.Project(await HardwareQueryHandler.GetEthernet8ChannelImmersionRCLapRF(Id));
+        if (_immersionRCLapRF == null)
+        {
+            NavigationManager.NavigateTo("/hardware/list");
+        }
+    }
+    private async Task NameChanged(string name)
+    {
+        if (_immersionRCLapRF == null)
+        {
+            return;
+        }
+        if(string.IsNullOrEmpty(name))
+        {
+            return;
+        }
+        await ImmersionRCLapRFCommandHandler.RenameDevice(_immersionRCLapRF.Id, name);
+        _immersionRCLapRF.Name = name;
+    }
+    private async Task IPAddressChanged(string? ipAddress)
+    {
+        if (_immersionRCLapRF == null)
+        {
+            return;
+        }
+
+        if(!System.Net.IPAddress.TryParse(ipAddress, out var address))
+        {
+            return;
+        }
+
+        await ImmersionRCLapRFCommandHandler.ReconfigureNetworkDevice(_immersionRCLapRF.Id, address, _immersionRCLapRF.Port);
+        _immersionRCLapRF.IPAddress = ipAddress;
+    }
+    private async Task PortChanged(ushort port)
+    {
+        if (_immersionRCLapRF == null)
+        {
+            return;
+        }
+
+        if (port < 1 || port > 65535)
+        {
+            return;
+        }
+
+        if (!System.Net.IPAddress.TryParse(_immersionRCLapRF.IPAddress, out var address))
+        {
+            return;
+        }
+
+        await ImmersionRCLapRFCommandHandler.ReconfigureNetworkDevice(_immersionRCLapRF.Id, address, port);
+        _immersionRCLapRF.Port = port;
+    }
+}

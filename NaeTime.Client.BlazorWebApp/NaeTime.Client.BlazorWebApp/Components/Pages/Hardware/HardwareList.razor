@@ -1,0 +1,53 @@
+﻿@page "/hardware/list"
+
+<a class="btn btn-primary" href="/hardware/ethernetimmersionrclaprf/create">Create Ethernet LapRF</a>
+<a class="btn btn-primary" href="/hardware/naetimeserial/create">Create Serial Naetime Node</a>
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Lanes</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (NaeTime.Query.Abstractions.Models.Detector detector in _detectors)
+        {
+            <tr @onclick="() => EditDetector(detector.Id,detector.Type)">
+                <td>@detector.Name</td>
+                <td>@detector.Type</td>
+                <td><span class="badge badge-info">x@detector.SupportedLanes</span></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@code {
+    [Inject]
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private IEnumerable<NaeTime.Query.Abstractions.Models.Detector> _detectors = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Detector>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _detectors = await HardwareQueryHandler.GetAllDetectors();
+    }
+
+    private void EditDetector(Guid id, NaeTime.Query.Abstractions.Models.DetectorType type)
+    {
+        switch(type)
+        {
+            case NaeTime.Query.Abstractions.Models.DetectorType.EthernetLapRF8Channel:
+                NavigationManager.NavigateTo($"/hardware/ethernetimmersionrclaprf/{id}");
+                break;
+            case NaeTime.Query.Abstractions.Models.DetectorType.NaeTimeSerial:
+                NavigationManager.NavigateTo($"/hardware/naetimeserial/{id}");
+                break;
+            default:
+                throw new NotSupportedException($"Detector type {type} is not supported.");
+        };
+    }
+}

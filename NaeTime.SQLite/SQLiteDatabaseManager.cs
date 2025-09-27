@@ -1,17 +1,30 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace NaeTime.Persistence.SQLite;
 public class SQLiteDatabaseManager<T> : IHostedService
     where T : DbContext
 {
-    private readonly T _dbContext;
+    private readonly IServiceProvider _serviceProvider;
 
-    public SQLiteDatabaseManager(T dbContext)
+    public SQLiteDatabaseManager(IServiceProvider serviceProvider)
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceProvider = serviceProvider;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken) => _dbContext.Database.MigrateAsync();
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        IServiceScope scope = _serviceProvider.CreateScope(); ;
+        try
+        {
+            T dbContext = scope.ServiceProvider.GetRequiredService<T>();
+            await dbContext.Database.MigrateAsync();
+        }
+        finally
+        {
+            scope.Dispose();
+        }
+    }
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

@@ -18,15 +18,10 @@ public class AggregateRepository : IAggregateRepository
 
     private string GetStreamName<T>(Guid id) where T : AggregateRoot => $"{typeof(T).Name}-{id}";
 
-    private void Initialize(AggregateRoot aggregateRoot)
-    {
-        aggregateRoot.EventSerializer = _eventSerializer;
-        aggregateRoot.HandlerProvider = _aggregateHandlerProvider;
-    }
+    private void Initialize(AggregateRoot aggregateRoot) => aggregateRoot.InitialiseDependencies(_aggregateHandlerProvider, _eventSerializer);
 
     public async Task<T?> Get<T>(Guid id) where T : AggregateRoot, new()
     {
-
         string streamName = GetStreamName<T>(id);
 
         IAsyncEnumerable<StreamEvent> streamEvents = _connection.ReadStreamEvents(streamName, StreamDirection.Forward, StreamPosition.Beginning);

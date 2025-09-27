@@ -1,3 +1,4 @@
+using EventDbLite.Abstractions;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
 using NaeTime.Query.Projections;
@@ -6,21 +7,30 @@ namespace NaeTime.Query;
 
 public class HardwareQueryHandler : IHardwareQueryHandler
 {
-    private readonly DetectorList _detectorList;
+    private readonly IProjectionProvider _projectionProvider;
 
-    public HardwareQueryHandler(DetectorList detectorList)
+    public HardwareQueryHandler(IProjectionProvider projectionProvider)
     {
-        _detectorList = detectorList;
+        _projectionProvider = projectionProvider;
     }
 
-    public Task<Detector?> GetDetector(Guid id)
-        => Task.FromResult(_detectorList.GetDetector(id));
+    public async Task<Detector?> GetDetector(Guid id)
+    {
+        DetectorList detectors = await _projectionProvider.Load<DetectorList>();
+        return detectors.GetDetector(id);
+    }
 
-    public Task<IEnumerable<Detector>> GetAllDetectors()
-        => Task.FromResult(_detectorList.GetAllDetectors());
+    public async Task<IEnumerable<Detector>> GetAllDetectors()
+    {
+        DetectorList detectors = await _projectionProvider.Load<DetectorList>();
+        return detectors.GetDetectors();
+    }
 
-    public Task<IEnumerable<Detector>> GetDetectors(IEnumerable<Guid> ids)
-         => Task.FromResult(_detectorList.GetDetectors(ids));
+    public async Task<IEnumerable<Detector>> GetDetectors(IEnumerable<Guid> ids)
+    {
+        DetectorList detectors = await _projectionProvider.Load<DetectorList>();
+        return detectors.GetDetectors(ids);
+    }
 
     public Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id)
     {

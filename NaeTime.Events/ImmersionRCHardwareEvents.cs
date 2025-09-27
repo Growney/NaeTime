@@ -1,9 +1,7 @@
-﻿using System.Net;
+﻿namespace NaeTime.Events;
 
-namespace NaeTime.Events;
-
-public record ImmersionRCLapRFNetworkDeviceRegistered(Guid TimerId, IPAddress IPAddress, ushort Port, byte Lanes);
-public record ImmersionRCLapRFNetworkConfigurationChanged(Guid TimerId, IPAddress IPAddress, ushort Port);
+public record ImmersionRCLapRFNetworkDeviceRegistered(Guid TimerId, string IPAddress, ushort Port, byte Lanes);
+public record ImmersionRCLapRFNetworkConfigurationChanged(Guid TimerId, string IPAddress, ushort Port);
 
 public record ImmersionRCLapRFRenamed(Guid TimerId, string Name);
 public record ImmersionRCLapRFLaneEnableRequested(Guid TimerId, byte Lane);

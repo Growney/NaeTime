@@ -18,7 +18,7 @@ internal class HandlerProvider : IHandlerProvider
     private Dictionary<string, (Type targetType, Action<object, object> handler)> RegisterHandler(Type aggregateRootType)
     {
         Dictionary<string, (Type targetType, Action<object, object> handler)> handlerMethods = new();
-        foreach (MethodInfo method in aggregateRootType.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
+        foreach (MethodInfo method in aggregateRootType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
         {
             if (method.Name != "When")
             {
@@ -70,7 +70,10 @@ internal class HandlerProvider : IHandlerProvider
 
         Dictionary<string, (Type targetType, Action<object, object> handler)> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterHandler);
 
-        handlerMethods.TryGetValue(identifier, out (Type targetType, Action<object, object> handler) method);
+        if (!handlerMethods.TryGetValue(identifier, out (Type targetType, Action<object, object> handler) method))
+        {
+            return null;
+        }
 
         return new Handler(
             action: payload => method.handler(handler, payload),

@@ -36,7 +36,7 @@ public class ImmersionRCLapRF : AggregateRoot
 
     public ImmersionRCLapRF(Guid id, string name, IPAddress address, ushort port, byte lanes)
     {
-        Raise(new ImmersionRCLapRFNetworkDeviceRegistered(id, address, port, lanes));
+        Raise(new ImmersionRCLapRFNetworkDeviceRegistered(id, address.ToString(), port, lanes));
         Raise(new ImmersionRCLapRFRenamed(id, name));
     }
 
@@ -72,7 +72,7 @@ public class ImmersionRCLapRF : AggregateRoot
             throw new InvalidOperationException("Cannot configure network settings for a non-network device.");
         }
 
-        Raise(new ImmersionRCLapRFNetworkConfigurationChanged(Id, address, port));
+        Raise(new ImmersionRCLapRFNetworkConfigurationChanged(Id, address.ToString(), port));
     }
 
     public void Rename(string name)

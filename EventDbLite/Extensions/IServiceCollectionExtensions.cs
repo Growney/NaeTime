@@ -1,4 +1,5 @@
-﻿using EventDbLite.Abstractions;
+﻿using EventDbLite;
+using EventDbLite.Abstractions;
 using EventDbLite.Aggregates;
 using EventDbLite.Connections;
 using EventDbLite.Events;
@@ -6,9 +7,9 @@ using EventDbLite.Handlers;
 using EventDbLite.Projections;
 using EventDbLite.Reactions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using NaeTime.Persistence.SQLite;
 
-namespace EventDbLite.Extensions;
+namespace Microsoft.Extensions.DependencyInjection;
 
 public static class IServiceCollectionExtensions
 {
@@ -17,10 +18,11 @@ public static class IServiceCollectionExtensions
     {
         services.AddDbContext<EventDbLiteContext>(options =>
         {
-            options.UseSqlite("Data Source=eventdblite.db;Cache=Shared;Pooling=true;Max Pool Size=100;")
+            options.UseSqlite("Data Source=eventdblite.db;Cache=Shared;Pooling=true;")
                    .EnableSensitiveDataLogging()
                    .EnableDetailedErrors();
         });
+        services.AddHostedService<SQLiteDatabaseManager<EventDbLiteContext>>();
 
         services.AddSingleton<IEventStoreLite, EventStoreLite>();
 
@@ -56,6 +58,7 @@ public static class IServiceCollectionExtensions
         services.AddSingleton(new LiveProjectionRequirement(streamName, projectionType));
         return services;
     }
+
 
     public static IServiceCollection AddSingletonLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Singleton, streamName);
     public static IServiceCollection AddScopedLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Scoped, streamName);

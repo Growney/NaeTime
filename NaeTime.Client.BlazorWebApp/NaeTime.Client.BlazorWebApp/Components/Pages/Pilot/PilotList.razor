@@ -1,0 +1,41 @@
+﻿@page "/pilot/list"
+<a class="btn btn-primary" href="/pilot/create"><i class="fas fa-user-plus"></i></a>
+<table class="table table-hover">
+    <thead>
+
+        <tr>
+            <th>Firstname</th>
+            <th>Lastname</th>
+            <th>Callsign</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in _pilots)
+        {
+            <tr @onclick="() => EditPilot(pilot.Id)">
+                <td>@pilot.Firstname</td>
+                <td>@pilot.Lastname</td>
+                <td>@pilot.Callsign</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Inject]
+    private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> _pilots = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Pilot>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _pilots = await PilotQueryHandler.GetAllPilots();
+    }
+
+    private void EditPilot(Guid id)
+    {
+        NavigationManager.NavigateTo($"/pilot/{id}");
+    }
+}

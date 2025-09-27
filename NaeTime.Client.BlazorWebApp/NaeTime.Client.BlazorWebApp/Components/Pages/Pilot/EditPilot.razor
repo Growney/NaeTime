@@ -1,0 +1,123 @@
+﻿@page "/pilot/{id:guid}"
+
+@if (_pilot != null)
+{
+    <div>
+        <a class="btn btn-primary" href="/pilot/list"><i class="fa-solid fa-backward-step"></i></a>
+    </div>
+    <div>
+        <label>
+            Firstname:
+            <input @bind:get="_pilot.Firstname" @bind:set="(x) => FirstnameChanged(x)"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            Lastname:
+            <input @bind:get="_pilot.Lastname" @bind:set="(x) => LastnameChanged(x)"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            Callsign:
+            <input @bind:get="_pilot.Callsign" @bind:set="(x) => CallsignChanged(x)"> </input>
+        </label>
+    </div>
+    <div>
+        @if (_pilot.HasBindingPhrase)
+        {
+            <button class="btn btn-danger" @onclick="ClearBindingPhrase">Remove Binding Phrase</button>
+        }
+        else
+        {
+            <label>
+                Binding Phrase:
+                <input @bind="_pilot.BindingPhrase"> </input><button class="btn btn-success" @onclick="ConfirmBindingPhrase"><i class="fa-solid fa-check"></i></button>
+            </label>
+        }
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [Inject]
+    private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
+    [Inject]
+    private IPilotCommandHandler PilotCommandHandler { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private NaeTime.Client.Models.Pilot? _pilot;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _pilot = PilotProjector.Project(await PilotQueryHandler.GetPilotById(Id));
+        if(_pilot == null)
+        {
+            NavigationManager.NavigateTo("/pilot/list");
+        }
+    } 
+    private async Task FirstnameChanged(string? name)
+    {
+        if(_pilot == null)
+        {
+            return;
+        }
+
+        await PilotCommandHandler.RenamePilot(_pilot.Id, name, _pilot.Lastname);
+
+        _pilot.Firstname = name;
+    }
+
+    private async Task LastnameChanged(string? name)
+    {
+        if (_pilot == null)
+        {
+            return;
+        }
+        await PilotCommandHandler.RenamePilot(_pilot.Id, _pilot.Firstname, name);
+        _pilot.Lastname = name;
+    }
+
+    private async Task CallsignChanged(string? callsign)
+    {
+        if (_pilot == null)
+        {
+            return;
+        }
+        await PilotCommandHandler.ChangePilotCallsign(_pilot.Id, callsign);
+        _pilot.Callsign = callsign;
+    }
+
+    private async Task ClearBindingPhrase()
+    {
+        if(_pilot == null)
+        {
+            return;
+        }
+
+        await PilotCommandHandler.RemovePilotBindingPhrase(_pilot.Id);
+        _pilot.HasBindingPhrase = false;
+        _pilot.BindingPhrase = string.Empty;
+    }
+    private async Task ConfirmBindingPhrase()
+    {
+        if(_pilot == null)
+        {
+            return;
+        }
+
+        if(string.IsNullOrEmpty(_pilot.BindingPhrase))
+        {
+            await PilotCommandHandler.RemovePilotBindingPhrase(_pilot.Id);
+        }
+        else
+        {
+            await PilotCommandHandler.ChangePilotBindingPhrase(_pilot.Id, _pilot.BindingPhrase);
+        }
+        _pilot.HasBindingPhrase = true;
+    }
+}

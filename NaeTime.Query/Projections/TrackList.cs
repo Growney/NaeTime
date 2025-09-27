@@ -1,10 +1,11 @@
+using EventDbLite.Projections;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
 
-public class TrackList
+public class TrackList : Projection
 {
     private class ListTrack
     {

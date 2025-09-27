@@ -1,0 +1,64 @@
+﻿@page "/pilot/create"
+
+@if (_pilot != null)
+{
+    <div>
+        <a class="btn btn-primary" href="/pilot/list"><i class="fa-solid fa-backward-step"></i></a>
+    </div>
+    <div>
+        <label>
+            Firstname:
+            <input @bind="_pilot.Firstname"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            Lastname:
+            <input @bind="_pilot.Lastname"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            Callsign:
+            <input @bind="_pilot.Callsign"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            Binding Phrase:
+            <input @bind="_pilot.BindingPhrase"> </input>
+        </label>
+    </div>
+    <div>
+        <button class="btn btn-primary" @onclick="Create">Create</button>
+    </div>
+}
+
+@code {
+
+    [Inject]
+    private IPilotCommandHandler PilotCommandHandler { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private NaeTime.Client.Models.Pilot? _pilot;
+
+    protected override void OnInitialized()
+    {
+        _pilot = new NaeTime.Client.Models.Pilot()
+        {
+            Id = Guid.NewGuid(),
+        };
+    }
+
+    private async Task Create()
+    {
+        if (_pilot == null)
+        {
+            return;
+        }
+        await PilotCommandHandler.CreatePilot(_pilot.Id, _pilot.Firstname, _pilot.Lastname, _pilot.Callsign, string.Empty);
+
+        NavigationManager.NavigateTo($"/pilot/{_pilot.Id}");
+    }
+}
