@@ -41,4 +41,14 @@ public class SessionsCommandHandler : ISessionsCommandHandler
 
         activeSession.ActivateOpenPracticeSession(id);
     }
+
+    public async Task DeactivateOpenPracticeSession(Guid id)
+    {
+        await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
+
+        ActiveSession activeSession = await _repository.Get<ActiveSession>(ActiveSession.SingletonId)
+            ?? _repository.CreateNew(() => new ActiveSession(ActiveSession.SingletonId));
+
+        activeSession.DeactivateOpenPracticeSession(id);
+    }
 }

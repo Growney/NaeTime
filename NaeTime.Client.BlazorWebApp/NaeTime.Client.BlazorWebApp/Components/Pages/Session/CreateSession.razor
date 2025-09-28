@@ -1,0 +1,85 @@
+﻿@page "/session/create"
+
+<div>
+    <a class="btn btn-primary" href="/session/list"><i class="fa-solid fa-backward-step"></i></a>
+</div>
+<div>
+    <MudBlazor.MudTextField @bind-Value="_session.Name" Label="Name"></MudBlazor.MudTextField>
+</div>
+<div>
+    <MudBlazor.MudSelect T="Models.SessionType" @bind-Value="_session.SessionType" Label="Type">
+        @foreach(Models.SessionType sessionType in Enum.GetValues<Models.SessionType>())
+        {
+            <MudBlazor.MudSelectItem Value="sessionType">@sessionType</MudBlazor.MudSelectItem>
+        }
+    </MudBlazor.MudSelect>
+</div>
+<div>
+    <MudBlazor.MudSelect T="Guid" @bind-Value="_session.TrackId" Label="Track">
+        @foreach (NaeTime.Query.Abstractions.Models.Track track in _tracks)
+        {
+            <MudBlazor.MudSelectItem Value="track.Id">@track.Name</MudBlazor.MudSelectItem>
+        }
+    </MudBlazor.MudSelect>
+</div>
+<MudBlazor.MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="Start">Start</MudBlazor.MudButton>
+<MudBlazor.MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="Create">Create</MudBlazor.MudButton>
+
+
+@code {
+    [Inject]
+    private ISessionsCommandHandler SessionsCommandHandler { get; set; } = null!;
+    [Inject]
+    private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
+    [Inject]
+    private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private NaeTime.Client.Models.Session _session = new()
+        {
+            Id = Guid.NewGuid(),
+            Name = $"{DateTime.Now.ToShortDateString()} Session",
+            SessionType = Models.SessionType.OpenPractice
+        };
+
+    private IEnumerable<NaeTime.Query.Abstractions.Models.Track> _tracks = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Track>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _tracks = await TrackQueryHandler.GetAllTracks();
+    }
+
+    private async Task Create()
+    {
+        if (string.IsNullOrEmpty(_session.Name))
+        {
+            return;
+        }
+
+        switch (_session.SessionType)
+        {
+            case Models.SessionType.OpenPractice:
+                await OpenPracticeCommandHandler.ScheduleSession(_session.Id, _session.TrackId, _session.Name);
+                NavigationManager.NavigateTo("/session/list");
+                break;
+        }
+
+    }
+    private async Task Start()
+    {
+        if (string.IsNullOrEmpty(_session.Name))
+        {
+            return;
+        }
+
+        switch (_session.SessionType)
+        {
+            case Models.SessionType.OpenPractice:
+                await OpenPracticeCommandHandler.ScheduleSession(_session.Id, _session.TrackId, _session.Name);
+                await SessionsCommandHandler.ActivateOpenPracticeSession(_session.Id);
+                NavigationManager.NavigateTo($"/open-practice/{_session.Id}");
+                break;
+        }
+    }
+}

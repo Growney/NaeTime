@@ -5,4 +5,4 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace NaeTime.Query.Abstractions.Models;
-public record Session(Guid Id, string Name, SessionType Type, bool IsActive);
+public record OpenPracticeLane(byte Lane, Guid PilotId, bool IsEnabled, byte? BandId, int FrequencyInMHz);

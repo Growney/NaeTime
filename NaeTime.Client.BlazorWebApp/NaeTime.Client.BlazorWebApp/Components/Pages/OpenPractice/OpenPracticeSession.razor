@@ -1,12 +1,16 @@
-﻿@page "/open-practice/active"
+﻿@page "/open-practice/{id:guid}"
 
 
 
 @code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
     [Inject]
     private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
     [Inject]
-    private Iqu
+    private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
 }

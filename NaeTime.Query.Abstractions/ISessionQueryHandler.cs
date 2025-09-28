@@ -10,4 +10,5 @@ public interface ISessionQueryHandler
 {
     public Task<Session?> GetSession(Guid id);
     public Task<IEnumerable<Session>> GetAllSessions();
+    public Task<Session?> GetActiveSession();
 }

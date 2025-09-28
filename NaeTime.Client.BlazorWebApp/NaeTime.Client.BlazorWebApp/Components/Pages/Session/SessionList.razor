@@ -1,0 +1,102 @@
+﻿@page "/session/list"
+<a class="btn btn-primary" href="/session/create"><i class="fas fa-user-plus"></i></a>
+<table class="table table-hover">
+    <thead>
+
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Active</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (NaeTime.Query.Abstractions.Models.Session session in _sessions)
+        {
+            <tr @onclick="() => OpenSession(session.Id,session.Type)">
+                <td>@session.Name</td>
+                <td>@session.Type</td>
+                <td>
+                    @if (session.IsActive)
+                    {
+                        <MudBlazor.MudButton Variant="MudBlazor.Variant.Outlined" Color="MudBlazor.Color.Error">Deactivate</MudBlazor.MudButton>
+                    }
+                    else
+                    {
+                        <MudBlazor.MudButton Variant="MudBlazor.Variant.Outlined" Color="MudBlazor.Color.Primary">Activate</MudBlazor.MudButton>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@code {
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject]
+    private ISessionQueryHandler SessionQueryHandler { get; set; } = null!;
+    [Inject]
+    private ISessionsCommandHandler SessionCommandHandler { get; set; } = null!;
+
+    private List<NaeTime.Query.Abstractions.Models.Session> _sessions = new();
+    private Guid? _activeSession;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        _sessions = new List<NaeTime.Query.Abstractions.Models.Session>(await SessionQueryHandler.GetAllSessions());
+    }
+
+    private void OpenSession(Guid id, NaeTime.Query.Abstractions.Models.SessionType sessionType)
+    {
+        switch (sessionType)
+        {
+            case NaeTime.Query.Abstractions.Models.SessionType.OpenPractice:
+                NavigationManager.NavigateTo($"/open-practice/{id}");
+                return;
+        }
+    }
+
+    private async Task ActivateSession(Guid id)
+    {
+        NaeTime.Query.Abstractions.Models.Session? session = _sessions.FirstOrDefault(x => x.Id == id);
+
+        if(session == null)
+        {
+            return;
+        }
+
+        switch (session.Type)
+        {
+            case NaeTime.Query.Abstractions.Models.SessionType.OpenPractice:
+                await SessionCommandHandler.ActivateOpenPracticeSession(id);
+                break;
+        }
+
+        for (int i = 0; i < _sessions.Count(); i++)
+        {
+            _sessions[i] = _sessions[i] with { IsActive = _sessions[i].Id == id };
+        }
+    }
+
+    private async Task DeactivateSession(Guid id)
+    {
+
+        NaeTime.Query.Abstractions.Models.Session? session = _sessions.FirstOrDefault(x => x.Id == id);
+
+        if(session == null)
+        {
+            return;
+        }
+        int index = _sessions.IndexOf(session);
+        switch (session.Type)
+        {
+            case NaeTime.Query.Abstractions.Models.SessionType.OpenPractice:
+                await SessionCommandHandler.DeactivateOpenPracticeSession(id);
+                break;
+        }
+        _sessions[index] = _sessions[index] with { IsActive = false };
+
+    }
+}
