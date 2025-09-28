@@ -12,6 +12,7 @@ public static class IServiceCollectionExtensions
         services.AddTransient<IOpenPracticeCommandHandler, OpenPracticeCommandHandler>();
         services.AddTransient<IPilotCommandHandler, PilotCommandHandler>();
         services.AddTransient<ITrackCommandHandler, TrackCommandHandler>();
+        services.AddTransient<ISessionsCommandHandler, SessionsCommandHandler>();
         return services;
     }
 }

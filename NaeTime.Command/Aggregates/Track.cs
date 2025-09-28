@@ -18,16 +18,19 @@ public class Track : AggregateRoot
     public Track(Guid id, Guid[] detectors, string name)
     {
         Raise(new TrackDesigned(id, name, detectors));
-        for (byte i = 0; i < detectors.Length; i++)
-        {
-            Raise(new TrackDetectorAdded(id, detectors[i], i));
-        }
-        Raise(new TrackRenamed(id, name));
     }
 
     private void When(TrackDesigned trackDesigned)
     {
         Id = trackDesigned.TrackId;
+        _detectors.Clear();
+        _detectorPositions.Clear();
+
+        for (byte i = 0; i < trackDesigned.DetectorIds.Length; i++)
+        {
+            _detectors[i] = trackDesigned.DetectorIds[i];
+            _detectorPositions[trackDesigned.DetectorIds[i]] = i;
+        }
     }
     private void When(TrackDetectorAdded trackDetectorAdded)
     {

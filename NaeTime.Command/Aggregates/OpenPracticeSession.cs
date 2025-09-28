@@ -35,8 +35,7 @@ public class OpenPracticeSession : AggregateRoot
     }
     public OpenPracticeSession(Guid id, Guid trackId, string name)
     {
-        Raise(new OpenPracticeSessionScheduled(id, trackId));
-        Raise(new OpenPracticeSessionRenamed(id, name));
+        Raise(new OpenPracticeSessionScheduled(id, name, trackId));
     }
 
     public void Rename(string name)

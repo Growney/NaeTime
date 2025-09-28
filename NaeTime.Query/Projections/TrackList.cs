@@ -1,4 +1,5 @@
 using EventDbLite.Projections;
+using NaeTime.Events;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
 using System.Collections.Concurrent;
@@ -27,7 +28,7 @@ public class TrackList : Projection
 
     public async Task<Track?> GetTrack(Guid id)
     {
-        _tracks.TryGetValue(id, out var listTrack);
+        _tracks.TryGetValue(id, out ListTrack? listTrack);
 
         if (listTrack == null)
         {
@@ -43,12 +44,79 @@ public class TrackList : Projection
     }
     public async Task<IEnumerable<Track>> GetTracks()
     {
-        var tasks = _tracks.Values.Select(async listTrack =>
+        IEnumerable<Task<Track>> tasks = _tracks.Values.Select(async listTrack =>
         {
             IEnumerable<Detector> detectors = await _hardwareQueryHandler.GetDetectors(listTrack.DetectorIds);
             byte maxLanes = detectors.Any() ? detectors.Max(d => d.SupportedLanes) : (byte)0;
-            return new Track(listTrack.Id, listTrack.Name, detectors.ToArray(), maxLanes, (int)listTrack.MinimumLapMilliseconds, (int)(listTrack.MaximumLapMilliseconds ?? int.MaxValue));
+            return new Track(listTrack.Id, listTrack.Name, detectors.ToArray(), maxLanes, listTrack.MinimumLapMilliseconds, listTrack.MaximumLapMilliseconds);
         });
         return await Task.WhenAll(tasks);
+    }
+    public void When(TrackDesigned designed)
+    {
+        ListTrack track = _tracks.GetOrAdd(designed.TrackId, id => new ListTrack { Id = id });
+        track.Name = designed.Name;
+        track.DetectorIds = designed.DetectorIds;
+    }
+    public void When(TrackRenamed renamed)
+    {
+        ListTrack track = _tracks.GetOrAdd(renamed.TrackId, id => new ListTrack { Id = id });
+        track.Name = renamed.Name;
+    }
+    public void When(TrackDetectorAdded detectorAdded)
+    {
+        ListTrack track = _tracks.GetOrAdd(detectorAdded.TrackId, id => new ListTrack { Id = id });
+        List<Guid> detectorIds = track.DetectorIds.ToList();
+        if (detectorAdded.OrdinalPosition <= detectorIds.Count)
+        {
+            detectorIds.Insert(detectorAdded.OrdinalPosition, detectorAdded.DetectorId);
+        }
+        else
+        {
+            detectorIds.Add(detectorAdded.DetectorId);
+        }
+        track.DetectorIds = detectorIds.ToArray();
+    }
+    public void When(TrackDetectorRemoved detectorRemoved)
+    {
+        ListTrack track = _tracks.GetOrAdd(detectorRemoved.TrackId, id => new ListTrack { Id = id });
+        List<Guid> detectorIds = track.DetectorIds.ToList();
+        detectorIds.Remove(detectorRemoved.DetectorId);
+        track.DetectorIds = detectorIds.ToArray();
+    }
+    public void When(TrackDetectorMoved detectorMoved)
+    {
+        ListTrack track = _tracks.GetOrAdd(detectorMoved.TrackId, id => new ListTrack { Id = id });
+        List<Guid> detectorIds = track.DetectorIds.ToList();
+        detectorIds.Remove(detectorMoved.DetectorId);
+        if (detectorMoved.OrdinalPosition <= detectorIds.Count)
+        {
+            detectorIds.Insert(detectorMoved.OrdinalPosition, detectorMoved.DetectorId);
+        }
+        else
+        {
+            detectorIds.Add(detectorMoved.DetectorId);
+        }
+        track.DetectorIds = detectorIds.ToArray();
+    }
+    public void When(TrackMinimumLapTimeConfigured configured)
+    {
+        ListTrack track = _tracks.GetOrAdd(configured.SessionId, id => new ListTrack { Id = id });
+        track.MinimumLapMilliseconds = configured.MinimumMilliseconds;
+    }
+    public void When(TrackMaximumLapTimeConfigured configured)
+    {
+        ListTrack track = _tracks.GetOrAdd(configured.SessionId, id => new ListTrack { Id = id });
+        track.MaximumLapMilliseconds = configured.MaximumMilliseconds;
+    }
+    public void When(TrackMinimumLapTimeReset reset)
+    {
+        ListTrack track = _tracks.GetOrAdd(reset.SessionId, id => new ListTrack { Id = id });
+        track.MinimumLapMilliseconds = null;
+    }
+    public void When(TrackMaximumLapTimeReset reset)
+    {
+        ListTrack track = _tracks.GetOrAdd(reset.SessionId, id => new ListTrack { Id = id });
+        track.MaximumLapMilliseconds = null;
     }
 }

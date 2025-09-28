@@ -1,0 +1,122 @@
+﻿@page "/track/create"
+
+@if (_track != null)
+{
+    <div>
+        <a class="btn btn-primary" href="/track/list"><i class="fa-solid fa-backward-step"></i></a>
+    </div>
+    <div>
+        <label>
+            Name:
+            <input @bind="_track.Name"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            Minimum Lap Time (ms):
+            <input type="number" @bind="_track.MinimumLapTimeMilliseconds"> </input>
+        </label>
+    </div>
+    <div>
+        <label>
+            Maximum Lap Time (ms):
+            <input type="number" @bind="_track.MaximumLapTimeMilliseconds"> </input>
+        </label>
+    </div>
+    <div>
+        <InputSelect @bind-Value=_selectedDetector>
+            @foreach (var detector in GetAvailableDetectors())
+            {
+                <option value="@detector.Id">@detector.Name</option>
+            }
+        </InputSelect>
+        <button type="button" @onclick=AddGate class="btn btn-primary"><i class="fa-solid fa-plus"></i></button>
+    </div>
+    <div>
+        @foreach(var detector in _track.Detectors)
+        {
+            <div class="mt-2">
+                <label>@detector.Name</label>
+                <button type="button" disabled="@_track.CanMoveDetectorUp(detector.Id)" @onclick="() => _track.MoveDetectorUp(detector.Id)" class="btn btn-secondary"><i class="fa-solid fa-arrow-up"></i></button>
+                <button type="button" disabled="@_track.CanMoveDetectorDown(detector.Id)" @onclick="() => _track.MoveDetectorDown(detector.Id)" class="btn btn-secondary"><i class="fa-solid fa-arrow-down"></i></button>
+                <button type="button" @onclick="() => _track.Detectors.Remove(detector)" class="btn btn-secondary"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        }
+    </div>
+    <div>
+        <button class="btn btn-primary" @onclick="Create">Create</button>
+    </div>
+}
+
+@code {
+    [Inject]
+    private ITrackCommandHandler TrackCommandHandler { get; set; } = null!;
+    [Inject]
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+    private Guid _selectedDetector;
+    private NaeTime.Client.Models.Track? _track;
+    private IEnumerable<NaeTime.Query.Abstractions.Models.Detector> _allDetectors = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Detector>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _allDetectors = await HardwareQueryHandler.GetAllDetectors();
+        _track = new NaeTime.Client.Models.Track()
+        {
+            Id = Guid.NewGuid()
+        };
+    }
+    private IEnumerable<NaeTime.Query.Abstractions.Models.Detector> GetAvailableDetectors()
+    {
+        if (_track == null)
+        {
+            return Enumerable.Empty<NaeTime.Query.Abstractions.Models.Detector>();
+        }
+        var usedDetectorIds = _track.Detectors.Select(d => d.Id).ToHashSet();
+        return _allDetectors.Where(d => !usedDetectorIds.Contains(d.Id));
+    }
+    private void AddGate()
+    {
+        if(_track == null)
+        {
+            return;
+        }
+        if (_selectedDetector == Guid.Empty)
+        {
+            return;
+        }
+        NaeTime.Query.Abstractions.Models.Detector? detector = _allDetectors.FirstOrDefault(d => d.Id == _selectedDetector);
+        if (detector == null)
+        {
+            return;
+        }
+        NaeTime.Client.Models.Detector trackDetector = DetectorProjector.Project(detector);
+        _track.Detectors.Add(trackDetector);
+    }
+    private async Task Create()
+    {
+        if(_track == null)
+        {
+            return;
+        }
+
+        if(string.IsNullOrWhiteSpace(_track.Name))
+        {
+            return;
+        }
+
+        await TrackCommandHandler.DesignTrack(_track.Id, _track.Name, _track.Detectors.Select(x => x.Id).ToArray());
+
+        if(_track.MinimumLapTimeMilliseconds != null)
+        {
+            await TrackCommandHandler.SetMinimumLapTime(_track.Id, _track.MinimumLapTimeMilliseconds.Value);
+
+        }
+        if(_track.MaximumLapTimeMilliseconds != null)
+        {
+            await TrackCommandHandler.SetMaximumLapTime(_track.Id, _track.MaximumLapTimeMilliseconds.Value);
+        }
+        NavigationManager.NavigateTo($"/track/{_track.Id}");
+    }
+}

@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Query.Abstractions.Models;
-public record ImmersionRCLapRF(Guid Id, string? Name, ImmersionRCLapRFLane[] Lanes);
+public record ImmersionRCLapRF(Guid Id, string? Name, bool IsConnected,bool IsSetupConfirmed, ImmersionRCLapRFLane[] RequestedLanes, ImmersionRCLapRFLane[] ConfirmedLanes);

@@ -27,7 +27,7 @@ public class DetectorList : Projection
 
     public void When(ImmersionRCLapRFNetworkDeviceRegistered e)
     {
-        _detectors[e.TimerId] = new Detector(e.TimerId, null, DetectorType.EthernetLapRF8Channel, e.Lanes);
+        _detectors[e.TimerId] = new Detector(e.TimerId, e.Name, DetectorType.EthernetLapRF8Channel, e.Lanes);
     }
 
     public void When(ImmersionRCLapRFRenamed e)

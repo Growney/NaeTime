@@ -32,9 +32,10 @@ public class HardwareQueryHandler : IHardwareQueryHandler
         return detectors.GetDetectors(ids);
     }
 
-    public Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id)
+    public async Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id)
     {
-        throw new NotImplementedException();
+        ImmersionRCList immersionRCList = await _projectionProvider.Load<ImmersionRCList>();
+        return immersionRCList.GetImmersionRCLapRF(id);
     }
 
     public Task<SerialNaeTimeNode?> GetSerialNaeTimeNode(Guid id)

@@ -15,7 +15,7 @@ public class ImmersionRCLapRFProjector
         {
             Id = source.Id,
             Name = source.Name,
-            Lanes = source.Lanes.Select(lane => new Models.ImmersionRCLapRFLane
+            Lanes = source.RequestedLanes.Select(lane => new Models.ImmersionRCLapRFLane
             {
                 LaneId = lane.LaneId,
                 IsEnabled = lane.IsEnabled,
