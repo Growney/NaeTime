@@ -1,8 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace NaeTime.Events;
+public enum SessionType
+{
+    OpenPractice,
+}
 
-namespace NaeTime.Events;
 public record ActiveSessionTrackingStarted(Guid TrackingId);
+public record SessionActivated(Guid SessionId, SessionType SessionType);
+public record SessionDeactivated(Guid SessionId, SessionType SessionType);
+public record SessionScheduled(Guid SessionId, string Name, Guid TrackId, SessionType SessionType);
+public record SessionRenamed(Guid Sessionid, string Name);

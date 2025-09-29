@@ -35,12 +35,12 @@ public class OpenPracticeSession : AggregateRoot
     }
     public OpenPracticeSession(Guid id, Guid trackId, string name)
     {
-        Raise(new OpenPracticeSessionScheduled(id, name, trackId));
+        Raise(new SessionScheduled(id, name, trackId, SessionType.OpenPractice));
     }
 
     public void Rename(string name)
     {
-        Raise(new OpenPracticeSessionRenamed(Id, name));
+        Raise(new SessionRenamed(Id, name));
     }
 
     public void ConfigureDefaultLanes(byte laneCount)
@@ -65,7 +65,7 @@ public class OpenPracticeSession : AggregateRoot
         return laneInfo;
     }
 
-    private void When(OpenPracticeSessionScheduled scheduledEvent)
+    private void When(SessionScheduled scheduledEvent)
     {
         Id = scheduledEvent.SessionId;
         _trackId = scheduledEvent.TrackId;

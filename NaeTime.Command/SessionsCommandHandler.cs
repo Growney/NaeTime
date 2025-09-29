@@ -3,11 +3,6 @@ using NaeTime.Command.Abstractions;
 using NaeTime.Command.Aggregates;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NaeTime.Command;
 public class SessionsCommandHandler : ISessionsCommandHandler
@@ -32,7 +27,7 @@ public class SessionsCommandHandler : ISessionsCommandHandler
             throw new ArgumentException($"Session with ID {id} is not of type {type}.", nameof(id));
         }
     }
-    public async Task ActivateOpenPracticeSession(Guid id)
+    public async Task ActivateSession(Guid id)
     {
         await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
 
@@ -42,13 +37,13 @@ public class SessionsCommandHandler : ISessionsCommandHandler
         activeSession.ActivateOpenPracticeSession(id);
     }
 
-    public async Task DeactivateOpenPracticeSession(Guid id)
+    public async Task DeactivateSession(Guid id)
     {
         await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
 
         ActiveSession activeSession = await _repository.Get<ActiveSession>(ActiveSession.SingletonId)
             ?? _repository.CreateNew(() => new ActiveSession(ActiveSession.SingletonId));
 
-        activeSession.DeactivateOpenPracticeSession(id);
+        activeSession.DeactivateSession(id);
     }
 }
