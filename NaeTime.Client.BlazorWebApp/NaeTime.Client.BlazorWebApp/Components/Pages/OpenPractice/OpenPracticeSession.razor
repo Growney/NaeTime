@@ -1,71 +1,97 @@
 ﻿@page "/open-practice/{id:guid}"
 @using NaeTime.Hardware.Frequency
+
+
+
 @if(_session != null)
 {
-    <MudSimpleTable Striped=true Dense=true>
-        <thead>
-            <tr>
-                <th style="width:150px;">
-                    #
-                </th>
-                <th>
-                    Pilot
-                </th>
-                <th>
-                    Frequency
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (byte i = 0; i < _session.Lanes.Count; i++)
-            {
-                byte laneIndex = i;
-                <tr>
-                    <td>
-                        @(laneIndex + 1)
-                    </td>
-                    <td>
-                        <MudSelect T="Guid?" Clearable="true" Variant="Variant.Text" Value="_session.Lanes[laneIndex].PilotId" SelectedValuesChanged="x => OnPilotSelectionChanged(x, laneIndex)">
-                            @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots(laneIndex))
-                            {
-                                <MudSelectItem T="Guid?" Value="pilot.Id">@pilot.Callsign</MudSelectItem>
-                            }
-                        </MudSelect>
-                    </td>
-                    <td>
-                        <div class="row">
-                            <div class="col">
-                                <MudMenu Variant="Variant.Filled" Label="@(GetBandString(_session.Lanes[laneIndex].BandId))" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
-                                    @foreach (NaeTime.Hardware.Frequency.Band band in NaeTime.Hardware.Frequency.Band.Bands)
-                                    {
-                                        <MudMenuItem Label="@band.ShortName" OnClick="() => ChangeFrequency([band.Id],[_session.Lanes[laneIndex].FrequencyInMHz],laneIndex)"></MudMenuItem>
-                                    }
-                                </MudMenu>
-                            </div>
-                            <div class="col">
-                                @if (Band.Bands.Any(b => b.Id == _session.Lanes[laneIndex].BandId))
-                                {
-                                    <MudMenu Variant="Variant.Outlined" Label="@(GetFrequencyString(_session.Lanes[laneIndex].BandId, _session.Lanes[laneIndex].FrequencyInMHz))" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
-                                        @{
-                                            Band band = Band.Bands.FirstOrDefault(b => b.Id == _session.Lanes[laneIndex].BandId);
-                                            foreach (NaeTime.Hardware.Frequency.BandFrequency bandFrequency in band.Frequencies)
-                                            {
-                                                <MudMenuItem Label="@bandFrequency.Name" OnClick="() => ChangeFrequency([band.Id], [bandFrequency.FrequencyInMhz], laneIndex)"></MudMenuItem>
-                                            }
+    <div class="lane-container">
+        @foreach (Models.OpenPracticeLane lane in _session.Lanes)
+        {
+            <div class="shadow rounded p-2" style="width: 190px">
+                <table class="w-100">
+                    <tbody>
+                        <tr>
+                            <td class="align-start" style="width:10px">
+                                <MudSwitch T=bool Value="lane.IsEnabled" ValueChanged="x => EnabledChanged(x, lane.Lane)"></MudSwitch>
+                            </td>
+                            <td>
+                                <div class="h4 text-start">
+                                    @lane.Lane
+                                </div>
+                            </td>
+                            <td>
+                                <div class="h5 text-end">
+                                    @lane.FrequencyInMHz<sup style="font-size:0.5em">MHz</sup>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="w-100">
+                    <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+
+                    </MudButtonGroup>
+                    <MudButton FullWidth=true Variant=Variant.Filled Color=Color.Primary EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(_pilots.FirstOrDefault(x => x.Id == lane.PilotId)?.Callsign ?? "[None]")</MudButton>
+                    <MudMenu Variant="Variant.Filled" Color=Color.Primary FullWidth=true Label="@(_pilots.FirstOrDefault(x => x.Id == lane.PilotId)?.Callsign ?? "[None]")" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
+                        <MudMenuItem Label="Clear" OnClick="x => OnPilotSelectionChanged(null, lane.Lane)"></MudMenuItem>
+                        @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots(lane.Lane))
+                        {
+                            <MudMenuItem Label=@pilot.Callsign OnClick="x => OnPilotSelectionChanged(pilot.Id, lane.Lane)"></MudMenuItem>
+                        }
+                    </MudMenu>
+                </div>
+                <div>
+                    <table class="w-100 mx-auto">
+                        <tbody>
+                            <tr>
+                                <td class="w-50">
+                                    <MudMenu Variant="Variant.Filled" Label="@(GetBandString(lane.BandId))" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
+                                        @foreach (NaeTime.Hardware.Frequency.Band band in NaeTime.Hardware.Frequency.Band.Bands)
+                                        {
+                                            <MudMenuItem Label="@band.ShortName" OnClick="() => ChangeFrequency([band.Id], [lane.FrequencyInMHz], lane.Lane)"></MudMenuItem>
                                         }
                                     </MudMenu>
-                                }
-                                else
-                                {
-                                    <MudNumericField T=int Value=_session.Lanes[laneIndex].FrequencyInMHz Label="Custom" ValueChanged="x => ChangeFrequency(Enumerable.Empty<byte?>(), [x], laneIndex)"></MudNumericField>
-                                }
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </MudSimpleTable>
+                                </td>
+                                <td class="w-50">
+                                    @if (Band.Bands.Any(b => b.Id == lane.BandId))
+                                    {
+                                        <MudMenu Variant="Variant.Outlined" Label="@(GetFrequencyString(lane.BandId, lane.FrequencyInMHz))" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
+                                            @{
+                                                Band band = Band.Bands.FirstOrDefault(b => b.Id == lane.BandId);
+                                                foreach (NaeTime.Hardware.Frequency.BandFrequency bandFrequency in band.Frequencies)
+                                                {
+                                                    <MudMenuItem Label="@bandFrequency.Name" OnClick="() => ChangeFrequency([band.Id], [bandFrequency.FrequencyInMhz], lane.Lane)"></MudMenuItem>
+                                                }
+                                            }
+                                        </MudMenu>
+                                    }
+                                    else
+                                    {
+                                        <MudNumericField T=int Value=lane.FrequencyInMHz Label="Custom" ValueChanged="x => ChangeFrequency(Enumerable.Empty<byte?>(), [x], lane.Lane)"></MudNumericField>
+                                    }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <table class="w-100">
+                    <tbody>
+                        <tr>
+                            <td class="w-50">
+                                <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100 rounded-0 rounded-start" onclick="() => TriggerDetection(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></MudButton>
+                            </td>
+                            <td class="w-50">
+                                <MudButton Variant=Variant.Filled Color=Color.Error Class="w-100 rounded-0 rounded-end" @onclick="() => TriggerInvalidation(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></MudButton>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+ 
 }
 
 
@@ -93,6 +119,24 @@
 
         _session = OpenPracticeSessionProjector.Project(await OpenPracticeQueryHandler.GetByIdAsync(Id));
     }
+    private async Task EnabledChanged(bool enabled, byte lane)
+    {
+        if(_session == null)
+        {
+            return;
+        }
+
+        if(enabled)
+        {
+            await OpenPracticeCommandHandler.EnableLane(_session.Id, lane);
+        }
+        else
+        {
+            await OpenPracticeCommandHandler.DisableLane(_session.Id, lane);
+        }
+        _session.Lanes[lane].IsEnabled = enabled;
+    }
+
     private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> GetUnassignedPilots(byte lane)
     {
         if(_session == null)
@@ -106,14 +150,13 @@
 
         return _pilots.Where(x => !usedPilots.Contains(x.Id) || x.Id == currentPilot);
     }
-    private async Task OnPilotSelectionChanged(IEnumerable<Guid?> selection, byte lane)
+    private async Task OnPilotSelectionChanged(Guid? pilotId, byte lane)
     {
         if(_session == null)
         {
             return;
         }
 
-        Guid? pilotId = selection.FirstOrDefault();
         if (pilotId.HasValue)
         {
             await OpenPracticeCommandHandler.SetLanePilot(_session.Id, lane, pilotId.Value);
@@ -167,5 +210,21 @@
         _session.Lanes[lane].FrequencyInMHz = frequencyInMhz;
 
         StateHasChanged();
+    }
+
+    private async Task TriggerDetection(Guid pilotId)
+    {
+        if(_session == null)
+        {
+            return;
+        }
+    }
+
+    private async Task TriggerInvalidation(Guid pilotId)
+    {
+        if(_session == null)
+        {
+            return;
+        }
     }
 }

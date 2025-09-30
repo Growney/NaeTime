@@ -1,0 +1,8 @@
+﻿.lane-container {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: self-start;
+    justify-content: center;
+    gap: 1rem;
+}
