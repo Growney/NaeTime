@@ -31,16 +31,16 @@
 
                 <div class="w-100">
                     <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
-
+                        <MudButton>@(_pilots.FirstOrDefault(x => x.Id == lane.PilotId)?.Callsign ?? "[None]")</MudButton>
+                        <MudMenu Label="@Icons.Material.Filled.ArrowDropDown">
+                            <MudMenuItem Label="Clear" OnClick="x => OnPilotSelectionChanged(null, lane.Lane)"></MudMenuItem>
+                            @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots(lane.Lane))
+                            {
+                                <MudMenuItem Label=@pilot.Callsign OnClick="x => OnPilotSelectionChanged(pilot.Id, lane.Lane)"></MudMenuItem>
+                            }
+                        </MudMenu>
                     </MudButtonGroup>
-                    <MudButton FullWidth=true Variant=Variant.Filled Color=Color.Primary EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(_pilots.FirstOrDefault(x => x.Id == lane.PilotId)?.Callsign ?? "[None]")</MudButton>
-                    <MudMenu Variant="Variant.Filled" Color=Color.Primary FullWidth=true Label="@(_pilots.FirstOrDefault(x => x.Id == lane.PilotId)?.Callsign ?? "[None]")" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
-                        <MudMenuItem Label="Clear" OnClick="x => OnPilotSelectionChanged(null, lane.Lane)"></MudMenuItem>
-                        @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots(lane.Lane))
-                        {
-                            <MudMenuItem Label=@pilot.Callsign OnClick="x => OnPilotSelectionChanged(pilot.Id, lane.Lane)"></MudMenuItem>
-                        }
-                    </MudMenu>
+                    
                 </div>
                 <div>
                     <table class="w-100 mx-auto">
