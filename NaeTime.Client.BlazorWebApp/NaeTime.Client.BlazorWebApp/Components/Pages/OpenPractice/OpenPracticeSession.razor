@@ -8,8 +8,8 @@
     <div class="lane-container">
         @foreach (Models.OpenPracticeLane lane in _session.Lanes)
         {
-            <div class="shadow rounded p-2" style="width: 190px">
-                <table class="w-100">
+            <div class="shadow rounded p-2" style="width: 200px">
+                <table class="w-100 pb-2">
                     <tbody>
                         <tr>
                             <td class="align-start" style="width:10px">
@@ -29,42 +29,52 @@
                     </tbody>
                 </table>
 
-                <div class="w-100">
-                    <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+                <div class="w-100 pb-2">
+                    <MudButtonGroup FullWidth=true  Color="Color.Primary" Variant="Variant.Filled">
                         <MudButton>@(_pilots.FirstOrDefault(x => x.Id == lane.PilotId)?.Callsign ?? "[None]")</MudButton>
-                        <MudMenu Label="@Icons.Material.Filled.ArrowDropDown">
-                            <MudMenuItem Label="Clear" OnClick="x => OnPilotSelectionChanged(null, lane.Lane)"></MudMenuItem>
+                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown">
+                            <MudMenuItem  OnClick="x => OnPilotSelectionChanged(null, lane.Lane)">[Clear]</MudMenuItem>
                             @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots(lane.Lane))
                             {
-                                <MudMenuItem Label=@pilot.Callsign OnClick="x => OnPilotSelectionChanged(pilot.Id, lane.Lane)"></MudMenuItem>
+                                <MudMenuItem OnClick="x => OnPilotSelectionChanged(pilot.Id, lane.Lane)">@pilot.Callsign</MudMenuItem>
                             }
                         </MudMenu>
                     </MudButtonGroup>
                     
                 </div>
-                <div>
-                    <table class="w-100 mx-auto">
+                <div class="w-100 pb-2">
+                    <table class="w-100">
                         <tbody>
                             <tr>
-                                <td class="w-50">
-                                    <MudMenu Variant="Variant.Filled" Label="@(GetBandString(lane.BandId))" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
-                                        @foreach (NaeTime.Hardware.Frequency.Band band in NaeTime.Hardware.Frequency.Band.Bands)
-                                        {
-                                            <MudMenuItem Label="@band.ShortName" OnClick="() => ChangeFrequency([band.Id], [lane.FrequencyInMHz], lane.Lane)"></MudMenuItem>
-                                        }
+                                <td class="w-50 pr-1">
+                                    <MudMenu Class="w-100">
+                                        <ActivatorContent>
+                                            <MudButton Variant=Variant.Filled Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetBandString(lane.BandId))</MudButton>
+                                        </ActivatorContent>
+                                        <ChildContent>
+                                            @foreach (NaeTime.Hardware.Frequency.Band band in NaeTime.Hardware.Frequency.Band.Bands)
+                                            {
+                                                <MudMenuItem Label="@band.ShortName" OnClick="() => ChangeFrequency([band.Id], [lane.FrequencyInMHz], lane.Lane)"></MudMenuItem>
+                                            }
+                                        </ChildContent>
                                     </MudMenu>
                                 </td>
-                                <td class="w-50">
+                                <td class="w-50 pl-1">
                                     @if (Band.Bands.Any(b => b.Id == lane.BandId))
                                     {
-                                        <MudMenu Variant="Variant.Outlined" Label="@(GetFrequencyString(lane.BandId, lane.FrequencyInMHz))" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
-                                            @{
-                                                Band band = Band.Bands.FirstOrDefault(b => b.Id == lane.BandId);
-                                                foreach (NaeTime.Hardware.Frequency.BandFrequency bandFrequency in band.Frequencies)
-                                                {
-                                                    <MudMenuItem Label="@bandFrequency.Name" OnClick="() => ChangeFrequency([band.Id], [bandFrequency.FrequencyInMhz], lane.Lane)"></MudMenuItem>
+                                        <MudMenu Class="w-100">
+                                            <ActivatorContent>
+                                                <MudButton Variant=Variant.Filled Color=Color.Primary FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetFrequencyString(lane.BandId, lane.FrequencyInMHz))</MudButton>
+                                            </ActivatorContent>
+                                            <ChildContent>
+                                                @{
+                                                    Band band = Band.Bands.FirstOrDefault(b => b.Id == lane.BandId);
+                                                    foreach (NaeTime.Hardware.Frequency.BandFrequency bandFrequency in band.Frequencies)
+                                                    {
+                                                        <MudMenuItem Label="@bandFrequency.Name" OnClick="() => ChangeFrequency([band.Id], [bandFrequency.FrequencyInMhz], lane.Lane)"></MudMenuItem>
+                                                    }
                                                 }
-                                            }
+                                            </ChildContent>
                                         </MudMenu>
                                     }
                                     else
@@ -76,18 +86,22 @@
                         </tbody>
                     </table>
                 </div>
-                <table class="w-100">
-                    <tbody>
-                        <tr>
-                            <td class="w-50">
-                                <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100 rounded-0 rounded-start" onclick="() => TriggerDetection(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></MudButton>
-                            </td>
-                            <td class="w-50">
-                                <MudButton Variant=Variant.Filled Color=Color.Error Class="w-100 rounded-0 rounded-end" @onclick="() => TriggerInvalidation(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></MudButton>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <TimerDisplay Start="DateTime.UtcNow"></TimerDisplay>
+                <div class="w-100 pb-2">
+                    <table class="w-100">
+                        <tbody>
+                            <tr>
+                                <td class="w-50 pr-1">
+                                    <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></MudButton>
+                                </td>
+                                <td class="w-50 pl-1">
+                                    <MudButton Variant=Variant.Filled Color=Color.Error Class="w-100" @onclick="() => TriggerInvalidation(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></MudButton>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
             </div>
         }
     </div>
@@ -192,7 +206,7 @@
             }
         }
 
-        return $"{frequencyInMhz} Mhz";
+        return $"{frequencyInMhz}";
     }
     private async Task ChangeFrequency(IEnumerable<byte?> bandSelection, IEnumerable<int> frequencySelection, byte lane)
     {
@@ -218,6 +232,8 @@
         {
             return;
         }
+
+        
     }
 
     private async Task TriggerInvalidation(Guid pilotId)
