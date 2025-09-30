@@ -15,35 +15,44 @@ public class SessionsCommandHandler : ISessionsCommandHandler
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _sessionsQueryHandler = sessionsQueryHandler ?? throw new ArgumentNullException(nameof(sessionsQueryHandler));
     }
-    private async Task ThrowIfSessionDoesNotExist(Guid id, SessionType type)
+    private async Task ThrowIfSessionDoesNotExist(Guid id, Events.SessionType type)
     {
+        var querySessionType = type switch
+        {
+            Events.SessionType.OpenPractice => Query.Abstractions.Models.SessionType.OpenPractice,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), $"Unsupported session type: {type}")
+        };
         var session = await _sessionsQueryHandler.GetSession(id);
         if (session == null)
         {
             throw new ArgumentException($"Session with ID {id} does not exist.", nameof(id));
         }
-        if (session.Type != type)
+        if (session.Type != querySessionType)
         {
             throw new ArgumentException($"Session with ID {id} is not of type {type}.", nameof(id));
         }
     }
-    public async Task ActivateSession(Guid id)
+    public async Task ActivateSession(Guid id, Events.SessionType sessionType)
     {
-        await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
+        await ThrowIfSessionDoesNotExist(id, sessionType);
 
         ActiveSession activeSession = await _repository.Get<ActiveSession>(ActiveSession.SingletonId)
             ?? _repository.CreateNew(() => new ActiveSession(ActiveSession.SingletonId));
 
-        activeSession.ActivateOpenPracticeSession(id);
+        activeSession.ActivateSession(id, sessionType);
+
+        await _repository.Save(activeSession);
     }
 
-    public async Task DeactivateSession(Guid id)
+    public async Task DeactivateSession(Guid id, Events.SessionType sessionType)
     {
-        await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
+        await ThrowIfSessionDoesNotExist(id, sessionType);
 
         ActiveSession activeSession = await _repository.Get<ActiveSession>(ActiveSession.SingletonId)
             ?? _repository.CreateNew(() => new ActiveSession(ActiveSession.SingletonId));
 
         activeSession.DeactivateSession(id);
+
+        await _repository.Save(activeSession);
     }
 }

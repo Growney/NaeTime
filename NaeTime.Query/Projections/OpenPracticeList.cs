@@ -33,13 +33,18 @@ public class OpenPracticeList : Projection
     {
         if (_sessions.TryGetValue(sessionId, out var session))
         {
-            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, session.Lanes.Select(l => new OpenPracticeLane(l.Lane, l.PilotId ?? Guid.Empty, l.IsEnabled, l.BandId, l.FrequencyInMHz)));
+            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, [.. session.Lanes.Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
         }
         return null;
     }
 
-    private void When(OpenPracticeSessionScheduled scheduled)
+    private void When(SessionScheduled scheduled)
     {
+        if( scheduled.SessionType != Events.SessionType.OpenPractice)
+        {
+            return;
+        }
+
         _sessions.GetOrAdd(scheduled.SessionId, id => new ListOpenPracticeSession
         {
             Id = scheduled.SessionId,
@@ -47,7 +52,7 @@ public class OpenPracticeList : Projection
             TrackId = scheduled.TrackId
         });
     }
-    private void When(OpenPracticeSessionRenamed renamed)
+    private void When(SessionRenamed renamed)
     {
         if (_sessions.TryGetValue(renamed.Sessionid, out var session))
         {

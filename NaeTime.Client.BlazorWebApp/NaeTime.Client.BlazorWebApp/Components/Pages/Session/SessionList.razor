@@ -18,11 +18,11 @@
                 <td>
                     @if (session.IsActive)
                     {
-                        <MudBlazor.MudButton Variant="MudBlazor.Variant.Outlined" Color="MudBlazor.Color.Error">Deactivate</MudBlazor.MudButton>
+                        <MudBlazor.MudButton OnClick="()=>DeactivateSession(session.Id)" Variant="MudBlazor.Variant.Outlined" Color="MudBlazor.Color.Error">Deactivate</MudBlazor.MudButton>
                     }
                     else
                     {
-                        <MudBlazor.MudButton Variant="MudBlazor.Variant.Outlined" Color="MudBlazor.Color.Primary">Activate</MudBlazor.MudButton>
+                        <MudBlazor.MudButton OnClick="()=> ActivateSession(session.Id)" Variant="MudBlazor.Variant.Outlined" Color="MudBlazor.Color.Primary">Activate</MudBlazor.MudButton>
                     }
                 </td>
             </tr>
@@ -70,7 +70,7 @@
         switch (session.Type)
         {
             case NaeTime.Query.Abstractions.Models.SessionType.OpenPractice:
-                await SessionCommandHandler.ActivateSession(id);
+                await SessionCommandHandler.ActivateSession(id, Events.SessionType.OpenPractice);
                 break;
         }
 
@@ -93,7 +93,7 @@
         switch (session.Type)
         {
             case NaeTime.Query.Abstractions.Models.SessionType.OpenPractice:
-                await SessionCommandHandler.DeactivateSession(id);
+                await SessionCommandHandler.DeactivateSession(id, Events.SessionType.OpenPractice);
                 break;
         }
         _sessions[index] = _sessions[index] with { IsActive = false };

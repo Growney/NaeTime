@@ -1,5 +1,39 @@
 ﻿@page "/open-practice/{id:guid}"
 
+@if(_session != null)
+{
+    <MudSimpleTable>
+        <thead>
+            <tr>
+                <th>
+                    #
+                </th>
+                <th>
+                    Pilot
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < _session.Lanes.Count; i++)
+            {
+                <tr>
+                    <td>
+                        Lane @(i+1)
+                    </td>
+                    <td>
+                        <MudSelect T="Guid?" @bind-Value="_session.Lanes[i].PilotId" Clearable="true" Variant="Variant.Outlined">
+                            @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in _pilots)
+                            {
+                                <MudSelectItem Value="pilot.Id">@pilot.Callsign</MudSelectItem>
+                            }
+                            )
+                        </MudSelect>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+}
 
 
 @code {
@@ -13,4 +47,18 @@
     private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
     [Inject]
     private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
+    [Inject]
+    private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
+
+    private Models.OpenPracticeSession? _session;
+    private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> _pilots = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Pilot>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _pilots = await PilotQueryHandler.GetAllPilots();
+
+        _session = OpenPracticeSessionProjector.Project(await OpenPracticeQueryHandler.GetByIdAsync(Id));
+
+    }
 }

@@ -5,4 +5,4 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace NaeTime.Query.Abstractions.Models;
-public record OpenPracticeSession(Guid Id, string Name, Guid TrackId, IEnumerable<OpenPracticeLane> Lanes);
+public record OpenPracticeSession(Guid Id, string Name, Guid TrackId, IReadOnlyList<OpenPracticeLane> Lanes);

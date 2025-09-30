@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NaeTime.Events\NaeTime.Events.csproj" />
+  </ItemGroup>
+
 </Project>

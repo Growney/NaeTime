@@ -15,7 +15,7 @@ public class SessionList : Projection
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public SessionType Type { get; set; }
+        public Abstractions.Models.SessionType Type { get; set; }
     }
 
     private Guid? _activeSessionId = null;
@@ -44,12 +44,12 @@ public class SessionList : Projection
         return null;
     }
 
-    private void When(OpenPracticeSessionActivated e)
+    private void When(SessionActivated e)
     {
         _activeSessionId = e.SessionId;
     }
 
-    private void When(OpenPracticeSessionDeactivated e)
+    private void When(SessionDeactivated e)
     {
         if (_activeSessionId == e.SessionId)
         {
@@ -57,16 +57,20 @@ public class SessionList : Projection
         }
     }
 
-    private void When(OpenPracticeSessionScheduled scheduled)
+    private void When(SessionScheduled scheduled)
     {
         _sessions.GetOrAdd(scheduled.SessionId, id => new ListSession()
         {
             Id = scheduled.SessionId,
             Name = scheduled.Name,
-            Type = SessionType.OpenPractice
+            Type = scheduled.SessionType switch
+            {
+                Events.SessionType.OpenPractice => Abstractions.Models.SessionType.OpenPractice,
+                _ => throw new NotImplementedException($"Unsupported session type: {scheduled.SessionType}")
+            }
         });
     }
-    private void When(OpenPracticeSessionRenamed renamed)
+    private void When(SessionRenamed renamed)
     {
         if (_sessions.TryGetValue(renamed.Sessionid, out var session))
         {
