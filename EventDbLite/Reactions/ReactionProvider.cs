@@ -1,12 +1,13 @@
 ﻿using EventDbLite.Abstractions;
 using EventDbLite.Events;
+using EventDbLite.Projections;
 using EventDbLite.Streams;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 namespace EventDbLite.Reactions;
 
-public class ReactionProvider : IReactionProvider, IDisposable
+public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
 {
     private class ReactionHandler : IDisposable
     {
@@ -46,56 +47,31 @@ public class ReactionProvider : IReactionProvider, IDisposable
             return item;
         }
     }
-    private readonly IStreamSubscription _streamSubscription;
-    private readonly IEventSerializer _eventSerializer;
 
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>>> _handlers = new();
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, ConcurrentDictionary<Guid, EventBuffer>>> _waiters = new();
 
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
-    private readonly Task _processTask;
-
-    public ReactionProvider(IStreamSubscription streamSubscription, IEventSerializer eventSerializer)
+    protected override async Task HandleEvent(StreamEvent streamEvent, EventMetadata metadata)
     {
-        _streamSubscription = streamSubscription ?? throw new ArgumentNullException(nameof(streamSubscription));
-        _eventSerializer = eventSerializer;
+        Task handlerProcess = ProcessHandlers(metadata, streamEvent.Data.Payload);
 
-        _processTask = Process();
+        ProcessAwaiters(metadata, streamEvent.Data.Payload);
+
+        await handlerProcess;
     }
 
-    private async Task Process()
-    {
-        while (!_cancellationTokenSource.IsCancellationRequested)
-        {
-            StreamEvent? nextEvent = await _streamSubscription.WaitForNextEvent(_cancellationTokenSource.Token);
-
-            if (nextEvent is null)
-            {
-                continue; // No event received, continue waiting
-            }
-
-            if (_cancellationTokenSource.IsCancellationRequested)
-            {
-                break; // Exit if cancellation is requested
-            }
-
-            EventMetadata metadata = _eventSerializer.DeserializeMetadata(nextEvent.Data.Metadata);
-
-            Task handlerProcess = ProcessHandlers(metadata, nextEvent.Data.Payload);
-
-            ProcessAwaiters(metadata, nextEvent.Data.Payload);
-
-            await handlerProcess;
-
-        }
-    }
     private void ProcessAwaiters(EventMetadata metadata, byte[] data)
     {
+        if (EventSerializer is null)
+        {
+            throw new InvalidOperationException("Event serializer must not be null");
+        }
+
         if (_waiters.TryGetValue(metadata.Identifier, out var waiters))
         {
             foreach (var waiter in waiters)
             {
-                object? eventData = _eventSerializer.DeserializeEvent(data, waiter.Key);
+                object? eventData = EventSerializer.DeserializeEvent(data, waiter.Key);
 
                 if (eventData is null)
                 {
@@ -111,12 +87,17 @@ public class ReactionProvider : IReactionProvider, IDisposable
     }
     private Task ProcessHandlers(EventMetadata metadata, byte[] data)
     {
+        if (EventSerializer is null)
+        {
+            throw new InvalidOperationException("Event serializer must not be null");
+        }
+
         List<Task> tasks = new();
         if (_handlers.TryGetValue(metadata.Identifier, out var handlers))
         {
             foreach (KeyValuePair<Type, ConcurrentDictionary<Guid, ReactionHandler>> handlerKvp in handlers)
             {
-                object? deserializedData = _eventSerializer.DeserializeEvent(data, handlerKvp.Key);
+                object? deserializedData = EventSerializer.DeserializeEvent(data, handlerKvp.Key);
 
                 if (deserializedData is null)
                 {
@@ -137,16 +118,21 @@ public class ReactionProvider : IReactionProvider, IDisposable
     {
         _handlers.Clear();
         _waiters.Clear();
-        _streamSubscription.Dispose();
     }
 
     public IDisposable On<T>(Func<T, Task> handler)
     {
+
+        if (EventSerializer is null)
+        {
+            throw new InvalidOperationException("Event serializer must not be null");
+        }
+
         Guid handlerId = Guid.NewGuid();
 
         Type targetType = typeof(T);
 
-        string identifier = _eventSerializer.GetIdentifier(targetType);
+        string identifier = EventSerializer.GetIdentifier(targetType);
 
         ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>> handlerBag = _handlers.GetOrAdd(identifier, _ => new ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>>());
         ConcurrentDictionary<Guid, ReactionHandler> handlers = handlerBag.GetOrAdd(targetType, _ => new ConcurrentDictionary<Guid, ReactionHandler>());
@@ -171,8 +157,13 @@ public class ReactionProvider : IReactionProvider, IDisposable
 
     public async IAsyncEnumerable<T> GetEvents<T>([EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        if (EventSerializer is null)
+        {
+            throw new InvalidOperationException("Event serializer must not be null");
+        }
+
         Type targetType = typeof(T);
-        string identifier = _eventSerializer.GetIdentifier(typeof(T));
+        string identifier = EventSerializer.GetIdentifier(typeof(T));
 
         var waiter = new EventBuffer();
         Guid waiterId = Guid.NewGuid();

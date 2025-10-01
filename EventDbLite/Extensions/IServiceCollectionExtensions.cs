@@ -33,12 +33,7 @@ public static class IServiceCollectionExtensions
         services.AddScoped<IEventStreamConnection, EventStreamConnection>();
         services.AddScoped<IAggregateRepository, AggregateRepository>();
         services.AddScoped<IProjectionProvider, ProjectionProvider>();
-        services.AddScoped<IReactionProvider>(provider =>
-        {
-            IStreamSubscription streamSubscription = provider.GetRequiredService<IStreamSubscription>();
-            IEventSerializer eventSerializer = provider.GetRequiredService<IEventSerializer>();
-            return new ReactionProvider(streamSubscription, eventSerializer);
-        });
+        services.AddScoped<IReactionProvider, ReactionProvider>();
 
         services.AddHostedService<LiveProjectionService>();
         return services;
@@ -63,4 +58,16 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddSingletonLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Singleton, streamName);
     public static IServiceCollection AddScopedLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Scoped, streamName);
     public static IServiceCollection AddTransientLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Transient, streamName);
+
+    public static IServiceCollection AddConstantReaction<T>(this IServiceCollection services, Func<T, Task> reaction)
+    {
+        services.AddSingleton((serviceProvider) =>
+        {
+            IReactionProvider reactionProvider = serviceProvider.GetRequiredService<IReactionProvider>();
+
+            return reactionProvider.On(reaction);
+        });
+
+        return services;
+    }
 }
