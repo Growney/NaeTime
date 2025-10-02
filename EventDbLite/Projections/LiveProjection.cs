@@ -7,8 +7,8 @@ namespace EventDbLite.Projections;
 
 public class LiveProjection
 {
-    internal IEventSerializer? EventSerializer { get; set; }
-    internal IAsyncHandlerProvider? HandlerProvider { get; set; }
+    internal IEventSerializer? _eventSerializer { get; set; }
+    internal IAsyncHandlerProvider? _handlerProvider { get; set; }
 
     private readonly Dictionary<string, long> _streamPositions = new();
     public long GlobalPosition { get; private set; }
@@ -33,12 +33,12 @@ public class LiveProjection
     }
     internal async Task Raise(StreamEvent streamEvent)
     {
-        if (EventSerializer is null)
+        if (_eventSerializer is null)
         {
             throw new InvalidOperationException("Event serializer must not be null");
         }
 
-        EventMetadata metadata = EventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
+        EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
 
         await HandleEvent(streamEvent, metadata);
 
@@ -48,24 +48,24 @@ public class LiveProjection
 
     protected virtual async Task HandleEvent(StreamEvent streamEvent, EventMetadata metadata)
     {
-        if (HandlerProvider is null)
+        if (_handlerProvider is null)
         {
             throw new InvalidOperationException("Handler provider must not be null");
         }
 
-        AsyncHandler? handler = HandlerProvider.GetHandlerMethod(this, metadata.Identifier);
+        AsyncHandler? handler = _handlerProvider.GetHandlerMethod(this, metadata.Identifier);
 
         if (handler is null)
         {
             return;
         }
 
-        if (EventSerializer is null)
+        if (_eventSerializer is null)
         {
             throw new InvalidOperationException("Event serializer must not be null");
         }
 
-        object? payload = EventSerializer.DeserializeEvent(streamEvent.Data.Payload, handler.TargetType)
+        object? payload = _eventSerializer.DeserializeEvent(streamEvent.Data.Payload, handler.TargetType)
             ?? throw new InvalidOperationException($"Failed to deserialize event payload for identifier '{metadata.Identifier}'");
 
         await handler.Action(payload);

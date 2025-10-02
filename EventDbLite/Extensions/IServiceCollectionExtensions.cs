@@ -45,8 +45,8 @@ public static class IServiceCollectionExtensions
             provider =>
             {
                 LiveProjection projection = (LiveProjection)ActivatorUtilities.CreateInstance(provider, projectionType);
-                projection.EventSerializer = provider.GetRequiredService<IEventSerializer>();
-                projection.HandlerProvider = provider.GetRequiredService<IAsyncHandlerProvider>();
+                projection._eventSerializer = provider.GetRequiredService<IEventSerializer>();
+                projection._handlerProvider = provider.GetRequiredService<IAsyncHandlerProvider>();
                 return projection;
             }, lifetime));
 

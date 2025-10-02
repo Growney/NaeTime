@@ -51,6 +51,10 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>>> _handlers = new();
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, ConcurrentDictionary<Guid, EventBuffer>>> _waiters = new();
 
+    private readonly IStreamEventWriter _streamEventWriter;
+
+    public 
+
     protected override async Task HandleEvent(StreamEvent streamEvent, EventMetadata metadata)
     {
         Task handlerProcess = ProcessHandlers(metadata, streamEvent.Data.Payload);
@@ -62,7 +66,7 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
 
     private void ProcessAwaiters(EventMetadata metadata, byte[] data)
     {
-        if (EventSerializer is null)
+        if (_eventSerializer is null)
         {
             throw new InvalidOperationException("Event serializer must not be null");
         }
@@ -71,7 +75,7 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
         {
             foreach (var waiter in waiters)
             {
-                object? eventData = EventSerializer.DeserializeEvent(data, waiter.Key);
+                object? eventData = _eventSerializer.DeserializeEvent(data, waiter.Key);
 
                 if (eventData is null)
                 {
@@ -87,7 +91,7 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
     }
     private Task ProcessHandlers(EventMetadata metadata, byte[] data)
     {
-        if (EventSerializer is null)
+        if (_eventSerializer is null)
         {
             throw new InvalidOperationException("Event serializer must not be null");
         }
@@ -97,7 +101,7 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
         {
             foreach (KeyValuePair<Type, ConcurrentDictionary<Guid, ReactionHandler>> handlerKvp in handlers)
             {
-                object? deserializedData = EventSerializer.DeserializeEvent(data, handlerKvp.Key);
+                object? deserializedData = _eventSerializer.DeserializeEvent(data, handlerKvp.Key);
 
                 if (deserializedData is null)
                 {
@@ -123,7 +127,7 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
     public IDisposable On<T>(Func<T, Task> handler)
     {
 
-        if (EventSerializer is null)
+        if (_eventSerializer is null)
         {
             throw new InvalidOperationException("Event serializer must not be null");
         }
@@ -132,7 +136,7 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
 
         Type targetType = typeof(T);
 
-        string identifier = EventSerializer.GetIdentifier(targetType);
+        string identifier = _eventSerializer.GetIdentifier(targetType);
 
         ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>> handlerBag = _handlers.GetOrAdd(identifier, _ => new ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>>());
         ConcurrentDictionary<Guid, ReactionHandler> handlers = handlerBag.GetOrAdd(targetType, _ => new ConcurrentDictionary<Guid, ReactionHandler>());
@@ -157,13 +161,13 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
 
     public async IAsyncEnumerable<T> GetEvents<T>([EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        if (EventSerializer is null)
+        if (_eventSerializer is null)
         {
             throw new InvalidOperationException("Event serializer must not be null");
         }
 
         Type targetType = typeof(T);
-        string identifier = EventSerializer.GetIdentifier(typeof(T));
+        string identifier = _eventSerializer.GetIdentifier(typeof(T));
 
         var waiter = new EventBuffer();
         Guid waiterId = Guid.NewGuid();
