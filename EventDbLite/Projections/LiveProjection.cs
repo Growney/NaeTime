@@ -7,10 +7,17 @@ namespace EventDbLite.Projections;
 
 public class LiveProjection
 {
-    internal IEventSerializer? _eventSerializer { get; set; }
-    internal IAsyncHandlerProvider? _handlerProvider { get; set; }
+    protected readonly IEventSerializer _eventSerializer;
+    protected readonly IAsyncHandlerProvider _handlerProvider;
 
     private readonly Dictionary<string, long> _streamPositions = new();
+
+    public LiveProjection(IEventSerializer eventSerializer, IAsyncHandlerProvider handlerProvider)
+    {
+        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
+        _handlerProvider = handlerProvider ?? throw new ArgumentNullException(nameof(handlerProvider));
+    }
+
     public long GlobalPosition { get; private set; }
 
     public long GetStreamPosition(string streamName)

@@ -6,6 +6,7 @@ using EventDbLite.Events;
 using EventDbLite.Handlers;
 using EventDbLite.Projections;
 using EventDbLite.Reactions;
+using EventDbLite.Streams;
 using Microsoft.EntityFrameworkCore;
 using NaeTime.Persistence.SQLite;
 
@@ -33,7 +34,11 @@ public static class IServiceCollectionExtensions
         services.AddScoped<IEventStreamConnection, EventStreamConnection>();
         services.AddScoped<IAggregateRepository, AggregateRepository>();
         services.AddScoped<IProjectionProvider, ProjectionProvider>();
-        services.AddScoped<IReactionProvider, ReactionProvider>();
+
+        services.AddScoped<IStreamEventWriter, StreamEventWriter>();
+
+        services.AddLiveProjection(typeof(ReactionProvider), ServiceLifetime.Scoped);
+        services.AddScoped<IReactionProvider>(x => x.GetRequiredService<ReactionProvider>());
 
         services.AddHostedService<LiveProjectionService>();
         return services;
@@ -45,8 +50,6 @@ public static class IServiceCollectionExtensions
             provider =>
             {
                 LiveProjection projection = (LiveProjection)ActivatorUtilities.CreateInstance(provider, projectionType);
-                projection._eventSerializer = provider.GetRequiredService<IEventSerializer>();
-                projection._handlerProvider = provider.GetRequiredService<IAsyncHandlerProvider>();
                 return projection;
             }, lifetime));
 
@@ -54,18 +57,17 @@ public static class IServiceCollectionExtensions
         return services;
     }
 
-
     public static IServiceCollection AddSingletonLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Singleton, streamName);
     public static IServiceCollection AddScopedLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Scoped, streamName);
     public static IServiceCollection AddTransientLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Transient, streamName);
 
-    public static IServiceCollection AddConstantReaction<T>(this IServiceCollection services, Func<T, Task> reaction)
+    public static IServiceCollection AddConstantReaction<T>(this IServiceCollection services, Func<IServiceProvider, T, Task> reaction)
     {
         services.AddSingleton((serviceProvider) =>
         {
             IReactionProvider reactionProvider = serviceProvider.GetRequiredService<IReactionProvider>();
 
-            return reactionProvider.On(reaction);
+            return reactionProvider.On((T eventObj) => reaction(serviceProvider, eventObj));
         });
 
         return services;

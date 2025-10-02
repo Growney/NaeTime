@@ -9,6 +9,8 @@ namespace EventDbLite.Reactions;
 
 public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
 {
+    private const string ReactionStreamName = "$reactions";
+
     private class ReactionHandler : IDisposable
     {
         public ReactionHandler(Func<object, Task> handler, Action onDispose)
@@ -52,16 +54,31 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, ConcurrentDictionary<Guid, EventBuffer>>> _waiters = new();
 
     private readonly IStreamEventWriter _streamEventWriter;
+    private readonly IEventStreamConnection _eventStreamConnection;
+    private readonly string _reactionHandledIdentifier;
 
-    public 
+    public ReactionProvider(IStreamEventWriter streamEventWriter, IEventStreamConnection eventStreamConnection, IEventSerializer eventSerializer, IAsyncHandlerProvider handlerProvider) : base(eventSerializer, handlerProvider)
+    {
+        _eventStreamConnection = eventStreamConnection ?? throw new ArgumentNullException(nameof(eventStreamConnection));
+        _streamEventWriter = streamEventWriter ?? throw new ArgumentNullException(nameof(streamEventWriter));
+        _reactionHandledIdentifier = eventSerializer.GetIdentifier(typeof(ReactionHandled));
+    }
 
     protected override async Task HandleEvent(StreamEvent streamEvent, EventMetadata metadata)
     {
+        if (metadata.Identifier == _reactionHandledIdentifier)
+        {
+            // Ignore ReactionHandled events to prevent loops
+            return;
+        }
+
         Task handlerProcess = ProcessHandlers(metadata, streamEvent.Data.Payload);
 
         ProcessAwaiters(metadata, streamEvent.Data.Payload);
 
         await handlerProcess;
+
+        await CommitReactionPosition(streamEvent.GlobalOrdinal);
     }
 
     private void ProcessAwaiters(EventMetadata metadata, byte[] data)
@@ -118,12 +135,46 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
         return Task.WhenAll(tasks);
     }
 
+    private Task CommitReactionPosition(long globalOrdinal)
+    {
+        ReactionHandled reactionHandled = new()
+        {
+            GlobalOrdinal = globalOrdinal
+        };
+
+        return _streamEventWriter.AppendToStream("$reactions", reactionHandled);
+    }
+
+    public override async Task<StreamPosition> GetGlobalPosition()
+    {
+        await foreach (StreamEvent streamEvent in _eventStreamConnection.ReadAllStreamEvents(StreamDirection.Reverse, StreamPosition.End))
+        {
+            EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
+
+            if (metadata.Identifier != _reactionHandledIdentifier)
+            {
+                continue;
+            }
+
+            ReactionHandled? handled = _eventSerializer.DeserializeEvent(streamEvent.Data.Payload, typeof(ReactionHandled)) as ReactionHandled;
+
+            if (handled is null)
+            {
+                continue;
+            }
+
+            return StreamPosition.WithGlobalVersion(handled.GlobalOrdinal);
+
+        }
+
+        return StreamPosition.Beginning;
+    }
+
     public void Dispose()
     {
         _handlers.Clear();
         _waiters.Clear();
     }
-
     public IDisposable On<T>(Func<T, Task> handler)
     {
 
@@ -158,7 +209,6 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
 
         return reactionHandler;
     }
-
     public async IAsyncEnumerable<T> GetEvents<T>([EnumeratorCancellation] CancellationToken cancellationToken)
     {
         if (_eventSerializer is null)

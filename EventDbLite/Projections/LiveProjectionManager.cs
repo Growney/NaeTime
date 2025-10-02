@@ -47,8 +47,6 @@ internal class LiveProjectionManager
     private LiveProjection GetInstance(IServiceProvider serviceProvider)
     {
         LiveProjection projection = (LiveProjection)ActivatorUtilities.GetServiceOrCreateInstance(serviceProvider, _requirement.ProjectionType);
-        projection._eventSerializer ??= serviceProvider.GetRequiredService<IEventSerializer>();
-        projection._handlerProvider ??= serviceProvider.GetRequiredService<IAsyncHandlerProvider>();
         return projection;
     }
 
