@@ -12,29 +12,29 @@ public class DetectionCommandHandler : IDetectionCommandHandler
         _repository = repository;
     }
 
-    public async Task AssignDetectionToSession(Guid DetectionId, Guid SessionId)
+    public async Task AssignDetectionToOpenPracticeSession(Guid detectionId, Guid sessionId)
     {
-        Detection? detection = await _repository.Get<Detection>(DetectionId) ?? throw new InvalidOperationException($"Detection {DetectionId} does not exist.");
-        detection.AssignToSession(DetectionId, SessionId);
+        Detection? detection = await _repository.Get<Detection>(detectionId) ?? throw new InvalidOperationException($"Detection {detectionId} does not exist.");
+        detection.AssignToOpenPracticeSession(detectionId, sessionId);
         await _repository.Save(detection);
     }
 
-    public Task RegisterDetection(Guid DetectionId, byte Lane, long SoftwareTime, DateTime UtcTime)
+    public Task RegisterDetection(Guid detectionId, byte lane, long softwareTime, DateTime utcTime)
     {
-        Detection? detection = _repository.CreateNew<Detection>(() => new(DetectionId, Lane, SoftwareTime, UtcTime));
+        Detection? detection = _repository.CreateNew<Detection>(() => new(detectionId, lane, softwareTime, utcTime));
         return _repository.Save(detection);
     }
 
-    public Task RegisterHardwareDetection(Guid DetectionId, Guid TimerId, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime)
+    public Task RegisterHardwareDetection(Guid detectionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        Detection? detection = _repository.CreateNew<Detection>(() => new(DetectionId, TimerId, Lane, HardwareTime, SoftwareTime, UtcTime));
+        Detection? detection = _repository.CreateNew<Detection>(() => new(detectionId, timerId, lane, hardwareTime, softwareTime, utcTime));
         return _repository.Save(detection);
     }
 
-    public async Task UnassignDetectionFromSession(Guid DetectionId, Guid SessionId)
+    public async Task UnassignDetectionFromSession(Guid detectionId, Guid sessionId)
     {
-        Detection? detection = await _repository.Get<Detection>(DetectionId) ?? throw new InvalidOperationException($"Detection {DetectionId} does not exist.");
-        detection.UnassignFromSession(DetectionId, SessionId);
+        Detection? detection = await _repository.Get<Detection>(detectionId) ?? throw new InvalidOperationException($"Detection {detectionId} does not exist.");
+        detection.UnassignFromSession(detectionId, sessionId);
         await _repository.Save(detection);
     }
 }

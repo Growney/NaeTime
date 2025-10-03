@@ -1,25 +1,22 @@
 ﻿using EventDbLite.Abstractions;
 using EventDbLite.Events;
-using EventDbLite.Projections;
 using EventDbLite.Streams;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 namespace EventDbLite.Reactions;
 
-public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
+public class ReactionProvider : IReactionProvider
 {
-    private const string ReactionStreamName = "$reactions";
-
     private class ReactionHandler : IDisposable
     {
-        public ReactionHandler(Func<object, Task> handler, Action onDispose)
+        public ReactionHandler(Func<object, StreamEvent, Task> handler, Action onDispose)
         {
             Handler = handler ?? throw new ArgumentNullException(nameof(handler));
             OnDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
         }
 
-        public Func<object, Task> Handler { get; }
+        public Func<object, StreamEvent, Task> Handler { get; }
         public Action OnDispose { get; }
 
         public void Dispose()
@@ -53,32 +50,31 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>>> _handlers = new();
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<Type, ConcurrentDictionary<Guid, EventBuffer>>> _waiters = new();
 
-    private readonly IStreamEventWriter _streamEventWriter;
-    private readonly IEventStreamConnection _eventStreamConnection;
-    private readonly string _reactionHandledIdentifier;
+    private readonly IStreamSubscription _subscription;
+    protected readonly IEventSerializer _eventSerializer;
 
-    public ReactionProvider(IStreamEventWriter streamEventWriter, IEventStreamConnection eventStreamConnection, IEventSerializer eventSerializer, IAsyncHandlerProvider handlerProvider) : base(eventSerializer, handlerProvider)
+    private Task _processTask;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    public ReactionProvider(IStreamSubscription subscription, IEventSerializer eventSerializer)
     {
-        _eventStreamConnection = eventStreamConnection ?? throw new ArgumentNullException(nameof(eventStreamConnection));
-        _streamEventWriter = streamEventWriter ?? throw new ArgumentNullException(nameof(streamEventWriter));
-        _reactionHandledIdentifier = eventSerializer.GetIdentifier(typeof(ReactionHandled));
+        _subscription = subscription ?? throw new ArgumentNullException(nameof(subscription));
+        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
+
+        _processTask = ProcessEvents();
     }
 
-    protected override async Task HandleEvent(StreamEvent streamEvent, EventMetadata metadata)
+    protected async Task ProcessEvents()
     {
-        if (metadata.Identifier == _reactionHandledIdentifier)
+        await foreach (StreamEvent streamEvent in _subscription.StreamEvents(_cancellationTokenSource.Token))
         {
-            // Ignore ReactionHandled events to prevent loops
-            return;
+            EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
+            Task handlerProcess = ProcessHandlers(streamEvent, metadata, streamEvent.Data.Payload);
+
+            ProcessAwaiters(metadata, streamEvent.Data.Payload);
+
+            await handlerProcess;
         }
-
-        Task handlerProcess = ProcessHandlers(metadata, streamEvent.Data.Payload);
-
-        ProcessAwaiters(metadata, streamEvent.Data.Payload);
-
-        await handlerProcess;
-
-        await CommitReactionPosition(streamEvent.GlobalOrdinal);
     }
 
     private void ProcessAwaiters(EventMetadata metadata, byte[] data)
@@ -106,7 +102,7 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
             }
         }
     }
-    private Task ProcessHandlers(EventMetadata metadata, byte[] data)
+    private Task ProcessHandlers(StreamEvent steamEvent, EventMetadata metadata, byte[] data)
     {
         if (_eventSerializer is null)
         {
@@ -127,55 +123,23 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
 
                 foreach (KeyValuePair<Guid, ReactionHandler> handler in handlerKvp.Value)
                 {
-
-                    tasks.Add(handler.Value.Handler(deserializedData));
+                    tasks.Add(handler.Value.Handler(deserializedData, steamEvent));
                 }
             }
         }
         return Task.WhenAll(tasks);
     }
 
-    private Task CommitReactionPosition(long globalOrdinal)
+    public async ValueTask DisposeAsync()
     {
-        ReactionHandled reactionHandled = new()
-        {
-            GlobalOrdinal = globalOrdinal
-        };
+        _cancellationTokenSource.Cancel();
 
-        return _streamEventWriter.AppendToStream("$reactions", reactionHandled);
-    }
+        await _processTask;
 
-    public override async Task<StreamPosition> GetGlobalPosition()
-    {
-        await foreach (StreamEvent streamEvent in _eventStreamConnection.ReadAllStreamEvents(StreamDirection.Reverse, StreamPosition.End))
-        {
-            EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
-
-            if (metadata.Identifier != _reactionHandledIdentifier)
-            {
-                continue;
-            }
-
-            ReactionHandled? handled = _eventSerializer.DeserializeEvent(streamEvent.Data.Payload, typeof(ReactionHandled)) as ReactionHandled;
-
-            if (handled is null)
-            {
-                continue;
-            }
-
-            return StreamPosition.WithGlobalVersion(handled.GlobalOrdinal);
-
-        }
-
-        return StreamPosition.Beginning;
-    }
-
-    public void Dispose()
-    {
         _handlers.Clear();
         _waiters.Clear();
     }
-    public IDisposable On<T>(Func<T, Task> handler)
+    public IDisposable On(Type type, Func<object, StreamEvent, Task> handler)
     {
 
         if (_eventSerializer is null)
@@ -185,44 +149,33 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
 
         Guid handlerId = Guid.NewGuid();
 
-        Type targetType = typeof(T);
-
-        string identifier = _eventSerializer.GetIdentifier(targetType);
+        string identifier = _eventSerializer.GetIdentifier(type);
 
         ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>> handlerBag = _handlers.GetOrAdd(identifier, _ => new ConcurrentDictionary<Type, ConcurrentDictionary<Guid, ReactionHandler>>());
-        ConcurrentDictionary<Guid, ReactionHandler> handlers = handlerBag.GetOrAdd(targetType, _ => new ConcurrentDictionary<Guid, ReactionHandler>());
+        ConcurrentDictionary<Guid, ReactionHandler> handlers = handlerBag.GetOrAdd(type, _ => new ConcurrentDictionary<Guid, ReactionHandler>());
 
-        Task Handler(object obj)
-        {
-            if (obj is T typedObj)
-            {
-                return handler(typedObj);
-            }
-            return Task.CompletedTask;
-        }
         void OnDispose()
         {
             handlers.TryRemove(handlerId, out _);
         }
-        ReactionHandler reactionHandler = new(Handler, OnDispose);
+        ReactionHandler reactionHandler = new(handler, OnDispose);
         handlers.TryAdd(handlerId, reactionHandler);
 
         return reactionHandler;
     }
-    public async IAsyncEnumerable<T> GetEvents<T>([EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<object> StreamEvents(Type type, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         if (_eventSerializer is null)
         {
             throw new InvalidOperationException("Event serializer must not be null");
         }
 
-        Type targetType = typeof(T);
-        string identifier = _eventSerializer.GetIdentifier(typeof(T));
+        string identifier = _eventSerializer.GetIdentifier(type);
 
         var waiter = new EventBuffer();
         Guid waiterId = Guid.NewGuid();
         ConcurrentDictionary<Type, ConcurrentDictionary<Guid, EventBuffer>> waiterBag = _waiters.GetOrAdd(identifier, _ => new ConcurrentDictionary<Type, ConcurrentDictionary<Guid, EventBuffer>>());
-        ConcurrentDictionary<Guid, EventBuffer> buffers = waiterBag.GetOrAdd(targetType, _ => new ConcurrentDictionary<Guid, EventBuffer>());
+        ConcurrentDictionary<Guid, EventBuffer> buffers = waiterBag.GetOrAdd(type, _ => new ConcurrentDictionary<Guid, EventBuffer>());
         buffers.TryAdd(waiterId, waiter);
 
         try
@@ -231,9 +184,9 @@ public class ReactionProvider : LiveProjection, IReactionProvider, IDisposable
             while (!cancellationToken.IsCancellationRequested)
             {
                 object? item = await waiter.WaitForItemAsync(cancellationToken);
-                if (item is T typedItem)
+                if (item != null)
                 {
-                    yield return typedItem;
+                    yield return item;
                 }
             }
         }

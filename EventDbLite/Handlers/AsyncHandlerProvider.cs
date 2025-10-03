@@ -6,7 +6,7 @@ namespace EventDbLite.Handlers;
 
 internal class AsyncHandlerProvider : IAsyncHandlerProvider
 {
-    private readonly ConcurrentDictionary<Type, Dictionary<string, (Type targetType, Func<object, object, Task> handler)>> _handlerMethods = new();
+    private readonly ConcurrentDictionary<Type, Dictionary<string, AsyncHandler>> _handlerMethods = new();
 
     private readonly IEventSerializer _eventSerializer;
 
@@ -15,9 +15,9 @@ internal class AsyncHandlerProvider : IAsyncHandlerProvider
         _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
     }
 
-    private Dictionary<string, (Type targetType, Func<object, object, Task> handler)> RegisterAggregateRoot(Type aggregateRootType)
+    private Dictionary<string, AsyncHandler> RegisterAggregateRoot(Type aggregateRootType)
     {
-        Dictionary<string, (Type targetType, Func<object, object, Task> handler)> handlerMethods = new();
+        Dictionary<string, AsyncHandler> handlerMethods = new();
         foreach (MethodInfo method in aggregateRootType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
         {
             if (method.Name != "When")
@@ -53,40 +53,43 @@ internal class AsyncHandlerProvider : IAsyncHandlerProvider
                 throw new InvalidOperationException($"Duplicate handler method found: {identifier} in {aggregateRootType.FullName}");
             }
 
-            handlerMethods.Add(identifier, (eventType, GetHandler(method)));
+            handlerMethods.Add(identifier, GetHandler(eventType, method));
         }
 
         return handlerMethods;
     }
 
-    private Func<object, object, Task> GetHandler(MethodInfo method)
+    private AsyncHandler GetHandler(Type targetType, MethodInfo method)
         => method.ReturnType == typeof(Task)
-            ? GetAsyncHandler(method)
-            : GetVoidHandler(method);
+            ? GetAsyncHandler(targetType, method)
+            : GetVoidHandler(targetType, method);
 
-    private Func<object, object, Task> GetAsyncHandler(MethodInfo method)
-        => (instance, eventObj) => method.Invoke(instance, [eventObj]) is not Task result
+    private AsyncHandler GetAsyncHandler(Type targetType, MethodInfo method)
+        => new((instance, eventObj) =>
+        {
+            return method.Invoke(instance, [eventObj]) is not Task result
                 ? throw new InvalidOperationException($"Method {method.Name} in {instance.GetType().FullName} must return a Task or void.")
                 : result;
+        }, targetType);
 
-    private Func<object, object, Task> GetVoidHandler(MethodInfo method)
-        => (instance, eventObj) =>
+    private AsyncHandler GetVoidHandler(Type targetType, MethodInfo method)
+        => new((instance, eventObj) =>
         {
             method.Invoke(instance, [eventObj]);
             return Task.CompletedTask;
-        };
+        }, targetType);
 
-    public AsyncHandler? GetHandlerMethod(object handler, string identifier)
+    public AsyncHandler? GetHandlerMethod(Type handlerType, string identifier)
     {
-        Type handlerType = handler.GetType();
+        Dictionary<string, AsyncHandler> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterAggregateRoot);
 
-        Dictionary<string, (Type targetType, Func<object, object, Task> handler)> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterAggregateRoot);
+        handlerMethods.TryGetValue(identifier, out AsyncHandler? method);
 
-        handlerMethods.TryGetValue(identifier, out (Type targetType, Func<object, object, Task> handler) method);
-
-        return new AsyncHandler(
-            action: payload => method.handler(handler, payload),
-            targetType: method.targetType
-        );
+        return method;
+    }
+    public IEnumerable<AsyncHandler> GetHandlerMethods(Type handlerType)
+    {
+        Dictionary<string, AsyncHandler> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterAggregateRoot);
+        return handlerMethods.Values;
     }
 }

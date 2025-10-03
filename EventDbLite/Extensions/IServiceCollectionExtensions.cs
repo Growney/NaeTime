@@ -25,20 +25,21 @@ public static class IServiceCollectionExtensions
         });
         services.AddHostedService<SQLiteDatabaseManager<EventDbLiteContext>>();
 
+        services.AddHostedService<ReactionService>();
+
         services.AddSingleton<IEventStoreLite, EventStoreLite>();
 
         services.AddSingleton<IEventSerializer, JsonEventSerializer>();
         services.AddSingleton<IHandlerProvider, HandlerProvider>();
         services.AddSingleton<IAsyncHandlerProvider, AsyncHandlerProvider>();
 
-        services.AddScoped<IEventStreamConnection, EventStreamConnection>();
-        services.AddScoped<IAggregateRepository, AggregateRepository>();
-        services.AddScoped<IProjectionProvider, ProjectionProvider>();
+        services.AddTransient<IEventStreamConnection, EventStreamConnection>();
+        services.AddTransient<IAggregateRepository, AggregateRepository>();
+        services.AddTransient<IProjectionProvider, ProjectionProvider>();
 
-        services.AddScoped<IStreamEventWriter, StreamEventWriter>();
-
-        services.AddLiveProjection(typeof(ReactionProvider), ServiceLifetime.Scoped);
-        services.AddScoped<IReactionProvider>(x => x.GetRequiredService<ReactionProvider>());
+        services.AddTransient<IStreamEventWriter, StreamEventWriter>();
+        services.AddTransient<IReactionProviderFactory, ReactionProviderFactory>();
+        services.AddTransient(x => x.GetRequiredService<IReactionProviderFactory>().CreateProvider(StreamPosition.End));
 
         services.AddHostedService<LiveProjectionService>();
         return services;
@@ -49,7 +50,7 @@ public static class IServiceCollectionExtensions
         services.Add(new ServiceDescriptor(projectionType,
             provider =>
             {
-                LiveProjection projection = (LiveProjection)ActivatorUtilities.CreateInstance(provider, projectionType);
+                LiveProjection projection = (LiveProjection)ActivatorUtilities.GetServiceOrCreateInstance(provider, projectionType);
                 return projection;
             }, lifetime));
 
@@ -63,13 +64,41 @@ public static class IServiceCollectionExtensions
 
     public static IServiceCollection AddConstantReaction<T>(this IServiceCollection services, Func<IServiceProvider, T, Task> reaction)
     {
-        services.AddSingleton((serviceProvider) =>
+        services.AddSingleton(new ConstantReactionSource([new ConstantReaction((serviceProvider, obj) =>
         {
-            IReactionProvider reactionProvider = serviceProvider.GetRequiredService<IReactionProvider>();
+            if (obj is T t)
+            {
+                return reaction(serviceProvider, t);
+            }
+            return Task.CompletedTask;
+        }, typeof(T))]));
 
-            return reactionProvider.On((T eventObj) => reaction(serviceProvider, eventObj));
+        return services;
+    }
+    public static IServiceCollection AddConstantReactionClass<T>(this IServiceCollection services) where T : class
+    {
+        services.AddSingleton(serviceProvider =>
+        {
+            IAsyncHandlerProvider handlerProvider = serviceProvider.GetRequiredService<IAsyncHandlerProvider>();
+            IEnumerable<AsyncHandler> handlers = handlerProvider.GetHandlerMethods(typeof(T));
+
+            List<ConstantReaction> reactions = new();
+
+            foreach (AsyncHandler handler in handlers)
+            {
+                ConstantReaction reaction = new(async (reactionServiceProvider, eventObject) =>
+                {
+                    object? instance = ActivatorUtilities.GetServiceOrCreateInstance(reactionServiceProvider, typeof(T));
+
+                    await handler.Action.Invoke(instance, eventObject);
+
+                }, handler.TargetType);
+
+                reactions.Add(reaction);
+            }
+
+            return new ConstantReactionSource(reactions);
         });
-
         return services;
     }
 }

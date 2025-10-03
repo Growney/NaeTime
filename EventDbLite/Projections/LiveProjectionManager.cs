@@ -20,7 +20,8 @@ internal class LiveProjectionManager
 
     public async Task Start()
     {
-        LiveProjection initialInstance = GetInstance(_serviceProvider);
+        using IServiceScope initialScope = _serviceProvider.CreateScope();
+        LiveProjection initialInstance = GetInstance(initialScope.ServiceProvider);
         StreamPosition initialPosition = await initialInstance.GetGlobalPosition();
 
         IStreamSubscription subscription = _requirement.Stream is not null
@@ -30,14 +31,8 @@ internal class LiveProjectionManager
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource = new CancellationTokenSource();
 
-        while (_cancellationTokenSource.IsCancellationRequested)
+        await foreach (StreamEvent nextEvent in subscription.StreamEvents(_cancellationTokenSource.Token))
         {
-            StreamEvent? nextEvent = await subscription.WaitForNextEvent(_cancellationTokenSource.Token);
-            if (nextEvent is null)
-            {
-                continue; // No event received, continue to wait
-            }
-
             using IServiceScope scope = _serviceProvider.CreateScope();
             LiveProjection projection = GetInstance(scope.ServiceProvider);
             await projection.Raise(nextEvent);

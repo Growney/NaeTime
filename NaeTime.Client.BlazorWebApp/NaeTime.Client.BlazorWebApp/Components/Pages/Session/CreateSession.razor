@@ -77,7 +77,7 @@
         {
             case Models.SessionType.OpenPractice:
                 await OpenPracticeCommandHandler.ScheduleSession(_session.Id, _session.TrackId, _session.Name);
-                await SessionsCommandHandler.ActivateSession(_session.Id, Events.SessionType.OpenPractice);
+                await SessionsCommandHandler.ActivateOpenPracticeSession(_session.Id);
                 NavigationManager.NavigateTo($"/open-practice/{_session.Id}");
                 break;
         }

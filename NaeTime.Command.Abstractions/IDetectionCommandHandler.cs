@@ -1,9 +1,9 @@
 ﻿namespace NaeTime.Command.Abstractions;
 public interface IDetectionCommandHandler
 {
-    public Task RegisterHardwareDetection(Guid DetectionId, Guid TimerId, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);
-    public Task RegisterDetection(Guid DetectionId, byte Lane, long SoftwareTime, DateTime UtcTime);
+    public Task RegisterHardwareDetection(Guid detectionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime);
+    public Task RegisterDetection(Guid detectionId, byte lane, long softwareTime, DateTime utcTime);
 
-    public Task AssignDetectionToSession(Guid DetectionId, Guid SessionId);
-    public Task UnassignDetectionFromSession(Guid DetectionId, Guid SessionId);
+    public Task AssignDetectionToOpenPracticeSession(Guid detectionId, Guid sessionId);
+    public Task UnassignDetectionFromSession(Guid detectionId, Guid sessionId);
 }

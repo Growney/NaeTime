@@ -12,6 +12,7 @@
     <ProjectReference Include="..\..\NaeTime.Command\NaeTime.Command.csproj" />
     <ProjectReference Include="..\..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
     <ProjectReference Include="..\..\NaeTime.Query\NaeTime.Query.csproj" />
+    <ProjectReference Include="..\..\NaeTime.Reactions\NaeTime.Reactions.csproj" />
     <ProjectReference Include="..\NaeTime.Client.BlazorWebApp.Client\NaeTime.Client.BlazorWebApp.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.8" />
     <PackageReference Include="MudBlazor" Version="8.12.0" />

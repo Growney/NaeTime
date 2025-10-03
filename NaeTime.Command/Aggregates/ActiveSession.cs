@@ -4,6 +4,11 @@ using NaeTime.Events;
 namespace NaeTime.Command.Aggregates;
 public class ActiveSession : AggregateRoot
 {
+    private enum SessionType
+    {
+        OpenPractice,
+    }
+
     public readonly static Guid SingletonId = Guid.Empty;
     private Guid? _sessionId;
     private SessionType? _sessionType;
@@ -19,26 +24,36 @@ public class ActiveSession : AggregateRoot
     {
         Id = started.TrackingId;
     }
-    public void ActivateSession(Guid sessionId, SessionType sessionType)
+    public void ActivateOpenPracticeSession(Guid sessionId)
     {
-        if (_sessionId.HasValue && _sessionType.HasValue)
+        if (_sessionId == sessionId)
         {
-            Raise(new SessionDeactivated(_sessionId.Value, _sessionType.Value));
+            return;
         }
 
-        Raise(new SessionActivated(sessionId, sessionType));
+        if (_sessionId.HasValue && _sessionType.HasValue)
+        {
+            switch (_sessionType)
+            {
+                case SessionType.OpenPractice:
+                    Raise(new OpenPracticeSessionDeactivated(_sessionId.Value));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        Raise(new OpenPracticeSessionActivated(sessionId));
     }
 
-    private void When(SessionActivated activated)
+    private void When(OpenPracticeSessionActivated activated)
     {
         _sessionId = activated.SessionId;
-        _sessionType = activated.SessionType;
+        _sessionType = SessionType.OpenPractice;
     }
 
     public void DeactivateSession(Guid sessionId)
     {
-
-
         if (_sessionId != sessionId)
         {
             throw new InvalidOperationException($"Cannot deactivate session {sessionId} because it is not the active session.");
@@ -46,10 +61,10 @@ public class ActiveSession : AggregateRoot
 
         if (_sessionId.HasValue && _sessionType.HasValue)
         {
-            Raise(new SessionDeactivated(_sessionId.Value, _sessionType.Value));
+            Raise(new OpenPracticeSessionActivated(_sessionId.Value));
         }
     }
-    private void When(SessionDeactivated _)
+    private void When(OpenPracticeSessionDeactivated _)
     {
         _sessionId = null;
         _sessionType = null;

@@ -3,5 +3,6 @@
 namespace EventDbLite.Abstractions;
 public interface IHandlerProvider
 {
-    Handler? GetHandlerMethod(object handler, string identifier);
+    Handler? GetHandlerMethod(Type handlerType, string identifier);
+    IEnumerable<Handler> GetAllHandlerMethods(Type handlerType);
 }

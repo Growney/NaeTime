@@ -54,7 +54,7 @@ public abstract class AggregateRoot
         EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
 
         Version = streamEvent.StreamOrdinal;
-        Handler? handler = _handlerProvider.GetHandlerMethod(this, metadata.Identifier);
+        Handler? handler = _handlerProvider.GetHandlerMethod(GetType(), metadata.Identifier);
         if (handler is null)
         {
             return;
@@ -62,7 +62,7 @@ public abstract class AggregateRoot
 
         object? payload = _eventSerializer.DeserializeEvent(streamEvent.Data.Payload, handler.TargetType) ?? throw new InvalidOperationException($"Failed to deserialize event payload for identifier '{metadata.Identifier}'");
 
-        handler.Action(payload);
+        handler.Action(this, payload);
 
     }
 
@@ -85,14 +85,14 @@ public abstract class AggregateRoot
 
         string identifier = _eventSerializer.GetIdentifier(payload.GetType());
 
-        Handler? handler = _handlerProvider.GetHandlerMethod(this, identifier);
+        Handler? handler = _handlerProvider.GetHandlerMethod(GetType(), identifier);
 
         if (handler is null)
         {
             return;
         }
 
-        handler.Action(payload);
+        handler.Action(this, payload);
     }
 
     protected void Clone(AggregateRoot root)

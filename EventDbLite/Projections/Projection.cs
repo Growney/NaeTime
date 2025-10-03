@@ -30,7 +30,7 @@ public class Projection
             throw new InvalidOperationException("Handler provider must not be null");
         }
 
-        Handler? handler = HandlerProvider.GetHandlerMethod(this, metadata.Identifier);
+        Handler? handler = HandlerProvider.GetHandlerMethod(this.GetType(), metadata.Identifier);
 
         if (handler is null)
         {
@@ -40,8 +40,13 @@ public class Projection
         object? payload = EventSerializer.DeserializeEvent(streamEvent.Data.Payload, handler.TargetType)
             ?? throw new InvalidOperationException($"Failed to deserialize event payload for identifier '{metadata.Identifier}'");
 
-        handler.Action(payload);
+        handler.Action(this, payload);
 
         GlobalOrdinal = streamEvent.GlobalOrdinal;
+    }
+
+    protected virtual void HandleEvent(StreamEvent streamEvent, EventMetadata metadata)
+    {
+        // Override in derived classes to handle events
     }
 }

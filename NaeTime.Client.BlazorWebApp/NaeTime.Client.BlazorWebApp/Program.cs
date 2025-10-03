@@ -9,6 +9,8 @@ builder.Services.AddMudServices();
 builder.Services.AddEventDbLite();
 builder.Services.AddNaeTimeQueries();
 builder.Services.AddNaeTimeCommand();
+builder.Services.AddHardwareCore();
+builder.Services.AddNaeTimeEventReactions();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()

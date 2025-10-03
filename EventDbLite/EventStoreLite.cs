@@ -93,13 +93,7 @@ public class EventStoreLite : IEventStoreLite
 
     public IStreamSubscription SubscribeToAllStreams(StreamPosition position)
     {
-        using IServiceScope scope = _serviceProvider.CreateScope();
-
-        IEventStreamConnection connection = scope.ServiceProvider.GetRequiredService<IEventStreamConnection>();
-
-        IAsyncEnumerable<StreamEvent> initialEvents = connection.ReadAllStreamEvents(StreamDirection.Forward, position);
-
-        return CreateSubscription(null, initialEvents);
+        return CreateSubscription(null, position);
     }
     public IStreamSubscription SubscribeToStream(string streamName, StreamPosition position)
     {
@@ -107,32 +101,23 @@ public class EventStoreLite : IEventStoreLite
         {
             throw new ArgumentException("Stream name cannot be null or empty.", nameof(streamName));
         }
-
-        using IServiceScope scope = _serviceProvider.CreateScope();
-
-        IEventStreamConnection connection = scope.ServiceProvider.GetRequiredService<IEventStreamConnection>();
-
-        IAsyncEnumerable<StreamEvent> initialEvents = connection.ReadStreamEvents(streamName, StreamDirection.Forward, position);
-        return CreateSubscription(streamName, initialEvents);
+        return CreateSubscription(streamName, position);
     }
 
-    private IStreamSubscription CreateSubscription(string? streamName, IAsyncEnumerable<StreamEvent> initialEvents)
+    private IStreamSubscription CreateSubscription(string? streamName, StreamPosition initialPosition)
     {
-        if (string.IsNullOrEmpty(streamName))
-        {
-            throw new ArgumentException("Stream name cannot be null or empty.", nameof(streamName));
-        }
         Guid subscriptionId = Guid.NewGuid();
+
+        ConcurrentDictionary<Guid, StreamSubscription> targetDictionary = streamName == null
+            ? _allStreamSubscriptions : _streamSubscriptions.GetOrAdd(streamName, _ => new ConcurrentDictionary<Guid, StreamSubscription>());
+
         void onDispose(StreamSubscription subscription)
         {
-            if (_streamSubscriptions.TryGetValue(streamName, out var subscriptions))
-            {
-                subscriptions.TryRemove(subscriptionId, out _);
-            }
+            targetDictionary.TryRemove(subscriptionId, out _);
         }
 
-        StreamSubscription subscription = new(initialEvents, onDispose);
-        _streamSubscriptions.GetOrAdd(streamName, _ => new ConcurrentDictionary<Guid, StreamSubscription>()).TryAdd(subscriptionId, subscription);
+        StreamSubscription subscription = new(this, streamName, initialPosition, onDispose);
+        targetDictionary.TryAdd(subscriptionId, subscription);
         return subscription;
     }
 }

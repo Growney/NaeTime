@@ -5,11 +5,11 @@ namespace EventDbLite.Aggregates;
 
 public class AggregateRepository : IAggregateRepository
 {
-    private readonly IEventStreamConnection _connection;
+    private readonly IEventStoreLite _connection;
     private readonly IEventSerializer _eventSerializer;
     private readonly IHandlerProvider _aggregateHandlerProvider;
 
-    public AggregateRepository(IEventStreamConnection connection, IEventSerializer eventSerializer, IHandlerProvider aggregateHandlerProvider)
+    public AggregateRepository(IEventStoreLite connection, IEventSerializer eventSerializer, IHandlerProvider aggregateHandlerProvider)
     {
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
         _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));

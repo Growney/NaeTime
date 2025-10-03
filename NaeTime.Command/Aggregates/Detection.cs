@@ -3,7 +3,13 @@
 namespace NaeTime.Command.Aggregates;
 public class Detection : AggregateRoot
 {
+    private enum SessionType
+    {
+        OpenPractice,
+    }
+
     private Guid? _sessionId;
+    private SessionType? _sessionType;
 
     public Detection(Guid DetectionId, Guid TimerId, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime)
     {
@@ -27,29 +33,37 @@ public class Detection : AggregateRoot
         Id = triggered.DetectionId;
     }
 
-    public void AssignToSession(Guid DetectionId, Guid SessionId)
+    public void AssignToOpenPracticeSession(Guid DetectionId, Guid SessionId)
     {
-        if (_sessionId.HasValue)
+        if (_sessionId.HasValue && _sessionType.HasValue)
         {
-            Raise(new Events.DetectionUnassignedFromSession(DetectionId, _sessionId.Value));
+            Raise(new Events.DetectionUnassignedOpenPracticeFromSession(DetectionId, _sessionId.Value));
         }
 
-        Raise(new Events.DetectionAssignedToSession(DetectionId, SessionId));
+        Raise(new Events.DetectionAssignedToOpenPracticeSession(DetectionId, SessionId));
     }
-    public void When(Events.DetectionAssignedToSession assigned)
+    public void When(Events.DetectionAssignedToOpenPracticeSession assigned)
     {
         _sessionId = assigned.SessionId;
+        _sessionType = SessionType.OpenPractice;
     }
     public void UnassignFromSession(Guid DetectionId, Guid SessionId)
     {
-        if (_sessionId != SessionId)
+        if (_sessionId != SessionId || !_sessionType.HasValue)
         {
             throw new InvalidOperationException($"Cannot unassign detection {DetectionId} from session {SessionId} because it is not assigned to that session.");
         }
 
-        Raise(new Events.DetectionUnassignedFromSession(DetectionId, SessionId));
+        switch (_sessionType)
+        {
+            case SessionType.OpenPractice:
+                Raise(new Events.DetectionUnassignedOpenPracticeFromSession(DetectionId, SessionId));
+                break;
+            default:
+                break;
+        }
     }
-    public void When(Events.DetectionUnassignedFromSession _)
+    public void When(Events.DetectionUnassignedOpenPracticeFromSession _)
     {
         _sessionId = null;
     }

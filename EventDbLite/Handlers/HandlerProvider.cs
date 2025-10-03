@@ -6,7 +6,7 @@ namespace EventDbLite.Handlers;
 
 internal class HandlerProvider : IHandlerProvider
 {
-    private readonly ConcurrentDictionary<Type, Dictionary<string, (Type targetType, Action<object, object> handler)>> _handlerMethods = new();
+    private readonly ConcurrentDictionary<Type, Dictionary<string, Handler>> _handlerMethods = new();
 
     private readonly IEventSerializer _eventSerializer;
 
@@ -15,9 +15,9 @@ internal class HandlerProvider : IHandlerProvider
         _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
     }
 
-    private Dictionary<string, (Type targetType, Action<object, object> handler)> RegisterHandler(Type aggregateRootType)
+    private Dictionary<string, Handler> RegisterHandler(Type aggregateRootType)
     {
-        Dictionary<string, (Type targetType, Action<object, object> handler)> handlerMethods = new();
+        Dictionary<string, Handler> handlerMethods = new();
         foreach (MethodInfo method in aggregateRootType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
         {
             if (method.Name != "When")
@@ -53,31 +53,33 @@ internal class HandlerProvider : IHandlerProvider
                 throw new InvalidOperationException($"Duplicate handler method found: {identifier} in {aggregateRootType.FullName}");
             }
 
-            handlerMethods.Add(identifier, (eventType, (instance, eventObj) =>
+            Handler handler = new((instance, handleObj) =>
             {
-                MethodInfo info = method;
-                info.Invoke(instance, [eventObj]);
-            }
-            ));
+                MethodInfo capturedMethod = method;
+                capturedMethod.Invoke(instance, new[] { handleObj });
+            }, eventType);
+
+            handlerMethods.Add(identifier, handler);
         }
 
         return handlerMethods;
     }
 
-    public Handler? GetHandlerMethod(object handler, string identifier)
+    public Handler? GetHandlerMethod(Type handlerType, string identifier)
     {
-        Type handlerType = handler.GetType();
+        Dictionary<string, Handler> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterHandler);
 
-        Dictionary<string, (Type targetType, Action<object, object> handler)> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterHandler);
-
-        if (!handlerMethods.TryGetValue(identifier, out (Type targetType, Action<object, object> handler) method))
+        if (!handlerMethods.TryGetValue(identifier, out Handler? method))
         {
             return null;
         }
 
-        return new Handler(
-            action: payload => method.handler(handler, payload),
-            targetType: method.targetType
-        );
+        return method;
+    }
+
+    public IEnumerable<Handler> GetAllHandlerMethods(Type handlerType)
+    {
+        Dictionary<string, Handler> handlerMethods = _handlerMethods.GetOrAdd(handlerType, RegisterHandler);
+        return handlerMethods.Values;
     }
 }

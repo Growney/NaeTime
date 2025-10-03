@@ -47,10 +47,10 @@ public class LiveProjection
 
         EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
 
-        await HandleEvent(streamEvent, metadata);
-
         GlobalPosition = streamEvent.StreamOrdinal;
         SetStreamPosition(streamEvent.StreamName, streamEvent.StreamOrdinal);
+
+        await HandleEvent(streamEvent, metadata);
     }
 
     protected virtual async Task HandleEvent(StreamEvent streamEvent, EventMetadata metadata)
@@ -60,7 +60,7 @@ public class LiveProjection
             throw new InvalidOperationException("Handler provider must not be null");
         }
 
-        AsyncHandler? handler = _handlerProvider.GetHandlerMethod(this, metadata.Identifier);
+        AsyncHandler? handler = _handlerProvider.GetHandlerMethod(GetType(), metadata.Identifier);
 
         if (handler is null)
         {
@@ -75,8 +75,8 @@ public class LiveProjection
         object? payload = _eventSerializer.DeserializeEvent(streamEvent.Data.Payload, handler.TargetType)
             ?? throw new InvalidOperationException($"Failed to deserialize event payload for identifier '{metadata.Identifier}'");
 
-        await handler.Action(payload);
+        await handler.Action(this, payload);
     }
 
-    public virtual Task<StreamPosition> GetGlobalPosition() => Task.FromResult(StreamPosition.Beginning); // Default implementation, can be overridden in derived classes
+    public virtual Task<StreamPosition> GetGlobalPosition() => Task.FromResult(StreamPosition.End); // Default implementation, can be overridden in derived classes
 }

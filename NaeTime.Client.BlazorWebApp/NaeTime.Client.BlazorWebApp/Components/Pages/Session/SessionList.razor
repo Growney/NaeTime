@@ -70,7 +70,7 @@
         switch (session.Type)
         {
             case NaeTime.Query.Abstractions.Models.SessionType.OpenPractice:
-                await SessionCommandHandler.ActivateSession(id, Events.SessionType.OpenPractice);
+                await SessionCommandHandler.ActivateOpenPracticeSession(id);
                 break;
         }
 
@@ -93,7 +93,7 @@
         switch (session.Type)
         {
             case NaeTime.Query.Abstractions.Models.SessionType.OpenPractice:
-                await SessionCommandHandler.DeactivateSession(id, Events.SessionType.OpenPractice);
+                await SessionCommandHandler.DeactivateOpenPracticeSession(id);
                 break;
         }
         _sessions[index] = _sessions[index] with { IsActive = false };

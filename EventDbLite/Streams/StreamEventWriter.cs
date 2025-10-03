@@ -5,8 +5,8 @@ namespace EventDbLite.Streams;
 public class StreamEventWriter : IStreamEventWriter
 {
     private readonly IEventSerializer _eventSerializer;
-    private readonly IEventStreamConnection _connection;
-    public StreamEventWriter(IEventSerializer eventSerializer, IEventStreamConnection connection)
+    private readonly IEventStoreLite _connection;
+    public StreamEventWriter(IEventSerializer eventSerializer, IEventStoreLite connection)
     {
         _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
         _connection = connection ?? throw new ArgumentNullException(nameof(connection));
@@ -31,6 +31,5 @@ public class StreamEventWriter : IStreamEventWriter
         string identifier = _eventSerializer.GetIdentifier(payload.GetType());
 
         await _connection.AppendToStreamAsync(streamName, data, StreamPosition.Any);
-
     }
 }

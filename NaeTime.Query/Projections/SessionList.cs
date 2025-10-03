@@ -1,12 +1,7 @@
 ﻿using EventDbLite.Projections;
 using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NaeTime.Query.Projections;
 public class SessionList : Projection
@@ -44,12 +39,12 @@ public class SessionList : Projection
         return null;
     }
 
-    private void When(SessionActivated e)
+    private void When(OpenPracticeSessionActivated e)
     {
         _activeSessionId = e.SessionId;
     }
 
-    private void When(SessionDeactivated e)
+    private void When(OpenPracticeSessionDeactivated e)
     {
         if (_activeSessionId == e.SessionId)
         {
@@ -57,20 +52,16 @@ public class SessionList : Projection
         }
     }
 
-    private void When(SessionScheduled scheduled)
+    private void When(OpenPracticeSessionScheduled scheduled)
     {
         _sessions.GetOrAdd(scheduled.SessionId, id => new ListSession()
         {
             Id = scheduled.SessionId,
             Name = scheduled.Name,
-            Type = scheduled.SessionType switch
-            {
-                Events.SessionType.OpenPractice => Abstractions.Models.SessionType.OpenPractice,
-                _ => throw new NotImplementedException($"Unsupported session type: {scheduled.SessionType}")
-            }
+            Type = Abstractions.Models.SessionType.OpenPractice
         });
     }
-    private void When(SessionRenamed renamed)
+    private void When(OpenPracticeSessionRenamed renamed)
     {
         if (_sessions.TryGetValue(renamed.Sessionid, out var session))
         {

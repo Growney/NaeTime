@@ -1,12 +1,7 @@
 ﻿using EventDbLite.Projections;
 using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NaeTime.Query.Projections;
 public class OpenPracticeList : Projection
@@ -38,13 +33,8 @@ public class OpenPracticeList : Projection
         return null;
     }
 
-    private void When(SessionScheduled scheduled)
+    private void When(OpenPracticeSessionScheduled scheduled)
     {
-        if( scheduled.SessionType != Events.SessionType.OpenPractice)
-        {
-            return;
-        }
-
         _sessions.GetOrAdd(scheduled.SessionId, id => new ListOpenPracticeSession
         {
             Id = scheduled.SessionId,
@@ -52,7 +42,7 @@ public class OpenPracticeList : Projection
             TrackId = scheduled.TrackId
         });
     }
-    private void When(SessionRenamed renamed)
+    private void When(OpenPracticeSessionRenamed renamed)
     {
         if (_sessions.TryGetValue(renamed.Sessionid, out var session))
         {
