@@ -8,7 +8,7 @@ namespace EventDbLite.Aggregates;
 
 public abstract class AggregateRoot
 {
-    public Guid Id { get; set; }
+    public string? Id { get; set; }
     public long Version { get; private set; }
 
     private IHandlerProvider? _handlerProvider;

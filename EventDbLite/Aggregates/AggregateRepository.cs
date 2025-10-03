@@ -16,11 +16,17 @@ public class AggregateRepository : IAggregateRepository
         _aggregateHandlerProvider = aggregateHandlerProvider ?? throw new ArgumentNullException(nameof(aggregateHandlerProvider));
     }
 
-    private string GetStreamName<T>(Guid id) where T : AggregateRoot => $"{typeof(T).Name}-{id}";
-
+    private string GetStreamName<T>(string? id) where T : AggregateRoot
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return typeof(T).Name;
+        }
+        return $"{typeof(T).Name}-{id}";
+    }
     private void Initialize(AggregateRoot aggregateRoot) => aggregateRoot.InitialiseDependencies(_aggregateHandlerProvider, _eventSerializer);
 
-    public async Task<T?> Get<T>(Guid id) where T : AggregateRoot, new()
+    public async Task<T?> Get<T>(string id) where T : AggregateRoot, new()
     {
         string streamName = GetStreamName<T>(id);
 
