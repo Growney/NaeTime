@@ -3,7 +3,7 @@ using NaeTime.Events;
 using System.Net;
 
 namespace NaeTime.Command.Aggregates;
-public class ImmersionRCLapRF : AggregateRoot
+public class ImmersionRCLapRF : AggregateRoot<Guid>
 {
     private enum Type
     {
@@ -36,12 +36,12 @@ public class ImmersionRCLapRF : AggregateRoot
 
     public ImmersionRCLapRF(Guid id, string name, IPAddress address, ushort port, byte lanes)
     {
+        RaiseId(id.ToString());
         Raise(new ImmersionRCLapRFNetworkDeviceRegistered(id,name, address.ToString(), port, lanes));
     }
 
     private void When(ImmersionRCLapRFNetworkDeviceRegistered changed)
     {
-        Id = changed.TimerId;
         _type = Type.Network;
         _lanes = changed.Lanes;
     }

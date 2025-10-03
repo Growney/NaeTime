@@ -6,9 +6,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace EventDbLite.Aggregates;
 
-public abstract class AggregateRoot
+public abstract class AggregateRoot<T>
 {
-    public string? Id { get; set; }
+    public T? Id { get; set; }
     public long Version { get; private set; }
 
     private IHandlerProvider? _handlerProvider;
@@ -26,7 +26,6 @@ public abstract class AggregateRoot
         _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
         RaisePreinitialisedEvents();
     }
-
     private void RaisePreinitialisedEvents()
     {
         if (!IsInitialized)
@@ -63,9 +62,18 @@ public abstract class AggregateRoot
         object? payload = _eventSerializer.DeserializeEvent(streamEvent.Data.Payload, handler.TargetType) ?? throw new InvalidOperationException($"Failed to deserialize event payload for identifier '{metadata.Identifier}'");
 
         handler.Action(this, payload);
-
     }
-
+    protected void RaiseId(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            throw new ArgumentException("Id cannot be null or whitespace.", nameof(id));
+        }
+        Raise(new AggregateIdentified()
+        {
+            Id = id
+        });
+    }
     protected void Raise(object payload)
     {
         if (!IsInitialized)
@@ -95,7 +103,7 @@ public abstract class AggregateRoot
         handler.Action(this, payload);
     }
 
-    protected void Clone(AggregateRoot root)
+    protected void Clone(AggregateRoot<T> root)
     {
         root._handlerProvider = _handlerProvider;
         root._eventSerializer = _eventSerializer;

@@ -31,23 +31,23 @@ public class SessionsCommandHandler : ISessionsCommandHandler
     {
         await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
 
-        ActiveSession activeSession = await _repository.Get<ActiveSession>(ActiveSession.SingletonId)
-            ?? _repository.CreateNew(() => new ActiveSession(ActiveSession.SingletonId));
+        ActiveSession activeSession = await _repository.Get<ActiveSession, string>()
+            ?? _repository.CreateNew<ActiveSession,string>();
 
         activeSession.ActivateOpenPracticeSession(id);
 
-        await _repository.Save(activeSession);
+        await _repository.Save<ActiveSession,string>(activeSession);
     }
 
     public async Task DeactivateOpenPracticeSession(Guid id)
     {
         await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
 
-        ActiveSession activeSession = await _repository.Get<ActiveSession>(ActiveSession.SingletonId)
-            ?? _repository.CreateNew(() => new ActiveSession(ActiveSession.SingletonId));
+        ActiveSession activeSession = await _repository.Get<ActiveSession, string>()
+            ?? _repository.CreateNew<ActiveSession, string>();
 
         activeSession.DeactivateSession(id);
 
-        await _repository.Save(activeSession);
+        await _repository.Save<ActiveSession,string>(activeSession);
     }
 }

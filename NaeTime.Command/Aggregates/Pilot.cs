@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 
 namespace NaeTime.Command.Aggregates;
-public class Pilot : AggregateRoot
+public class Pilot : AggregateRoot<Guid>
 {
     public Pilot()
     {

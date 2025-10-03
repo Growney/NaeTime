@@ -1,7 +1,7 @@
 ﻿using EventDbLite.Aggregates;
 using NaeTime.Events;
 namespace NaeTime.Command.Aggregates;
-public class OpenPracticeSession : AggregateRoot
+public class OpenPracticeSession : AggregateRoot<Guid>
 {
     private class LaneInfo
     {

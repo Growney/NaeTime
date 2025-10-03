@@ -4,8 +4,8 @@ namespace EventDbLite.Abstractions;
 
 public interface IAggregateRepository
 {
-    T CreateNew<T>(Func<T> constructor) where T : AggregateRoot;
+    T CreateNew<T,K>(Func<T>? constructor = null) where T : AggregateRoot<K>, new();
 
-    Task<T?> Get<T>(string id) where T : AggregateRoot, new();
-    Task Save<T>(T aggregateRoot) where T : AggregateRoot;
+    Task<T?> Get<T,K>(K? id = default) where T : AggregateRoot<K>, new();
+    Task Save<T,K>(T aggregateRoot) where T : AggregateRoot<K>;
 }

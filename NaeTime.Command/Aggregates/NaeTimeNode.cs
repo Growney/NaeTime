@@ -2,7 +2,7 @@
 using NaeTime.Events;
 
 namespace NaeTime.Command.Aggregates;
-public class NaeTimeNode : AggregateRoot
+public class NaeTimeNode : AggregateRoot<Guid>
 {
     private class Field<T>
     {

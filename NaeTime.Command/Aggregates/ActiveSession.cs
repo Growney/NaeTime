@@ -2,7 +2,7 @@
 using NaeTime.Events;
 
 namespace NaeTime.Command.Aggregates;
-public class ActiveSession : AggregateRoot
+public class ActiveSession : AggregateRoot<string>
 {
     private enum SessionType
     {
@@ -12,18 +12,7 @@ public class ActiveSession : AggregateRoot
     public readonly static Guid SingletonId = Guid.Empty;
     private Guid? _sessionId;
     private SessionType? _sessionType;
-    public ActiveSession()
-    {
 
-    }
-    public ActiveSession(Guid id)
-    {
-        Raise(new ActiveSessionTrackingStarted(id));
-    }
-    private void When(ActiveSessionTrackingStarted started)
-    {
-        Id = started.TrackingId;
-    }
     public void ActivateOpenPracticeSession(Guid sessionId)
     {
         if (_sessionId == sessionId)

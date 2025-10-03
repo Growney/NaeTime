@@ -1,7 +1,7 @@
 ﻿using EventDbLite.Aggregates;
 
 namespace NaeTime.Command.Aggregates;
-public class Detection : AggregateRoot
+public class Detection : AggregateRoot<Guid>
 {
     private enum SessionType
     {
@@ -20,17 +20,9 @@ public class Detection : AggregateRoot
     {
 
     }
-    public void When(Events.HardwareDetectionOccured occured)
-    {
-        Id = occured.DetectionId;
-    }
     public Detection(Guid DetectionId, byte Lane, long SoftwareTime, DateTime UtcTime)
     {
         Raise(new Events.DetectionTriggered(DetectionId, Lane, SoftwareTime, UtcTime));
-    }
-    public void When(Events.DetectionTriggered triggered)
-    {
-        Id = triggered.DetectionId;
     }
 
     public void AssignToOpenPracticeSession(Guid DetectionId, Guid SessionId)

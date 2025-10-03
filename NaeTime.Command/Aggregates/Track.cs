@@ -2,7 +2,7 @@
 using NaeTime.Events;
 
 namespace NaeTime.Command.Aggregates;
-public class Track : AggregateRoot
+public class Track : AggregateRoot<Guid>
 {
     private Dictionary<byte, Guid> _detectors = new();
     private Dictionary<Guid, byte> _detectorPositions = new();
