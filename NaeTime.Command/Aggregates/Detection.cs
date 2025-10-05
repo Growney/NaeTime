@@ -10,31 +10,50 @@ public class Detection : AggregateRoot<Guid>
 
     private Guid? _sessionId;
     private SessionType? _sessionType;
+    private byte _lane;
+    private ulong? _hardwareTime;
+    private long _softwareTime;
+    private DateTime _utcTime;
 
-    public Detection(Guid DetectionId, Guid TimerId, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime)
-    {
-        Raise(new Events.HardwareDetectionOccured(DetectionId, TimerId, Lane, HardwareTime, SoftwareTime, UtcTime));
-    }
 
     public Detection()
     {
 
     }
-    public Detection(Guid DetectionId, byte Lane, long SoftwareTime, DateTime UtcTime)
+    public Detection(Guid detectionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        Raise(new Events.DetectionTriggered(DetectionId, Lane, SoftwareTime, UtcTime));
+        Raise(new Events.HardwareDetectionOccured(detectionId, timerId, lane, hardwareTime, softwareTime, utcTime));
     }
 
-    public void AssignToOpenPracticeSession(Guid DetectionId, Guid SessionId)
+    private void When(Events.HardwareDetectionOccured occured)
+    {
+        Id = occured.DetectionId;
+        _lane = occured.Lane;
+        _hardwareTime = occured.HardwareTime;
+        _softwareTime = occured.SoftwareTime;
+        _utcTime = occured.UtcTime;
+    }
+    public Detection(Guid detectionId, byte lane, long softwareTime, DateTime utcTime)
+    {
+        Raise(new Events.DetectionTriggered(detectionId, lane, softwareTime, utcTime));
+    }
+    private void When(Events.DetectionTriggered triggered)
+    {
+        Id = triggered.DetectionId;
+        _lane = triggered.Lane;
+        _softwareTime = triggered.SoftwareTime;
+        _utcTime = triggered.UtcTime;
+    }
+    public void MarkDetectionWithinOpenPracticeBounds(Guid detectionId, Guid sessionId)
     {
         if (_sessionId.HasValue && _sessionType.HasValue)
         {
-            Raise(new Events.DetectionUnassignedOpenPracticeFromSession(DetectionId, _sessionId.Value));
+            throw new InvalidOperationException($"Cannot assign detection {detectionId} to session {sessionId} because it is already assigned to session {_sessionId} of type {_sessionType}.");
         }
 
-        Raise(new Events.DetectionAssignedToOpenPracticeSession(DetectionId, SessionId));
+        Raise(new Events.DetectionOccuredWithinOpenPracticeBounds(detectionId, sessionId, _lane, _hardwareTime, _softwareTime, _utcTime));
     }
-    public void When(Events.DetectionAssignedToOpenPracticeSession assigned)
+    public void When(Events.DetectionOccuredWithinOpenPracticeBounds assigned)
     {
         _sessionId = assigned.SessionId;
         _sessionType = SessionType.OpenPractice;

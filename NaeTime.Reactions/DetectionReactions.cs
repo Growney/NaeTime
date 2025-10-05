@@ -25,7 +25,7 @@ internal class DetectionReactions
         switch (session.Type)
         {
             case Query.Abstractions.Models.SessionType.OpenPractice:
-                await _detectionCommandHandler.AssignDetectionToOpenPracticeSession(detection.DetectionId, session.Id);
+                await _detectionCommandHandler.MarkDetectionWithinOpenPracticeBounds(detection.DetectionId, session.Id);
                 break;
             default:
                 break;
@@ -44,7 +44,7 @@ internal class DetectionReactions
         switch (session.Type)
         {
             case Query.Abstractions.Models.SessionType.OpenPractice:
-                await _detectionCommandHandler.AssignDetectionToOpenPracticeSession(detection.DetectionId, session.Id);
+                await _detectionCommandHandler.MarkDetectionWithinOpenPracticeBounds(detection.DetectionId, session.Id);
                 break;
             default:
                 break;

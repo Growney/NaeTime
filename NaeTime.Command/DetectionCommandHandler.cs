@@ -12,16 +12,16 @@ public class DetectionCommandHandler : IDetectionCommandHandler
         _repository = repository;
     }
 
-    public async Task AssignDetectionToOpenPracticeSession(Guid detectionId, Guid sessionId)
+    public async Task MarkDetectionWithinOpenPracticeBounds(Guid detectionId, Guid sessionId)
     {
         Detection? detection = await _repository.Get<Detection, Guid>(detectionId) ?? throw new InvalidOperationException($"Detection {detectionId} does not exist.");
-        detection.AssignToOpenPracticeSession(detectionId, sessionId);
-        await _repository.Save<Detection,Guid>(detection);
+        detection.MarkDetectionWithinOpenPracticeBounds(detectionId, sessionId);
+        await _repository.Save<Detection, Guid>(detection);
     }
 
     public Task RegisterDetection(Guid detectionId, byte lane, long softwareTime, DateTime utcTime)
     {
-        Detection? detection = _repository.CreateNew<Detection,Guid>(() => new(detectionId, lane, softwareTime, utcTime));
+        Detection? detection = _repository.CreateNew<Detection, Guid>(() => new(detectionId, lane, softwareTime, utcTime));
         return _repository.Save<Detection, Guid>(detection);
     }
 
