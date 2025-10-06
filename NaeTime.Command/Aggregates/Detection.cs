@@ -15,7 +15,6 @@ public class Detection : AggregateRoot<Guid>
     private long _softwareTime;
     private DateTime _utcTime;
 
-
     public Detection()
     {
 
