@@ -15,6 +15,28 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
         _trackQueryHandler = trackQueryHandler ?? throw new ArgumentNullException(nameof(trackQueryHandler));
     }
 
+    public async Task AssignDetectionToOpenPracticeSession(Guid detectionId, Guid sessionId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId);
+        if (session == null)
+        {
+            throw new InvalidOperationException("Session does not exist");
+        }
+        session.AssignDetectionToSession(detectionId, lane, hardwareTime, softwareTime, utcTime);
+        await _repository.Save<OpenPracticeSession, Guid>(session);
+    }
+
+    public async Task AssignDetectionToPilot(Guid detectionId, Guid sessionId, Guid pilotId)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId);
+        if (session == null)
+        {
+            throw new InvalidOperationException("Session does not exist");
+        }
+        session.AssignDetectionToPilot(detectionId, pilotId);
+        await _repository.Save<OpenPracticeSession, Guid>(session);
+    }
+
     public async Task CloneSession(Guid newId, Guid existingId, string newName)
     {
         OpenPracticeSession? existingSession = await _repository.Get<OpenPracticeSession,Guid>(existingId);
@@ -126,6 +148,28 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
             throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
         }
         session.TuneLaneVideoFrequency(lane, bandId, frequencyInMhz);
+        await _repository.Save<OpenPracticeSession, Guid>(session);
+    }
+
+    public async Task UnassignDetectionFromOpenPracticeSession(Guid detectionId, Guid sessionId)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId);
+        if (session == null)
+        {
+            throw new InvalidOperationException("Session does not exist");
+        }
+        session.UnassignDetectionFromPilot(detectionId);
+        await _repository.Save<OpenPracticeSession, Guid>(session);
+    }
+
+    public async Task UnassignDetectionFromPilot(Guid detectionId,Guid sessionId, Guid pilotId)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId);
+        if (session == null)
+        {
+            throw new InvalidOperationException("Session does not exist");
+        }
+        session.UnassignDetectionFromPilot(detectionId);
         await _repository.Save<OpenPracticeSession, Guid>(session);
     }
 }

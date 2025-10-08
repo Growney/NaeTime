@@ -26,7 +26,7 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         public byte? BandId { get; set; }
         public int FrequencyInMHz { get; set; }
     }
-
+    private readonly Dictionary<Guid, Guid?> _pilotDetections = new();
     private readonly Dictionary<byte, LaneInfo> _lanes = new();
     private Guid _trackId;
     public OpenPracticeSession()
@@ -109,7 +109,6 @@ public class OpenPracticeSession : AggregateRoot<Guid>
 
         Raise(new OpenPracticeSessionLanePilotSet(Id, lane, pilotId));
     }
-
     public void ResetLanePilot(byte lane)
     {
         if (_lanes.TryGetValue(lane, out LaneInfo? laneInfo))
@@ -117,12 +116,10 @@ public class OpenPracticeSession : AggregateRoot<Guid>
             Raise(new OpenPracticeSessionLanePilotReset(Id, lane));
         }
     }
-
     public void TuneLaneVideoFrequency(byte lane, byte? bandId, int frequencyInMHz)
     {
         Raise(new OpenPracticeSessionLaneVideoFrequencyTuned(Id, lane, bandId, frequencyInMHz));
     }
-
     public void EnableLane(byte lane)
     {
         if (_lanes.TryGetValue(lane, out LaneInfo? laneInfo))
@@ -137,7 +134,6 @@ public class OpenPracticeSession : AggregateRoot<Guid>
             Raise(new OpenPracticeSessionLaneEnabled(Id, lane));
         }
     }
-
     public void DisableLane(byte lane)
     {
         if (_lanes.TryGetValue(lane, out LaneInfo? laneInfo))
@@ -152,7 +148,57 @@ public class OpenPracticeSession : AggregateRoot<Guid>
             Raise(new OpenPracticeSessionLaneDisabled(Id, lane));
         }
     }
+    public void AssignDetectionToSession(Guid detectionId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
+    {
+        Raise(new DetectionAssignedToOpenPracticeSession(detectionId, Id, lane, hardwareTime, softwareTime, utcTime));
+        if(!_lanes.TryGetValue(lane, out LaneInfo? laneinfo))
+        {
+            throw new InvalidOperationException($"Lane {lane} is not configured.");
+        }
+        if(laneinfo.PilotId.HasValue)
+        {
+            Raise(new OpenPracticeDetectionAssignedToPilot(detectionId, laneinfo.PilotId.Value));
+        }
+    }
+    private void When(DetectionAssignedToOpenPracticeSession assignedToSession)
+    {
+        _pilotDetections[assignedToSession.DetectionId] = null;
+    }
+    private void When(OpenPracticeDetectionAssignedToPilot assignedToPilot)
+    {
+        _pilotDetections[assignedToPilot.DetectionId] = assignedToPilot.PilotId;
+    }
+    public void UnassignDetectionFromPilot(Guid detectionId)
+    {
+        if(!_pilotDetections.ContainsKey(detectionId))
+        {
+            throw new InvalidOperationException($"Detection {detectionId} is not assigned to session.");
+        }
 
+        _pilotDetections.TryGetValue(detectionId, out Guid? pilotId);
+        if (!pilotId.HasValue)
+        {
+            throw new InvalidOperationException($"Detection {detectionId} is not assigned to a pilot.");
+        }
+        Raise(new OpenPracticeDetectionUnassignedFromPilot(detectionId, pilotId.Value));      
+    }
+    private void When(OpenPracticeDetectionUnassignedFromPilot unassignedFromPilot)
+    {
+        _pilotDetections.Remove(unassignedFromPilot.DetectionId);
+    }
+    public void AssignDetectionToPilot(Guid detectionId, Guid pilotId)
+    {
+        if (!_pilotDetections.ContainsKey(detectionId))
+        {
+            throw new InvalidOperationException($"Detection {detectionId} is not assigned to session.");
+        }
+        _pilotDetections.TryGetValue(detectionId, out Guid? currentPilotId);
+        if (currentPilotId.HasValue)
+        {
+            Raise(new OpenPracticeDetectionUnassignedFromPilot(detectionId, currentPilotId.Value));
+        }
+        Raise(new OpenPracticeDetectionAssignedToPilot(detectionId, pilotId));
+    }
     public OpenPracticeSession Clone(Guid newId, string newName)
     {
         OpenPracticeSession clone = new(newId, _trackId, newName);
