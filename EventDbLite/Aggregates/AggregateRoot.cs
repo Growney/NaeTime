@@ -63,17 +63,6 @@ public abstract class AggregateRoot<T> where T : AggregateIdentifier
 
         handler.Action(this, payload);
     }
-    protected void RaiseId(string id)
-    {
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            throw new ArgumentException("Id cannot be null or whitespace.", nameof(id));
-        }
-        Raise(new AggregateIdentified()
-        {
-            Id = id
-        });
-    }
     protected void Raise(object payload)
     {
         if (!IsInitialized)
