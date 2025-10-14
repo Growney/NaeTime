@@ -1,14 +1,22 @@
 ﻿using EventDbLite.Aggregates;
+using NaeTime.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NaeTime.Events;
+using static NaeTime.Command.Aggregates.OpenPracticePilotTiming;
 
 namespace NaeTime.Command.Aggregates;
-public class OpenPracticePilotTiming : AggregateRoot<string>
+public class OpenPracticePilotTiming : AggregateRoot<OpenPracticeTimingId>
 {
+    public class OpenPracticeTimingId
+    {
+        public Guid PilotId { get; init; }
+        public Guid SessionId { get; init; }
+
+        public override string ToString() => $"{SessionId:N}-{PilotId:N}";
+    }
     private class Detection
     {
         public Guid SessionId { get; init; }
@@ -21,13 +29,22 @@ public class OpenPracticePilotTiming : AggregateRoot<string>
 
     private readonly Dictionary<Guid, Dictionary<Guid, List<Detection>>> _pilotDetections = new();
 
+    public OpenPracticePilotTiming()
+    {
+
+    }
+
     public OpenPracticePilotTiming(Guid sessionId, Guid pilotId)
     {
         Raise(new PilotOpenPracticeSessionTimingStarted(pilotId, sessionId));
     }
     private void When(PilotOpenPracticeSessionTimingStarted e)
     {
-        Id = $"{e.SessionId:N}-{e.PilotId:N}";
+        Id = new OpenPracticeTimingId
+        {
+            PilotId = e.PilotId,
+            SessionId = e.SessionId
+        };
     }
 
     public void AddDetectionToPilot(Guid pilotId, Guid sessionId, Guid detectionId, ulong? hardwareTime, long softwareTime, DateTime utcTime)
@@ -64,9 +81,9 @@ public class OpenPracticePilotTiming : AggregateRoot<string>
             IsValid = true
         });
     }
-    public void RemoveDetectionFromPilot(Guid pilotId, Guid sessionId, Guid detectionId)
+    public void RemoveDetectionFromPilot(Guid detectionId)
     {
-        Raise(new OpenPracticeDetectionRemovedFromPilot(pilotId, sessionId, detectionId));
+        Raise(new OpenPracticeDetectionRemovedFromPilot(Id.PilotId, Id.SessionId, detectionId));
     }
 
     private void When(OpenPracticeDetectionRemovedFromPilot e)
@@ -83,9 +100,9 @@ public class OpenPracticePilotTiming : AggregateRoot<string>
             }
         }
     }
-    public void MarkPilotDetectionAsValid(Guid pilotId, Guid sessionId, Guid detectionId)
+    public void MarkPilotDetectionAsValid(Guid detectionId)
     {
-        Raise(new OpenPracticeDetectionValidated(pilotId, sessionId, detectionId));
+        Raise(new OpenPracticeDetectionValidated(Id.PilotId, Id.SessionId, detectionId));
     }
 
     private void When(OpenPracticeDetectionValidated e)
@@ -103,9 +120,9 @@ public class OpenPracticePilotTiming : AggregateRoot<string>
         }
     }
 
-    public void MarkPilotDetectionAsInvalid(Guid pilotId, Guid sessionId, Guid detectionId)
+    public void MarkPilotDetectionAsInvalid(Guid detectionId)
     {
-        Raise(new OpenPracticeDetectionInvalidated(pilotId, sessionId, detectionId));
+        Raise(new OpenPracticeDetectionInvalidated(Id.PilotId, Id.SessionId, detectionId));
     }
 
     private void When(OpenPracticeDetectionInvalidated e)

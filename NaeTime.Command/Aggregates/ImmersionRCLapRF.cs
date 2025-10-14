@@ -36,7 +36,6 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
 
     public ImmersionRCLapRF(Guid id, string name, IPAddress address, ushort port, byte lanes)
     {
-        RaiseId(id.ToString());
         Raise(new ImmersionRCLapRFNetworkDeviceRegistered(id,name, address.ToString(), port, lanes));
     }
 

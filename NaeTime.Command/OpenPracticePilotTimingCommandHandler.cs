@@ -17,21 +17,63 @@ public class OpenPracticePilotTimingCommandHandler : IOpenPracticePilotTimingCom
     }
     public async Task AddDetectionToPilot(Guid pilotId, Guid sessionId, Guid detectionId, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        OpenPracticePilotTiming aggregate = await _
+        OpenPracticePilotTiming.OpenPracticeTimingId id = new ()
+        {
+            PilotId = pilotId,
+            SessionId = sessionId
+        };
+        OpenPracticePilotTiming aggregate = await _repository.Get<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(id) 
+            ?? _repository.CreateNew<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>();
+
+        aggregate.AddDetectionToPilot(pilotId, sessionId, detectionId, hardwareTime, softwareTime, utcTime);
+
+        await _repository.Save<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(aggregate);
     }
 
-    public Task MarkPilotDetectionAsInvalid(Guid pilotId, Guid sessionId, Guid detectionId)
+    public async Task MarkPilotDetectionAsInvalid(Guid pilotId, Guid sessionId, Guid detectionId)
     {
-        throw new NotImplementedException();
+        OpenPracticePilotTiming.OpenPracticeTimingId id = new()
+        {
+            PilotId = pilotId,
+            SessionId = sessionId
+        };
+        OpenPracticePilotTiming aggregate = await _repository.Get<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(id)
+            ?? _repository.CreateNew<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>();
+
+        aggregate.MarkPilotDetectionAsInvalid(detectionId);
+
+        await _repository.Save<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(aggregate);
     }
 
-    public Task MarkPilotDetectionAsValid(Guid pilotId, Guid sessionId, Guid detectionId)
+    public async Task MarkPilotDetectionAsValid(Guid pilotId, Guid sessionId, Guid detectionId)
     {
-        throw new NotImplementedException();
+        OpenPracticePilotTiming.OpenPracticeTimingId id = new()
+        {
+            PilotId = pilotId,
+            SessionId = sessionId
+        };
+
+        OpenPracticePilotTiming aggregate = await _repository.Get<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(id)
+            ?? _repository.CreateNew<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>();
+
+        aggregate.MarkPilotDetectionAsValid(detectionId);
+
+        await _repository.Save<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId> (aggregate);
     }
 
-    public Task RemoveDetectionFromPilot(Guid pilotId, Guid sessionId, Guid detectionId)
+    public async Task RemoveDetectionFromPilot(Guid pilotId, Guid sessionId, Guid detectionId)
     {
-        throw new NotImplementedException();
+        OpenPracticePilotTiming.OpenPracticeTimingId id = new()
+        {
+            PilotId = pilotId,
+            SessionId = sessionId
+        };
+
+        OpenPracticePilotTiming aggregate = await _repository.Get<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(id)
+            ?? _repository.CreateNew<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>();
+
+        aggregate.RemoveDetectionFromPilot(detectionId);
+
+        await _repository.Save<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(aggregate);
     }
 }
