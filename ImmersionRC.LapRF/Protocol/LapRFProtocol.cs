@@ -2,7 +2,10 @@
 using NaeTime.Bytes;
 
 namespace ImmersionRC.LapRF.Protocol;
-internal partial class LapRFProtocol : ILapRFProtocol
+internal partial class LapRFProtocol(ILapRFCommunication communication,
+    IStatusProtocol statusProtocol,
+    IPassingRecordProtocol passingRecordProtocol,
+    IRadioFrequencySetupProtocol radioFrequencySetupProtocol) : ILapRFProtocol
 {
 
     public const byte START_OF_RECORD = 0x5a;
@@ -11,27 +14,16 @@ internal partial class LapRFProtocol : ILapRFProtocol
     public const byte ESCAPED_ADDER = 0x40;
     public static readonly DataEscaper DataEscaper = new(ESCAPE, ESCAPED_ADDER, 1, 1, START_OF_RECORD, END_OF_RECORD, ESCAPE);
 
-    private readonly ILapRFCommunication _communication;
+    private readonly ILapRFCommunication _communication = communication ?? throw new ArgumentNullException(nameof(communication));
     private readonly Crc16 _crc16 = new();
 
     private readonly Stack<byte> _receivedStack = new();
 
     private readonly byte[] _packet = new byte[2096];
 
-    public IStatusProtocol StatusProtocol { get; }
-    public IPassingRecordProtocol PassingRecordProtocol { get; }
-    public IRadioFrequencySetupProtocol RadioFrequencySetupProtocol { get; }
-
-    public LapRFProtocol(ILapRFCommunication communication,
-        IStatusProtocol statusProtocol,
-        IPassingRecordProtocol passingRecordProtocol,
-        IRadioFrequencySetupProtocol radioFrequencySetupProtocol)
-    {
-        _communication = communication ?? throw new ArgumentNullException(nameof(communication));
-        StatusProtocol = statusProtocol;
-        PassingRecordProtocol = passingRecordProtocol;
-        RadioFrequencySetupProtocol = radioFrequencySetupProtocol;
-    }
+    public IStatusProtocol StatusProtocol { get; } = statusProtocol;
+    public IPassingRecordProtocol PassingRecordProtocol { get; } = passingRecordProtocol;
+    public IRadioFrequencySetupProtocol RadioFrequencySetupProtocol { get; } = radioFrequencySetupProtocol;
 
     public async Task RunAsync(CancellationToken token)
     {

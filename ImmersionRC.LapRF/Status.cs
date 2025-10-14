@@ -1,16 +1,8 @@
 ﻿namespace ImmersionRC.LapRF;
-public struct Status
+public struct Status(ushort? inputVoltage, byte? gateState, ushort? statusFlags, uint? statusCount)
 {
-    public Status(ushort? inputVoltage, byte? gateState, ushort? statusFlags, uint? statusCount)
-    {
-        InputVoltage = inputVoltage;
-        GateState = gateState;
-        StatusFlags = statusFlags;
-        StatusCount = statusCount;
-    }
-
-    public ushort? InputVoltage { get; }
-    public byte? GateState { get; }
-    public ushort? StatusFlags { get; }
-    public uint? StatusCount { get; }
+    public ushort? InputVoltage { get; } = inputVoltage;
+    public byte? GateState { get; } = gateState;
+    public ushort? StatusFlags { get; } = statusFlags;
+    public uint? StatusCount { get; } = statusCount;
 }

@@ -5,23 +5,14 @@ using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
 
 namespace NaeTime.Command;
-public class SessionsCommandHandler : ISessionsCommandHandler
+public class SessionsCommandHandler(IAggregateRepository repository, ISessionQueryHandler sessionsQueryHandler) : ISessionsCommandHandler
 {
-    private readonly IAggregateRepository _repository;
-    private readonly ISessionQueryHandler _sessionsQueryHandler;
+    private readonly IAggregateRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+    private readonly ISessionQueryHandler _sessionsQueryHandler = sessionsQueryHandler ?? throw new ArgumentNullException(nameof(sessionsQueryHandler));
 
-    public SessionsCommandHandler(IAggregateRepository repository, ISessionQueryHandler sessionsQueryHandler)
-    {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _sessionsQueryHandler = sessionsQueryHandler ?? throw new ArgumentNullException(nameof(sessionsQueryHandler));
-    }
     private async Task ThrowIfSessionDoesNotExist(Guid id, Query.Abstractions.Models.SessionType type)
     {
-        var session = await _sessionsQueryHandler.GetSession(id);
-        if (session == null)
-        {
-            throw new ArgumentException($"Session with ID {id} does not exist.", nameof(id));
-        }
+        var session = await _sessionsQueryHandler.GetSession(id) ?? throw new ArgumentException($"Session with ID {id} does not exist.", nameof(id));
         if (session.Type != type)
         {
             throw new ArgumentException($"Session with ID {id} is not of type {type}.", nameof(id));
@@ -31,23 +22,23 @@ public class SessionsCommandHandler : ISessionsCommandHandler
     {
         await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
 
-        ActiveSession activeSession = await _repository.Get<ActiveSession, string>()
-            ?? _repository.CreateNew<ActiveSession,string>();
+        ActiveSession activeSession = await _repository.Get<ActiveSession>()
+            ?? _repository.CreateNew<ActiveSession>();
 
         activeSession.ActivateOpenPracticeSession(id);
 
-        await _repository.Save<ActiveSession,string>(activeSession);
+        await _repository.Save<ActiveSession>(activeSession);
     }
 
     public async Task DeactivateOpenPracticeSession(Guid id)
     {
         await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
 
-        ActiveSession activeSession = await _repository.Get<ActiveSession, string>()
-            ?? _repository.CreateNew<ActiveSession, string>();
+        ActiveSession activeSession = await _repository.Get<ActiveSession>()
+            ?? _repository.CreateNew<ActiveSession>();
 
         activeSession.DeactivateSession(id);
 
-        await _repository.Save<ActiveSession,string>(activeSession);
+        await _repository.Save<ActiveSession>(activeSession);
     }
 }

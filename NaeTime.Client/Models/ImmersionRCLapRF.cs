@@ -4,5 +4,5 @@ public class ImmersionRCLapRF
     public Guid Id { get; set; }
     public string? Name { get; set; }
 
-    public List<ImmersionRCLapRFLane> Lanes { get; set; } = new();
+    public List<ImmersionRCLapRFLane> Lanes { get; set; } = [];
 }

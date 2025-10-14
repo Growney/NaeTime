@@ -1,10 +1,5 @@
 ﻿namespace EventDbLite.Reactions;
-internal class ConstantReactionSource
+internal class ConstantReactionSource(IEnumerable<ConstantReaction> reactions)
 {
-    public IEnumerable<ConstantReaction> Reactions { get; }
-
-    public ConstantReactionSource(IEnumerable<ConstantReaction> reactions)
-    {
-        Reactions = reactions ?? throw new ArgumentNullException(nameof(reactions));
-    }
+    public IEnumerable<ConstantReaction> Reactions { get; } = reactions ?? throw new ArgumentNullException(nameof(reactions));
 }

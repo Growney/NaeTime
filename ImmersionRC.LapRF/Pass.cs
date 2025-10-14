@@ -1,19 +1,10 @@
 ﻿namespace ImmersionRC.LapRF;
-public struct Pass
+public struct Pass(uint passingNumber, byte pilotId, uint transponderId, uint timestamp, ulong realTimeClockTime)
 {
-    public Pass(uint passingNumber, byte pilotId, uint transponderId, uint timestamp, ulong realTimeClockTime)
-    {
-        PassingNumber = passingNumber;
-        PilotId = pilotId;
-        TransponderId = transponderId;
-        Timestamp = timestamp;
-        RealTimeClockTime = realTimeClockTime;
-    }
-
-    public uint PassingNumber { get; }
-    public byte PilotId { get; }                    // pilot ID, from 1 to max pilots
-    public uint TransponderId { get; }
-    public uint Timestamp { get; }
-    public ulong RealTimeClockTime { get; }                      // in microseconds
+    public uint PassingNumber { get; } = passingNumber;
+    public byte PilotId { get; } = pilotId;
+    public uint TransponderId { get; } = transponderId;
+    public uint Timestamp { get; } = timestamp;
+    public ulong RealTimeClockTime { get; } = realTimeClockTime;
 
 }

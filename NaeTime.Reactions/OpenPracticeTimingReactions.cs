@@ -6,14 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace NaeTime.Reactions;
-internal class OpenPracticeTimingReactions
+internal class OpenPracticeTimingReactions(IOpenPracticeCommandHandler openPracticeCommandHandler)
 {
-    private readonly IOpenPracticeCommandHandler _openPracticeCommandHandler;
-
-    public OpenPracticeTimingReactions(IOpenPracticeCommandHandler openPracticeCommandHandler)
-    {
-        _openPracticeCommandHandler = openPracticeCommandHandler ?? throw new ArgumentNullException(nameof(openPracticeCommandHandler));
-    }
+    private readonly IOpenPracticeCommandHandler _openPracticeCommandHandler = openPracticeCommandHandler ?? throw new ArgumentNullException(nameof(openPracticeCommandHandler));
 
     public async Task When(Events.DetectionAssignedToOpenPracticeSession assigned)
     {

@@ -5,10 +5,12 @@ using EventDbLite.Streams;
 using System.Diagnostics.CodeAnalysis;
 
 namespace EventDbLite.Aggregates;
-
-public abstract class AggregateRoot<T> 
+public abstract class AggregateRoot<T> : AggregateRoot
 {
-    public T? Id { get; set; }
+    public T? Id { get; protected set; }
+}
+public abstract class AggregateRoot
+{
     public long Version { get; private set; }
 
     private IHandlerProvider? _handlerProvider;
@@ -17,7 +19,7 @@ public abstract class AggregateRoot<T>
     //Pre initialised events are used to allow the constructor to raise events before the dependencies are set.
     private readonly Queue<object> _preinitialiseEvents = new();
 
-    private readonly List<EventData> _uncommittedEvents = new();
+    private readonly List<EventData> _uncommittedEvents = [];
     public IEnumerable<EventData> GetEvents() => _uncommittedEvents;
 
     internal void InitialiseDependencies(IHandlerProvider handlerProvider, IEventSerializer eventSerializer)
@@ -92,7 +94,7 @@ public abstract class AggregateRoot<T>
         handler.Action(this, payload);
     }
 
-    protected void Clone(AggregateRoot<T> root)
+    protected void Clone(AggregateRoot root)
     {
         root._handlerProvider = _handlerProvider;
         root._eventSerializer = _eventSerializer;

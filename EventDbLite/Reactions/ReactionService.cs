@@ -5,17 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace EventDbLite.Reactions;
-public class ReactionService : IHostedService
+public class ReactionService(IServiceProvider serviceProvider) : IHostedService
 {
     private const string ReactionStreamName = "$reactions";
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     private IReactionProvider? _reactionProvider;
-
-    public ReactionService(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {

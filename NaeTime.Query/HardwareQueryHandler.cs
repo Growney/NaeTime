@@ -5,14 +5,9 @@ using NaeTime.Query.Projections;
 
 namespace NaeTime.Query;
 
-public class HardwareQueryHandler : IHardwareQueryHandler
+public class HardwareQueryHandler(IProjectionProvider projectionProvider) : IHardwareQueryHandler
 {
-    private readonly IProjectionProvider _projectionProvider;
-
-    public HardwareQueryHandler(IProjectionProvider projectionProvider)
-    {
-        _projectionProvider = projectionProvider;
-    }
+    private readonly IProjectionProvider _projectionProvider = projectionProvider;
 
     public async Task<Detector?> GetDetector(Guid id)
     {

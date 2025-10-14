@@ -2,15 +2,10 @@
 using EventDbLite.Streams;
 
 namespace EventDbLite.Reactions;
-public class ReactionProviderFactory : IReactionProviderFactory
+public class ReactionProviderFactory(IEventStoreLite eventStore, IEventSerializer eventSerializer) : IReactionProviderFactory
 {
-    private readonly IEventStoreLite _eventStore;
-    private readonly IEventSerializer _eventSerializer;
-    public ReactionProviderFactory(IEventStoreLite eventStore, IEventSerializer eventSerializer)
-    {
-        _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
-        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
-    }
+    private readonly IEventStoreLite _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
+    private readonly IEventSerializer _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
 
     public IReactionProvider CreateProvider(StreamPosition initialPosition, string? streamName = null)
     {

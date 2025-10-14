@@ -2,14 +2,9 @@
 using NaeTime.Hardware.Node.Esp32.Abstractions;
 
 namespace NaeTime.Hardware.Node.Esp32;
-internal class NodeConnectionFactory : INodeConnectionFactory
+internal class NodeConnectionFactory(ISoftwareTimer softwareTimer) : INodeConnectionFactory
 {
-    private readonly ISoftwareTimer _softwareTimer;
-
-    public NodeConnectionFactory(ISoftwareTimer softwareTimer)
-    {
-        _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
-    }
+    private readonly ISoftwareTimer _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
 
     public NodeConnection CreateSerialConnection(Guid timerId, string port)
     {

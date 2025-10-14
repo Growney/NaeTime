@@ -3,17 +3,11 @@ using NaeTime.Timing.ImmersionRC.Abstractions;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Timing.ImmersionRC.Hardware;
-internal class LapRFManager : IHostedService
+internal class LapRFManager(ILapRFConnectionFactory connectionFactory) : IHostedService
 {
-    private readonly ILapRFConnectionFactory _connectionFactory;
+    private readonly ILapRFConnectionFactory _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
     private readonly ConcurrentDictionary<Guid, LapRFConnection> _hardwareProcesses = new();
-
-    public LapRFManager(ILapRFConnectionFactory connectionFactory)
-    {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-
-    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {

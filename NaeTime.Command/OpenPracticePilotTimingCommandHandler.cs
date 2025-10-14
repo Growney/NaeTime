@@ -8,13 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace NaeTime.Command;
-public class OpenPracticePilotTimingCommandHandler : IOpenPracticePilotTimingCommandHandler
+public class OpenPracticePilotTimingCommandHandler(IAggregateRepository repository) : IOpenPracticePilotTimingCommandHandler
 {
-    private readonly IAggregateRepository _repository;
-    public OpenPracticePilotTimingCommandHandler(IAggregateRepository repository)
-    {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-    }
+    private readonly IAggregateRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+
     public async Task AddDetectionToPilot(Guid pilotId, Guid sessionId, Guid detectionId, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
         OpenPracticePilotTiming.OpenPracticeTimingId id = new ()
@@ -23,7 +20,7 @@ public class OpenPracticePilotTimingCommandHandler : IOpenPracticePilotTimingCom
             SessionId = sessionId
         };
         OpenPracticePilotTiming aggregate = await _repository.Get<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(id) 
-            ?? _repository.CreateNew<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>();
+            ?? _repository.CreateNew<OpenPracticePilotTiming>(() => new(sessionId, pilotId));
 
         aggregate.AddDetectionToPilot(pilotId, sessionId, detectionId, hardwareTime, softwareTime, utcTime);
 
@@ -38,7 +35,7 @@ public class OpenPracticePilotTimingCommandHandler : IOpenPracticePilotTimingCom
             SessionId = sessionId
         };
         OpenPracticePilotTiming aggregate = await _repository.Get<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(id)
-            ?? _repository.CreateNew<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>();
+            ?? _repository.CreateNew<OpenPracticePilotTiming>(() => new(sessionId,pilotId));
 
         aggregate.MarkPilotDetectionAsInvalid(detectionId);
 
@@ -54,7 +51,7 @@ public class OpenPracticePilotTimingCommandHandler : IOpenPracticePilotTimingCom
         };
 
         OpenPracticePilotTiming aggregate = await _repository.Get<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(id)
-            ?? _repository.CreateNew<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>();
+            ?? _repository.CreateNew<OpenPracticePilotTiming>(() => new(sessionId, pilotId));
 
         aggregate.MarkPilotDetectionAsValid(detectionId);
 
@@ -70,7 +67,7 @@ public class OpenPracticePilotTimingCommandHandler : IOpenPracticePilotTimingCom
         };
 
         OpenPracticePilotTiming aggregate = await _repository.Get<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>(id)
-            ?? _repository.CreateNew<OpenPracticePilotTiming, OpenPracticePilotTiming.OpenPracticeTimingId>();
+            ?? _repository.CreateNew<OpenPracticePilotTiming>(() => new(sessionId, pilotId));
 
         aggregate.RemoveDetectionFromPilot(detectionId);
 

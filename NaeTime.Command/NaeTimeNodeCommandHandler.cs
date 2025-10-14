@@ -3,14 +3,9 @@ using NaeTime.Command.Abstractions;
 using NaeTime.Command.Aggregates;
 
 namespace NaeTime.Command;
-public class NaeTimeNodeCommandHandler : INaeTimeNodeCommandHandler
+public class NaeTimeNodeCommandHandler(IAggregateRepository repository) : INaeTimeNodeCommandHandler
 {
-    private readonly IAggregateRepository _repository;
-
-    public NaeTimeNodeCommandHandler(IAggregateRepository repository)
-    {
-        _repository = repository;
-    }
+    private readonly IAggregateRepository _repository = repository;
 
     public async Task ConfigureSerialEsp32Node(Guid id, string name, string port, byte lanes)
     {

@@ -1,13 +1,6 @@
 ﻿namespace NaeTime.Hardware.Node.Esp32;
-public struct Pass
+public struct Pass(byte lane, ulong time)
 {
-    public byte Lane { get; }
-    public ulong Time { get; }
-
-    public Pass(byte lane, ulong time)
-    {
-        Lane = lane;
-        Time = time;
-    }
-
+    public byte Lane { get; } = lane;
+    public ulong Time { get; } = time;
 }

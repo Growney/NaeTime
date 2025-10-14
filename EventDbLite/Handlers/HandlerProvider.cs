@@ -4,20 +4,15 @@ using System.Reflection;
 
 namespace EventDbLite.Handlers;
 
-internal class HandlerProvider : IHandlerProvider
+internal class HandlerProvider(IEventSerializer eventSerializer) : IHandlerProvider
 {
     private readonly ConcurrentDictionary<Type, Dictionary<string, Handler>> _handlerMethods = new();
 
-    private readonly IEventSerializer _eventSerializer;
-
-    public HandlerProvider(IEventSerializer eventSerializer)
-    {
-        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
-    }
+    private readonly IEventSerializer _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
 
     private Dictionary<string, Handler> RegisterHandler(Type aggregateRootType)
     {
-        Dictionary<string, Handler> handlerMethods = new();
+        Dictionary<string, Handler> handlerMethods = [];
         foreach (MethodInfo method in aggregateRootType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
         {
             if (method.Name != "When")

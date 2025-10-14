@@ -5,18 +5,12 @@ using EventDbLite.Streams;
 
 namespace EventDbLite.Projections;
 
-public class LiveProjection
+public class LiveProjection(IEventSerializer eventSerializer, IAsyncHandlerProvider handlerProvider)
 {
-    protected readonly IEventSerializer _eventSerializer;
-    protected readonly IAsyncHandlerProvider _handlerProvider;
+    protected readonly IEventSerializer _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
+    protected readonly IAsyncHandlerProvider _handlerProvider = handlerProvider ?? throw new ArgumentNullException(nameof(handlerProvider));
 
-    private readonly Dictionary<string, long> _streamPositions = new();
-
-    public LiveProjection(IEventSerializer eventSerializer, IAsyncHandlerProvider handlerProvider)
-    {
-        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
-        _handlerProvider = handlerProvider ?? throw new ArgumentNullException(nameof(handlerProvider));
-    }
+    private readonly Dictionary<string, long> _streamPositions = [];
 
     public long GlobalPosition { get; private set; }
 

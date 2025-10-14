@@ -1,14 +1,8 @@
 ﻿
 namespace EventDbLite.Streams;
 
-public class EventData
+public class EventData(byte[] payload, byte[] metadata)
 {
-    public EventData(byte[] payload, byte[] metadata)
-    {
-        Metadata = metadata ?? throw new ArgumentNullException(nameof(metadata));
-        Payload = payload ?? throw new ArgumentNullException(nameof(payload));
-    }
-
-    public byte[] Metadata { get; }
-    public byte[] Payload { get; }
+    public byte[] Metadata { get; } = metadata ?? throw new ArgumentNullException(nameof(metadata));
+    public byte[] Payload { get; } = payload ?? throw new ArgumentNullException(nameof(payload));
 }

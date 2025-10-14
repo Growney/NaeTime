@@ -3,7 +3,7 @@ public class Track
 {
     public Guid Id { get; set; }
     public string? Name { get; set; }
-    private readonly List<Guid> _timers = new();
+    private readonly List<Guid> _timers = [];
     public IEnumerable<Guid> Timers => _timers;
     public long? MinimumLapTimeMilliseconds { get; set; }
     public long? MaximumLapTimeMilliseconds { get; set; }

@@ -5,14 +5,9 @@ using NaeTime.Query.Projections;
 
 namespace NaeTime.Query;
 
-public class PilotQueryHandler : IPilotQueryHandler
+public class PilotQueryHandler(IProjectionProvider projectionProvider) : IPilotQueryHandler
 {
-    private readonly IProjectionProvider _projectionProvider;
-
-    public PilotQueryHandler(IProjectionProvider projectionProvider)
-    {
-        _projectionProvider = projectionProvider;
-    }
+    private readonly IProjectionProvider _projectionProvider = projectionProvider;
 
     public async Task<IEnumerable<Pilot>> GetAllPilots()
     {

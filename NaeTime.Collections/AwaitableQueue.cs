@@ -1,15 +1,11 @@
 ﻿using System.Collections.Concurrent;
 
 namespace NaeTime.Collections;
-public class AwaitableQueue<T> : IDisposable
+public class AwaitableQueue<T>(int maxSize) : IDisposable
 {
     private readonly ConcurrentQueue<T> _queue = new();
     private readonly SemaphoreSlim _signal = new(0);
-    private readonly int _maxSize;
-    public AwaitableQueue(int maxSize)
-    {
-        _maxSize = maxSize;
-    }
+    private readonly int _maxSize = maxSize;
 
     public void Dispose()
     {

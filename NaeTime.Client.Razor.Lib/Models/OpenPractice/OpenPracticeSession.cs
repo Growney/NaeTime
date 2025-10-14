@@ -6,7 +6,7 @@ public class OpenPracticeSession
     public Guid TrackId { get; set; }
     public long MinimumLapMilliseconds { get; set; }
     public long? MaximumLapMilliseconds { get; set; }
-    public List<OpenPracticeLap> Laps { get; set; } = new List<OpenPracticeLap>();
-    public List<OpenPracticeLaneConfiguration> Lanes { get; set; } = new List<OpenPracticeLaneConfiguration>();
-    public List<uint> TrackedConsecutiveLaps { get; set; } = new List<uint>();
+    public List<OpenPracticeLap> Laps { get; set; } = [];
+    public List<OpenPracticeLaneConfiguration> Lanes { get; set; } = [];
+    public List<uint> TrackedConsecutiveLaps { get; set; } = [];
 }

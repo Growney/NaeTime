@@ -2,12 +2,10 @@
 
 namespace EventDbLite;
 
-internal class EventDbLiteContext : DbContext
+internal class EventDbLiteContext(DbContextOptions<EventDbLiteContext> options) : DbContext(options)
 {
     public DbSet<DbModels.PersistedEvent> PersistedEvents { get; set; } = null!;
-    public EventDbLiteContext(DbContextOptions<EventDbLiteContext> options) : base(options)
-    {
-    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

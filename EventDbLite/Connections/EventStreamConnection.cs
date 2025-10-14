@@ -6,14 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EventDbLite.Connections;
 
-internal class EventStreamConnection : IEventStreamConnection
+internal class EventStreamConnection(EventDbLiteContext context) : IEventStreamConnection
 {
-    private readonly EventDbLiteContext _context;
-
-    public EventStreamConnection(EventDbLiteContext context)
-    {
-        _context = context ?? throw new ArgumentNullException(nameof(context));
-    }
+    private readonly EventDbLiteContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
     public async Task<IEnumerable<StreamEvent>> AppendToStreamAsync(string streamName, IEnumerable<EventData> data, StreamPosition expectedState)
     {
@@ -34,7 +29,7 @@ internal class EventStreamConnection : IEventStreamConnection
         }
 
         long currentStreamVersion = await _context.PersistedEvents.Where(x => x.StreamName == streamName).OrderByDescending(x => x.StreamOrdinal).Select(x => x.StreamOrdinal).FirstOrDefaultAsync();
-        List<PersistedEvent> createdPersistedEvents = new();
+        List<PersistedEvent> createdPersistedEvents = [];
 
         foreach (var eventData in data)
         {

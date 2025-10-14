@@ -19,7 +19,7 @@ public class OpenPracticeList : Projection
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public Guid TrackId { get; set; }
-        public List<ListOpenPracticeSessionLane> Lanes { get; set; } = new();
+        public List<ListOpenPracticeSessionLane> Lanes { get; set; } = [];
 
     }
     private readonly ConcurrentDictionary<Guid, ListOpenPracticeSession> _sessions = new();

@@ -1,21 +1,15 @@
 ﻿namespace NaeTime.Hardware.Node.Esp32;
-internal struct RecordHeader
+internal struct RecordHeader(ushort recordLength, ushort recordCRC, byte recordTypeRaw)
 {
     private const int HEADER_START_INDEX = 0;
     private const int TYPE_START_INDEX = HEADER_START_INDEX;
     private const int CRC_START_INDEX = TYPE_START_INDEX + 1;
     private const int LENGTH_START_INDEX = CRC_START_INDEX + 2;
     private const int DATA_START_INDEX = LENGTH_START_INDEX + 2;
-    public RecordHeader(ushort recordLength, ushort recordCRC, byte recordTypeRaw)
-    {
-        RecordLength = recordLength;
-        RecordCRC = recordCRC;
-        RecordTypeRaw = recordTypeRaw;
-    }
 
-    public ushort RecordLength { get; }
-    public ushort RecordCRC { get; }
-    public byte RecordTypeRaw { get; }
+    public ushort RecordLength { get; } = recordLength;
+    public ushort RecordCRC { get; } = recordCRC;
+    public byte RecordTypeRaw { get; } = recordTypeRaw;
     public RecordType RecordType => (RecordType)RecordTypeRaw;
 
     public static int GetDataStartLocation() => DATA_START_INDEX;

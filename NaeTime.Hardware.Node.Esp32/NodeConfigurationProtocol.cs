@@ -3,15 +3,11 @@ using NaeTime.Hardware.Node.Esp32.Abstractions;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Hardware.Node.Esp32;
-public class NodeConfigurationProtocol : INodeConfigurationProtocol
+public class NodeConfigurationProtocol(INodeCommunication nodeCommunication) : INodeConfigurationProtocol
 {
-    private readonly INodeCommunication _nodeCommunication;
+    private readonly INodeCommunication _nodeCommunication = nodeCommunication ?? throw new ArgumentNullException(nameof(nodeCommunication));
     private ConcurrentDictionary<byte, ConcurrentDictionary<byte, TaskCompletionSource<bool>>> _laneAckWaiting = new();
 
-    public NodeConfigurationProtocol(INodeCommunication nodeCommunication)
-    {
-        _nodeCommunication = nodeCommunication ?? throw new ArgumentNullException(nameof(nodeCommunication));
-    }
     private byte GetNodeLaneId(byte lane) => (byte)(lane - 1);
     public async ValueTask SetLaneFrequency(byte lane, ushort frequencyInMHz, CancellationToken token = default)
     {

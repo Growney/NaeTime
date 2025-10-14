@@ -3,15 +3,10 @@ using NaeTime.Events;
 using NaeTime.Query.Abstractions;
 
 namespace NaeTime.Reactions;
-internal class DetectionReactions
+internal class DetectionReactions(ISessionQueryHandler sessionQueryHandler, IDetectionCommandHandler detectionCommandHandler)
 {
-    private readonly ISessionQueryHandler _sessionQueryHandler;
-    private readonly IDetectionCommandHandler _detectionCommandHandler;
-    public DetectionReactions(ISessionQueryHandler sessionQueryHandler, IDetectionCommandHandler detectionCommandHandler)
-    {
-        _sessionQueryHandler = sessionQueryHandler ?? throw new ArgumentNullException(nameof(sessionQueryHandler));
-        _detectionCommandHandler = detectionCommandHandler ?? throw new ArgumentNullException(nameof(detectionCommandHandler));
-    }
+    private readonly ISessionQueryHandler _sessionQueryHandler = sessionQueryHandler ?? throw new ArgumentNullException(nameof(sessionQueryHandler));
+    private readonly IDetectionCommandHandler _detectionCommandHandler = detectionCommandHandler ?? throw new ArgumentNullException(nameof(detectionCommandHandler));
 
     public async Task When(HardwareDetectionOccured detection)
     {

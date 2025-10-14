@@ -1,14 +1,7 @@
 ﻿namespace NaeTime.Hardware.Node.Esp32;
-public struct ReceivedSignalStrengthIndicator
+public struct ReceivedSignalStrengthIndicator(byte lane, ushort level, ulong? realTimeClockTime)
 {
-    public ReceivedSignalStrengthIndicator(byte lane, ushort level, ulong? realTimeClockTime)
-    {
-        Lane = lane;
-        Level = level;
-        RealTimeClockTime = realTimeClockTime;
-    }
-
-    public byte Lane { get; }
-    public ushort Level { get; }
-    public ulong? RealTimeClockTime { get; }
+    public byte Lane { get; } = lane;
+    public ushort Level { get; } = level;
+    public ulong? RealTimeClockTime { get; } = realTimeClockTime;
 }

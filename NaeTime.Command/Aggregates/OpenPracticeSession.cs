@@ -3,31 +3,19 @@ using NaeTime.Events;
 namespace NaeTime.Command.Aggregates;
 public class OpenPracticeSession : AggregateRoot<Guid>
 {
-    private class LaneInfo
+    private class LaneInfo(Guid? pilotId, bool isEnabled, OpenPracticeSession.LaneFrequency frequency)
     {
-        public LaneInfo(Guid? pilotId, bool isEnabled, LaneFrequency frequency)
-        {
-            PilotId = pilotId;
-            IsEnabled = isEnabled;
-            Frequency = frequency ?? throw new ArgumentNullException(nameof(frequency));
-        }
-
-        public Guid? PilotId { get; set; }
-        public bool IsEnabled { get; set; }
-        public LaneFrequency Frequency { get; set; }
+        public Guid? PilotId { get; set; } = pilotId;
+        public bool IsEnabled { get; set; } = isEnabled;
+        public LaneFrequency Frequency { get; set; } = frequency ?? throw new ArgumentNullException(nameof(frequency));
     }
-    private class LaneFrequency
+    private class LaneFrequency(byte? bandId, int frequencyInMHz)
     {
-        public LaneFrequency(byte? bandId, int frequencyInMHz)
-        {
-            BandId = bandId;
-            FrequencyInMHz = frequencyInMHz;
-        }
-        public byte? BandId { get; set; }
-        public int FrequencyInMHz { get; set; }
+        public byte? BandId { get; set; } = bandId;
+        public int FrequencyInMHz { get; set; } = frequencyInMHz;
     }
-    private readonly Dictionary<Guid, Guid?> _detectionPilot = new();
-    private readonly Dictionary<byte, LaneInfo> _lanes = new();
+    private readonly Dictionary<Guid, Guid?> _detectionPilot = [];
+    private readonly Dictionary<byte, LaneInfo> _lanes = [];
     private Guid _trackId;
     public OpenPracticeSession()
     {

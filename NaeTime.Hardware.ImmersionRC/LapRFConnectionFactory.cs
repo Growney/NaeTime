@@ -4,18 +4,11 @@ using NaeTime.Timing.ImmersionRC.Abstractions;
 using System.Net;
 
 namespace NaeTime.Timing.ImmersionRC;
-internal class LapRFConnectionFactory : ILapRFConnectionFactory
+internal class LapRFConnectionFactory(ILapRFCommunicationFactory communicationFactory, ILapRFProtocolFactory protocolFactory, ISoftwareTimer softwareTimer) : ILapRFConnectionFactory
 {
-    private readonly ILapRFCommunicationFactory _communicationFactory;
-    private readonly ILapRFProtocolFactory _protocolFactory;
-    private readonly ISoftwareTimer _softwareTimer;
-
-    public LapRFConnectionFactory(ILapRFCommunicationFactory communicationFactory, ILapRFProtocolFactory protocolFactory, ISoftwareTimer softwareTimer)
-    {
-        _communicationFactory = communicationFactory ?? throw new ArgumentNullException(nameof(communicationFactory));
-        _protocolFactory = protocolFactory ?? throw new ArgumentNullException(nameof(protocolFactory));
-        _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
-    }
+    private readonly ILapRFCommunicationFactory _communicationFactory = communicationFactory ?? throw new ArgumentNullException(nameof(communicationFactory));
+    private readonly ILapRFProtocolFactory _protocolFactory = protocolFactory ?? throw new ArgumentNullException(nameof(protocolFactory));
+    private readonly ISoftwareTimer _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
 
     public LapRFConnection CreateEthernetConnection(Guid timerId, IPAddress address, int port)
     {

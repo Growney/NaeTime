@@ -3,14 +3,9 @@ using NaeTime.Command.Abstractions;
 using NaeTime.Command.Aggregates;
 
 namespace NaeTime.Command;
-public class DetectionCommandHandler : IDetectionCommandHandler
+public class DetectionCommandHandler(IAggregateRepository repository) : IDetectionCommandHandler
 {
-    private readonly IAggregateRepository _repository;
-
-    public DetectionCommandHandler(IAggregateRepository repository)
-    {
-        _repository = repository;
-    }
+    private readonly IAggregateRepository _repository = repository;
 
     public async Task AssignDetectionToOpenPracticeSesssion(Guid detectionId, Guid sessionId)
     {

@@ -3,14 +3,9 @@ using NaeTime.Command.Abstractions;
 using NaeTime.Command.Aggregates;
 
 namespace NaeTime.Command;
-public class PilotCommandHandler : IPilotCommandHandler
+public class PilotCommandHandler(IAggregateRepository repository) : IPilotCommandHandler
 {
-    private readonly IAggregateRepository _repository;
-
-    public PilotCommandHandler(IAggregateRepository repository)
-    {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-    }
+    private readonly IAggregateRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
 
     public async Task ChangePilotBindingPhrase(Guid id, string bindingPhrase)
     {

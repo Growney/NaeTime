@@ -21,7 +21,7 @@ public class NaeTimeNode : AggregateRoot<Guid>
 
     private string? _name;
     private string? _port;
-    private readonly Dictionary<byte, LaneInfo> _laneInfo = new();
+    private readonly Dictionary<byte, LaneInfo> _laneInfo = [];
 
     public NaeTimeNode() { }
 

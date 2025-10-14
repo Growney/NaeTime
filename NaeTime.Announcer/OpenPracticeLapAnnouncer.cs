@@ -137,7 +137,7 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
         }
         public IEnumerable<Guid> GetPilotIds()
         {
-            List<Guid> pilotIds = new();
+            List<Guid> pilotIds = [];
 
             foreach (ConsecutiveLapRecord record in ConsecutiveLapRecordHolder.Values)
             {

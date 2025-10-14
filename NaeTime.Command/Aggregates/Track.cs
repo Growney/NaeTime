@@ -4,11 +4,11 @@ using NaeTime.Events;
 namespace NaeTime.Command.Aggregates;
 public class Track : AggregateRoot<Guid>
 {
-    private Dictionary<byte, Guid> _detectors = new();
-    private Dictionary<Guid, byte> _detectorPositions = new();
+    private Dictionary<byte, Guid> _detectors = [];
+    private Dictionary<Guid, byte> _detectorPositions = [];
 
-    private Dictionary<Guid, long> _pilotMaximumTimes = new();
-    private Dictionary<Guid, long> _pilotMinimumTimes = new();
+    private Dictionary<Guid, long> _pilotMaximumTimes = [];
+    private Dictionary<Guid, long> _pilotMinimumTimes = [];
 
     public Track()
     {
@@ -55,7 +55,7 @@ public class Track : AggregateRoot<Guid>
 
     public void ReorderDetectors(Guid[] detectors)
     {
-        List<object> newEvents = new();
+        List<object> newEvents = [];
         for (byte i = 0; i < detectors.Length; i++)
         {
             if (_detectors.TryGetValue(i, out var detectorId))

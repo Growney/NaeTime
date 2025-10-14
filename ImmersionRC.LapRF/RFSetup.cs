@@ -1,22 +1,11 @@
 ﻿namespace ImmersionRC.LapRF;
-public struct RFSetup
+public struct RFSetup(byte transponderId, bool isEnabled, ushort? channel, ushort? band, ushort? attenuation, ushort? frequency, float? threshold)
 {
-    public RFSetup(byte transponderId, bool isEnabled, ushort? channel, ushort? band, ushort? attenuation, ushort? frequency, float? threshold)
-    {
-        TransponderId = transponderId;
-        IsEnabled = isEnabled;
-        Channel = channel;
-        Band = band;
-        Attenuation = attenuation;
-        Frequency = frequency;
-        Threshold = threshold;
-    }
-
-    public byte TransponderId { get; }
-    public bool IsEnabled { get; }
-    public ushort? Channel { get; }
-    public ushort? Band { get; }
-    public ushort? Attenuation { get; }
-    public ushort? Frequency { get; }
-    public float? Threshold { get; }
+    public byte TransponderId { get; } = transponderId;
+    public bool IsEnabled { get; } = isEnabled;
+    public ushort? Channel { get; } = channel;
+    public ushort? Band { get; } = band;
+    public ushort? Attenuation { get; } = attenuation;
+    public ushort? Frequency { get; } = frequency;
+    public float? Threshold { get; } = threshold;
 }

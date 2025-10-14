@@ -4,16 +4,10 @@ using NaeTime.Command.Aggregates;
 using NaeTime.Query.Abstractions;
 
 namespace NaeTime.Command;
-public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
+public class OpenPracticeCommandHandler(IAggregateRepository repository, ITrackQueryHandler trackQueryHandler) : IOpenPracticeCommandHandler
 {
-    private readonly IAggregateRepository _repository;
-    private readonly ITrackQueryHandler _trackQueryHandler;
-
-    public OpenPracticeCommandHandler(IAggregateRepository repository, ITrackQueryHandler trackQueryHandler)
-    {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _trackQueryHandler = trackQueryHandler ?? throw new ArgumentNullException(nameof(trackQueryHandler));
-    }
+    private readonly IAggregateRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+    private readonly ITrackQueryHandler _trackQueryHandler = trackQueryHandler ?? throw new ArgumentNullException(nameof(trackQueryHandler));
 
     public async Task AddDetectionToSession(Guid detectionId, Guid sessionId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {

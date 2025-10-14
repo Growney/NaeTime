@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
 
-public class TrackList : Projection
+public class TrackList(IHardwareQueryHandler hardwareQueryHandler) : Projection
 {
     private class ListTrack
     {
@@ -19,12 +19,7 @@ public class TrackList : Projection
 
     private readonly ConcurrentDictionary<Guid, ListTrack> _tracks = new();
 
-    private readonly IHardwareQueryHandler _hardwareQueryHandler;
-
-    public TrackList(IHardwareQueryHandler hardwareQueryHandler)
-    {
-        _hardwareQueryHandler = hardwareQueryHandler;
-    }
+    private readonly IHardwareQueryHandler _hardwareQueryHandler = hardwareQueryHandler;
 
     public async Task<Track?> GetTrack(Guid id)
     {

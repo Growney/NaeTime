@@ -3,17 +3,11 @@ using NaeTime.Hardware.Node.Esp32.Abstractions;
 using System.IO.Ports;
 
 namespace NaeTime.Hardware.Node.Esp32;
-internal class NodeSerialCommunication : INodeCommunication
+internal class NodeSerialCommunication(string commPort) : INodeCommunication
 {
-    private readonly string _commPort;
-    private readonly byte[] _rxBuffer;
+    private readonly string _commPort = commPort ?? throw new ArgumentNullException(nameof(commPort));
+    private readonly byte[] _rxBuffer = new byte[1024];
     private SerialPort? _serialPort;
-
-    public NodeSerialCommunication(string commPort)
-    {
-        _commPort = commPort ?? throw new ArgumentNullException(nameof(commPort));
-        _rxBuffer = new byte[1024];
-    }
 
     public Task ConnectAsync(CancellationToken token)
     {

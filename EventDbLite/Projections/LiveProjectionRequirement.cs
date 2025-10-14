@@ -1,13 +1,7 @@
 ﻿namespace EventDbLite.Projections;
 
-public class LiveProjectionRequirement
+public class LiveProjectionRequirement(string? stream, Type projectionType)
 {
-    public LiveProjectionRequirement(string? stream, Type projectionType)
-    {
-        Stream = stream;
-        ProjectionType = projectionType ?? throw new ArgumentNullException(nameof(projectionType));
-    }
-
-    public string? Stream { get; } = null;
-    public Type ProjectionType { get; }
+    public string? Stream { get; } = stream;
+    public Type ProjectionType { get; } = projectionType ?? throw new ArgumentNullException(nameof(projectionType));
 }

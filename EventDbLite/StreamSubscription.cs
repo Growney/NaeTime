@@ -5,23 +5,16 @@ using System.Runtime.CompilerServices;
 
 namespace EventDbLite;
 
-internal class StreamSubscription : IStreamSubscription
+internal class StreamSubscription(IEventStoreLite eventStore, string? streamName, StreamPosition initialPosition, Action<StreamSubscription> onDispose) : IStreamSubscription
 {
     private readonly ConcurrentQueue<StreamEvent> _liveQueue = new();
-    private readonly IEventStoreLite _eventStore;
-    private readonly string? _streamName;
-    private readonly StreamPosition _currentPosition;
+    private readonly IEventStoreLite _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
+    private readonly string? _streamName = streamName;
+    private readonly StreamPosition _currentPosition = initialPosition;
 
-    private readonly Action<StreamSubscription> _onDispose;
+    private readonly Action<StreamSubscription> _onDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
     private readonly SemaphoreSlim _signal = new(0);
 
-    public StreamSubscription(IEventStoreLite eventStore, string? streamName, StreamPosition initialPosition, Action<StreamSubscription> onDispose)
-    {
-        _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
-        this._streamName = streamName;
-        _currentPosition = initialPosition;
-        _onDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
-    }
     public void AddLiveEvent(StreamEvent streamEvent)
     {
         _liveQueue.Enqueue(streamEvent);

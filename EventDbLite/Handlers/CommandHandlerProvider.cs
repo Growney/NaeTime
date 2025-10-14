@@ -4,20 +4,15 @@ using System.Reflection;
 
 namespace EventDbLite.Handlers;
 
-public class CommandHandlerProvider : ICommandHandlerProvider
+public class CommandHandlerProvider(IEventSerializer eventSerializer) : ICommandHandlerProvider
 {
     private readonly ConcurrentDictionary<Type, Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)>> _handlerMethods = new();
 
-    private readonly IEventSerializer _eventSerializer;
-
-    public CommandHandlerProvider(IEventSerializer eventSerializer)
-    {
-        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
-    }
+    private readonly IEventSerializer _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
 
     private Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)> RegisterHandler(Type commandControllerType)
     {
-        Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)> handlerMethods = new();
+        Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)> handlerMethods = [];
         foreach (MethodInfo method in commandControllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
         {
             if (method.Name != "On")

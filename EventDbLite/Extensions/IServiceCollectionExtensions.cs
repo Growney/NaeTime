@@ -82,7 +82,7 @@ public static class IServiceCollectionExtensions
             IAsyncHandlerProvider handlerProvider = serviceProvider.GetRequiredService<IAsyncHandlerProvider>();
             IEnumerable<AsyncHandler> handlers = handlerProvider.GetHandlerMethods(typeof(T));
 
-            List<ConstantReaction> reactions = new();
+            List<ConstantReaction> reactions = [];
 
             foreach (AsyncHandler handler in handlers)
             {

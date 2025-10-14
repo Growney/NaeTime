@@ -8,16 +8,10 @@ namespace EventDbLite.Reactions;
 
 public class ReactionProvider : IReactionProvider
 {
-    private class ReactionHandler : IDisposable
+    private class ReactionHandler(Func<object, StreamEvent, Task> handler, Action onDispose) : IDisposable
     {
-        public ReactionHandler(Func<object, StreamEvent, Task> handler, Action onDispose)
-        {
-            Handler = handler ?? throw new ArgumentNullException(nameof(handler));
-            OnDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
-        }
-
-        public Func<object, StreamEvent, Task> Handler { get; }
-        public Action OnDispose { get; }
+        public Func<object, StreamEvent, Task> Handler { get; } = handler ?? throw new ArgumentNullException(nameof(handler));
+        public Action OnDispose { get; } = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
 
         public void Dispose()
         {
@@ -109,7 +103,7 @@ public class ReactionProvider : IReactionProvider
             throw new InvalidOperationException("Event serializer must not be null");
         }
 
-        List<Task> tasks = new();
+        List<Task> tasks = [];
         if (_handlers.TryGetValue(metadata.Identifier, out var handlers))
         {
             foreach (KeyValuePair<Type, ConcurrentDictionary<Guid, ReactionHandler>> handlerKvp in handlers)

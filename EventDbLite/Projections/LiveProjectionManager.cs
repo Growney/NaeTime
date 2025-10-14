@@ -4,19 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EventDbLite.Projections;
 
-internal class LiveProjectionManager
+internal class LiveProjectionManager(LiveProjectionRequirement requirement, IServiceProvider serviceProvider, IEventStoreLite eventStore)
 {
-    private readonly LiveProjectionRequirement _requirement;
-    private readonly IEventStoreLite _eventStore;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly LiveProjectionRequirement _requirement = requirement ?? throw new ArgumentNullException(nameof(requirement));
+    private readonly IEventStoreLite _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     private CancellationTokenSource? _cancellationTokenSource;
-
-    public LiveProjectionManager(LiveProjectionRequirement requirement, IServiceProvider serviceProvider, IEventStoreLite eventStore)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _requirement = requirement ?? throw new ArgumentNullException(nameof(requirement));
-        _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
-    }
 
     public async Task Start()
     {

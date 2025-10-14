@@ -27,7 +27,7 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticeTimingId>
         public bool IsValid { get; set; } = true;
     }
 
-    private readonly Dictionary<Guid, Dictionary<Guid, List<Detection>>> _pilotDetections = new();
+    private readonly Dictionary<Guid, Dictionary<Guid, List<Detection>>> _pilotDetections = [];
 
     public OpenPracticePilotTiming()
     {
@@ -55,13 +55,13 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticeTimingId>
     {
         if(!_pilotDetections.TryGetValue(e.SessionId, out Dictionary<Guid, List<Detection>>? sessionPilots))
         {
-            sessionPilots = new Dictionary<Guid, List<Detection>>();
+            sessionPilots = [];
             _pilotDetections[e.SessionId] = sessionPilots;
         }
 
         if(!sessionPilots.TryGetValue(e.PilotId, out List<Detection>? detections))
         {
-            detections = new List<Detection>();
+            detections = [];
             sessionPilots[e.PilotId] = detections;
         }
 
@@ -83,6 +83,8 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticeTimingId>
     }
     public void RemoveDetectionFromPilot(Guid detectionId)
     {
+        ArgumentNullException.ThrowIfNull(Id, nameof(Id));
+
         Raise(new OpenPracticeDetectionRemovedFromPilot(Id.PilotId, Id.SessionId, detectionId));
     }
 
@@ -102,6 +104,8 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticeTimingId>
     }
     public void MarkPilotDetectionAsValid(Guid detectionId)
     {
+        ArgumentNullException.ThrowIfNull(Id, nameof(Id));
+
         Raise(new OpenPracticeDetectionValidated(Id.PilotId, Id.SessionId, detectionId));
     }
 
@@ -122,6 +126,8 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticeTimingId>
 
     public void MarkPilotDetectionAsInvalid(Guid detectionId)
     {
+        ArgumentNullException.ThrowIfNull(Id, nameof(Id));
+
         Raise(new OpenPracticeDetectionInvalidated(Id.PilotId, Id.SessionId, detectionId));
     }
 

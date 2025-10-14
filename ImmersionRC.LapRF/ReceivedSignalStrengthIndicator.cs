@@ -1,14 +1,7 @@
 ﻿namespace ImmersionRC.LapRF;
-public struct ReceivedSignalStrengthIndicator
+public struct ReceivedSignalStrengthIndicator(byte transponderId, float level, ulong? realTimeClockTime)
 {
-    public ReceivedSignalStrengthIndicator(byte transponderId, float level, ulong? realTimeClockTime)
-    {
-        TransponderId = transponderId;
-        Level = level;
-        RealTimeClockTime = realTimeClockTime;
-    }
-
-    public byte TransponderId { get; }
-    public float Level { get; }
-    public ulong? RealTimeClockTime { get; }
+    public byte TransponderId { get; } = transponderId;
+    public float Level { get; } = level;
+    public ulong? RealTimeClockTime { get; } = realTimeClockTime;
 }

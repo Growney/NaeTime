@@ -2,7 +2,7 @@
 using NaeTime.Hardware.Node.Esp32.Abstractions;
 
 namespace NaeTime.Hardware.Node.Esp32;
-public class NodeProtocol : INodeProtocol
+public class NodeProtocol(INodeCommunication communication, INodeTimingProtocol timingProtocol, INodeConfigurationProtocol configurationProtocol) : INodeProtocol
 {
     public const byte START_OF_RECORD = 0x5a;
     public const byte END_OF_RECORD = 0x5b;
@@ -11,21 +11,14 @@ public class NodeProtocol : INodeProtocol
     public const byte ESCAPED_ADDER = 0x40;
     public static readonly DataEscaper DataEscaper = new(ESCAPE, ESCAPED_ADDER, 1, 1, START_OF_RECORD, END_OF_RECORD, ESCAPE, CTRL_C);
 
-    private readonly INodeCommunication _communication;
-    public INodeTimingProtocol TimingProtocol { get; }
-    public INodeConfigurationProtocol ConfigurationProtocol { get; }
+    private readonly INodeCommunication _communication = communication ?? throw new ArgumentNullException(nameof(communication));
+    public INodeTimingProtocol TimingProtocol { get; } = timingProtocol;
+    public INodeConfigurationProtocol ConfigurationProtocol { get; } = configurationProtocol;
     private readonly CRC16 _crc16 = new();
 
     private readonly Stack<byte> _receivedStack = new();
 
     private readonly byte[] _packet = new byte[2096];
-
-    public NodeProtocol(INodeCommunication communication, INodeTimingProtocol timingProtocol, INodeConfigurationProtocol configurationProtocol)
-    {
-        _communication = communication ?? throw new ArgumentNullException(nameof(communication));
-        TimingProtocol = timingProtocol;
-        ConfigurationProtocol = configurationProtocol;
-    }
 
     public async Task RunAsync(CancellationToken token)
     {

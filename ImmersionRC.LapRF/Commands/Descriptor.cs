@@ -1,12 +1,6 @@
 ﻿namespace ImmersionRC.LapRF.Commands;
-internal class Descriptor : CommandBase
+internal class Descriptor(byte pilotId, long realTimeClockTime, short statusFlag, int puckVersion, byte protocolVersion) : CommandBase(pilotId, realTimeClockTime, statusFlag)
 {
-    public Descriptor(byte pilotId, long realTimeClockTime, short statusFlag, int puckVersion, byte protocolVersion) : base(pilotId, realTimeClockTime, statusFlag)
-    {
-        PuckVersion = puckVersion;
-        ProtocolVersion = protocolVersion;
-    }
-
-    public int PuckVersion { get; }
-    public byte ProtocolVersion { get; }
+    public int PuckVersion { get; } = puckVersion;
+    public byte ProtocolVersion { get; } = protocolVersion;
 }

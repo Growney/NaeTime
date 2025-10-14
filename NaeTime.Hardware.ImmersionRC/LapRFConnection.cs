@@ -111,7 +111,7 @@ internal class LapRFConnection
 
         IEnumerable<RFSetup> rfSetups = await _protocol.RadioFrequencySetupProtocol.GetSetupAsync(lanes, CancellationToken.None).ConfigureAwait(false);
 
-        List<LapRF8ChannelLaneConfiguration> channels = new();
+        List<LapRF8ChannelLaneConfiguration> channels = [];
 
         foreach (RFSetup setup in rfSetups)
         {

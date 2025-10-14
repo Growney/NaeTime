@@ -1,14 +1,7 @@
 ﻿namespace ImmersionRC.LapRF.Commands;
-internal class CommandBase
+internal class CommandBase(byte pilotId, long realTimeClockTime, short statusFlag)
 {
-    public CommandBase(byte pilotId, long realTimeClockTime, short statusFlag)
-    {
-        PilotId = pilotId;
-        RealTimeClockTime = realTimeClockTime;
-        StatusFlag = statusFlag;
-    }
-
-    public byte PilotId { get; }
-    public long RealTimeClockTime { get; }
-    public short StatusFlag { get; }
+    public byte PilotId { get; } = pilotId;
+    public long RealTimeClockTime { get; } = realTimeClockTime;
+    public short StatusFlag { get; } = statusFlag;
 }

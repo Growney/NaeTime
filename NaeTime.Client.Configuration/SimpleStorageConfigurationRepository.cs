@@ -2,14 +2,9 @@
 using NaeTime.Client.Configuration.Models;
 
 namespace NaeTime.Client.Configuration;
-public class SimpleStorageConfigurationRepository : ILocalConfigurationRepository
+public class SimpleStorageConfigurationRepository(ISimpleStorageProvider simpleStorageProvider) : ILocalConfigurationRepository
 {
-    private readonly ISimpleStorageProvider _simpleStorageProvider;
-
-    public SimpleStorageConfigurationRepository(ISimpleStorageProvider simpleStorageProvider)
-    {
-        _simpleStorageProvider = simpleStorageProvider ?? throw new ArgumentNullException(nameof(simpleStorageProvider));
-    }
+    private readonly ISimpleStorageProvider _simpleStorageProvider = simpleStorageProvider ?? throw new ArgumentNullException(nameof(simpleStorageProvider));
 
     public async Task<SoundConfiguration> GetSoundConfigurationAsync()
     {

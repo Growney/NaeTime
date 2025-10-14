@@ -9,7 +9,7 @@ public class Track
 {
     public Guid Id { get; set; }
     public string? Name { get; set; }
-    public List<Detector> Detectors { get; set; } = new();
+    public List<Detector> Detectors { get; set; } = [];
     public byte MaxLanes { get; set; }
     public long? MinimumLapTimeMilliseconds { get; set; }
     public long? MaximumLapTimeMilliseconds { get; set; }

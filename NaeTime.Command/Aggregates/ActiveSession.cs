@@ -2,7 +2,7 @@
 using NaeTime.Events;
 
 namespace NaeTime.Command.Aggregates;
-public class ActiveSession : AggregateRoot<string>
+public class ActiveSession : AggregateRoot
 {
     private enum SessionType
     {

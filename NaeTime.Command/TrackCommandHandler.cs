@@ -4,16 +4,10 @@ using NaeTime.Command.Aggregates;
 using NaeTime.Query.Abstractions;
 
 namespace NaeTime.Command;
-public class TrackCommandHandler : ITrackCommandHandler
+public class TrackCommandHandler(IAggregateRepository repository, IHardwareQueryHandler hardwareQueryHandler) : ITrackCommandHandler
 {
-    private readonly IAggregateRepository _repository;
-    private readonly IHardwareQueryHandler _hardwareQueryHandler;
-
-    public TrackCommandHandler(IAggregateRepository repository, IHardwareQueryHandler hardwareQueryHandler)
-    {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-        _hardwareQueryHandler = hardwareQueryHandler ?? throw new ArgumentNullException(nameof(hardwareQueryHandler));
-    }
+    private readonly IAggregateRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+    private readonly IHardwareQueryHandler _hardwareQueryHandler = hardwareQueryHandler ?? throw new ArgumentNullException(nameof(hardwareQueryHandler));
 
     private async Task ThrowIfDetectorDoesNotExist(IEnumerable<Guid> detectors)
     {

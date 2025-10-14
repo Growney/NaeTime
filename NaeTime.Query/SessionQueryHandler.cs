@@ -9,13 +9,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace NaeTime.Query;
-public class SessionQueryHandler : ISessionQueryHandler
+public class SessionQueryHandler(IProjectionProvider projectionProvider) : ISessionQueryHandler
 {
-    private readonly IProjectionProvider _projectionProvider;
-    public SessionQueryHandler(IProjectionProvider projectionProvider)
-    {
-        _projectionProvider = projectionProvider;
-    }
+    private readonly IProjectionProvider _projectionProvider = projectionProvider;
+
     public async Task<IEnumerable<Session>> GetAllSessions()
     {
         SessionList sessionList = await _projectionProvider.Load<SessionList>();

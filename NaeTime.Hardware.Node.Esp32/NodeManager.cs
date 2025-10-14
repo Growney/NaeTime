@@ -4,18 +4,12 @@ using NaeTime.Hardware.Node.Esp32.Abstractions;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Hardware.Node.Esp32;
-internal class NodeManager : IHostedService
+internal class NodeManager(INodeConnectionFactory connectionFactory, ISoftwareTimer softwareTimer) : IHostedService
 {
-    private readonly ISoftwareTimer _softwareTimer;
-    private readonly INodeConnectionFactory _connectionFactory;
+    private readonly ISoftwareTimer _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
+    private readonly INodeConnectionFactory _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
     private readonly ConcurrentDictionary<Guid, NodeConnection> _hardwareProcesses = new();
-
-    public NodeManager(INodeConnectionFactory connectionFactory, ISoftwareTimer softwareTimer)
-    {
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
-    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {

@@ -3,17 +3,12 @@ using NaeTime.Bytes;
 using System.Collections.Concurrent;
 
 namespace ImmersionRC.LapRF.Protocol;
-internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
+internal class RadioFrequencySetupProtocol(ILapRFCommunication lapRFCommunication) : IRadioFrequencySetupProtocol
 {
-    private readonly ILapRFCommunication _lapRFCommunication;
+    private readonly ILapRFCommunication _lapRFCommunication = lapRFCommunication;
     private readonly ConcurrentDictionary<byte, RFSetup> _latestSetup = new();
     private readonly ConcurrentDictionary<byte, List<TaskCompletionSource<RFSetup>>> _responders = new();
     private readonly Crc16 _crc16 = new();
-
-    public RadioFrequencySetupProtocol(ILapRFCommunication lapRFCommunication)
-    {
-        _lapRFCommunication = lapRFCommunication;
-    }
 
     public void HandleRecordData(ReadOnlySpanReader<byte> recordReader)
     {
@@ -133,7 +128,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
     }
     public async ValueTask<IEnumerable<RFSetup>> GetSetupAsync(IEnumerable<byte> transponderIds, CancellationToken cancellationToken = default)
     {
-        List<TaskCompletionSource<RFSetup>> responders = new();
+        List<TaskCompletionSource<RFSetup>> responders = [];
 
         foreach (byte transponderId in transponderIds)
         {
@@ -160,7 +155,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
 
         await Task.WhenAll(responders.Select(x => x.Task)).ConfigureAwait(false);
 
-        List<RFSetup> results = new();
+        List<RFSetup> results = [];
 
         foreach (TaskCompletionSource<RFSetup> responder in responders)
         {
@@ -176,7 +171,7 @@ internal class RadioFrequencySetupProtocol : IRadioFrequencySetupProtocol
 
         cancellationToken.Register(() => responderCompletionSource.TrySetCanceled());
 
-        _responders.AddOrUpdate(transponderId, new List<TaskCompletionSource<RFSetup>>() { responderCompletionSource }, (key, oldValue) =>
+        _responders.AddOrUpdate(transponderId, [responderCompletionSource], (key, oldValue) =>
         {
             oldValue.Add(responderCompletionSource);
             return oldValue;

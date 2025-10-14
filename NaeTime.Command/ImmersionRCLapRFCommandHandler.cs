@@ -4,14 +4,9 @@ using NaeTime.Command.Aggregates;
 using System.Net;
 
 namespace NaeTime.Command;
-public class ImmersionRCLapRFCommandHandler : IImmersionRCLapRFCommandHandler
+public class ImmersionRCLapRFCommandHandler(IAggregateRepository repository) : IImmersionRCLapRFCommandHandler
 {
-    private readonly IAggregateRepository _repository;
-
-    public ImmersionRCLapRFCommandHandler(IAggregateRepository repository)
-    {
-        _repository = repository;
-    }
+    private readonly IAggregateRepository _repository = repository;
 
     public async Task ConfirmLaneDisabled(Guid id, byte lane)
     {
@@ -99,7 +94,7 @@ public class ImmersionRCLapRFCommandHandler : IImmersionRCLapRFCommandHandler
 
     public async Task RegisterNetworkLapRF8Channel(Guid id, string name, IPAddress address, ushort port)
     {
-        ImmersionRCLapRF aggregate = _repository.CreateNew<ImmersionRCLapRF, Guid>(() => new ImmersionRCLapRF(id, name, address, port, 8));
+        ImmersionRCLapRF aggregate = _repository.CreateNew<ImmersionRCLapRF>(() => new ImmersionRCLapRF(id, name, address, port, 8));
         await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
     }
 

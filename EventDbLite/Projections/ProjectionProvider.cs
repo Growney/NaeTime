@@ -4,20 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EventDbLite.Projections;
 
-public class ProjectionProvider : IProjectionProvider
+public class ProjectionProvider(IServiceProvider serviceProvider, IEventStreamConnection connection, IEventSerializer eventSerializer, IHandlerProvider aggregateHandlerProvider) : IProjectionProvider
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IEventStreamConnection _connection;
-    private readonly IEventSerializer _eventSerializer;
-    private readonly IHandlerProvider _handlerProvider;
-
-    public ProjectionProvider(IServiceProvider serviceProvider, IEventStreamConnection connection, IEventSerializer eventSerializer, IHandlerProvider aggregateHandlerProvider)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _connection = connection ?? throw new ArgumentNullException(nameof(connection));
-        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
-        _handlerProvider = aggregateHandlerProvider ?? throw new ArgumentNullException(nameof(aggregateHandlerProvider));
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly IEventStreamConnection _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+    private readonly IEventSerializer _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
+    private readonly IHandlerProvider _handlerProvider = aggregateHandlerProvider ?? throw new ArgumentNullException(nameof(aggregateHandlerProvider));
 
     public async Task<T> Load<T>(string? streamName = null) where T : Projection
     {

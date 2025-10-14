@@ -2,15 +2,11 @@
 using EventDbLite.Events;
 
 namespace EventDbLite.Streams;
-public class StreamEventWriter : IStreamEventWriter
+public class StreamEventWriter(IEventSerializer eventSerializer, IEventStoreLite connection) : IStreamEventWriter
 {
-    private readonly IEventSerializer _eventSerializer;
-    private readonly IEventStoreLite _connection;
-    public StreamEventWriter(IEventSerializer eventSerializer, IEventStoreLite connection)
-    {
-        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
-        _connection = connection ?? throw new ArgumentNullException(nameof(connection));
-    }
+    private readonly IEventSerializer _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
+    private readonly IEventStoreLite _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+
     public async Task AppendToStream(string streamName, object payload)
     {
         if (string.IsNullOrWhiteSpace(streamName))

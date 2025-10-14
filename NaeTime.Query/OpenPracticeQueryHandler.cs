@@ -9,14 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace NaeTime.Query;
-public class OpenPracticeQueryHandler : IOpenPracticeQueryHandler
+public class OpenPracticeQueryHandler(IProjectionProvider projectionProvider) : IOpenPracticeQueryHandler
 {
-    private readonly IProjectionProvider _projectionProvider;
-
-    public OpenPracticeQueryHandler(IProjectionProvider projectionProvider)
-    {
-        _projectionProvider = projectionProvider;
-    }
+    private readonly IProjectionProvider _projectionProvider = projectionProvider;
 
     public async Task<OpenPracticeSession?> GetByIdAsync(Guid id)
     {

@@ -3,15 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace NaeTime.Persistence.SQLite;
-public class SQLiteDatabaseManager<T> : IHostedService
+public class SQLiteDatabaseManager<T>(IServiceProvider serviceProvider) : IHostedService
     where T : DbContext
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public SQLiteDatabaseManager(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {

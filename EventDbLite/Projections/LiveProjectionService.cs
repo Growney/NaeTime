@@ -7,7 +7,7 @@ public class LiveProjectionService : IHostedService
 {
     private readonly IEventStoreLite _eventStore;
     private readonly IServiceProvider _serviceProvider;
-    private readonly List<LiveProjectionManager> _projections = new();
+    private readonly List<LiveProjectionManager> _projections = [];
 
     public LiveProjectionService(IEventStoreLite eventStore, IServiceProvider serviceProvider, IEnumerable<LiveProjectionRequirement> projections)
     {

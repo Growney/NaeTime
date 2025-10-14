@@ -3,16 +3,10 @@ using NaeTime.Announcer.Abstractions;
 using NaeTime.Announcer.Models;
 
 namespace NaeTime.Announcer;
-public class Announcer : BackgroundService
+public class Announcer(IEnumerable<IAnnouncmentProvider> providers, ISpeechProvider speechProvider) : BackgroundService
 {
-    private readonly IEnumerable<IAnnouncmentProvider> _providers;
-    private readonly ISpeechProvider _speechProvider;
-
-    public Announcer(IEnumerable<IAnnouncmentProvider> providers, ISpeechProvider speechProvider)
-    {
-        _providers = providers ?? throw new ArgumentNullException(nameof(providers));
-        _speechProvider = speechProvider ?? throw new ArgumentNullException(nameof(speechProvider));
-    }
+    private readonly IEnumerable<IAnnouncmentProvider> _providers = providers ?? throw new ArgumentNullException(nameof(providers));
+    private readonly ISpeechProvider _speechProvider = speechProvider ?? throw new ArgumentNullException(nameof(speechProvider));
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

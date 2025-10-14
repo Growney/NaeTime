@@ -1,19 +1,9 @@
 ﻿namespace ImmersionRC.LapRF.Commands;
-internal class Settings : CommandBase
+internal class Settings(byte pilotId, long realTimeClockTime, short statusFlag, byte[] name, short updatePeriodMilliseconds, byte saveSettings, int minimumLapTimeMilliseconds, byte isModuleEnabled) : CommandBase(pilotId, realTimeClockTime, statusFlag)
 {
-    public Settings(byte pilotId, long realTimeClockTime, short statusFlag, byte[] name, short updatePeriodMilliseconds, byte saveSettings, int minimumLapTimeMilliseconds, byte isModuleEnabled)
-        : base(pilotId, realTimeClockTime, statusFlag)
-    {
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-        UpdatePeriodMilliseconds = updatePeriodMilliseconds;
-        SaveSettings = saveSettings;
-        MinimumLapTimeMilliseconds = minimumLapTimeMilliseconds;
-        IsModuleEnabled = isModuleEnabled;
-    }
-
-    public byte[] Name { get; }
-    public short UpdatePeriodMilliseconds { get; }
-    public byte SaveSettings { get; }
-    public int MinimumLapTimeMilliseconds { get; }
-    public byte IsModuleEnabled { get; }
+    public byte[] Name { get; } = name ?? throw new ArgumentNullException(nameof(name));
+    public short UpdatePeriodMilliseconds { get; } = updatePeriodMilliseconds;
+    public byte SaveSettings { get; } = saveSettings;
+    public int MinimumLapTimeMilliseconds { get; } = minimumLapTimeMilliseconds;
+    public byte IsModuleEnabled { get; } = isModuleEnabled;
 }

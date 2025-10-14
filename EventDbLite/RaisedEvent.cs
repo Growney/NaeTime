@@ -3,16 +3,10 @@ using System.Reflection;
 
 namespace EventDbLite;
 
-public class RaisedEvent
+public class RaisedEvent(string identifier, object data)
 {
-    public RaisedEvent(string identifier, object data)
-    {
-        Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
-        Data = data ?? throw new ArgumentNullException(nameof(data));
-    }
-
-    public string Identifier { get; }
-    public object Data { get; }
+    public string Identifier { get; } = identifier ?? throw new ArgumentNullException(nameof(identifier));
+    public object Data { get; } = data ?? throw new ArgumentNullException(nameof(data));
 
     public static string GetIdentifier(Type eventType)
     {

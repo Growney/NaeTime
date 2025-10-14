@@ -5,14 +5,9 @@ using NaeTime.Query.Projections;
 
 namespace NaeTime.Query;
 
-public class TrackQueryHandler : ITrackQueryHandler
+public class TrackQueryHandler(IProjectionProvider projectionProvider) : ITrackQueryHandler
 {
-    private readonly IProjectionProvider _projectionProvider;
-
-    public TrackQueryHandler(IProjectionProvider projectionProvider)
-    {
-        _projectionProvider = projectionProvider;
-    }
+    private readonly IProjectionProvider _projectionProvider = projectionProvider;
 
     public async Task<IEnumerable<Track>> GetAllTracks()
     {

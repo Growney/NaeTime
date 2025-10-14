@@ -27,7 +27,7 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     private Type _type;
     private byte _lanes;
 
-    private readonly Dictionary<byte, LaneInfo> _laneInfo = new();
+    private readonly Dictionary<byte, LaneInfo> _laneInfo = [];
 
     public ImmersionRCLapRF()
     {

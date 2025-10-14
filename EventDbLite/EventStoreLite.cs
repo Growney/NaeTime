@@ -5,16 +5,11 @@ using System.Collections.Concurrent;
 
 namespace EventDbLite;
 
-public class EventStoreLite : IEventStoreLite
+public class EventStoreLite(IServiceProvider serviceProvider) : IEventStoreLite
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, StreamSubscription>> _streamSubscriptions = new();
     private readonly ConcurrentDictionary<Guid, StreamSubscription> _allStreamSubscriptions = new();
-
-    public EventStoreLite(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-    }
 
     public async Task AppendToStreamAsync(string streamName, IEnumerable<EventData> data, StreamPosition expectedState)
     {

@@ -1,31 +1,22 @@
 ﻿namespace NaeTime.Bytes;
-public class DataEscaper
+/// <summary>
+/// Creates a new instance of the <see cref="DataEscaper"/> class.
+/// </summary>
+/// <param name="escape">The escape character</param>
+/// <param name="escapedAdder">Value that should be added to characters that have been escaped and subtracted when unescaped</param>
+/// <param name="escapeStart">Number of bytes that should be ignored at the start of the data for escaping</param>
+/// <param name="escapeEnd">Number of bytes that should beb ignored at the end of the data for escaping</param>
+/// <param name="escapeCharacters">Characters that should be escaped</param>
+/// <exception cref="ArgumentNullException"></exception>
+public class DataEscaper(byte escape, byte escapedAdder, int escapeStart, int escapeEnd, params byte[] escapeCharacters)
 {
-    private readonly byte _escape;
-    private readonly byte[] _escapeCharacters;
-    private readonly byte _escapedAdder;
+    private readonly byte _escape = escape;
+    private readonly byte[] _escapeCharacters = escapeCharacters ?? throw new ArgumentNullException(nameof(escapeCharacters));
+    private readonly byte _escapedAdder = escapedAdder;
     //Number of bytes that should be ignored at the start of the data for escaping
-    private readonly int _escapeStart;
+    private readonly int _escapeStart = escapeStart;
     //Number of bytes that should be ignored at the end of the data for escaping
-    private readonly int _escapeEnd;
-
-    /// <summary>
-    /// Creates a new instance of the <see cref="DataEscaper"/> class.
-    /// </summary>
-    /// <param name="escape">The escape character</param>
-    /// <param name="escapedAdder">Value that should be added to characters that have been escaped and subtracted when unescaped</param>
-    /// <param name="escapeStart">Number of bytes that should be ignored at the start of the data for escaping</param>
-    /// <param name="escapeEnd">Number of bytes that should beb ignored at the end of the data for escaping</param>
-    /// <param name="escapeCharacters">Characters that should be escaped</param>
-    /// <exception cref="ArgumentNullException"></exception>
-    public DataEscaper(byte escape, byte escapedAdder, int escapeStart, int escapeEnd, params byte[] escapeCharacters)
-    {
-        _escape = escape;
-        _escapeCharacters = escapeCharacters ?? throw new ArgumentNullException(nameof(escapeCharacters));
-        _escapedAdder = escapedAdder;
-        _escapeStart = escapeStart;
-        _escapeEnd = escapeEnd;
-    }
+    private readonly int _escapeEnd = escapeEnd;
 
     public byte[] UnEscape(ReadOnlySpan<byte> data)
     {
