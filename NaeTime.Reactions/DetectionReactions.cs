@@ -25,7 +25,7 @@ internal class DetectionReactions
         switch (session.Type)
         {
             case Query.Abstractions.Models.SessionType.OpenPractice:
-                await _detectionCommandHandler.BindDetectionToOpenPracticeSession(detection.DetectionId, session.Id);
+                await _detectionCommandHandler.AssignDetectionToOpenPracticeSesssion(detection.DetectionId, session.Id);
                 break;
             default:
                 break;
@@ -44,10 +44,15 @@ internal class DetectionReactions
         switch (session.Type)
         {
             case Query.Abstractions.Models.SessionType.OpenPractice:
-                await _detectionCommandHandler.BindDetectionToOpenPracticeSession(detection.DetectionId, session.Id);
+                await _detectionCommandHandler.AssignDetectionToOpenPracticeSesssion(detection.DetectionId, session.Id);
                 break;
             default:
                 break;
         }
+    }
+
+    public async Task When(DetectionRemovedFromOpenPracticeSession unassigned)
+    {
+        await _detectionCommandHandler.UnassignDetectionFromOpenPracticeSession(unassigned.DetectionId,unassigned.SessionId);
     }
 }

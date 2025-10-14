@@ -11,7 +11,8 @@ public interface IOpenPracticeCommandHandler
     public Task SetLanePilot(Guid sessionId, byte lane, Guid pilotId);
     public Task ResetLanePilot(Guid sessionId, byte lane);
 
-    public Task AssignDetectionToOpenPracticeSession(Guid detectionId, Guid sessionId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime);
+    public Task AddDetectionToSession(Guid detectionId, Guid sessionId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime);
+    public Task RemoveDetectionFromSession(Guid detectionId, Guid sessionId);
     public Task AssignDetectionToPilot(Guid detectionId, Guid sessionId, Guid pilotId);
     public Task UnassignDetectionFromPilot(Guid detectionId,Guid sessionId, Guid pilotId);
 }

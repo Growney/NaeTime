@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace EventDbLite.Aggregates;
 
-public abstract class AggregateRoot<T>
+public abstract class AggregateRoot<T> where T : AggregateIdentifier
 {
     public T? Id { get; set; }
     public long Version { get; private set; }
