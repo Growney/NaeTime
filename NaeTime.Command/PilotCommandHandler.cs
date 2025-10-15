@@ -15,7 +15,7 @@ public class PilotCommandHandler(IAggregateRepository repository) : IPilotComman
             throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
         }
         pilot.ChangeBindingPhrase(bindingPhrase);
-        await _repository.Save<Pilot,Guid>(pilot);
+        await _repository.Save<Pilot, Guid>(pilot);
     }
 
     public async Task RemovePilotBindingPhrase(Guid id)
@@ -41,7 +41,7 @@ public class PilotCommandHandler(IAggregateRepository repository) : IPilotComman
 
     public async Task CreatePilot(Guid id, string? firstName, string? lastName, string? callSign, string? bindingPhrase)
     {
-        Pilot pilot = _repository.CreateNew<Pilot,Guid>(() => new Pilot(id));
+        Pilot pilot = _repository.CreateNew<Pilot>(() => new Pilot(id));
 
         if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
         {

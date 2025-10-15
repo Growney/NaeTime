@@ -9,17 +9,50 @@ public class OpenPracticeCommandHandler(IAggregateRepository repository, ITrackQ
     private readonly IAggregateRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     private readonly ITrackQueryHandler _trackQueryHandler = trackQueryHandler ?? throw new ArgumentNullException(nameof(trackQueryHandler));
 
-    public async Task AddDetectionToSession(Guid detectionId, Guid sessionId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
+    public async Task AddHardwareDetectionToSession(Guid detectionId, Guid sessionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
         OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId);
         if (session == null)
         {
             throw new InvalidOperationException("Session does not exist");
         }
-        session.AddDetectionToSession(detectionId, lane, hardwareTime, softwareTime, utcTime);
+
+        Query.Abstractions.Models.Track? track = await _trackQueryHandler.GetTrack(session.TrackId);
+        if (track == null)
+        {
+            throw new InvalidOperationException("Session track does not exist");
+        }
+
+        byte detectorIndex = (byte)Array.FindIndex(track.Detectors, x => x.Id == timerId);
+        if (detectorIndex < 0)
+        {
+            throw new InvalidOperationException("Detector not found on track");
+        }
+
+        session.AddDetection(detectionId, detectorIndex, (byte)track.Detectors.Length, lane, hardwareTime, softwareTime, utcTime);
         await _repository.Save<OpenPracticeSession, Guid>(session);
     }
+    public async Task AddDetectionToSession(Guid detectionId, Guid sessionId, byte ordinalPosition, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId);
+        if (session == null)
+        {
+            throw new InvalidOperationException("Session does not exist");
+        }
+        Query.Abstractions.Models.Track? track = await _trackQueryHandler.GetTrack(session.TrackId);
+        if (track == null)
+        {
+            throw new InvalidOperationException("Session track does not exist");
+        }
 
+        if (ordinalPosition >= track.Detectors.Length)
+        {
+            throw new InvalidOperationException("Detector index out of range for track");
+        }
+
+        session.AddDetection(detectionId, ordinalPosition, (byte)track.Detectors.Length, lane, hardwareTime, softwareTime, utcTime);
+        await _repository.Save<OpenPracticeSession, Guid>(session);
+    }
     public async Task AssignDetectionToPilot(Guid detectionId, Guid sessionId, Guid pilotId)
     {
         OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId);
@@ -33,7 +66,7 @@ public class OpenPracticeCommandHandler(IAggregateRepository repository, ITrackQ
 
     public async Task CloneSession(Guid newId, Guid existingId, string newName)
     {
-        OpenPracticeSession? existingSession = await _repository.Get<OpenPracticeSession,Guid>(existingId);
+        OpenPracticeSession? existingSession = await _repository.Get<OpenPracticeSession, Guid>(existingId);
         if (existingSession == null)
         {
             throw new ArgumentException($"Session with ID {existingId} does not exist.", nameof(existingId));
@@ -115,10 +148,10 @@ public class OpenPracticeCommandHandler(IAggregateRepository repository, ITrackQ
             throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
         }
 
-        OpenPracticeSession session = _repository.CreateNew<OpenPracticeSession,Guid>(() => new OpenPracticeSession(id, trackId, name));
+        OpenPracticeSession session = _repository.CreateNew<OpenPracticeSession>(() => new OpenPracticeSession(id, trackId, name));
         session.ConfigureDefaultLanes(track.MaxLanes);
 
-        await _repository.Save<OpenPracticeSession,Guid>(session);
+        await _repository.Save<OpenPracticeSession, Guid>(session);
     }
 
     public async Task SetLanePilot(Guid sessionId, byte lane, Guid pilotId)
@@ -156,7 +189,7 @@ public class OpenPracticeCommandHandler(IAggregateRepository repository, ITrackQ
         await _repository.Save<OpenPracticeSession, Guid>(session);
     }
 
-    public async Task UnassignDetectionFromPilot(Guid detectionId,Guid sessionId, Guid pilotId)
+    public async Task UnassignDetectionFromPilot(Guid detectionId, Guid sessionId, Guid pilotId)
     {
         OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId);
         if (session == null)

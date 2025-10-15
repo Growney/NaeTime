@@ -21,14 +21,14 @@ public class TrackCommandHandler(IAggregateRepository repository, IHardwareQuery
     {
         await ThrowIfDetectorDoesNotExist(detectors);
 
-        Track track = _repository.CreateNew<Track,Guid>(() => new Track(id, detectors, name));
+        Track track = _repository.CreateNew<Track>(() => new Track(id, detectors, name));
 
         await _repository.Save<Track, Guid>(track);
     }
 
     public async Task RenameTrack(Guid id, string name)
     {
-        Track? track = await _repository.Get<Track,Guid>(id) ?? throw new ArgumentException($"Track with ID {id} does not exist.", nameof(id));
+        Track? track = await _repository.Get<Track, Guid>(id) ?? throw new ArgumentException($"Track with ID {id} does not exist.", nameof(id));
         track.Rename(name);
         await _repository.Save<Track, Guid>(track);
     }

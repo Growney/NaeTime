@@ -1,10 +1,5 @@
 ﻿using EventDbLite.Aggregates;
 using NaeTime.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static NaeTime.Command.Aggregates.OpenPracticePilotTiming;
 
 namespace NaeTime.Command.Aggregates;
@@ -19,15 +14,33 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticeTimingId>
     }
     private class Detection
     {
-        public Guid SessionId { get; init; }
-        public Guid DetectionId { get; init; }
+        public Guid Id { get; init; }
+        public byte OrdinalPosition { get; init; }
         public ulong? HardwareTime { get; init; }
         public long SoftwareTime { get; init; }
         public DateTime UtcTime { get; init; }
         public bool IsValid { get; set; } = true;
     }
 
-    private readonly Dictionary<Guid, Dictionary<Guid, List<Detection>>> _pilotDetections = [];
+    private class Lap
+    {
+        public uint Id { get; init; }
+        public required Detection StartDetection { get; set; }
+        public Detection? EndDetection { get; set; }
+        public bool IsIncluded { get; set; } = true;
+        public List<Split> Splits { get; } = [];
+    }
+    private class Split
+    {
+        public uint Id { get; init; }
+        public required Detection StartDetection { get; set; }
+        public Detection? EndDetection { get; set; }
+    }
+
+    private readonly List<Lap> _laps = [];
+
+    private Lap? _currentLap = null;
+
 
     public OpenPracticePilotTiming()
     {
@@ -47,102 +60,15 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticeTimingId>
         };
     }
 
-    public void AddDetectionToPilot(Guid pilotId, Guid sessionId, Guid detectionId, ulong? hardwareTime, long softwareTime, DateTime utcTime)
+    public void AddDetectionToPilot(Guid pilotId, Guid sessionId, Guid detectionId, byte ordinalPosition, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        Raise(new OpenPracticeDetectionAddedToPilot(pilotId, sessionId, detectionId, hardwareTime, softwareTime, utcTime));
-    }
-    private void When(OpenPracticeDetectionAddedToPilot e)
-    {
-        if(!_pilotDetections.TryGetValue(e.SessionId, out Dictionary<Guid, List<Detection>>? sessionPilots))
+        Raise(new OpenPracticeDetectionAddedToPilot(pilotId, sessionId, detectionId, ordinalPosition, hardwareTime, softwareTime, utcTime));
+
+        if (ordinalPosition == 0)
         {
-            sessionPilots = [];
-            _pilotDetections[e.SessionId] = sessionPilots;
+
         }
 
-        if(!sessionPilots.TryGetValue(e.PilotId, out List<Detection>? detections))
-        {
-            detections = [];
-            sessionPilots[e.PilotId] = detections;
-        }
-
-        if(detections.Any(d => d.DetectionId == e.DetectionId))
-        {
-            // already added
-            return;
-        }
-
-        detections.Add( new Detection
-        {
-            SessionId = e.SessionId,
-            DetectionId = e.DetectionId,
-            HardwareTime = e.HardwareTime,
-            SoftwareTime = e.SoftwareTime,
-            UtcTime = e.UtcTime,
-            IsValid = true
-        });
-    }
-    public void RemoveDetectionFromPilot(Guid detectionId)
-    {
-        ArgumentNullException.ThrowIfNull(Id, nameof(Id));
-
-        Raise(new OpenPracticeDetectionRemovedFromPilot(Id.PilotId, Id.SessionId, detectionId));
     }
 
-    private void When(OpenPracticeDetectionRemovedFromPilot e)
-    {
-        if (_pilotDetections.TryGetValue(e.SessionId, out Dictionary<Guid, List<Detection>>? sessionPilots))
-        {
-            if (sessionPilots.TryGetValue(e.PilotId, out List<Detection>? detections))
-            {
-                var detection = detections.FirstOrDefault(d => d.DetectionId == e.DetectionId);
-                if (detection != null)
-                {
-                    detections.Remove(detection);
-                }
-            }
-        }
-    }
-    public void MarkPilotDetectionAsValid(Guid detectionId)
-    {
-        ArgumentNullException.ThrowIfNull(Id, nameof(Id));
-
-        Raise(new OpenPracticeDetectionValidated(Id.PilotId, Id.SessionId, detectionId));
-    }
-
-    private void When(OpenPracticeDetectionValidated e)
-    {
-        if (_pilotDetections.TryGetValue(e.SessionId, out Dictionary<Guid, List<Detection>>? sessionPilots))
-        {
-            if (sessionPilots.TryGetValue(e.PilotId, out List<Detection>? detections))
-            {
-                var detection = detections.FirstOrDefault(d => d.DetectionId == e.DetectionId);
-                if (detection != null)
-                {
-                    detection.IsValid = true;
-                }
-            }
-        }
-    }
-
-    public void MarkPilotDetectionAsInvalid(Guid detectionId)
-    {
-        ArgumentNullException.ThrowIfNull(Id, nameof(Id));
-
-        Raise(new OpenPracticeDetectionInvalidated(Id.PilotId, Id.SessionId, detectionId));
-    }
-
-    private void When(OpenPracticeDetectionInvalidated e)
-    {
-        if (_pilotDetections.TryGetValue(e.SessionId, out Dictionary<Guid, List<Detection>>? sessionPilots))
-        {
-            if (sessionPilots.TryGetValue(e.PilotId, out List<Detection>? detections))
-            {
-                var detection = detections.FirstOrDefault(d => d.DetectionId == e.DetectionId);
-                if (detection != null)
-                {
-                    detection.IsValid = false;
-                }
-            }
-        }
-    }
 }

@@ -9,13 +9,13 @@ public class NaeTimeNodeCommandHandler(IAggregateRepository repository) : INaeTi
 
     public async Task ConfigureSerialEsp32Node(Guid id, string name, string port, byte lanes)
     {
-        NaeTimeNode aggregate = _repository.CreateNew<NaeTimeNode,Guid>(() => new NaeTimeNode(id, name, port, lanes));
+        NaeTimeNode aggregate = _repository.CreateNew<NaeTimeNode>(() => new NaeTimeNode(id, name, port, lanes));
         await _repository.Save<NaeTimeNode, Guid>(aggregate);
     }
 
     public async Task RequestEnableLane(Guid id, byte lane)
     {
-        NaeTimeNode aggregate = await _repository.Get<NaeTimeNode,Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        NaeTimeNode aggregate = await _repository.Get<NaeTimeNode, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
         aggregate.RequestEnableLane(lane);
         await _repository.Save<NaeTimeNode, Guid>(aggregate);
     }

@@ -26,28 +26,4 @@ internal class DetectionReactions(ISessionQueryHandler sessionQueryHandler, IDet
                 break;
         }
     }
-
-    public async Task When(DetectionTriggered detection)
-    {
-        NaeTime.Query.Abstractions.Models.Session? session = await _sessionQueryHandler.GetActiveSession();
-
-        if (session is null)
-        {
-            return;
-        }
-
-        switch (session.Type)
-        {
-            case Query.Abstractions.Models.SessionType.OpenPractice:
-                await _detectionCommandHandler.AssignDetectionToOpenPracticeSesssion(detection.DetectionId, session.Id);
-                break;
-            default:
-                break;
-        }
-    }
-
-    public async Task When(DetectionRemovedFromOpenPracticeSession unassigned)
-    {
-        await _detectionCommandHandler.UnassignDetectionFromOpenPracticeSession(unassigned.DetectionId,unassigned.SessionId);
-    }
 }

@@ -9,27 +9,14 @@ public class DetectionCommandHandler(IAggregateRepository repository) : IDetecti
 
     public async Task AssignDetectionToOpenPracticeSesssion(Guid detectionId, Guid sessionId)
     {
-        Detection? detection = await _repository.Get<Detection, Guid>(detectionId) ?? throw new InvalidOperationException($"Detection {detectionId} does not exist.");
+        HardwareDetection? detection = await _repository.Get<HardwareDetection, Guid>(detectionId) ?? throw new InvalidOperationException($"Detection {detectionId} does not exist.");
         detection.AssignDetectionToOpenPracticeSession(detectionId, sessionId);
-        await _repository.Save<Detection, Guid>(detection);
-    }
-
-    public Task RegisterDetection(Guid detectionId, byte lane, long softwareTime, DateTime utcTime)
-    {
-        Detection? detection = _repository.CreateNew<Detection, Guid>(() => new(detectionId, lane, softwareTime, utcTime));
-        return _repository.Save<Detection, Guid>(detection);
+        await _repository.Save<HardwareDetection, Guid>(detection);
     }
 
     public Task RegisterHardwareDetection(Guid detectionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
-        Detection? detection = _repository.CreateNew<Detection, Guid>(() => new(detectionId, timerId, lane, hardwareTime, softwareTime, utcTime));
-        return _repository.Save<Detection, Guid>(detection);
-    }
-
-    public async Task UnassignDetectionFromOpenPracticeSession(Guid detectionId, Guid sessionId)
-    {
-        Detection? detection = await _repository.Get<Detection, Guid>(detectionId) ?? throw new InvalidOperationException($"Detection {detectionId} does not exist.");
-        detection.UnassignFromSession(detectionId, sessionId);
-        await _repository.Save<Detection, Guid>(detection);
+        HardwareDetection? detection = _repository.CreateNew<HardwareDetection>(() => new(detectionId, timerId, lane, hardwareTime, softwareTime, utcTime));
+        return _repository.Save<HardwareDetection, Guid>(detection);
     }
 }
