@@ -13,7 +13,6 @@ public static class IServiceCollectionExtensions
         services.AddTransient<IPilotCommandHandler, PilotCommandHandler>();
         services.AddTransient<ITrackCommandHandler, TrackCommandHandler>();
         services.AddTransient<ISessionsCommandHandler, SessionsCommandHandler>();
-        services.AddTransient<IDetectionCommandHandler, DetectionCommandHandler>();
         return services;
     }
 }

@@ -3,17 +3,6 @@ using NaeTime.Events;
 namespace NaeTime.Command.Aggregates;
 public class OpenPracticeSession : AggregateRoot<Guid>
 {
-    private class DetectionInfo
-    {
-        public Guid DetectionId { get; init; }
-        public byte OrdinalPosition { get; init; }
-        public byte DetectorCount { get; init; } = 1;
-        public byte Lane { get; init; }
-        public ulong? HardwareTime { get; init; }
-        public long SoftwareTime { get; init; }
-        public DateTime UtcTime { get; init; }
-        public Guid? PilotId { get; set; }
-    }
     private class LaneInfo(Guid? pilotId, bool isEnabled, OpenPracticeSession.LaneFrequency frequency)
     {
         public Guid? PilotId { get; set; } = pilotId;
@@ -25,7 +14,6 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         public byte? BandId { get; set; } = bandId;
         public int FrequencyInMHz { get; set; } = frequencyInMHz;
     }
-    private readonly Dictionary<Guid, DetectionInfo> _detections = [];
     private readonly Dictionary<byte, LaneInfo> _lanes = [];
     public Guid TrackId { get; private set; }
     public OpenPracticeSession()
@@ -146,79 +134,6 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         {
             Raise(new OpenPracticeSessionLaneDisabled(Id, lane));
         }
-    }
-    public void AddDetection(Guid detectionId, byte ordinalPosition, byte detectorCount, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
-    {
-        Raise(new DetectionAddedToOpenPracticeSession(detectionId, Id, ordinalPosition, lane, hardwareTime, softwareTime, utcTime));
-        if (!_lanes.TryGetValue(lane, out LaneInfo? laneinfo))
-        {
-            throw new InvalidOperationException($"Lane {lane} is not configured.");
-        }
-        if (laneinfo.PilotId.HasValue)
-        {
-            Raise(new OpenPracticeDetectionAssignedToPilot(detectionId, Id, laneinfo.PilotId.Value, detectorCount, ordinalPosition, lane, hardwareTime, softwareTime, utcTime));
-        }
-    }
-    public void RemoveDetectionFromSession(Guid detectionId)
-    {
-        if (_detections.ContainsKey(detectionId))
-        {
-            Raise(new DetectionRemovedFromOpenPracticeSession(detectionId, Id));
-        }
-    }
-    private void When(DetectionRemovedFromOpenPracticeSession removedFromSession)
-    {
-        _detections.Remove(removedFromSession.DetectionId);
-    }
-    private void When(DetectionAddedToOpenPracticeSession assignedToSession)
-    {
-        DetectionInfo detectionInfo = new()
-        {
-            DetectionId = assignedToSession.DetectionId,
-            OrdinalPosition = assignedToSession.OrdinalPosition,
-            Lane = assignedToSession.Lane,
-            HardwareTime = assignedToSession.HardwareTime,
-            SoftwareTime = assignedToSession.SoftwareTime,
-            UtcTime = assignedToSession.UtcTime,
-            PilotId = null
-        };
-
-        _detections[assignedToSession.DetectionId] = detectionInfo;
-    }
-    private void When(OpenPracticeDetectionAssignedToPilot assignedToPilot)
-    {
-        _detections[assignedToPilot.DetectionId].PilotId = assignedToPilot.PilotId;
-    }
-    public void UnassignDetectionFromPilot(Guid detectionId)
-    {
-        _detections.TryGetValue(detectionId, out DetectionInfo? detectionInfo);
-        if (detectionInfo is null)
-        {
-            throw new InvalidOperationException($"Detection {detectionId} is not assigned to session.");
-        }
-
-        if (detectionInfo.PilotId is null)
-        {
-            throw new InvalidOperationException($"Detection {detectionId} is not assigned to a pilot.");
-        }
-        Raise(new OpenPracticeDetectionUnassignedFromPilot(detectionId, detectionInfo.PilotId.Value));
-    }
-    private void When(OpenPracticeDetectionUnassignedFromPilot unassignedFromPilot)
-    {
-        _detections[unassignedFromPilot.DetectionId].PilotId = null;
-    }
-    public void AssignDetectionToPilot(Guid detectionId, Guid pilotId)
-    {
-        _detections.TryGetValue(detectionId, out DetectionInfo? detectionInfo);
-        if (detectionInfo is null)
-        {
-            throw new InvalidOperationException($"Detection {detectionId} is not assigned to session.");
-        }
-        if (detectionInfo.PilotId.HasValue)
-        {
-            Raise(new OpenPracticeDetectionUnassignedFromPilot(detectionId, detectionInfo.PilotId.Value));
-        }
-        Raise(new OpenPracticeDetectionAssignedToPilot(detectionId, Id, pilotId, detectionInfo.OrdinalPosition, detectionInfo.DetectorCount, detectionInfo.Lane, detectionInfo.HardwareTime, detectionInfo.SoftwareTime, detectionInfo.UtcTime));
     }
     public OpenPracticeSession Clone(Guid newId, string newName)
     {

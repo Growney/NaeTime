@@ -118,8 +118,6 @@
     [Inject]
     private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
     [Inject]
-    private IDetectionCommandHandler DetectionCommandHandler { get; set; } = null!;
-    [Inject]
     private ISoftwareTimer SoftwareTimer { get; set; } = null!;
 
     private Models.OpenPracticeSession? _session;
@@ -229,7 +227,6 @@
             return;
         }
 
-        await DetectionCommandHandler.RegisterDetection(Guid.NewGuid(), lane, SoftwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
     }
 
     private async Task TriggerInvalidation(Guid pilotId)
