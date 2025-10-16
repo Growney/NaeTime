@@ -9,7 +9,6 @@ public class ActiveSession : AggregateRoot
         OpenPractice,
     }
 
-    public readonly static Guid SingletonId = Guid.Empty;
     private Guid? _sessionId;
     private SessionType? _sessionType;
 

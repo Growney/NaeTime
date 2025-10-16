@@ -7,6 +7,8 @@ using NaeTime.Query.Abstractions.Models;
 namespace NaeTime.Command;
 public class SessionsCommandHandler(IAggregateRepository repository, ISessionQueryHandler sessionsQueryHandler) : ISessionsCommandHandler
 {
+    private const string _activeSessionStreamName = "activesession";
+
     private readonly IAggregateRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     private readonly ISessionQueryHandler _sessionsQueryHandler = sessionsQueryHandler ?? throw new ArgumentNullException(nameof(sessionsQueryHandler));
 
@@ -22,23 +24,23 @@ public class SessionsCommandHandler(IAggregateRepository repository, ISessionQue
     {
         await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
 
-        ActiveSession activeSession = await _repository.Get<ActiveSession>()
+        ActiveSession activeSession = await _repository.Get<ActiveSession>(_activeSessionStreamName)
             ?? _repository.CreateNew<ActiveSession>();
 
         activeSession.ActivateOpenPracticeSession(id);
 
-        await _repository.Save<ActiveSession>(activeSession);
+        await _repository.Save<ActiveSession>(activeSession, _activeSessionStreamName);
     }
 
     public async Task DeactivateOpenPracticeSession(Guid id)
     {
         await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
 
-        ActiveSession activeSession = await _repository.Get<ActiveSession>()
+        ActiveSession activeSession = await _repository.Get<ActiveSession>(_activeSessionStreamName)
             ?? _repository.CreateNew<ActiveSession>();
 
         activeSession.DeactivateSession(id);
 
-        await _repository.Save<ActiveSession>(activeSession);
+        await _repository.Save<ActiveSession>(activeSession, _activeSessionStreamName);
     }
 }

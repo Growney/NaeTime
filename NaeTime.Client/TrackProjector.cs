@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NaeTime.Client;
+﻿namespace NaeTime.Client;
 public static class TrackProjector
 {
     public static Models.Track? Project(NaeTime.Query.Abstractions.Models.Track? track)
     {
-        if(track == null)
+        if (track == null)
         {
             return null;
         }
@@ -31,7 +25,7 @@ public static class TrackProjector
                 SupportedLanes = d.SupportedLanes
             }).ToList(),
             MaxLanes = track.MaxLanes,
-            MinimumLapTimeMilliseconds = track.MinimumLapTimeMilliseconds,
+            RedetectionDelay = track.MinimumLapTimeMilliseconds,
             MaximumLapTimeMilliseconds = track.MaximumLapTimeMilliseconds
         };
     }

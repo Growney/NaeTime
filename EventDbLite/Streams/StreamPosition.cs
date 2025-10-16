@@ -32,4 +32,5 @@ public class StreamPosition
         ExpectedVersion.Any or ExpectedVersion.NoStream or ExpectedVersion.StreamExists => true,
         _ => currentPosition == Version
     };
+    public static implicit operator long(StreamPosition state) => state.Version;
 }

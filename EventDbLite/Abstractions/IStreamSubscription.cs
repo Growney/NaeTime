@@ -4,5 +4,5 @@ namespace EventDbLite.Abstractions;
 
 public interface IStreamSubscription : IDisposable
 {
-    IAsyncEnumerable<StreamEvent> StreamEvents(CancellationToken token);
+    IAsyncEnumerable<SubscriptionEvent> StreamEvents(CancellationToken token);
 }

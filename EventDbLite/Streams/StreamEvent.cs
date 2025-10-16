@@ -1,10 +1,19 @@
 ﻿namespace EventDbLite.Streams;
 
-public class StreamEvent(Guid id, string streamName, long streamOrdinal, long globalOrdinal, EventData data)
+public class StreamEvent
 {
-    public Guid Id { get; set; } = id;
-    public string StreamName { get; set; } = streamName ?? throw new ArgumentNullException(nameof(streamName));
-    public long StreamOrdinal { get; set; } = streamOrdinal;
-    public long GlobalOrdinal { get; set; } = globalOrdinal;
-    public EventData Data { get; set; } = data ?? throw new ArgumentNullException(nameof(data));
+    public Guid Id { get; set; }
+    public string StreamName { get; set; }
+    public long StreamOrdinal { get; set; }
+    public long GlobalOrdinal { get; set; }
+    public EventData Data { get; set; }
+
+    public StreamEvent(Guid id, string streamName, long streamOrdinal, long globalOrdinal, EventData data)
+    {
+        Id = id;
+        StreamName = streamName ?? throw new ArgumentNullException(nameof(streamName));
+        StreamOrdinal = streamOrdinal;
+        GlobalOrdinal = globalOrdinal;
+        Data = data ?? throw new ArgumentNullException(nameof(data));
+    }
 }

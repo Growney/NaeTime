@@ -13,6 +13,7 @@ public class LiveProjection(IEventSerializer eventSerializer, IAsyncHandlerProvi
     private readonly Dictionary<string, long> _streamPositions = [];
 
     public long GlobalPosition { get; private set; }
+    public bool IsLive { get; private set; } = false;
 
     public long GetStreamPosition(string streamName)
     {
@@ -32,19 +33,21 @@ public class LiveProjection(IEventSerializer eventSerializer, IAsyncHandlerProvi
 
         _streamPositions[streamName] = position;
     }
-    internal async Task Raise(StreamEvent streamEvent)
+    internal async Task Raise(SubscriptionEvent streamEvent)
     {
         if (_eventSerializer is null)
         {
             throw new InvalidOperationException("Event serializer must not be null");
         }
 
-        EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
+        EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Event.Data.Metadata);
 
-        GlobalPosition = streamEvent.StreamOrdinal;
-        SetStreamPosition(streamEvent.StreamName, streamEvent.StreamOrdinal);
+        IsLive = streamEvent.IsLive;
 
-        await HandleEvent(streamEvent, metadata);
+        GlobalPosition = streamEvent.Event.StreamOrdinal;
+        SetStreamPosition(streamEvent.Event.StreamName, streamEvent.Event.StreamOrdinal);
+
+        await HandleEvent(streamEvent.Event, metadata);
     }
 
     protected virtual async Task HandleEvent(StreamEvent streamEvent, EventMetadata metadata)

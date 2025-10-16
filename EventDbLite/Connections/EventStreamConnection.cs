@@ -16,7 +16,7 @@ internal class EventStreamConnection(EventDbLiteContext context) : IEventStreamC
         {
             if (await _context.PersistedEvents.AnyAsync(s => s.StreamName == streamName))
             {
-                throw new InvalidOperationException($"Stream '{streamName}' already exists.");
+                throw new ConcurrencyException(StreamPosition.NoStream, StreamPosition.End);
             }
         }
 
@@ -24,7 +24,7 @@ internal class EventStreamConnection(EventDbLiteContext context) : IEventStreamC
         {
             if (!await _context.PersistedEvents.AnyAsync(s => s.StreamName == streamName))
             {
-                throw new InvalidOperationException($"Stream '{streamName}' does not exist.");
+                throw new ConcurrencyException(StreamPosition.StreamExists, StreamPosition.NoStream);
             }
         }
 

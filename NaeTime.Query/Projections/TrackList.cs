@@ -13,7 +13,7 @@ public class TrackList(IHardwareQueryHandler hardwareQueryHandler) : Projection
         public Guid Id { get; set; }
         public string? Name { get; set; }
         public Guid[] DetectorIds { get; set; } = Array.Empty<Guid>();
-        public long? MinimumLapMilliseconds { get; set; }
+        public long? RedetectionDelayMilliseconds { get; set; }
         public long? MaximumLapMilliseconds { get; set; }
     }
 
@@ -34,7 +34,7 @@ public class TrackList(IHardwareQueryHandler hardwareQueryHandler) : Projection
 
         byte maxLanes = detectors.Any() ? detectors.Max(d => d.SupportedLanes) : (byte)0;
 
-        return new Track(id, listTrack.Name, detectors.ToArray(), maxLanes, listTrack.MinimumLapMilliseconds, listTrack.MaximumLapMilliseconds);
+        return new Track(id, listTrack.Name, detectors.ToArray(), maxLanes, listTrack.RedetectionDelayMilliseconds, listTrack.MaximumLapMilliseconds);
 
     }
     public async Task<IEnumerable<Track>> GetTracks()
@@ -43,7 +43,7 @@ public class TrackList(IHardwareQueryHandler hardwareQueryHandler) : Projection
         {
             IEnumerable<Detector> detectors = await _hardwareQueryHandler.GetDetectors(listTrack.DetectorIds);
             byte maxLanes = detectors.Any() ? detectors.Max(d => d.SupportedLanes) : (byte)0;
-            return new Track(listTrack.Id, listTrack.Name, detectors.ToArray(), maxLanes, listTrack.MinimumLapMilliseconds, listTrack.MaximumLapMilliseconds);
+            return new Track(listTrack.Id, listTrack.Name, detectors.ToArray(), maxLanes, listTrack.RedetectionDelayMilliseconds, listTrack.MaximumLapMilliseconds);
         });
         return await Task.WhenAll(tasks);
     }
@@ -94,24 +94,24 @@ public class TrackList(IHardwareQueryHandler hardwareQueryHandler) : Projection
         }
         track.DetectorIds = detectorIds.ToArray();
     }
-    public void When(TrackMinimumLapTimeConfigured configured)
+    public void When(TrackRedetectionDelayConfigured configured)
     {
-        ListTrack track = _tracks.GetOrAdd(configured.SessionId, id => new ListTrack { Id = id });
-        track.MinimumLapMilliseconds = configured.MinimumMilliseconds;
+        ListTrack track = _tracks.GetOrAdd(configured.TrackId, id => new ListTrack { Id = id });
+        track.RedetectionDelayMilliseconds = configured.DelayMilliseconds;
     }
     public void When(TrackMaximumLapTimeConfigured configured)
     {
-        ListTrack track = _tracks.GetOrAdd(configured.SessionId, id => new ListTrack { Id = id });
+        ListTrack track = _tracks.GetOrAdd(configured.TrackId, id => new ListTrack { Id = id });
         track.MaximumLapMilliseconds = configured.MaximumMilliseconds;
     }
-    public void When(TrackMinimumLapTimeReset reset)
+    public void When(TrackRedetectionDelayReset reset)
     {
-        ListTrack track = _tracks.GetOrAdd(reset.SessionId, id => new ListTrack { Id = id });
-        track.MinimumLapMilliseconds = null;
+        ListTrack track = _tracks.GetOrAdd(reset.TrackId, id => new ListTrack { Id = id });
+        track.RedetectionDelayMilliseconds = null;
     }
     public void When(TrackMaximumLapTimeReset reset)
     {
-        ListTrack track = _tracks.GetOrAdd(reset.SessionId, id => new ListTrack { Id = id });
+        ListTrack track = _tracks.GetOrAdd(reset.TrackId, id => new ListTrack { Id = id });
         track.MaximumLapMilliseconds = null;
     }
 }

@@ -88,59 +88,17 @@ public class Track : AggregateRoot<Guid>
     {
         Raise(new TrackMaximumLapTimeConfigured(Id, maximumMilliseconds));
     }
-    public void SetMinimumLapTime(long minimumMilliseconds)
+    public void SetMinimumDetectionDelay(long minimumMilliseconds)
     {
-        Raise(new TrackMinimumLapTimeConfigured(Id, minimumMilliseconds));
-    }
-    public void ResetPilotMaximumTimeLapTime(Guid pilotId)
-    {
-        if (!_pilotMaximumTimes.ContainsKey(pilotId))
-        {
-            return;
-        }
-
-        Raise(new TrackPilotMaximumLapTimeReset(Id, pilotId));
-    }
-    public void ResetPilotMinimumTimeLapTime(Guid pilotId)
-    {
-        if (!_pilotMinimumTimes.ContainsKey(pilotId))
-        {
-            return;
-        }
-
-        Raise(new TrackPilotMinimumLapTimeReset(Id, pilotId));
-    }
-    public void SetPilotMaximumLapTime(Guid pilotId, long maximumMilliseconds)
-    {
-        Raise(new TrackPilotMaximumLapTimeConfigured(Id, pilotId, maximumMilliseconds));
-    }
-    public void SetPilotMinimumLapTime(Guid pilotId, long minimumMilliseconds)
-    {
-        Raise(new TrackPilotMinimumLapTimeConfigured(Id, pilotId, minimumMilliseconds));
+        Raise(new TrackRedetectionDelayConfigured(Id, minimumMilliseconds));
     }
     public void ResetMaximumLapTime()
     {
         Raise(new TrackMaximumLapTimeReset(Id));
     }
-    public void ResetMinimumLapTime()
+    public void ResetMinimumDetectionDelay()
     {
-        Raise(new TrackMinimumLapTimeReset(Id));
-    }
-    private void When(TrackPilotMaximumLapTimeConfigured configured)
-    {
-        _pilotMaximumTimes[configured.PilotId] = configured.MaximumMilliseconds;
-    }
-    private void When(TrackPilotMinimumLapTimeConfigured configured)
-    {
-        _pilotMinimumTimes[configured.PilotId] = configured.MinimumMilliseconds;
-    }
-    private void When(TrackPilotMaximumLapTimeReset reset)
-    {
-        _pilotMaximumTimes.Remove(reset.PilotId);
-    }
-    private void When(TrackPilotMinimumLapTimeReset reset)
-    {
-        _pilotMinimumTimes.Remove(reset.PilotId);
+        Raise(new TrackRedetectionDelayReset(Id));
     }
 }
 

@@ -151,6 +151,24 @@ public class OpenPracticeSession : AggregateRoot<Guid>
 
         return clone;
     }
+    public void AssignHardwareDetection(Guid detectionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
+    {
+        Raise(new OpenPracticeHardwareDetectionOccured(detectionId, Id, timerId, TrackId, lane, hardwareTime, softwareTime, utcTime));
+
+        LaneInfo laneInfo = GetLaneInfo(lane);
+        if (!laneInfo.IsEnabled)
+        {
+            Raise(new OpenPracticeHardwareDetectionIgnoredOnDisabledLane(detectionId, Id, timerId, TrackId, lane, hardwareTime, softwareTime, utcTime));
+            return;
+        }
+        if (laneInfo.PilotId is null)
+        {
+            Raise(new OpenPracticeHardwareDetectionIgnoredOnUnassignedLane(detectionId, Id, timerId, TrackId, lane, hardwareTime, softwareTime, utcTime));
+            return;
+        }
+
+        Raise(new OpenPracticeHardwareDetectionAssignedToPilot(detectionId, Id, laneInfo.PilotId.Value, timerId, TrackId, lane, hardwareTime, softwareTime, utcTime));
+    }
 
     private void CloneLanes(OpenPracticeSession clone)
     {

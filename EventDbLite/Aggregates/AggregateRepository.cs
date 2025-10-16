@@ -30,11 +30,11 @@ public class AggregateRepository(IEventStoreLite connection, IEventSerializer ev
 
         return aggregateRoot;
     }
-    public Task Save<AggregateType>(AggregateType aggregateRoot,string streamName) where AggregateType : AggregateRoot
+    public Task Save<AggregateType>(AggregateType aggregateRoot, string streamName, StreamPosition expectedPosition) where AggregateType : AggregateRoot
     {
         IEnumerable<EventData> raisedEvents = aggregateRoot.GetEvents();
 
-        return _connection.AppendToStreamAsync(streamName, raisedEvents, StreamPosition.WithVersion(aggregateRoot.Version));
+        return _connection.AppendToStreamAsync(streamName, raisedEvents, expectedPosition);
     }
 
     public AggregateType CreateNew<AggregateType>(Func<AggregateType>? constructor) where AggregateType : AggregateRoot, new()

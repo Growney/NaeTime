@@ -42,20 +42,6 @@ public class TrackCommandHandler(IAggregateRepository repository, IHardwareQuery
         await _repository.Save<Track, Guid>(track);
     }
 
-    public async Task ResetPilotMaximumLapTime(Guid trackId, Guid pilotId)
-    {
-        Track? track = await _repository.Get<Track, Guid>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        track.ResetPilotMaximumTimeLapTime(pilotId);
-        await _repository.Save<Track, Guid>(track);
-    }
-
-    public async Task ResetPilotMinimumLapTime(Guid trackId, Guid pilotId)
-    {
-        Track? track = await _repository.Get<Track, Guid>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        track.ResetPilotMinimumTimeLapTime(pilotId);
-        await _repository.Save<Track, Guid>(track);
-    }
-
     public async Task SetMaximumLapTime(Guid trackId, long milliseconds)
     {
         Track? track = await _repository.Get<Track, Guid>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
@@ -63,24 +49,10 @@ public class TrackCommandHandler(IAggregateRepository repository, IHardwareQuery
         await _repository.Save<Track, Guid>(track);
     }
 
-    public async Task SetMinimumLapTime(Guid trackId, long milliseconds)
+    public async Task SetMinimumDetectionDelay(Guid trackId, long milliseconds)
     {
         Track? track = await _repository.Get<Track, Guid>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        track.SetMinimumLapTime(milliseconds);
-        await _repository.Save<Track, Guid>(track);
-    }
-
-    public async Task SetPilotMaximumLapTime(Guid trackId, Guid pilotId, long milliseconds)
-    {
-        Track? track = await _repository.Get<Track, Guid>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        track.SetPilotMaximumLapTime(pilotId, milliseconds);
-        await _repository.Save<Track, Guid>(track);
-    }
-
-    public async Task SetPilotMinimumLapTime(Guid trackId, Guid pilotId, long milliseconds)
-    {
-        Track? track = await _repository.Get<Track, Guid>(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        track.SetPilotMinimumLapTime(pilotId, milliseconds);
+        track.SetMinimumDetectionDelay(milliseconds);
         await _repository.Save<Track, Guid>(track);
     }
 
@@ -91,10 +63,10 @@ public class TrackCommandHandler(IAggregateRepository repository, IHardwareQuery
         await _repository.Save<Track, Guid>(track);
     }
 
-    public Task ResetMinimumLapTime(Guid trackId)
+    public Task ResetMinimumDetectionDelay(Guid trackId)
     {
         Track track = _repository.Get<Track, Guid>(trackId).Result ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        track.ResetMinimumLapTime();
+        track.ResetMinimumDetectionDelay();
         return _repository.Save<Track, Guid>(track);
     }
 }

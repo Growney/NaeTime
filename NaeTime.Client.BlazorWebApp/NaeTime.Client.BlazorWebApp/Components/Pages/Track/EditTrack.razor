@@ -13,9 +13,9 @@
     </div>
     <div>
         <label>
-            Minimum Lap Time (ms):
-            <input type="number" @bind:get="_track.MinimumLapTimeMilliseconds" @bind:set="(x) => SetMinimumLapTime(x ?? 0)"> </input>
-            <button type="button" disabled="@(!_track.MinimumLapTimeMilliseconds.HasValue)" class="btn btn-secondary" @onclick="ResetMinimumLapTime">Reset</button>
+            Redetection delay (ms):
+            <input type="number" @bind:get="_track.RedetectionDelay" @bind:set="(x) => SetMinimumLapTime(x ?? 0)"> </input>
+            <button type="button" disabled="@(!_track.RedetectionDelay.HasValue)" class="btn btn-secondary" @onclick="ResetMinimumLapTime">Reset</button>
         </label>
     </div>
     <div>
@@ -153,8 +153,8 @@
         {
             return;
         }
-        _track.MinimumLapTimeMilliseconds = value;
-        await TrackCommandHandler.SetMinimumLapTime(_track.Id, value);
+        _track.RedetectionDelay = value;
+        await TrackCommandHandler.SetMinimumDetectionDelay(_track.Id, value);
     }
     private async Task SetMaximumLapTime(long value)
     {
@@ -171,8 +171,8 @@
         {
             return;
         }
-        _track.MinimumLapTimeMilliseconds = null;
-        await TrackCommandHandler.ResetMinimumLapTime(_track.Id);
+        _track.RedetectionDelay = null;
+        await TrackCommandHandler.ResetMinimumDetectionDelay(_track.Id);
     }
     private async Task ResetMaximumLapTime()
     {

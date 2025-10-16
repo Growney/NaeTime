@@ -27,7 +27,7 @@ internal class StreamSubscription(IEventStoreLite eventStore, string? streamName
         _signal.Dispose();
     }
 
-    public async IAsyncEnumerable<StreamEvent> StreamEvents([EnumeratorCancellation] CancellationToken token)
+    public async IAsyncEnumerable<SubscriptionEvent> StreamEvents([EnumeratorCancellation] CancellationToken token)
     {
         IAsyncEnumerable<StreamEvent> eventStream = _streamName is not null
             ? _eventStore.ReadStreamEvents(_streamName, StreamDirection.Forward, _currentPosition)
@@ -35,7 +35,7 @@ internal class StreamSubscription(IEventStoreLite eventStore, string? streamName
 
         await foreach (StreamEvent streamEvent in eventStream)
         {
-            yield return streamEvent;
+            yield return new SubscriptionEvent(false, streamEvent);
         }
 
         while (!token.IsCancellationRequested)
@@ -54,7 +54,7 @@ internal class StreamSubscription(IEventStoreLite eventStore, string? streamName
             {
                 if (_liveQueue.TryDequeue(out StreamEvent? streamEvent))
                 {
-                    yield return streamEvent;
+                    yield return new SubscriptionEvent(true, streamEvent);
                 }
             }
         }

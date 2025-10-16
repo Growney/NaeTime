@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NaeTime.Client.Models;
+﻿namespace NaeTime.Client.Models;
 public class Track
 {
     public Guid Id { get; set; }
     public string? Name { get; set; }
     public List<Detector> Detectors { get; set; } = [];
     public byte MaxLanes { get; set; }
-    public long? MinimumLapTimeMilliseconds { get; set; }
+    public long? RedetectionDelay { get; set; }
     public long? MaximumLapTimeMilliseconds { get; set; }
 
     public bool CanMoveDetectorUp(Guid timerId)

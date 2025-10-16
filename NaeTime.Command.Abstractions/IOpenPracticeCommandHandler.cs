@@ -10,4 +10,6 @@ public interface IOpenPracticeCommandHandler
     public Task TuneLane(Guid sessionId, byte lane, byte? bandId, int frequencyInMhz);
     public Task SetLanePilot(Guid sessionId, byte lane, Guid pilotId);
     public Task ResetLanePilot(Guid sessionId, byte lane);
+
+    public Task AssignHardwareDetectionToSession(Guid detectionId, Guid sessionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime);
 }

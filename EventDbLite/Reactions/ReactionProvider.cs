@@ -8,9 +8,9 @@ namespace EventDbLite.Reactions;
 
 public class ReactionProvider : IReactionProvider
 {
-    private class ReactionHandler(Func<object, StreamEvent, Task> handler, Action onDispose) : IDisposable
+    private class ReactionHandler(Func<ReactionEvent, Task> handler, Action onDispose) : IDisposable
     {
-        public Func<object, StreamEvent, Task> Handler { get; } = handler ?? throw new ArgumentNullException(nameof(handler));
+        public Func<ReactionEvent, Task> Handler { get; } = handler ?? throw new ArgumentNullException(nameof(handler));
         public Action OnDispose { get; } = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
 
         public void Dispose()
@@ -22,16 +22,16 @@ public class ReactionProvider : IReactionProvider
     {
         private readonly CancellationTokenSource _cancellationSource = new();
         private readonly SemaphoreSlim _signal = new(0);
-        private readonly ConcurrentQueue<object> _queue = new();
+        private readonly ConcurrentQueue<ReactionEvent> _queue = new();
 
-        public void AddItem(object item)
+        public void AddItem(ReactionEvent item)
         {
             _queue.Enqueue(item);
         }
 
-        public async Task<object?> WaitForItemAsync(CancellationToken cancellationToken = default)
+        public async Task<ReactionEvent?> WaitForItemAsync(CancellationToken cancellationToken = default)
         {
-            object? item = null;
+            ReactionEvent? item = null;
             while (!_queue.TryDequeue(out item) && !_cancellationSource.IsCancellationRequested)
             {
                 await _signal.WaitAsync(1000, cancellationToken);
@@ -60,18 +60,18 @@ public class ReactionProvider : IReactionProvider
 
     protected async Task ProcessEvents()
     {
-        await foreach (StreamEvent streamEvent in _subscription.StreamEvents(_cancellationTokenSource.Token))
+        await foreach (SubscriptionEvent streamEvent in _subscription.StreamEvents(_cancellationTokenSource.Token))
         {
-            EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
-            Task handlerProcess = ProcessHandlers(streamEvent, metadata, streamEvent.Data.Payload);
+            EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Event.Data.Metadata);
+            Task handlerProcess = ProcessHandlers(streamEvent, metadata, streamEvent.Event.Data.Payload);
 
-            ProcessAwaiters(metadata, streamEvent.Data.Payload);
+            ProcessAwaiters(streamEvent, metadata, streamEvent.Event.Data.Payload);
 
             await handlerProcess;
         }
     }
 
-    private void ProcessAwaiters(EventMetadata metadata, byte[] data)
+    private void ProcessAwaiters(SubscriptionEvent subscriptionEvent, EventMetadata metadata, byte[] data)
     {
         if (_eventSerializer is null)
         {
@@ -91,12 +91,12 @@ public class ReactionProvider : IReactionProvider
 
                 foreach (KeyValuePair<Guid, EventBuffer> bufferKvp in waiter.Value)
                 {
-                    bufferKvp.Value.AddItem(eventData);
+                    bufferKvp.Value.AddItem(new ReactionEvent(eventData, subscriptionEvent));
                 }
             }
         }
     }
-    private Task ProcessHandlers(StreamEvent steamEvent, EventMetadata metadata, byte[] data)
+    private Task ProcessHandlers(SubscriptionEvent subscriptionEvent, EventMetadata metadata, byte[] data)
     {
         if (_eventSerializer is null)
         {
@@ -117,7 +117,7 @@ public class ReactionProvider : IReactionProvider
 
                 foreach (KeyValuePair<Guid, ReactionHandler> handler in handlerKvp.Value)
                 {
-                    tasks.Add(handler.Value.Handler(deserializedData, steamEvent));
+                    tasks.Add(handler.Value.Handler(new ReactionEvent(deserializedData, subscriptionEvent)));
                 }
             }
         }
@@ -133,7 +133,7 @@ public class ReactionProvider : IReactionProvider
         _handlers.Clear();
         _waiters.Clear();
     }
-    public IDisposable On(Type type, Func<object, StreamEvent, Task> handler)
+    public IDisposable On(Type type, Func<ReactionEvent, Task> handler)
     {
 
         if (_eventSerializer is null)
@@ -157,7 +157,7 @@ public class ReactionProvider : IReactionProvider
 
         return reactionHandler;
     }
-    public async IAsyncEnumerable<object> StreamEvents(Type type, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<ReactionEvent> StreamSubscription(Type type, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         if (_eventSerializer is null)
         {
@@ -177,7 +177,7 @@ public class ReactionProvider : IReactionProvider
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                object? item = await waiter.WaitForItemAsync(cancellationToken);
+                ReactionEvent? item = await waiter.WaitForItemAsync(cancellationToken);
                 if (item != null)
                 {
                     yield return item;

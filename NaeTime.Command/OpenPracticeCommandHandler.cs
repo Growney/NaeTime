@@ -4,10 +4,25 @@ using NaeTime.Command.Aggregates;
 using NaeTime.Query.Abstractions;
 
 namespace NaeTime.Command;
-public class OpenPracticeCommandHandler(IAggregateRepository repository, ITrackQueryHandler trackQueryHandler) : IOpenPracticeCommandHandler
+public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
 {
-    private readonly IAggregateRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-    private readonly ITrackQueryHandler _trackQueryHandler = trackQueryHandler ?? throw new ArgumentNullException(nameof(trackQueryHandler));
+    private readonly IAggregateRepository _repository;
+    private readonly ITrackQueryHandler _trackQueryHandler;
+
+    public OpenPracticeCommandHandler(IAggregateRepository repository, ITrackQueryHandler trackQueryHandler)
+    {
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _trackQueryHandler = trackQueryHandler ?? throw new ArgumentNullException(nameof(trackQueryHandler));
+    }
+
+    public async Task AssignHardwareDetectionToSession(Guid detectionId, Guid sessionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+
+        session.AssignHardwareDetection(detectionId, timerId, lane, hardwareTime, softwareTime, utcTime);
+
+        await _repository.Save<OpenPracticeSession, Guid>(session);
+    }
 
     public async Task CloneSession(Guid newId, Guid existingId, string newName)
     {

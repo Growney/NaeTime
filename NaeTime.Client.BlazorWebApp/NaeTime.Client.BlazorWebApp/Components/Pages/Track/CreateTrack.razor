@@ -13,8 +13,8 @@
     </div>
     <div>
         <label>
-            Minimum Lap Time (ms):
-            <input type="number" @bind="_track.MinimumLapTimeMilliseconds"> </input>
+            Redetection Delay (ms):
+            <input type="number" @bind="_track.RedetectionDelay"> </input>
         </label>
     </div>
     <div>
@@ -64,7 +64,9 @@
         _allDetectors = await HardwareQueryHandler.GetAllDetectors();
         _track = new NaeTime.Client.Models.Track()
         {
-            Id = Guid.NewGuid()
+            Id = Guid.NewGuid(),
+            RedetectionDelay = 3000,
+            MaximumLapTimeMilliseconds = 50000,
         };
     }
     private IEnumerable<NaeTime.Query.Abstractions.Models.Detector> GetAvailableDetectors()
@@ -108,9 +110,9 @@
 
         await TrackCommandHandler.DesignTrack(_track.Id, _track.Name, _track.Detectors.Select(x => x.Id).ToArray());
 
-        if(_track.MinimumLapTimeMilliseconds != null)
+        if(_track.RedetectionDelay != null)
         {
-            await TrackCommandHandler.SetMinimumLapTime(_track.Id, _track.MinimumLapTimeMilliseconds.Value);
+            await TrackCommandHandler.SetMinimumDetectionDelay(_track.Id, _track.RedetectionDelay.Value);
 
         }
         if(_track.MaximumLapTimeMilliseconds != null)

@@ -14,6 +14,5 @@ public class ReactionProviderFactory(IEventStoreLite eventStore, IEventSerialize
             : _eventStore.SubscribeToAllStreams(initialPosition);
 
         return new ReactionProvider(subscription, _eventSerializer);
-
     }
 }

@@ -24,7 +24,7 @@ internal class LiveProjectionManager(LiveProjectionRequirement requirement, ISer
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource = new CancellationTokenSource();
 
-        await foreach (StreamEvent nextEvent in subscription.StreamEvents(_cancellationTokenSource.Token))
+        await foreach (SubscriptionEvent nextEvent in subscription.StreamEvents(_cancellationTokenSource.Token))
         {
             using IServiceScope scope = _serviceProvider.CreateScope();
             LiveProjection projection = GetInstance(scope.ServiceProvider);
