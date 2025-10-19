@@ -17,7 +17,7 @@ public record OpenPracticeLapSplitStarted(Guid PilotId, Guid SessionId, Guid Tra
 public record OpenPracticeLapSplitCompleted(Guid PilotId, Guid SessionId, Guid TrackId, Guid LapId, byte SplitIndex, Guid StartDetectionId, ulong? StartedHardwareTime, long StartedSoftwareTime, DateTime StartedUtcTime, Guid EndDetectionId, ulong? CompletedHardwareTime, long CompletedSoftwareTime, DateTime CompletedUtcTime, TimeSpan Duration);
 public record OpenPracticeLapSplitEndMissed(Guid PilotId, Guid SessionId, Guid TrackId, Guid LapId, byte SplitIndex, byte SkippedToTimerOrdinal, Guid SkippedToDetectionId, ulong? SkippedToHardwareTime, long SkippedToSoftwareTime, DateTime SkippedToUtcTime);
 
-public record OpenPracticeDetectionWithNoEffectOnRecord(Guid PilotId, Guid SessionId, Guid TrackId, Guid LapId, TimeSpan Duration);
+public record OpenPracticeLapCompletedWithNoEffectOnRecord(Guid PilotId, Guid SessionId, Guid TrackId, Guid LapId, TimeSpan Duration);
 public record OpenPracticeFastestLapRecordRecorded(Guid PilotId, Guid SessionId, Guid TrackId, TimeSpan Record, Guid LapId);
 public record OpenPracticeConsecutiveLapRecordRecorded(Guid PilotId, Guid SessionId, Guid TrackId, uint LapCount, Guid[] IncludedLaps);
 public record OpenPracticeFastestConsecutiveLapsRecordRecorded(Guid PilotId, Guid SessionId, Guid TrackId, uint LapCount, Guid[] IncludedLaps, TimeSpan Record);

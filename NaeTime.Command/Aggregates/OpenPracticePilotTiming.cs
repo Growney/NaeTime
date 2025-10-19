@@ -166,7 +166,6 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticePilotTiming.Ope
 
         Raise(new OpenPracticePilotDetectionOccured(detectionId, Id.SessionId, Id.TrackId, Id.PilotId, timerId, (byte)trackTimerOrdinal, (byte)_trackDetectors.Length, lane, hardwareTime, softwareTime, utcTime));
         RaiseLapEvents(detectionId, timerId, (byte)trackTimerOrdinal, (byte)_trackDetectors.Length, hardwareTime, softwareTime, utcTime);
-        RaiseLapRecordEvents();
     }
     public void TriggerDetection(Guid detectionId, byte lane, byte ordinalPosition, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
@@ -223,9 +222,13 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticePilotTiming.Ope
                     TimeSpan lapDuration = CalculateDuration(_currentLap.StartDetection.TimerId, _currentLap.StartDetection.HardwareTime, _currentLap.StartDetection.SoftwareTime, _currentLap.StartDetection.UtcTime,
                         timerId, hardwareTime, softwareTime, utcTime);
 
+                    Guid completedLapId = _currentLap.Id;
+
                     Raise(new OpenPracticeLapCompleted(Id.PilotId, Id.SessionId, Id.TrackId, _currentLap.Id,
                         _currentLap.StartDetection.Id, _currentLap.StartDetection.HardwareTime, _currentLap.StartDetection.SoftwareTime, _currentLap.StartDetection.UtcTime,
                         detectionId, hardwareTime, softwareTime, utcTime, lapDuration));
+
+                    RaiseLapRecordEvents(completedLapId, lapDuration);
                 }
             }
         }
@@ -239,7 +242,7 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticePilotTiming.Ope
             Raise(new OpenPracticeLapStarted(Id.PilotId, Id.SessionId, Id.TrackId, lapId, detectionId, hardwareTime, softwareTime, utcTime));
         }
     }
-    private void RaiseLapRecordEvents()
+    private void RaiseLapRecordEvents(Guid lapId, TimeSpan duration)
     {
         ArgumentNullException.ThrowIfNull(Id);
         List<List<Lap>> consecutiveLapGroups = GetConsecutiveLapGroups();
@@ -274,6 +277,11 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticePilotTiming.Ope
         {
             if (_bestConsecutiveLapRecords.TryGetValue(kvp.Key, out ConsecutiveRecord? existingRecord))
             {
+                if (kvp.Value.Record >= existingRecord.Record)
+                {
+                    continue;
+                }
+
                 if (kvp.Key == 1)
                 {
                     Raise(new OpenPracticeFastestLapRecordImproved(Id.PilotId, Id.SessionId, Id.TrackId, existingRecord.Record, kvp.Value.Record, existingRecord.IncludedLaps.First()));
@@ -316,7 +324,7 @@ public class OpenPracticePilotTiming : AggregateRoot<OpenPracticePilotTiming.Ope
 
         if (!recordChanged)
         {
-            Raise(new OpenPracticeLapCompletedWithNoEffectOnRecord());
+            Raise(new OpenPracticeLapCompletedWithNoEffectOnRecord(Id.PilotId, Id.SessionId, Id.TrackId, lapId, duration));
         }
     }
 
