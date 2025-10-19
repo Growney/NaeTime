@@ -1,5 +1,7 @@
 ﻿using NaeTime.Query;
 using NaeTime.Query.Abstractions;
+using NaeTime.Query.Projections;
+using NaeTime.Query.Projections.Abstractions;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions
@@ -11,6 +13,9 @@ public static class IServiceCollectionExtensions
         services.AddTransient<ITrackQueryHandler, TrackQueryHandler>();
         services.AddTransient<IOpenPracticeQueryHandler, OpenPracticeQueryHandler>();
         services.AddTransient<ISessionQueryHandler, SessionQueryHandler>();
+
+        services.AddSingletonLiveProjection<IOpenPracticeTimingProjection, OpenPracticeTimingProjection>();
+
         return services;
     }
 }

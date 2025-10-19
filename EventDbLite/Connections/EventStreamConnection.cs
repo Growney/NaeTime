@@ -67,7 +67,7 @@ internal class EventStreamConnection(EventDbLiteContext context) : IEventStreamC
     {
 
         var query = _context.PersistedEvents.AsQueryable();
-        query = direction == StreamDirection.Forward ? query.Where(x => x.GlobalOrdinal >= position.Version) : query.Where(x => x.GlobalOrdinal <= position.Version);
+        query = direction == StreamDirection.Forward ? query.Where(x => x.GlobalOrdinal > position.Version) : query.Where(x => x.GlobalOrdinal < position.Version);
         query = direction == StreamDirection.Forward ? query.OrderBy(x => x.GlobalOrdinal) : query.OrderByDescending(x => x.GlobalOrdinal);
         return query
             .Select(x => new StreamEvent(x.Id, x.StreamName, x.StreamOrdinal, x.GlobalOrdinal, new EventData(x.Payload, x.Metadata)))
@@ -79,7 +79,7 @@ internal class EventStreamConnection(EventDbLiteContext context) : IEventStreamC
         var query = _context.PersistedEvents
                 .Where(x => x.StreamName == streamName);
 
-        query = direction == StreamDirection.Forward ? query.Where(x => x.StreamOrdinal >= position.Version) : query.Where(x => x.StreamOrdinal <= position.Version);
+        query = direction == StreamDirection.Forward ? query.Where(x => x.StreamOrdinal > position.Version) : query.Where(x => x.StreamOrdinal < position.Version);
         query = direction == StreamDirection.Forward ? query.OrderBy(x => x.StreamOrdinal) : query.OrderByDescending(x => x.StreamOrdinal);
 
         return query

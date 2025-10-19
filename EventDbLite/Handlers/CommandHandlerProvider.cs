@@ -13,7 +13,7 @@ public class CommandHandlerProvider(IEventSerializer eventSerializer) : ICommand
     private Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)> RegisterHandler(Type commandControllerType)
     {
         Dictionary<string, (Type targetType, Func<object, object, Task<bool>> handler)> handlerMethods = [];
-        foreach (MethodInfo method in commandControllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+        foreach (MethodInfo method in commandControllerType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
         {
             if (method.Name != "On")
             {

@@ -1,9 +1,10 @@
 ﻿using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
+using NaeTime.Query.Projections.Abstractions;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
-public class OpenPracticeTiming
+public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
 {
     private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, ConcurrentBag<OpenPracticeDetection>>>> _sessionTrackPilotDetections = new();
 
@@ -18,13 +19,13 @@ public class OpenPracticeTiming
         return trackRecords.GetOrAdd(pilotId, _ => new());
     }
 
-    public void When(OpenPracticePilotDetectionTriggered triggered)
+    private void When(OpenPracticePilotDetectionTriggered triggered)
     {
         ConcurrentBag<OpenPracticeDetection> pilotDetections = GetPilotDetections(triggered.SessionId, triggered.TrackId, triggered.PilotId);
 
         pilotDetections.Add(new OpenPracticeDetection(triggered.DetectionId, triggered.SessionId, triggered.PilotId, null, true, triggered.OrdinalPosition, triggered.TrackDetectorCount, triggered.Lane, triggered.HardwareTime, triggered.SoftwareTime, triggered.UtcTime));
     }
-    public void When(OpenPracticePilotDetectionOccured occured)
+    private void When(OpenPracticePilotDetectionOccured occured)
     {
         ConcurrentBag<OpenPracticeDetection> pilotDetections = GetPilotDetections(occured.SessionId, occured.TrackId, occured.PilotId);
 

@@ -40,10 +40,11 @@ internal class LiveProjectionManager : IAsyncDisposable
 
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-
+        long finalPosition = 0;
         await foreach (SubscriptionEvent nextEvent in subscription.CatchUp(_cancellationTokenSource.Token))
         {
             await RaiseProjectionEvent(nextEvent);
+            finalPosition = nextEvent.Event.GlobalOrdinal;
         }
 
         _continueTask = ContinueMonitoring(subscription, _cancellationTokenSource.Token);
@@ -51,7 +52,7 @@ internal class LiveProjectionManager : IAsyncDisposable
 
     private async Task ContinueMonitoring(IStreamSubscription subscription, CancellationToken token)
     {
-        await foreach (SubscriptionEvent nextEvent in subscription.CatchUp(token))
+        await foreach (SubscriptionEvent nextEvent in subscription.StreamEvents(token))
         {
             await RaiseProjectionEvent(nextEvent);
         }

@@ -9,7 +9,7 @@ public class SessionList
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public Abstractions.Models.SessionType Type { get; set; }
+        public SessionType Type { get; set; }
     }
 
     private Guid? _activeSessionId = null;
@@ -57,7 +57,7 @@ public class SessionList
         {
             Id = scheduled.SessionId,
             Name = scheduled.Name,
-            Type = Abstractions.Models.SessionType.OpenPractice
+            Type = SessionType.OpenPractice
         });
     }
     private void When(OpenPracticeSessionRenamed renamed)

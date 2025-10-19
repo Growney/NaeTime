@@ -13,7 +13,7 @@ internal class AsyncHandlerProvider(IEventSerializer eventSerializer) : IAsyncHa
     private Dictionary<string, AsyncHandler> RegisterAggregateRoot(Type aggregateRootType)
     {
         Dictionary<string, AsyncHandler> handlerMethods = [];
-        foreach (MethodInfo method in aggregateRootType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+        foreach (MethodInfo method in aggregateRootType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
         {
             if (method.Name != "When")
             {
