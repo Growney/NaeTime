@@ -339,3 +339,6 @@ NaeTime/Server/appsettings.Developer.json
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+/NaeTime.Client.BlazorWebApp/NaeTime.Client.BlazorWebApp/eventdblite.db
+/NaeTime.Client.BlazorWebApp/NaeTime.Client.BlazorWebApp/eventdblite.db-shm
+/NaeTime.Client.BlazorWebApp/NaeTime.Client.BlazorWebApp/eventdblite.db-wal
