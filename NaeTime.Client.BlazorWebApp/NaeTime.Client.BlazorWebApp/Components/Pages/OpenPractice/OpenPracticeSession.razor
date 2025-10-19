@@ -98,7 +98,133 @@
             </div>
         }
     </div>
- 
+    @if(_timingInfo != null)
+    {
+        <div class="d-flex flex-wrap justify-content-center">
+            @foreach (var kvp in _timingInfo.SessionLapRecords)
+            {
+                <div class="shadow-sm p-3">
+                    @if (kvp.Key == 1)
+                    {
+                        <h5 style="height: 1em;" class="w-100 text-center">Fastest Single Lap </h5>
+                    }
+                    else
+                    {
+                        <h5 style="height: 1em;" class="w-100 text-center">Fastest @kvp.Key Consecutive </h5>
+                    }
+                    <div style="width:300px;">
+                        <table class="table table-striped">
+                            <tr class="px-2">
+                                <th>
+                                    #
+                                </th>
+                                <th>
+                                    Pilot
+                                </th>
+                                <th class="text-center">
+                                    Time
+                                </th>
+                            </tr>
+                            <tbody>
+                                @foreach (var position in kvp.Value)
+                                {
+                                    <tr>
+                                        <td>
+                                        </td>
+                                        <td>
+                                            @GetPilotName(position.PilotId)
+                                        </td>
+                                        <td>
+                                            @($"{position.Record:m\\:ss\\:fff}")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            @foreach (var kvp in _timingInfo.PilotLaps)
+            {
+                <div class="shadow-sm p-3">
+                    <h5 style="height: 1em;" class="w-100 text-center">@GetPilotName(kvp.Key) </h5>
+                    <div style="width:300px;">
+                        <table class="table table-striped">
+                            <tr class="px-2">
+                                <th>
+                                    #
+                                </th>
+                                <th class="text-center">
+                                    Time
+                                </th>
+                            </tr>
+                            <tbody>
+                                @foreach (var lap in kvp.Value)
+                                {
+                                    <tr>
+                                        <td>
+                                            @lap.StartDetection.UtcTime.ToString("HH:mm:ss")
+                                        </td>
+                                        <td>
+                                            @lap.EndDetection.UtcTime.ToString("HH:mm:ss")
+                                        </td>
+                                        <td>
+                                            @($"{lap.Duration:m\\:ss\\:fff}")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            @foreach (var kvp in _timingInfo.PilotDetections)
+            {
+                <div class="shadow-sm p-3">
+                    <h5 style="height: 1em;" class="w-100 text-center">@GetPilotName(kvp.Key) </h5>
+                    <div style="width:300px;">
+                        <table class="table table-striped">
+                            <tr class="px-2">
+                                <th>
+                                    Lane
+                                </th>
+                                <th class="text-center">
+                                    Software Time
+                                </th>
+                                <th class="text-center">
+                                    Hardware Time
+                                </th>
+                                <th class="text-center">
+                                    Date Time
+                                </th>
+                            </tr>
+                            <tbody>
+                                @foreach (var detection in kvp.Value)
+                                {
+                                    <tr>
+                                        <td>
+                                            @detection.Lane
+                                        </td>
+                                        <td>
+                                            @detection.SoftwareTime
+                                        </td>
+                                        <td>
+                                            @detection.HardwareTime
+                                        </td>
+                                        <td>
+                                            @detection.UtcTime.ToString("HH:mm:ss.fff")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    }
 }
 
 
@@ -121,15 +247,30 @@
     private ISoftwareTimer SoftwareTimer { get; set; } = null!;
 
     private Models.OpenPracticeSession? _session;
+    private NaeTime.Query.Abstractions.Models.OpenPracticeSessionTimingInformation? _timingInfo;
     private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> _pilots = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Pilot>();
-
 
     protected override async Task OnInitializedAsync()
     {
         _pilots = await PilotQueryHandler.GetAllPilots();
 
         _session = OpenPracticeSessionProjector.Project(await OpenPracticeQueryHandler.GetByIdAsync(Id));
+
+        if(_session != null)
+        {
+            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId,TimeSpan.Zero, TimeSpan.FromSeconds(30));
+        }
     }
+    private string GetPilotName(Guid pilotId)
+    {
+        NaeTime.Query.Abstractions.Models.Pilot? pilot = _pilots.FirstOrDefault(x => x.Id == pilotId);
+        if(pilot != null)
+        {
+            return pilot.Callsign ?? pilot.Firstname ?? pilot.Lastname ?? "[No Name]";
+        }
+        return "[Unknown Pilot]";
+    }
+
     private async Task EnabledChanged(bool enabled, byte lane)
     {
         if(_session == null)
