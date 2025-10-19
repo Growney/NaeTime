@@ -1,11 +1,12 @@
 using NaeTime.Events;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
+using NaeTime.Query.Projections.Abstractions;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
 
-public class TrackList
+public class TrackProjection : ITrackProjection
 {
     private class ListTrack
     {
@@ -20,7 +21,7 @@ public class TrackList
 
     private readonly IHardwareQueryHandler _hardwareQueryHandler;
 
-    public TrackList(IHardwareQueryHandler hardwareQueryHandler)
+    public TrackProjection(IHardwareQueryHandler hardwareQueryHandler)
     {
         _hardwareQueryHandler = hardwareQueryHandler;
     }
@@ -51,18 +52,18 @@ public class TrackList
         });
         return await Task.WhenAll(tasks);
     }
-    public void When(TrackDesigned designed)
+    private void When(TrackDesigned designed)
     {
         ListTrack track = _tracks.GetOrAdd(designed.TrackId, id => new ListTrack { Id = id });
         track.Name = designed.Name;
         track.DetectorIds = designed.DetectorIds;
     }
-    public void When(TrackRenamed renamed)
+    private void When(TrackRenamed renamed)
     {
         ListTrack track = _tracks.GetOrAdd(renamed.TrackId, id => new ListTrack { Id = id });
         track.Name = renamed.Name;
     }
-    public void When(TrackDetectorAdded detectorAdded)
+    private void When(TrackDetectorAdded detectorAdded)
     {
         ListTrack track = _tracks.GetOrAdd(detectorAdded.TrackId, id => new ListTrack { Id = id });
         List<Guid> detectorIds = track.DetectorIds.ToList();
@@ -76,14 +77,14 @@ public class TrackList
         }
         track.DetectorIds = detectorIds.ToArray();
     }
-    public void When(TrackDetectorRemoved detectorRemoved)
+    private void When(TrackDetectorRemoved detectorRemoved)
     {
         ListTrack track = _tracks.GetOrAdd(detectorRemoved.TrackId, id => new ListTrack { Id = id });
         List<Guid> detectorIds = track.DetectorIds.ToList();
         detectorIds.Remove(detectorRemoved.DetectorId);
         track.DetectorIds = detectorIds.ToArray();
     }
-    public void When(TrackDetectorMoved detectorMoved)
+    private void When(TrackDetectorMoved detectorMoved)
     {
         ListTrack track = _tracks.GetOrAdd(detectorMoved.TrackId, id => new ListTrack { Id = id });
         List<Guid> detectorIds = track.DetectorIds.ToList();
@@ -98,22 +99,22 @@ public class TrackList
         }
         track.DetectorIds = detectorIds.ToArray();
     }
-    public void When(TrackRedetectionDelayConfigured configured)
+    private void When(TrackRedetectionDelayConfigured configured)
     {
         ListTrack track = _tracks.GetOrAdd(configured.TrackId, id => new ListTrack { Id = id });
         track.RedetectionDelayMilliseconds = configured.DelayMilliseconds;
     }
-    public void When(TrackMaximumLapTimeConfigured configured)
+    private void When(TrackMaximumLapTimeConfigured configured)
     {
         ListTrack track = _tracks.GetOrAdd(configured.TrackId, id => new ListTrack { Id = id });
         track.MaximumLapMilliseconds = configured.MaximumMilliseconds;
     }
-    public void When(TrackRedetectionDelayReset reset)
+    private void When(TrackRedetectionDelayReset reset)
     {
         ListTrack track = _tracks.GetOrAdd(reset.TrackId, id => new ListTrack { Id = id });
         track.RedetectionDelayMilliseconds = null;
     }
-    public void When(TrackMaximumLapTimeReset reset)
+    private void When(TrackMaximumLapTimeReset reset)
     {
         ListTrack track = _tracks.GetOrAdd(reset.TrackId, id => new ListTrack { Id = id });
         track.MaximumLapMilliseconds = null;

@@ -11,8 +11,9 @@ internal class NodeManager(INodeConnectionFactory connectionFactory, ISoftwareTi
 
     private readonly ConcurrentDictionary<Guid, NodeConnection> _hardwareProcesses = new();
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
+        return Task.CompletedTask;
     }
     public async Task StopAsync(CancellationToken cancellationToken)
     {

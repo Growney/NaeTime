@@ -9,8 +9,9 @@ internal class LapRFManager(ILapRFConnectionFactory connectionFactory) : IHosted
 
     private readonly ConcurrentDictionary<Guid, LapRFConnection> _hardwareProcesses = new();
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
+        return Task.CompletedTask;
     }
     public async Task StopAsync(CancellationToken cancellationToken)
     {

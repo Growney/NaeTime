@@ -1,35 +1,36 @@
 using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
+using NaeTime.Query.Projections.Abstractions;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
 
-public class DetectorList
+public class DetectorProjection : IDetectorProjection
 {
     private readonly ConcurrentDictionary<Guid, Detector> _detectors = new();
 
-    public void When(NaeTimeNodeSerialEsp32NodeConfigured e)
+    private void When(NaeTimeNodeSerialEsp32NodeConfigured e)
     {
         _detectors[e.TimerId] = new Detector(e.TimerId, e.Name, DetectorType.NaeTimeSerial, e.Lanes);
     }
 
-    public void When(NaeTimeNodeTimerConnected e)
+    private void When(NaeTimeNodeTimerConnected e)
     {
         if (_detectors.TryGetValue(e.TimerId, out var detector))
             _detectors[e.TimerId] = detector with { };
     }
 
-    public void When(NaeTimeNodeTimerDisconnected e)
+    private void When(NaeTimeNodeTimerDisconnected e)
     {
         // Optionally handle disconnection if needed
     }
 
-    public void When(ImmersionRCLapRFNetworkDeviceRegistered e)
+    private void When(ImmersionRCLapRFNetworkDeviceRegistered e)
     {
         _detectors[e.TimerId] = new Detector(e.TimerId, e.Name, DetectorType.EthernetLapRF8Channel, e.Lanes);
     }
 
-    public void When(ImmersionRCLapRFRenamed e)
+    private void When(ImmersionRCLapRFRenamed e)
     {
         if (_detectors.TryGetValue(e.TimerId, out var detector))
             _detectors[e.TimerId] = detector with { Name = e.Name };

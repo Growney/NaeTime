@@ -1,37 +1,27 @@
-using EventDbLite.Abstractions;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
-using NaeTime.Query.Projections;
+using NaeTime.Query.Projections.Abstractions;
 
 namespace NaeTime.Query;
 
-public class HardwareQueryHandler(IProjectionProvider projectionProvider) : IHardwareQueryHandler
+public class HardwareQueryHandler : IHardwareQueryHandler
 {
-    private readonly IProjectionProvider _projectionProvider = projectionProvider;
+    private readonly IDetectorProjection _detectorProjection;
+    private readonly IImmersionRCProjection _immersionRCProjection;
 
-    public async Task<Detector?> GetDetector(Guid id)
+    public HardwareQueryHandler(IDetectorProjection detectorProjection, IImmersionRCProjection immersionRCProjection)
     {
-        DetectorList detectors = await _projectionProvider.Load<DetectorList>();
-        return detectors.GetDetector(id);
+        _detectorProjection = detectorProjection ?? throw new ArgumentNullException(nameof(detectorProjection));
+        _immersionRCProjection = immersionRCProjection ?? throw new ArgumentNullException(nameof(immersionRCProjection));
     }
 
-    public async Task<IEnumerable<Detector>> GetAllDetectors()
-    {
-        DetectorList detectors = await _projectionProvider.Load<DetectorList>();
-        return detectors.GetDetectors();
-    }
+    public Task<Detector?> GetDetector(Guid id) => Task.FromResult(_detectorProjection.GetDetector(id));
 
-    public async Task<IEnumerable<Detector>> GetDetectors(IEnumerable<Guid> ids)
-    {
-        DetectorList detectors = await _projectionProvider.Load<DetectorList>();
-        return detectors.GetDetectors(ids);
-    }
+    public Task<IEnumerable<Detector>> GetAllDetectors() => Task.FromResult(_detectorProjection.GetDetectors());
 
-    public async Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id)
-    {
-        ImmersionRCList immersionRCList = await _projectionProvider.Load<ImmersionRCList>();
-        return immersionRCList.GetImmersionRCLapRF(id);
-    }
+    public Task<IEnumerable<Detector>> GetDetectors(IEnumerable<Guid> ids) => Task.FromResult(_detectorProjection.GetDetectors(ids));
+
+    public Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id) => Task.FromResult(_immersionRCProjection.GetImmersionRCLapRF(id));
 
     public Task<SerialNaeTimeNode?> GetSerialNaeTimeNode(Guid id)
     {

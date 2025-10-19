@@ -14,6 +14,12 @@ public static class IServiceCollectionExtensions
         services.AddTransient<IOpenPracticeQueryHandler, OpenPracticeQueryHandler>();
         services.AddTransient<ISessionQueryHandler, SessionQueryHandler>();
 
+        services.AddSingletonLiveProjection<IOpenPracticeProjection, OpenPracticeProjection>();
+        services.AddSingletonLiveProjection<IDetectorProjection, DetectorProjection>();
+        services.AddSingletonLiveProjection<IImmersionRCProjection, ImmersionRCProjection>();
+        services.AddSingletonLiveProjection<IPilotProjection, PilotProjection>();
+        services.AddSingletonLiveProjection<ITrackProjection, TrackProjection>();
+        services.AddSingletonLiveProjection<ISessionProjection, SessionProjection>();
         services.AddSingletonLiveProjection<IOpenPracticeTimingProjection, OpenPracticeTimingProjection>();
 
         return services;

@@ -1,33 +1,20 @@
-﻿using EventDbLite.Abstractions;
-using NaeTime.Query.Abstractions;
+﻿using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
-using NaeTime.Query.Projections;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NaeTime.Query.Projections.Abstractions;
 
 namespace NaeTime.Query;
-public class SessionQueryHandler(IProjectionProvider projectionProvider) : ISessionQueryHandler
+public class SessionQueryHandler : ISessionQueryHandler
 {
-    private readonly IProjectionProvider _projectionProvider = projectionProvider;
+    private readonly ISessionProjection _sessionProjection;
 
-    public async Task<IEnumerable<Session>> GetAllSessions()
+    public SessionQueryHandler(ISessionProjection sessionProjection)
     {
-        SessionList sessionList = await _projectionProvider.Load<SessionList>();
-        return sessionList.GetAllSessions();
+        _sessionProjection = sessionProjection;
     }
 
-    public async Task<Session?> GetSession(Guid id)
-    {
-        SessionList sessionList = await _projectionProvider.Load<SessionList>();
-        return sessionList.GetSessionById(id);
-    }
+    public Task<IEnumerable<Session>> GetAllSessions() => Task.FromResult(_sessionProjection.GetAllSessions());
 
-    public async Task<Session?> GetActiveSession()
-    {
-        SessionList sessionList = await _projectionProvider.Load<SessionList>();
-        return sessionList.GetActiveSession();
-    }
+    public Task<Session?> GetSession(Guid id) => Task.FromResult(_sessionProjection.GetSessionById(id));
+
+    public Task<Session?> GetActiveSession() => Task.FromResult(_sessionProjection.GetActiveSession());
 }

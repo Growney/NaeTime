@@ -1,23 +1,19 @@
-using EventDbLite.Abstractions;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
-using NaeTime.Query.Projections;
+using NaeTime.Query.Projections.Abstractions;
 
 namespace NaeTime.Query;
 
-public class TrackQueryHandler(IProjectionProvider projectionProvider) : ITrackQueryHandler
+public class TrackQueryHandler : ITrackQueryHandler
 {
-    private readonly IProjectionProvider _projectionProvider = projectionProvider;
+    private readonly ITrackProjection _trackProjection;
 
-    public async Task<IEnumerable<Track>> GetAllTracks()
+    public TrackQueryHandler(ITrackProjection trackProjection)
     {
-        TrackList trackList = await _projectionProvider.Load<TrackList>();
-        return await trackList.GetTracks();
+        _trackProjection = trackProjection;
     }
 
-    public async Task<Track?> GetTrack(Guid id)
-    {
-        TrackList trackList = await _projectionProvider.Load<TrackList>();
-        return await trackList.GetTrack(id);
-    }
+    public Task<IEnumerable<Track>> GetAllTracks() => _trackProjection.GetTracks();
+
+    public Task<Track?> GetTrack(Guid id) => _trackProjection.GetTrack(id);
 }

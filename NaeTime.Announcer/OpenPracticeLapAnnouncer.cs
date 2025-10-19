@@ -361,11 +361,11 @@ public class OpenPracticeLapAnnouncer : IAnnouncmentProvider
 
         return $"{callout}, {GetLapCallout(state.PilotLaps.Where(x => pilotId == x.PilotId))}";
     }
-    private async Task<string> GetLapTimesAnnouncement(IEnumerable<Guid> lapIds)
+    private Task<string> GetLapTimesAnnouncement(IEnumerable<Guid> lapIds)
     {
         StringBuilder builder = new();
 
-        return builder.ToString();
+        return Task.FromResult(builder.ToString());
     }
 
     private string GetLapCallout(long totalMilliseconds, int roundedTo = 3)

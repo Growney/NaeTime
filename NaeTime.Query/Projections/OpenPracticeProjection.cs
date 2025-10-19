@@ -1,9 +1,10 @@
 ﻿using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
+using NaeTime.Query.Projections.Abstractions;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
-public class OpenPracticeList
+public class OpenPracticeProjection : IOpenPracticeProjection
 {
     private class ListOpenPracticeSessionLane
     {
