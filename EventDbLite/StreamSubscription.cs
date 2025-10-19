@@ -76,7 +76,7 @@ internal class StreamSubscription : IStreamSubscription
                 if (_liveQueue.TryDequeue(out StreamEvent? streamEvent))
                 {
                     yield return new SubscriptionEvent(true, streamEvent);
-                    _currentPosition = StreamPosition.WithGlobalVersion(streamEvent.GlobalOrdinal);
+                    _currentPosition = streamEvent.GlobalOrdinal;
                 }
             }
         }

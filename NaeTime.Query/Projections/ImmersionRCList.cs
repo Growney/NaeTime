@@ -1,16 +1,10 @@
-﻿using EventDbLite.Projections;
-using NaeTime.Events;
+﻿using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NaeTime.Query.Projections;
-public class ImmersionRCList : Projection
+public class ImmersionRCList
 {
     private readonly ConcurrentDictionary<Guid, ImmersionRCLapRF> _timers = new();
 
@@ -139,7 +133,7 @@ public class ImmersionRCList : Projection
     {
         if (_timers.TryGetValue(requested.TimerId, out var timer))
         {
-            _timers[requested.TimerId] = timer with {  IsSetupConfirmed = false };
+            _timers[requested.TimerId] = timer with { IsSetupConfirmed = false };
         }
     }
 

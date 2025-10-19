@@ -1,22 +1,21 @@
-﻿using EventDbLite.Abstractions;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace EventDbLite.Projections;
 
 public class LiveProjectionService : IHostedService
 {
-    private readonly IEventStoreLite _eventStore;
     private readonly IServiceProvider _serviceProvider;
     private readonly List<LiveProjectionManager> _projections = [];
 
-    public LiveProjectionService(IEventStoreLite eventStore, IServiceProvider serviceProvider, IEnumerable<LiveProjectionRequirement> projections)
+    public LiveProjectionService(IServiceProvider serviceProvider, IEnumerable<LiveProjectionRequirement> projections)
     {
-        _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
         foreach (LiveProjectionRequirement requirement in projections)
         {
-            LiveProjectionManager projectionManager = new(requirement, _serviceProvider, _eventStore);
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            LiveProjectionManager projectionManager = ActivatorUtilities.CreateInstance<LiveProjectionManager>(scope.ServiceProvider, requirement);
             _projections.Add(projectionManager);
         }
     }

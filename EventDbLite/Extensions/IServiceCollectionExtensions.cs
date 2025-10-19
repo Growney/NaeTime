@@ -45,15 +45,8 @@ public static class IServiceCollectionExtensions
         return services;
     }
 
-    private static IServiceCollection AddLiveProjection(this IServiceCollection services, Type projectionType, ServiceLifetime lifetime, string? streamName = null)
+    private static IServiceCollection AddLiveProjection(this IServiceCollection services, Type projectionType, string? streamName = null)
     {
-        services.Add(new ServiceDescriptor(projectionType,
-            provider =>
-            {
-                LiveProjection projection = (LiveProjection)ActivatorUtilities.GetServiceOrCreateInstance(provider, projectionType);
-                return projection;
-            }, lifetime));
-
         services.AddSingleton(new LiveProjectionRequirement(streamName, projectionType));
         return services;
     }
@@ -62,27 +55,45 @@ public static class IServiceCollectionExtensions
         where TImplementation : class, TService
     {
         services.AddSingleton<TService, TImplementation>();
-        services.AddLiveProjection(typeof(TService), ServiceLifetime.Singleton, streamName);
+        services.AddLiveProjection(typeof(TService), streamName);
 
         return services;
     }
-    public static IServiceCollection AddSingletonLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Singleton, streamName);
-    public static IServiceCollection AddScopedLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Scoped, streamName);
+    public static IServiceCollection AddSingletonLiveProjection<TImplementation>(this IServiceCollection services, string? streamName = null)
+        where TImplementation : class
+    {
+        services.AddScoped<TImplementation>();
+        services.AddLiveProjection(typeof(TImplementation), streamName);
+        return services;
+    }
+    public static IServiceCollection AddScopedLiveProjection<TImplementation>(this IServiceCollection services, string? streamName = null)
+        where TImplementation : class
+    {
+        services.AddScoped<TImplementation>();
+        services.AddLiveProjection(typeof(TImplementation), streamName);
+        return services;
+    }
     public static IServiceCollection AddScopedLiveProjection<TService, TImplementation>(this IServiceCollection services, string? streamName = null)
         where TService : class
         where TImplementation : class, TService
     {
         services.AddScoped<TService, TImplementation>();
-        services.AddLiveProjection(typeof(TService), ServiceLifetime.Scoped, streamName);
+        services.AddLiveProjection(typeof(TService), streamName);
         return services;
     }
-    public static IServiceCollection AddTransientLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Transient, streamName);
+    public static IServiceCollection AddTransientLiveProjection<TImplementation>(this IServiceCollection services, string? streamName = null)
+         where TImplementation : class
+    {
+        services.AddTransient<TImplementation>();
+        services.AddLiveProjection(typeof(TImplementation), streamName);
+        return services;
+    }
     public static IServiceCollection AddTransientLiveProjection<TService, TImplementation>(this IServiceCollection services, string? streamName = null)
         where TService : class
         where TImplementation : class, TService
     {
         services.AddTransient<TService, TImplementation>();
-        services.AddLiveProjection(typeof(TService), ServiceLifetime.Transient, streamName);
+        services.AddLiveProjection(typeof(TService), streamName);
         return services;
     }
 
@@ -99,7 +110,7 @@ public static class IServiceCollectionExtensions
 
         return services;
     }
-    public static IServiceCollection AddConstantReactionClass<T>(this IServiceCollection services) where T : class
+    public static IServiceCollection AddConstantReactionClass<T>(this IServiceCollection services)
     {
         services.AddSingleton(serviceProvider =>
         {
@@ -123,6 +134,14 @@ public static class IServiceCollectionExtensions
 
             return new ConstantReactionSource(reactions);
         });
+        return services;
+    }
+    public static IServiceCollection AddConstantReactionService<TService, TImplementation>(this IServiceCollection services)
+        where TService : class
+        where TImplementation : class, TService
+    {
+        services.AddSingleton<TService, TImplementation>();
+        services.AddConstantReactionClass<TService>();
         return services;
     }
 }

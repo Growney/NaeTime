@@ -1,10 +1,9 @@
-﻿using EventDbLite.Projections;
-using NaeTime.Events;
+﻿using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
-public class OpenPracticeTiming : Projection
+public class OpenPracticeTiming
 {
     private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, ConcurrentBag<OpenPracticeDetection>>>> _sessionTrackPilotDetections = new();
 

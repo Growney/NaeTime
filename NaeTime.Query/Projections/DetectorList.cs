@@ -1,11 +1,10 @@
-using EventDbLite.Projections;
 using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
 
-public class DetectorList : Projection
+public class DetectorList
 {
     private readonly ConcurrentDictionary<Guid, Detector> _detectors = new();
 

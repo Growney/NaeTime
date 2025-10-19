@@ -1,4 +1,3 @@
-using EventDbLite.Projections;
 using NaeTime.Events;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
@@ -6,7 +5,7 @@ using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
 
-public class TrackList(IHardwareQueryHandler hardwareQueryHandler) : Projection
+public class TrackList
 {
     private class ListTrack
     {
@@ -19,7 +18,12 @@ public class TrackList(IHardwareQueryHandler hardwareQueryHandler) : Projection
 
     private readonly ConcurrentDictionary<Guid, ListTrack> _tracks = new();
 
-    private readonly IHardwareQueryHandler _hardwareQueryHandler = hardwareQueryHandler;
+    private readonly IHardwareQueryHandler _hardwareQueryHandler;
+
+    public TrackList(IHardwareQueryHandler hardwareQueryHandler)
+    {
+        _hardwareQueryHandler = hardwareQueryHandler;
+    }
 
     public async Task<Track?> GetTrack(Guid id)
     {

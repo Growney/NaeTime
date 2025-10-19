@@ -1,8 +1,6 @@
-﻿using EventDbLite.Projections;
-
-namespace EventDbLite.Abstractions;
+﻿namespace EventDbLite.Abstractions;
 
 public interface IProjectionProvider
 {
-    Task<T> Load<T>(string? streamName = null) where T : Projection;
+    Task<T> Load<T>(string? streamName = null);
 }

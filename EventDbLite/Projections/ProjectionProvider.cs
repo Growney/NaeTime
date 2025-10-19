@@ -1,4 +1,5 @@
 ﻿using EventDbLite.Abstractions;
+using EventDbLite.Events;
 using EventDbLite.Streams;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,12 +12,9 @@ public class ProjectionProvider(IServiceProvider serviceProvider, IEventStreamCo
     private readonly IEventSerializer _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
     private readonly IHandlerProvider _handlerProvider = aggregateHandlerProvider ?? throw new ArgumentNullException(nameof(aggregateHandlerProvider));
 
-    public async Task<T> Load<T>(string? streamName = null) where T : Projection
+    public async Task<T> Load<T>(string? streamName = null)
     {
         T projection = ActivatorUtilities.CreateInstance<T>(_serviceProvider);
-
-        projection.EventSerializer = _eventSerializer;
-        projection.HandlerProvider = _handlerProvider;
 
         IAsyncEnumerable<StreamEvent> streamEvents = (streamName is null)
             ? _connection.ReadAllStreamEvents(StreamDirection.Forward, StreamPosition.Beginning)
@@ -24,24 +22,30 @@ public class ProjectionProvider(IServiceProvider serviceProvider, IEventStreamCo
 
         await foreach (StreamEvent streamEvent in streamEvents)
         {
-            projection.Raise(streamEvent);
+            RaiseProjectionEvent(projection, streamEvent);
         }
 
         return projection;
     }
 
-    public async Task Refresh<T>(T projection) where T : Projection
+    private void RaiseProjectionEvent<T>(T projection, StreamEvent streamEvent)
     {
-        projection.EventSerializer = _eventSerializer;
-        projection.HandlerProvider = _handlerProvider;
-
-        IAsyncEnumerable<StreamEvent> streamEvents = (projection.StreamName is null)
-            ? _connection.ReadAllStreamEvents(StreamDirection.Forward, StreamPosition.WithVersion(projection.GlobalOrdinal))
-            : _connection.ReadStreamEvents(projection.StreamName, StreamDirection.Forward, StreamPosition.WithVersion(projection.GlobalOrdinal));
-
-        await foreach (StreamEvent streamEvent in streamEvents)
+        if (projection == null)
         {
-            projection.Raise(streamEvent);
+            return;
         }
+
+        EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
+
+        Handlers.Handler? handler = _handlerProvider.GetHandlerMethod(typeof(T), metadata.Identifier);
+        if (handler is null)
+        {
+            return;
+        }
+
+        object? payload = _eventSerializer.DeserializeEvent(streamEvent.Data.Payload, handler.TargetType)
+            ?? throw new InvalidOperationException($"Failed to deserialize event payload for identifier '{metadata.Identifier}'");
+
+        handler.Action(projection, payload);
     }
 }

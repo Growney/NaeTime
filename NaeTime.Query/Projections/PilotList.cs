@@ -1,10 +1,9 @@
-﻿using EventDbLite.Projections;
-using NaeTime.Events;
+﻿using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;
-public class PilotList : Projection
+public class PilotList
 {
     private readonly ConcurrentDictionary<Guid, Pilot> _pilots = new();
 
