@@ -28,6 +28,7 @@ public static class IServiceCollectionExtensions
         services.AddHostedService<ReactionService>();
 
         services.AddSingleton<IEventStoreLite, EventStoreLite>();
+        services.AddSingleton<ILiveProjectionRepository, LiveProjectionRepository>();
 
         services.AddSingleton<IEventSerializer, JsonEventSerializer>();
         services.AddSingleton<IHandlerProvider, HandlerProvider>();

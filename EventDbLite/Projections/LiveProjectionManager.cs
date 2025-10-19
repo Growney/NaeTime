@@ -3,10 +3,11 @@ using EventDbLite.Events;
 using EventDbLite.Handlers;
 using EventDbLite.Streams;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
 
 namespace EventDbLite.Projections;
 
-internal class LiveProjectionManager : IAsyncDisposable
+internal class LiveProjectionManager : IAsyncDisposable, ILiveProjectionManager
 {
     private readonly LiveProjectionRequirement _requirement;
     private readonly IEventStoreLite _eventStore;
@@ -17,6 +18,18 @@ internal class LiveProjectionManager : IAsyncDisposable
     private CancellationTokenSource? _cancellationTokenSource;
     private Task _continueTask = Task.CompletedTask;
 
+    private class VersionWaiter
+    {
+        public long GlobalPosition { get; }
+        public TaskCompletionSource CompletionSource { get; }
+        public VersionWaiter(long globalPosition)
+        {
+            GlobalPosition = globalPosition;
+            CompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+    }
+
+    private ConcurrentBag<VersionWaiter> _waitingTasks = new();
     public LiveProjectionManager(IServiceProvider serviceProvider, IEventSerializer serializer, IAsyncHandlerProvider asyncHandlerProvider, IEventStoreLite eventStore, LiveProjectionRequirement requirement)
     {
         _requirement = requirement ?? throw new ArgumentNullException(nameof(requirement));
@@ -40,21 +53,39 @@ internal class LiveProjectionManager : IAsyncDisposable
 
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
-        long finalPosition = 0;
         await foreach (SubscriptionEvent nextEvent in subscription.CatchUp(_cancellationTokenSource.Token))
         {
             await RaiseProjectionEvent(nextEvent);
-            finalPosition = nextEvent.Event.GlobalOrdinal;
+            NotifyWaitingTasks(nextEvent.Event.GlobalOrdinal);
         }
 
         _continueTask = ContinueMonitoring(subscription, _cancellationTokenSource.Token);
     }
 
+    public Task WaitForVersion(long globalPosition, CancellationToken cancellationToken)
+    {
+        VersionWaiter waiter = new(globalPosition);
+        _waitingTasks.Add(waiter);
+        cancellationToken.Register(() => waiter.CompletionSource.TrySetCanceled(cancellationToken));
+        return waiter.CompletionSource.Task;
+    }
+    private void NotifyWaitingTasks(long globalPosition)
+    {
+        foreach (VersionWaiter waiter in _waitingTasks)
+        {
+            if (waiter.GlobalPosition <= globalPosition)
+            {
+                waiter.CompletionSource.TrySetResult();
+                _waitingTasks.TryTake(out _);
+            }
+        }
+    }
     private async Task ContinueMonitoring(IStreamSubscription subscription, CancellationToken token)
     {
         await foreach (SubscriptionEvent nextEvent in subscription.StreamEvents(token))
         {
             await RaiseProjectionEvent(nextEvent);
+            NotifyWaitingTasks(nextEvent.Event.GlobalOrdinal);
         }
     }
     private async Task RaiseProjectionEvent(SubscriptionEvent subscriptionEvent)
@@ -88,4 +119,5 @@ internal class LiveProjectionManager : IAsyncDisposable
     }
 
     public ValueTask DisposeAsync() => Stop();
+
 }
