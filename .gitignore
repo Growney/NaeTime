@@ -342,3 +342,5 @@ NaeTime/Server/appsettings.Developer.json
 /NaeTime.Client.BlazorWebApp/NaeTime.Client.BlazorWebApp/eventdblite.db
 /NaeTime.Client.BlazorWebApp/NaeTime.Client.BlazorWebApp/eventdblite.db-shm
 /NaeTime.Client.BlazorWebApp/NaeTime.Client.BlazorWebApp/eventdblite.db-wal
+*.db-shm
+*.db-wal
