@@ -5,15 +5,23 @@ using System.Runtime.CompilerServices;
 
 namespace EventDbLite;
 
-internal class StreamSubscription(IEventStoreLite eventStore, string? streamName, StreamPosition initialPosition, Action<StreamSubscription> onDispose) : IStreamSubscription
+internal class StreamSubscription : IStreamSubscription
 {
     private readonly ConcurrentQueue<StreamEvent> _liveQueue = new();
-    private readonly IEventStoreLite _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
-    private readonly string? _streamName = streamName;
-    private readonly StreamPosition _currentPosition = initialPosition;
+    private readonly IEventStoreLite _eventStore;
+    private readonly string? _streamName;
+    private StreamPosition _currentPosition;
 
-    private readonly Action<StreamSubscription> _onDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
+    private readonly Action<StreamSubscription> _onDispose;
     private readonly SemaphoreSlim _signal = new(0);
+
+    public StreamSubscription(IEventStoreLite eventStore, string? streamName, StreamPosition initialPosition, Action<StreamSubscription> onDispose)
+    {
+        _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
+        _streamName = streamName;
+        _currentPosition = initialPosition;
+        _onDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
+    }
 
     public void AddLiveEvent(StreamEvent streamEvent)
     {
@@ -27,6 +35,18 @@ internal class StreamSubscription(IEventStoreLite eventStore, string? streamName
         _signal.Dispose();
     }
 
+    public async IAsyncEnumerable<SubscriptionEvent> CatchUp([EnumeratorCancellation] CancellationToken token)
+    {
+        IAsyncEnumerable<StreamEvent> eventStream = _streamName is not null
+            ? _eventStore.ReadStreamEvents(_streamName, StreamDirection.Forward, _currentPosition)
+            : _eventStore.ReadEvents(StreamDirection.Forward, _currentPosition);
+        await foreach (StreamEvent streamEvent in eventStream.WithCancellation(token))
+        {
+            yield return new SubscriptionEvent(false, streamEvent);
+            _currentPosition = streamEvent.GlobalOrdinal;
+        }
+    }
+
     public async IAsyncEnumerable<SubscriptionEvent> StreamEvents([EnumeratorCancellation] CancellationToken token)
     {
         IAsyncEnumerable<StreamEvent> eventStream = _streamName is not null
@@ -36,6 +56,7 @@ internal class StreamSubscription(IEventStoreLite eventStore, string? streamName
         await foreach (StreamEvent streamEvent in eventStream)
         {
             yield return new SubscriptionEvent(false, streamEvent);
+            _currentPosition = streamEvent.GlobalOrdinal;
         }
 
         while (!token.IsCancellationRequested)
@@ -55,6 +76,7 @@ internal class StreamSubscription(IEventStoreLite eventStore, string? streamName
                 if (_liveQueue.TryDequeue(out StreamEvent? streamEvent))
                 {
                     yield return new SubscriptionEvent(true, streamEvent);
+                    _currentPosition = StreamPosition.WithGlobalVersion(streamEvent.GlobalOrdinal);
                 }
             }
         }

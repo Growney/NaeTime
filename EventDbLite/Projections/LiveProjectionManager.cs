@@ -4,14 +4,22 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EventDbLite.Projections;
 
-internal class LiveProjectionManager(LiveProjectionRequirement requirement, IServiceProvider serviceProvider, IEventStoreLite eventStore)
+internal class LiveProjectionManager : IAsyncDisposable
 {
-    private readonly LiveProjectionRequirement _requirement = requirement ?? throw new ArgumentNullException(nameof(requirement));
-    private readonly IEventStoreLite _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
-    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly LiveProjectionRequirement _requirement;
+    private readonly IEventStoreLite _eventStore;
+    private readonly IServiceProvider _serviceProvider;
     private CancellationTokenSource? _cancellationTokenSource;
+    private Task _continueTask = Task.CompletedTask;
 
-    public async Task Start()
+    public LiveProjectionManager(LiveProjectionRequirement requirement, IServiceProvider serviceProvider, IEventStoreLite eventStore)
+    {
+        _requirement = requirement ?? throw new ArgumentNullException(nameof(requirement));
+        _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    }
+
+    public async Task Start(CancellationToken token)
     {
         using IServiceScope initialScope = _serviceProvider.CreateScope();
         LiveProjection initialInstance = GetInstance(initialScope.ServiceProvider);
@@ -22,9 +30,21 @@ internal class LiveProjectionManager(LiveProjectionRequirement requirement, ISer
             : _eventStore.SubscribeToAllStreams(initialPosition);
 
         _cancellationTokenSource?.Cancel();
-        _cancellationTokenSource = new CancellationTokenSource();
+        _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-        await foreach (SubscriptionEvent nextEvent in subscription.StreamEvents(_cancellationTokenSource.Token))
+        await foreach (SubscriptionEvent nextEvent in subscription.CatchUp(_cancellationTokenSource.Token))
+        {
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            LiveProjection projection = GetInstance(scope.ServiceProvider);
+            await projection.Raise(nextEvent);
+        }
+
+        _continueTask = ContinueMonitoring(subscription, _cancellationTokenSource.Token);
+    }
+
+    private async Task ContinueMonitoring(IStreamSubscription subscription, CancellationToken token)
+    {
+        await foreach (SubscriptionEvent nextEvent in subscription.CatchUp(token))
         {
             using IServiceScope scope = _serviceProvider.CreateScope();
             LiveProjection projection = GetInstance(scope.ServiceProvider);
@@ -38,7 +58,7 @@ internal class LiveProjectionManager(LiveProjectionRequirement requirement, ISer
         return projection;
     }
 
-    public void Stop()
+    public async ValueTask Stop()
     {
         if (_cancellationTokenSource is not null)
         {
@@ -46,6 +66,9 @@ internal class LiveProjectionManager(LiveProjectionRequirement requirement, ISer
             _cancellationTokenSource.Dispose();
             _cancellationTokenSource = null;
         }
+
+        await _continueTask;
     }
 
+    public ValueTask DisposeAsync() => Stop();
 }

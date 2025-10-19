@@ -21,22 +21,18 @@ public class LiveProjectionService : IHostedService
         }
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
         foreach (LiveProjectionManager projection in _projections)
         {
-            _ = projection.Start();
+            await projection.Start(cancellationToken);
         }
-
-        return Task.CompletedTask;
     }
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
         foreach (LiveProjectionManager projection in _projections)
         {
-            projection.Stop();
+            await projection.Stop();
         }
-
-        return Task.CompletedTask;
     }
 }

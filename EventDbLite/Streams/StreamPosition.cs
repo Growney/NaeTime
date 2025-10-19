@@ -1,6 +1,6 @@
 ﻿namespace EventDbLite.Streams;
 
-public class StreamPosition
+public struct StreamPosition
 {
     public static readonly StreamPosition Any = new(ExpectedVersion.Any);
     public static readonly StreamPosition NoStream = new(ExpectedVersion.NoStream);
@@ -33,4 +33,5 @@ public class StreamPosition
         _ => currentPosition == Version
     };
     public static implicit operator long(StreamPosition state) => state.Version;
+    public static implicit operator StreamPosition(long version) => WithGlobalVersion(version);
 }
