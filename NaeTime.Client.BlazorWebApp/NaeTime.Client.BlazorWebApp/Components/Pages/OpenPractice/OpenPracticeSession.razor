@@ -29,17 +29,18 @@
                 </table>
 
                 <div class="w-100 pb-2">
-                    <MudButtonGroup FullWidth=true  Color="Color.Primary" Variant="Variant.Filled">
-                        <MudButton>@(_pilots.FirstOrDefault(x => x.Id == lane.PilotId)?.Callsign ?? "[None]")</MudButton>
-                        <MudMenu Icon="@Icons.Material.Filled.ArrowDropDown">
-                            <MudMenuItem  OnClick="x => OnPilotSelectionChanged(null, lane.Lane)">[Clear]</MudMenuItem>
+                    <MudMenu Class="w-100">
+                        <ActivatorContent>
+                            <MudButton Variant=Variant.Filled Size=Size.Small Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(_pilots.FirstOrDefault(x => x.Id == lane.PilotId)?.Callsign ?? "[None]")</MudButton>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudMenuItem OnClick="x => OnPilotSelectionChanged(null, lane.Lane)">[Clear]</MudMenuItem>
                             @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots(lane.Lane))
                             {
                                 <MudMenuItem OnClick="x => OnPilotSelectionChanged(pilot.Id, lane.Lane)">@pilot.Callsign</MudMenuItem>
                             }
-                        </MudMenu>
-                    </MudButtonGroup>
-                    
+                        </ChildContent>
+                    </MudMenu>                    
                 </div>
                 <div class="w-100 pb-2">
                     <MudMenu Class="w-100">
