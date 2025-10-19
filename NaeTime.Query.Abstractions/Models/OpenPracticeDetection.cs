@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Query.Abstractions.Models;
-public record OpenPracticeDetection(Guid Id, Guid SessionId, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);
+public record OpenPracticeDetection(Guid Id, Guid SessionId, Guid PilotId, Guid? TimerId, bool IsValid, byte TrackTimerOrdinal, byte TrackTimerTotal, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);

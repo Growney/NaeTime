@@ -2,11 +2,6 @@
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
 using NaeTime.Query.Projections;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NaeTime.Query;
 public class OpenPracticeQueryHandler(IProjectionProvider projectionProvider) : IOpenPracticeQueryHandler
@@ -17,5 +12,12 @@ public class OpenPracticeQueryHandler(IProjectionProvider projectionProvider) : 
     {
         OpenPracticeList openPracticeList = await _projectionProvider.Load<OpenPracticeList>();
         return openPracticeList.GetSession(id);
+    }
+
+    public async Task<OpenPracticeSessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    {
+        OpenPracticeTiming openPracticeTiming = await _projectionProvider.Load<OpenPracticeTiming>();
+
+        return openPracticeTiming.GetSessionTimingInfo(sessionId, trackId, minimumLapTime, maximumLapTime);
     }
 }
