@@ -72,7 +72,7 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
     public async Task ScheduleSession(Guid id, Guid trackId, string name)
     {
         Query.Abstractions.Models.Track? track = await _trackQueryHandler.GetTrack(trackId) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        OpenPracticeSession session = _repository.CreateNew<OpenPracticeSession>(() => new OpenPracticeSession(id, trackId, name));
+        OpenPracticeSession session = _repository.CreateNew<OpenPracticeSession>(() => new OpenPracticeSession(id, trackId, track.Detectors.Select(x => x.Id).ToArray(), name));
         session.ConfigureDefaultLanes(track.MaxLanes);
 
         await _repository.Save<OpenPracticeSession, Guid>(session);
@@ -82,6 +82,13 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
     {
         OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
         session.SetLanePilot(lane, pilotId);
+        await _repository.Save<OpenPracticeSession, Guid>(session);
+    }
+
+    public async Task TriggerDetection(Guid detectionId, Guid sessionId, byte lane, byte ordinalPosition, ulong? hardwareTime, long softwareTime, DateTime utcTime)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.TriggerDetection(detectionId, lane, ordinalPosition, hardwareTime, softwareTime, utcTime);
         await _repository.Save<OpenPracticeSession, Guid>(session);
     }
 

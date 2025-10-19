@@ -1,6 +1,9 @@
 ﻿namespace NaeTime.Events;
 
-public record OpenPracticePilotTimingStarted(Guid PilotId, Guid SessionId, Guid TrackId, Guid[] TrackDetectors, long? RedetectionDelayMilliseconds, long? MaximumLapMilliseconds);
+public record OpenPracticeHardwareDetectionOccured(Guid DetectionId, Guid SessionId, Guid TimerId, Guid TrackId, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);
+public record OpenPracticeHardwareDetectionIgnoredOnDisabledLane(Guid DetectionId, Guid SessionId, Guid TimerId, Guid TrackId, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);
+public record OpenPracticeHardwareDetectionIgnoredOnUnassignedLane(Guid DetectionId, Guid SessionId, Guid TimerId, Guid TrackId, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);
+public record OpenPracticeDetectionTriggerIgnoredOnUnassignedLane(Guid DetectionId, Guid SessionId, Guid TrackId, byte OrdinalPosition, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);
 
 public record OpenPracticePilotDetectionOccured(Guid DetectionId, Guid SessionId, Guid TrackId, Guid PilotId, Guid TimerId, byte TrackTimerOrdinal, byte TrackTimerTotal, byte Lane, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);
 public record OpenPracticePilotDetectionTriggered(Guid DetectionId, Guid SessionId, Guid TrackId, Guid PilotId, byte Lane, byte OrdinalPosition, byte TrackDetectorCount, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);

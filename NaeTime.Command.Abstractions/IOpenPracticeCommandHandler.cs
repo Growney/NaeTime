@@ -12,4 +12,5 @@ public interface IOpenPracticeCommandHandler
     public Task ResetLanePilot(Guid sessionId, byte lane);
 
     public Task AssignHardwareDetectionToSession(Guid detectionId, Guid sessionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime);
+    public Task TriggerDetection(Guid detectionId, Guid sessionId, byte lane, byte ordinalPosition, ulong? hardwareTime, long softwareTime, DateTime utcTime);
 }

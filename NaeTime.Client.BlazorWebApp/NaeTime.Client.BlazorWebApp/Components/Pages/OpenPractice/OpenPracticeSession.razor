@@ -81,19 +81,7 @@
                 
                 <TimerDisplay Start="DateTime.UtcNow"></TimerDisplay>
                 <div class="w-100 pb-2">
-                    <table class="w-100">
-                        <tbody>
-                            <tr>
-                                <td class="w-50 pr-1">
-                                    <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection(lane.Lane)"><i class="fa-solid fa-stopwatch"></i></MudButton>
-                                </td>
-                                <td class="w-50 pl-1">
-                                    <MudButton Variant=Variant.Filled Color=Color.Error Class="w-100" @onclick="() => TriggerInvalidation(Guid.Empty)"><i class="fa-solid fa-stopwatch"></i></MudButton>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-
+                    <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection(lane.Lane)"><i class="fa-solid fa-stopwatch"></i></MudButton>                
                 </div>
             </div>
         }
@@ -236,8 +224,6 @@
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
     [Inject]
-    private IOpenPracticePilotTimingCommandHandler OpenPracticePilotTimingCommandHandler { get; set; } = null!;
-    [Inject]
     private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
     [Inject]
     private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
@@ -368,20 +354,6 @@
             return;
         }
 
-        Guid? pilotId = _session.Lanes[lane].PilotId;
-
-        if(pilotId != null)
-        {
-            await OpenPracticePilotTimingCommandHandler.TriggerDetection(Guid.NewGuid(), Id, pilotId.Value,lane, 0, null, SoftwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
-        }
-
-    }
-
-    private async Task TriggerInvalidation(Guid pilotId)
-    {
-        if(_session == null)
-        {
-            return;
-        }
+        await OpenPracticeCommandHandler.TriggerDetection(Guid.NewGuid(), Id, lane, 0, null, SoftwareTimer.ElapsedMilliseconds, DateTime.UtcNow);  
     }
 }
