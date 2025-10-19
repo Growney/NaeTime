@@ -57,10 +57,34 @@ public static class IServiceCollectionExtensions
         services.AddSingleton(new LiveProjectionRequirement(streamName, projectionType));
         return services;
     }
+    public static IServiceCollection AddSingletonLiveProjection<TService, TImplementation>(this IServiceCollection services, string? streamName = null)
+        where TService : class
+        where TImplementation : class, TService
+    {
+        services.AddSingleton<TService, TImplementation>();
+        services.AddLiveProjection(typeof(TService), ServiceLifetime.Singleton, streamName);
 
+        return services;
+    }
     public static IServiceCollection AddSingletonLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Singleton, streamName);
     public static IServiceCollection AddScopedLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Scoped, streamName);
+    public static IServiceCollection AddScopedLiveProjection<TService, TImplementation>(this IServiceCollection services, string? streamName = null)
+        where TService : class
+        where TImplementation : class, TService
+    {
+        services.AddScoped<TService, TImplementation>();
+        services.AddLiveProjection(typeof(TService), ServiceLifetime.Scoped, streamName);
+        return services;
+    }
     public static IServiceCollection AddTransientLiveProjection<T>(this IServiceCollection services, string? streamName = null) => AddLiveProjection(services, typeof(T), ServiceLifetime.Transient, streamName);
+    public static IServiceCollection AddTransientLiveProjection<TService, TImplementation>(this IServiceCollection services, string? streamName = null)
+        where TService : class
+        where TImplementation : class, TService
+    {
+        services.AddTransient<TService, TImplementation>();
+        services.AddLiveProjection(typeof(TService), ServiceLifetime.Transient, streamName);
+        return services;
+    }
 
     public static IServiceCollection AddConstantReaction<T>(this IServiceCollection services, Func<IServiceProvider, T, Task> reaction)
     {
