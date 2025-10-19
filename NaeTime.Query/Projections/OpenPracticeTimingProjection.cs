@@ -70,7 +70,7 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         List<OpenPracticeLap> laps = new();
 
         OpenPracticeDetection initialDetection = orderedDetections[firstValidDetectionIndex];
-        for (int i = firstValidDetectionIndex + 1; i < orderedDetections.Count - 1; i++)
+        for (int i = firstValidDetectionIndex + 1; i < orderedDetections.Count; i++)
         {
             OpenPracticeDetection currentDetection = orderedDetections[i];
 
@@ -218,6 +218,10 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
                 sessionRecords[lapCount].Add(record);
             }
         }
+        foreach(var lapCount in sessionRecords.Keys.ToList())
+        {
+            sessionRecords[lapCount].Sort((x,y)=> x.Record.CompareTo(y.Record));
+        }
         return sessionRecords.ToDictionary(kvp => kvp.Key, kvp => (IEnumerable<OpenPracticeLapRecord>)kvp.Value);
     }
 
@@ -253,5 +257,11 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         IDictionary<uint, OpenPracticeLapRecord> pilotRecords = GetPilotRecords(sessionId, trackId, pilotId, pilotLaps);
 
         return new OpenPracticeSessionPilotTimingInfo(pilotDetections, pilotLaps, pilotRecords);
+    }
+    public OpenPracticeDetection? GetLastPilotDetection(Guid sessionId, Guid trackId, Guid pilotId)
+    {
+        ConcurrentBag<OpenPracticeDetection> detections = GetPilotDetections(sessionId, trackId, pilotId);
+        OpenPracticeDetection? lastDetection = detections.OrderByDescending(d => d.UtcTime).FirstOrDefault();
+        return lastDetection;
     }
 }
