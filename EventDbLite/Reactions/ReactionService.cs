@@ -7,7 +7,6 @@ using Microsoft.Extensions.Hosting;
 namespace EventDbLite.Reactions;
 public class ReactionService(IServiceProvider serviceProvider) : IHostedService
 {
-    private const string ReactionStreamName = "$reactions";
     private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     private IReactionProvider? _reactionProvider;
