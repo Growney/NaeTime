@@ -36,11 +36,12 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
 
     public ImmersionRCLapRF(Guid id, string name, IPAddress address, ushort port, byte lanes)
     {
-        Raise(new ImmersionRCLapRFNetworkDeviceRegistered(id,name, address.ToString(), port, lanes));
+        Raise(new ImmersionRCLapRFNetworkDeviceRegistered(id, name, address.ToString(), port, lanes));
     }
 
     private void When(ImmersionRCLapRFNetworkDeviceRegistered changed)
     {
+        Id = changed.TimerId;
         _type = Type.Network;
         _lanes = changed.Lanes;
     }
@@ -86,18 +87,18 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
         }
     }
 
-    public void RequestEnableLane(byte lane)
+    public void RequestLaneStatus(byte lane, bool desiredStatus)
     {
         ThrowIfLaneNotExists(lane);
 
-        LaneInfo laneInfo = GetLaneInfo(lane);
-
-        if (laneInfo.IsEnabled.RequestedValue == true)
+        if (desiredStatus)
         {
-            return; // Already requested
+            Raise(new ImmersionRCLapRFLaneEnableRequested(Id, lane));
         }
-
-        Raise(new ImmersionRCLapRFLaneEnableRequested(Id, lane));
+        else
+        {
+            Raise(new ImmersionRCLapRFLaneDisableRequested(Id, lane));
+        }
     }
 
     private void When(ImmersionRCLapRFLaneEnableRequested changed)
@@ -107,31 +108,34 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
         laneInfo.IsEnabled.RequestedValue = true;
     }
 
-    public void RequestDisableLane(byte lane)
-    {
-        ThrowIfLaneNotExists(lane);
-
-        LaneInfo laneInfo = GetLaneInfo(lane);
-
-        if (laneInfo.IsEnabled.RequestedValue == false)
-        {
-            return; // Already requested
-        }
-
-        Raise(new ImmersionRCLapRFLaneDisableRequested(Id, lane));
-    }
-
     private void When(ImmersionRCLapRFLaneDisableRequested changed)
     {
         LaneInfo laneInfo = GetLaneInfo(changed.Lane);
         laneInfo.IsEnabled.RequestedValue = false;
     }
 
-    public void ConfirmLaneEnabled(byte lane)
+    public void ConfirmLaneStatus(byte lane, bool status)
     {
         ThrowIfLaneNotExists(lane);
 
-        Raise(new ImmersionRCLapRFLaneEnabled(Id, lane));
+        LaneInfo laneInfo = GetLaneInfo(lane);
+
+        if (laneInfo.IsEnabled.ConfirmedValue != status)
+        {
+            if (status)
+            {
+                Raise(new ImmersionRCLapRFLaneEnabled(Id, lane));
+            }
+            else
+            {
+                Raise(new ImmersionRCLapRFLaneDisabled(Id, lane));
+            }
+        }
+
+        if (laneInfo.IsEnabled.RequestedValue != status)
+        {
+            Raise(new ImmersionRCLapRFLaneStatusMismatch(Id, lane, GetLaneInfo(lane).IsEnabled.RequestedValue, status));
+        }
     }
 
     private void When(ImmersionRCLapRFLaneEnabled changed)
@@ -139,14 +143,6 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
         LaneInfo laneInfo = GetLaneInfo(changed.Lane);
         laneInfo.IsEnabled.ConfirmedValue = true;
     }
-
-    public void ConfirmLaneDisabled(byte lane)
-    {
-        ThrowIfLaneNotExists(lane);
-
-        Raise(new ImmersionRCLapRFLaneDisabled(Id, lane));
-    }
-
     private void When(ImmersionRCLapRFLaneDisabled changed)
     {
         LaneInfo laneInfo = GetLaneInfo(changed.Lane);
@@ -156,12 +152,6 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     public void RequestTuneLaneVideoFrequency(byte lane, byte? bandId, int frequencyInMHz)
     {
         ThrowIfLaneNotExists(lane);
-
-        LaneInfo laneInfo = GetLaneInfo(lane);
-        if (laneInfo.BandId.RequestedValue == bandId && laneInfo.FrequencyInMHz.RequestedValue == frequencyInMHz)
-        {
-            return; // Already requested
-        }
 
         Raise(new ImmersionRCLapRFLaneFrequencyRequested(Id, lane, bandId, frequencyInMHz));
     }
@@ -178,12 +168,16 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
         ThrowIfLaneNotExists(lane);
 
         LaneInfo laneInfo = GetLaneInfo(lane);
-        if (laneInfo.BandId.ConfirmedValue == bandId && laneInfo.FrequencyInMHz.ConfirmedValue == frequencyInMHz)
+
+        if (laneInfo.BandId.ConfirmedValue != bandId || laneInfo.FrequencyInMHz.ConfirmedValue != frequencyInMHz)
         {
-            return; // Already confirmed
+            Raise(new ImmersionRCLapRFLaneFrequencyTuned(Id, lane, bandId, frequencyInMHz));
         }
 
-        Raise(new ImmersionRCLapRFLaneFrequencyTuned(Id, lane, bandId, frequencyInMHz));
+        if (laneInfo.BandId.RequestedValue != bandId || laneInfo.FrequencyInMHz.RequestedValue != frequencyInMHz)
+        {
+            Raise(new ImmersionRCLapRFLaneFrequencyMismatch(Id, lane, laneInfo.BandId.RequestedValue, laneInfo.FrequencyInMHz.RequestedValue, bandId, frequencyInMHz));
+        }
     }
 
     private void When(ImmersionRCLapRFLaneFrequencyTuned changed)
@@ -196,12 +190,6 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     public void RequestLaneThreshold(byte lane, int threshold)
     {
         ThrowIfLaneNotExists(lane);
-
-        LaneInfo laneInfo = GetLaneInfo(lane);
-        if (laneInfo.Threshold.RequestedValue == threshold)
-        {
-            return; // Already requested
-        }
 
         Raise(new ImmersionRCLapRFLaneThresholdRequested(Id, lane, threshold));
     }
@@ -217,11 +205,15 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
         ThrowIfLaneNotExists(lane);
 
         LaneInfo laneInfo = GetLaneInfo(lane);
-        if (laneInfo.Threshold.ConfirmedValue == threshold)
+        if (laneInfo.Threshold.ConfirmedValue != threshold)
         {
-            return; // Already confirmed
+            Raise(new ImmersionRCLapRFLaneThresholdConfigured(Id, lane, threshold));
         }
-        Raise(new ImmersionRCLapRFLaneThresholdConfigured(Id, lane, threshold));
+
+        if (laneInfo.Threshold.RequestedValue != threshold)
+        {
+            Raise(new ImmersionRCLapRFLaneThresholdMismatch(Id, lane, laneInfo.Threshold.RequestedValue, threshold));
+        }
     }
 
     private void When(ImmersionRCLapRFLaneThresholdConfigured changed)
@@ -233,13 +225,6 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     public void RequestLaneGain(byte lane, ushort gain)
     {
         ThrowIfLaneNotExists(lane);
-
-        LaneInfo laneInfo = GetLaneInfo(lane);
-
-        if (laneInfo.Gain.RequestedValue == gain)
-        {
-            return; // Already requested
-        }
 
         Raise(new ImmersionRCLapRFLaneGainRequested(Id, lane, gain));
     }
@@ -256,12 +241,15 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
 
         LaneInfo laneInfo = GetLaneInfo(lane);
 
-        if (laneInfo.Gain.ConfirmedValue == gain)
+        if (laneInfo.Gain.ConfirmedValue != gain)
         {
-            return; // Already confirmed
+            Raise(new ImmersionRCLapRFLaneGainConfigured(Id, lane, gain));
         }
 
-        Raise(new ImmersionRCLapRFLaneGainConfigured(Id, lane, gain));
+        if (laneInfo.Gain.RequestedValue != gain)
+        {
+            Raise(new ImmersionRCLapRFLaneGainMismatch(Id, lane, GetLaneInfo(lane).Gain.RequestedValue, gain));
+        }
     }
 
     private void When(ImmersionRCLapRFLaneGainConfigured changed)
@@ -274,34 +262,8 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     {
         Raise(new ImmersionRCLapRFTimerConnected(Id));
     }
-
     public void MarkAsDisconnected()
     {
         Raise(new ImmersionRCLapRFTimerDisconnected(Id));
-    }
-
-    public void RequestConfigurationConfirmation()
-    {
-        Raise(new ImmersionRCLapRFTimerRFSetupConfirmationRequested(Id));
-    }
-
-    public void ConfirmConfiguration()
-    {
-        Raise(new ImmersionRCLapRFTimerRFSetupConfirmed(Id));
-    }
-
-    public void MarkConfigurationMismatch()
-    {
-        Raise(new ImmersionRCLapRFTimerRFSetupMismatch(Id));
-    }
-
-    public void EnableRFSetupSync()
-    {
-        Raise(new ImmersionRCLapRFLaneRFSetupSyncEnabled(Id));
-    }
-
-    public void DisableRFSetupSync()
-    {
-        Raise(new ImmersionRCLapRFLaneRFSetupSyncDisabled(Id));
     }
 }

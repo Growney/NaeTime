@@ -1,14 +1,20 @@
-﻿using ImmersionRC.LapRF;
+﻿using EventDbLite.Abstractions;
+using ImmersionRC.LapRF;
 using ImmersionRC.LapRF.Abstractions;
+using NaeTime.Command.Abstractions;
 using NaeTime.Hardware.Abstractions;
+using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Models;
 
 namespace NaeTime.Timing.ImmersionRC;
-internal class LapRFConnection
+internal class LapRFConnection : ILapRFConnection
 {
+
     private readonly ILapRFCommunication _communication;
     private readonly ILapRFProtocol _protocol;
     private readonly ISoftwareTimer _softwareTimer;
+    private readonly IStreamEventWriter _writer;
+    private readonly IImmersionRCLapRFCommandHandler _commandHandler;
     private readonly Guid _timerId;
 
     private readonly CancellationTokenSource _cancellationTokenSource;
@@ -16,12 +22,19 @@ internal class LapRFConnection
 
     private readonly Task[] _runningTasks;
 
-    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol)
+    private readonly string _detectionsStream;
+
+    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol, IStreamEventWriter writer, IImmersionRCLapRFCommandHandler commandHandler)
     {
         _timerId = timerId;
+
+        _detectionsStream = $"ImmersionRC-LapRF-{_timerId}-Detections";
+
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
         _communication = communication ?? throw new ArgumentNullException(nameof(communication));
         _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
+        _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+        _commandHandler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
 
         _cancellationTokenSource = new CancellationTokenSource();
 
@@ -42,22 +55,23 @@ internal class LapRFConnection
                 //We must start the run task before we dispatch the connection established as data may be requested when the connection is established
                 System.Runtime.CompilerServices.ConfiguredTaskAwaitable runTask = _protocol.RunAsync(token).ConfigureAwait(false);
 
+                await _commandHandler.MarkAsConnected(_timerId);
 
                 await runTask;
             }
             catch
             {
-                await Task.Delay(1000).ConfigureAwait(false);
+                await Task.Delay(500).ConfigureAwait(false);
             }
 
             if (IsConnected)
             {
+                await _commandHandler.MarkAsDisconnected(_timerId);
                 IsConnected = false;
             }
 
             await _communication.DisconnectAsync(token).ConfigureAwait(false);
         }
-
     }
     private async Task WaitForDetectionsAsync(CancellationToken token)
     {
@@ -73,6 +87,8 @@ internal class LapRFConnection
                 }
 
                 Pass passingRecord = nullablePassingRecord.Value;
+
+                await _writer.AppendToStream(_detectionsStream, new NaeTime.Events.HardwareDetectionOccured(Guid.NewGuid(), _timerId, (byte)passingRecord.TransponderId, passingRecord.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
             }
             catch
             {
@@ -102,16 +118,16 @@ internal class LapRFConnection
             }
         }
     }
-    public async Task<IEnumerable<LapRF8ChannelLaneConfiguration>> GetLaneConfigurations(IEnumerable<byte> lanes)
+    public async Task<IEnumerable<LapRFLaneConfiguration>> GetLaneConfigurations(IEnumerable<byte> lanes)
     {
         if (!IsConnected)
         {
-            return Enumerable.Empty<LapRF8ChannelLaneConfiguration>();
+            return Enumerable.Empty<LapRFLaneConfiguration>();
         }
 
         IEnumerable<RFSetup> rfSetups = await _protocol.RadioFrequencySetupProtocol.GetSetupAsync(lanes, CancellationToken.None).ConfigureAwait(false);
 
-        List<LapRF8ChannelLaneConfiguration> channels = [];
+        List<LapRFLaneConfiguration> channels = [];
 
         foreach (RFSetup setup in rfSetups)
         {
@@ -120,13 +136,13 @@ internal class LapRFConnection
                 continue;
             }
 
-            channels.Add(new LapRF8ChannelLaneConfiguration(setup.TransponderId, null, setup.Frequency ?? 0, setup.IsEnabled, setup.Attenuation ?? 0, setup.Threshold ?? 0));
+            channels.Add(new LapRFLaneConfiguration(setup.TransponderId, null, setup.Frequency ?? 0, setup.IsEnabled, setup.Attenuation ?? 0, setup.Threshold ?? 0));
         }
 
         return channels;
     }
-    public Task<IEnumerable<LapRF8ChannelLaneConfiguration>> GetLaneConfigurations(params byte[] lanes) => GetLaneConfigurations(lanes.AsEnumerable<byte>());
-    public Task<IEnumerable<LapRF8ChannelLaneConfiguration>> GetAllLaneConfigurations() => GetLaneConfigurations([1, 2, 3, 4, 5, 6, 7, 8]);
+    public Task<IEnumerable<LapRFLaneConfiguration>> GetLaneConfigurations(params byte[] lanes) => GetLaneConfigurations(lanes.AsEnumerable<byte>());
+    public Task<IEnumerable<LapRFLaneConfiguration>> GetAllLaneConfigurations() => GetLaneConfigurations([1, 2, 3, 4, 5, 6, 7, 8]);
     public async Task SetLaneStatus(byte Lane, bool isEnabled)
     {
         if (!IsConnected)
@@ -154,7 +170,6 @@ internal class LapRFConnection
 
         await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(lane, threshold: threshold).ConfigureAwait(false);
     }
-
     public async Task SetLaneGain(byte lane, ushort gain)
     {
         if (!IsConnected)
@@ -163,6 +178,14 @@ internal class LapRFConnection
         }
 
         await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(lane, attenuation: gain).ConfigureAwait(false);
+    }
+    public async Task SetupLane(LapRFLaneConfiguration configuration)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(configuration.Lane, isEnabled: configuration.IsEnabled, frequencyInMHz: (ushort?)configuration.FrequencyInMhz, attenuation: configuration.Gain, threshold: configuration.Threshold).ConfigureAwait(false);
     }
     public Task Stop()
     {

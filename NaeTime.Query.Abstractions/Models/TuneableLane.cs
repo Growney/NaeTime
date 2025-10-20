@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Query.Abstractions.Models;
-public record TuneableLane(byte? BandId, int FrequencyInMHz);
+public record TuneableLane(RequestableValue<byte?> BandId, RequestableValue<int> FrequencyInMHz);

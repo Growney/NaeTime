@@ -7,5 +7,6 @@ public interface IHardwareQueryHandler
     public Task<IEnumerable<Detector>> GetAllDetectors();
     public Task<IEnumerable<Detector>> GetDetectors(IEnumerable<Guid> ids);
     public Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id);
-    public Task<SerialNaeTimeNode?> GetSerialNaeTimeNode(Guid id);
+    public Task<IEnumerable<ImmersionRCLapRF>> GetAllImmersionRCLapRFs();
+    //public Task<SerialNaeTimeNode?> GetSerialNaeTimeNode(Guid id);
 }

@@ -15,14 +15,14 @@ public class ImmersionRCLapRFProjector
         {
             Id = source.Id,
             Name = source.Name,
-            Lanes = source.RequestedLanes.Select(lane => new Models.ImmersionRCLapRFLane
+            Lanes = source.Lanes.Select(lane => new Models.ImmersionRCLapRFLane
             {
                 LaneId = lane.LaneId,
-                IsEnabled = lane.IsEnabled,
-                Gain = lane.Gain,
-                Threshold = lane.Threshold,
-                BandId = lane.BandId,
-                FrequencyInMHz = lane.FrequencyInMHz,
+                IsEnabled = lane.IsEnabled.Requested,
+                Gain = lane.Gain.Requested,
+                Threshold = lane.Threshold.Requested,
+                BandId = lane.BandId.Requested,
+                FrequencyInMHz = lane.FrequencyInMHz.Requested,
             }).ToList(),
             IPAddress = source.IPAddress.ToString(),
             Port = source.Port

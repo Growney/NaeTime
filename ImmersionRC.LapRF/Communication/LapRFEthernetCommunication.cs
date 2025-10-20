@@ -3,13 +3,19 @@ using System.Net;
 using System.Net.Sockets;
 
 namespace ImmersionRC.LapRF.Communication;
-internal class LapRFEthernetCommunication(IPAddress address, int port) : ILapRFCommunication
+internal class LapRFEthernetCommunication : ILapRFCommunication
 {
     private TcpClient? _client = new TcpClient();
     private readonly byte[] _rxBuffer = new byte[1024];
 
-    private readonly IPAddress _address = address;
-    private readonly int _port = port;
+    private readonly IPAddress _address;
+    private readonly ushort _port;
+
+    public LapRFEthernetCommunication(IPAddress address, ushort port)
+    {
+        _address = address;
+        _port = port;
+    }
 
     public async Task ConnectAsync(CancellationToken token)
     {

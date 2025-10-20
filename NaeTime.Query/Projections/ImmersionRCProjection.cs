@@ -19,15 +19,20 @@ public class ImmersionRCProjection : IImmersionRCProjection
         return timer as Ethernet8ChannelImmersionRCLapRF;
     }
 
+    public IEnumerable<ImmersionRCLapRF> GetAllImmersionRCLapRFs()
+    {
+        return _timers.Values;
+    }
+
     private void When(ImmersionRCLapRFNetworkDeviceRegistered register)
     {
         ImmersionRCLapRFLane[] lanes = new ImmersionRCLapRFLane[register.Lanes];
         for (byte i = 0; i < register.Lanes; i++)
         {
-            lanes[i] = new ImmersionRCLapRFLane(i, false, 0, 0, null, 0);
+            lanes[i] = new ImmersionRCLapRFLane(i, new(false, false, false), new(0, 0, false), new(0, 0, false), new(null, null, false), new(0, 0, false));
         }
 
-        Ethernet8ChannelImmersionRCLapRF timer = new(register.TimerId, register.Name, false, false, lanes, lanes, IPAddress.Parse(register.IPAddress), register.Port);
+        Ethernet8ChannelImmersionRCLapRF timer = new(register.TimerId, register.Name, false, lanes, IPAddress.Parse(register.IPAddress), register.Port);
         _timers[register.TimerId] = timer;
     }
     private void When(ImmersionRCLapRFNetworkConfigurationChanged configured)
@@ -46,76 +51,85 @@ public class ImmersionRCProjection : IImmersionRCProjection
     }
     private void When(ImmersionRCLapRFLaneEnableRequested enabled)
     {
-        if (_timers.TryGetValue(enabled.TimerId, out var timer))
-        {
-            _timers[enabled.TimerId].RequestedLanes[enabled.Lane] = _timers[enabled.TimerId].RequestedLanes[enabled.Lane] with { IsEnabled = true };
-        }
+        ImmersionRCLapRFLane lane = _timers[enabled.TimerId].Lanes[enabled.Lane];
+
+        _timers[enabled.TimerId].Lanes[enabled.Lane] = lane with { IsEnabled = lane.IsEnabled with { Requested = true, ConfirmedMismatch = false } };
+
     }
     private void When(ImmersionRCLapRFLaneDisableRequested disabled)
     {
-        if (_timers.TryGetValue(disabled.TimerId, out var timer))
-        {
-            _timers[disabled.TimerId].RequestedLanes[disabled.Lane] = _timers[disabled.TimerId].RequestedLanes[disabled.Lane] with { IsEnabled = false };
-        }
+        ImmersionRCLapRFLane lane = _timers[disabled.TimerId].Lanes[disabled.Lane];
+
+        _timers[disabled.TimerId].Lanes[disabled.Lane] = lane with { IsEnabled = lane.IsEnabled with { Requested = false, ConfirmedMismatch = false } };
+
     }
     private void When(ImmersionRCLapRFLaneEnabled enabled)
     {
-        if (_timers.TryGetValue(enabled.TimerId, out var timer))
-        {
-            _timers[enabled.TimerId].ConfirmedLanes[enabled.Lane] = _timers[enabled.TimerId].ConfirmedLanes[enabled.Lane] with { IsEnabled = true };
-        }
+        ImmersionRCLapRFLane lane = _timers[enabled.TimerId].Lanes[enabled.Lane];
+
+        _timers[enabled.TimerId].Lanes[enabled.Lane] = lane with { IsEnabled = lane.IsEnabled with { Confirmed = true, ConfirmedMismatch = false } };
+
     }
     private void When(ImmersionRCLapRFLaneDisabled disabled)
     {
-        if (_timers.TryGetValue(disabled.TimerId, out var timer))
-        {
-            _timers[disabled.TimerId].ConfirmedLanes[disabled.Lane] = _timers[disabled.TimerId].ConfirmedLanes[disabled.Lane] with { IsEnabled = false };
-        }
+        ImmersionRCLapRFLane lane = _timers[disabled.TimerId].Lanes[disabled.Lane];
+
+        _timers[disabled.TimerId].Lanes[disabled.Lane] = lane with { IsEnabled = lane.IsEnabled with { Confirmed = false, ConfirmedMismatch = false } };
     }
+
+    private void When(ImmersionRCLapRFLaneStatusMismatch mismatch)
+    {
+        ImmersionRCLapRFLane lane = _timers[mismatch.TimerId].Lanes[mismatch.Lane];
+        _timers[mismatch.TimerId].Lanes[mismatch.Lane] = lane with { IsEnabled = lane.IsEnabled with { Requested = mismatch.DesiredStatus, ConfirmedMismatch = true, Confirmed = mismatch.ActualStatus } };
+    }
+
     private void When(ImmersionRCLapRFLaneFrequencyRequested requested)
     {
-        if (_timers.TryGetValue(requested.TimerId, out var timer))
-        {
-            _timers[requested.TimerId].RequestedLanes[requested.Lane] = _timers[requested.TimerId].RequestedLanes[requested.Lane] with { BandId = requested.BandId, FrequencyInMHz = requested.FrequencyInMHz };
-        }
+        ImmersionRCLapRFLane lane = _timers[requested.TimerId].Lanes[requested.Lane];
+        _timers[requested.TimerId].Lanes[requested.Lane] = lane with { BandId = lane.BandId with { Requested = requested.BandId, ConfirmedMismatch = false }, FrequencyInMHz = lane.FrequencyInMHz with { Requested = requested.FrequencyInMHz, ConfirmedMismatch = false } };
+
     }
     private void When(ImmersionRCLapRFLaneFrequencyTuned tuned)
     {
-        if (_timers.TryGetValue(tuned.TimerId, out var timer))
-        {
-            _timers[tuned.TimerId].ConfirmedLanes[tuned.Lane] = _timers[tuned.TimerId].ConfirmedLanes[tuned.Lane] with { BandId = tuned.BandId, FrequencyInMHz = tuned.FrequencyInMHz };
-        }
+        ImmersionRCLapRFLane lane = _timers[tuned.TimerId].Lanes[tuned.Lane];
+        _timers[tuned.TimerId].Lanes[tuned.Lane] = lane with { BandId = lane.BandId with { Confirmed = tuned.BandId, ConfirmedMismatch = false }, FrequencyInMHz = lane.FrequencyInMHz with { Confirmed = tuned.FrequencyInMHz, ConfirmedMismatch = false } };
     }
 
     private void When(ImmersionRCLapRFLaneThresholdRequested requested)
     {
-        if (_timers.TryGetValue(requested.TimerId, out var timer))
-        {
-            _timers[requested.TimerId].RequestedLanes[requested.Lane] = _timers[requested.TimerId].RequestedLanes[requested.Lane] with { Threshold = requested.Threshold };
-        }
+        ImmersionRCLapRFLane lane = _timers[requested.TimerId].Lanes[requested.Lane];
+        _timers[requested.TimerId].Lanes[requested.Lane] = lane with { Threshold = lane.Threshold with { Requested = requested.Threshold, ConfirmedMismatch = false } };
     }
 
     private void When(ImmersionRCLapRFLaneThresholdConfigured configured)
     {
-        if (_timers.TryGetValue(configured.TimerId, out var timer))
-        {
-            _timers[configured.TimerId].ConfirmedLanes[configured.Lane] = _timers[configured.TimerId].ConfirmedLanes[configured.Lane] with { Threshold = configured.Threshold };
-        }
+        ImmersionRCLapRFLane lane = _timers[configured.TimerId].Lanes[configured.Lane];
+        _timers[configured.TimerId].Lanes[configured.Lane] = lane with { Threshold = lane.Threshold with { Confirmed = configured.Threshold, ConfirmedMismatch = false } };
     }
+
+    private void When(ImmersionRCLapRFLaneThresholdMismatch mismatch)
+    {
+        ImmersionRCLapRFLane lane = _timers[mismatch.TimerId].Lanes[mismatch.Lane];
+        _timers[mismatch.TimerId].Lanes[mismatch.Lane] = lane with { Threshold = lane.Threshold with { Confirmed = mismatch.ActualThreshold, Requested = mismatch.DesiredThreshold, ConfirmedMismatch = true } };
+    }
+
     private void When(ImmersionRCLapRFLaneGainRequested requested)
     {
-        if (_timers.TryGetValue(requested.TimerId, out var timer))
-        {
-            _timers[requested.TimerId].RequestedLanes[requested.Lane] = _timers[requested.TimerId].RequestedLanes[requested.Lane] with { Gain = requested.Gain };
-        }
+        ImmersionRCLapRFLane lane = _timers[requested.TimerId].Lanes[requested.Lane];
+        _timers[requested.TimerId].Lanes[requested.Lane] = lane with { Gain = lane.Gain with { Requested = requested.Gain, ConfirmedMismatch = false } };
     }
     private void When(ImmersionRCLapRFLaneGainConfigured configured)
     {
-        if (_timers.TryGetValue(configured.TimerId, out var timer))
-        {
-            _timers[configured.TimerId].ConfirmedLanes[configured.Lane] = _timers[configured.TimerId].ConfirmedLanes[configured.Lane] with { Gain = configured.Gain };
-        }
+        ImmersionRCLapRFLane lane = _timers[configured.TimerId].Lanes[configured.Lane];
+        _timers[configured.TimerId].Lanes[configured.Lane] = lane with { Gain = lane.Gain with { Confirmed = configured.Gain, ConfirmedMismatch = false } };
     }
+
+    private void When(ImmersionRCLapRFLaneGainMismatch mismatch)
+    {
+        ImmersionRCLapRFLane lane = _timers[mismatch.TimerId].Lanes[mismatch.Lane];
+        _timers[mismatch.TimerId].Lanes[mismatch.Lane] = lane with { Gain = lane.Gain with { Confirmed = mismatch.ActualGain, Requested = mismatch.DesiredGain, ConfirmedMismatch = true } };
+    }
+
     private void When(ImmersionRCLapRFTimerConnected connected)
     {
         if (_timers.TryGetValue(connected.TimerId, out var timer))
@@ -130,20 +144,4 @@ public class ImmersionRCProjection : IImmersionRCProjection
             _timers[disconnected.TimerId] = timer with { IsConnected = false };
         }
     }
-    private void When(ImmersionRCLapRFLaneRFSetupConfirmationRequested requested)
-    {
-        if (_timers.TryGetValue(requested.TimerId, out var timer))
-        {
-            _timers[requested.TimerId] = timer with { IsSetupConfirmed = false };
-        }
-    }
-
-    private void When(ImmersionRCLapRFTimerRFSetupConfirmed confirmed)
-    {
-        if (_timers.TryGetValue(confirmed.TimerId, out var timer))
-        {
-            _timers[confirmed.TimerId] = timer with { IsSetupConfirmed = true };
-        }
-    }
-
 }

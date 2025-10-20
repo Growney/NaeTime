@@ -1,8 +1,7 @@
-﻿using EventDbLite.Abstractions;
-using EventDbLite.Reactions;
+﻿using EventDbLite.Reactions;
 using System.Runtime.CompilerServices;
 
-namespace EventDbLite.Extensions;
+namespace EventDbLite.Abstractions;
 public static class IReactionProviderExtensions
 {
     public static IDisposable On(this IReactionProvider reactionProvider, Type type, Func<object, Task> handler) => reactionProvider.On(type, (obj) => handler(obj.Payload));

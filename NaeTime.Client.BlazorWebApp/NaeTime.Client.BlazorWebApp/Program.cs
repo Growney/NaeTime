@@ -11,6 +11,7 @@ builder.Services.AddNaeTimeQueries();
 builder.Services.AddNaeTimeCommand();
 builder.Services.AddHardwareCore();
 builder.Services.AddNaeTimeEventReactions();
+builder.Services.AddImmersionRCHardware();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()

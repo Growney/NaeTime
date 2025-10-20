@@ -1,11 +1,12 @@
 ﻿using EventDbLite.Abstractions;
 using EventDbLite.Streams;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
 
 namespace EventDbLite;
 
-public class EventStoreLite(IServiceProvider serviceProvider) : IEventStoreLite
+public class EventStoreLite(IServiceProvider serviceProvider) : IEventStoreLite, IHostedService
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, StreamSubscription>> _streamSubscriptions = new();
@@ -114,5 +115,16 @@ public class EventStoreLite(IServiceProvider serviceProvider) : IEventStoreLite
         StreamSubscription subscription = new(this, streamName, initialPosition, onDispose);
         targetDictionary.TryAdd(subscriptionId, subscription);
         return subscription;
+    }
+
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        EventDbLiteContext context = _serviceProvider.GetRequiredService<EventDbLiteContext>();
+        return context.Database.EnsureCreatedAsync(cancellationToken);
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 }

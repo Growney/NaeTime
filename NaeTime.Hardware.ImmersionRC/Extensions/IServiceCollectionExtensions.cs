@@ -1,4 +1,6 @@
 ﻿using ImmersionRC.LapRF.Extensions;
+using NaeTime.Hardware.ImmersionRC;
+using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Timing.ImmersionRC;
 using NaeTime.Timing.ImmersionRC.Abstractions;
 using NaeTime.Timing.ImmersionRC.Hardware;
@@ -10,6 +12,7 @@ public static class IServiceCollectionExtensions
     {
         services.AddHostedService<LapRFManager>();
         services.AddTransient<ILapRFConnectionFactory, LapRFConnectionFactory>();
+        services.AddSingleton<ILapRFConnectionProvider, LapRFConnectionProvider>();
         services.AddImmersionRCLapRF();
         return services;
     }

@@ -23,8 +23,10 @@ public class HardwareQueryHandler : IHardwareQueryHandler
 
     public Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id) => Task.FromResult(_immersionRCProjection.GetImmersionRCLapRF(id));
 
-    public Task<SerialNaeTimeNode?> GetSerialNaeTimeNode(Guid id)
-    {
-        throw new NotImplementedException();
-    }
+    //public Task<SerialNaeTimeNode?> GetSerialNaeTimeNode(Guid id)
+    //{
+    //    throw new NotImplementedException();
+    //}
+
+    public Task<IEnumerable<ImmersionRCLapRF>> GetAllImmersionRCLapRFs() => Task.FromResult(_immersionRCProjection.GetAllImmersionRCLapRFs());
 }

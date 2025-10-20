@@ -10,7 +10,7 @@ public class SQLiteDatabaseManager<T>(IServiceProvider serviceProvider) : IHoste
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        IServiceScope scope = _serviceProvider.CreateScope(); ;
+        IServiceScope scope = _serviceProvider.CreateScope();
         try
         {
             T dbContext = scope.ServiceProvider.GetRequiredService<T>();

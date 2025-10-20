@@ -10,6 +10,7 @@
     <ProjectReference Include="..\..\EventDbLite\EventDbLite.csproj" />
     <ProjectReference Include="..\..\NaeTime.Client\NaeTime.Client.csproj" />
     <ProjectReference Include="..\..\NaeTime.Command\NaeTime.Command.csproj" />
+    <ProjectReference Include="..\..\NaeTime.Hardware.ImmersionRC\NaeTime.Hardware.ImmersionRC.csproj" />
     <ProjectReference Include="..\..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
     <ProjectReference Include="..\..\NaeTime.Query\NaeTime.Query.csproj" />
     <ProjectReference Include="..\..\NaeTime.Reactions\NaeTime.Reactions.csproj" />

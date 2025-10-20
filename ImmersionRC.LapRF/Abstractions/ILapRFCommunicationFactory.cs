@@ -3,5 +3,5 @@
 namespace ImmersionRC.LapRF.Abstractions;
 public interface ILapRFCommunicationFactory
 {
-    ILapRFCommunication CreateEthernetCommunication(IPAddress address, int port);
+    ILapRFCommunication CreateEthernetCommunication(IPAddress address, ushort port);
 }
