@@ -1,6 +1,8 @@
 ﻿@page "/open-practice/{id:guid}"
+@using EventDbLite.Abstractions
 @using NaeTime.Hardware.Abstractions
 @using NaeTime.Hardware.Frequency
+@implements IAsyncDisposable
 
 @if(_session != null)
 {
@@ -80,7 +82,7 @@
                     }
                 </div>
                 
-                <TimerDisplay Start="DateTime.UtcNow"></TimerDisplay>
+                <TimerDisplay Start="GetPilotLastDetectionTime(lane.PilotId)"></TimerDisplay>
                 <div class="w-100 pb-2">
                     <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection(lane.Lane)"><i class="fa-solid fa-stopwatch"></i></MudButton>                
                 </div>
@@ -223,6 +225,8 @@
     public Guid Id { get; set; }
 
     [Inject]
+    private IReactionProvider ReactionProvider { get; set; } = null!;
+    [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
     [Inject]
     private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
@@ -237,16 +241,59 @@
     private NaeTime.Query.Abstractions.Models.OpenPracticeSessionTimingInformation? _timingInfo;
     private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> _pilots = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Pilot>();
 
+    private DateTime? GetPilotLastDetectionTime(Guid? pilotId)
+    {
+        if(pilotId is null)
+        {
+            return null;
+        }
+
+        if(_timingInfo is null)
+        {
+            return null;
+        }
+
+        if(!_timingInfo.PilotDetections.ContainsKey(pilotId.Value))
+        {
+            return null;
+        }
+        return _timingInfo.PilotDetections[pilotId.Value].OrderByDescending(x => x.UtcTime).First().UtcTime;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         _pilots = await PilotQueryHandler.GetAllPilots();
 
         _session = OpenPracticeSessionProjector.Project(await OpenPracticeQueryHandler.GetByIdAsync(Id));
 
-        if(_session != null)
+        if (_session != null)
         {
-            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId,TimeSpan.Zero, TimeSpan.FromSeconds(30));
+            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, TimeSpan.Zero, TimeSpan.FromSeconds(30));
         }
+
+        ReactionProvider.On<NaeTime.Events.OpenPracticePilotDetectionOccured>(async x =>
+        {
+            if (_session == null)
+            {
+                return;
+            }
+
+            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+
+            StateHasChanged();
+        });
+        ReactionProvider.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async x =>
+        {
+
+            if (_session == null)
+            {
+                return;
+            }
+
+            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+
+            StateHasChanged();
+        });
     }
     private string GetPilotName(Guid pilotId)
     {
@@ -347,6 +394,8 @@
 
         StateHasChanged();
     }
+
+    public ValueTask DisposeAsync() => ReactionProvider.DisposeAsync();
 
     private async Task TriggerDetection(byte lane)
     {
