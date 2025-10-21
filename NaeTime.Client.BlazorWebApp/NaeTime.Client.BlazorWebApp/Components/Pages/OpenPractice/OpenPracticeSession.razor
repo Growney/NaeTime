@@ -2,6 +2,7 @@
 @using EventDbLite.Abstractions
 @using NaeTime.Hardware.Abstractions
 @using NaeTime.Hardware.Frequency
+@using Toolbelt.Blazor.SpeechSynthesis
 @implements IAsyncDisposable
 
 @if(_session != null)
@@ -238,6 +239,8 @@
     private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
     [Inject]
     private ISoftwareTimer SoftwareTimer { get; set; } = null!;
+    [Inject]
+    private SpeechSynthesis SpeechSynthesis { get; set; } = null!;
 
     private Models.OpenPracticeSession? _session;
     private NaeTime.Query.Abstractions.Models.OpenPracticeSessionTimingInformation? _timingInfo;
@@ -292,8 +295,10 @@
             _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
 
             StateHasChanged();
+
+            await SpeechSynthesis.SpeakAsync($"Detection on lane {x.Lane}").ConfigureAwait(false);
         });
-        ReactionProvider.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async x =>
+        ReactionProvider.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async detection =>
         {
 
             if (_session == null)
@@ -304,7 +309,26 @@
             _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
 
             StateHasChanged();
+
+            NaeTime.Query.Abstractions.Models.OpenPracticeLap? lap = _timingInfo.PilotLaps.ContainsKey(detection.PilotId) ? _timingInfo.PilotLaps[detection.PilotId].FirstOrDefault(x=>x.EndDetection.Id == detection.DetectionId) : null;
+
+            string utterance = string.Empty;
+
+            if(lap != null)
+            {
+                utterance = $"{GetPilotName(detection.PilotId)} {GetLapCallout(lap.Duration)} ";
+            }
+            else
+            {
+                utterance = $"{GetPilotName(detection.PilotId)}";
+            }
+
+            await SpeechSynthesis.SpeakAsync(utterance).ConfigureAwait(false);
         });
+    }
+    private string GetLapCallout(TimeSpan timeSpan, int roundedTo = 3)
+    {
+        return Math.Round(timeSpan.TotalSeconds, roundedTo).ToString();
     }
     private string GetPilotName(Guid pilotId)
     {

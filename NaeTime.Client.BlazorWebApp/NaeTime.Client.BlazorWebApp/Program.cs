@@ -1,9 +1,11 @@
 using MudBlazor.Services;
 using NaeTime.Client.BlazorWebApp.Components;
+using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMudServices();
+builder.Services.AddSpeechSynthesis();
 
 // Add services to the container.
 builder.Services.AddEventDbLite();
