@@ -233,6 +233,8 @@
     [Inject]
     private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
     [Inject]
+    private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
+    [Inject]
     private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
     [Inject]
     private ISoftwareTimer SoftwareTimer { get; set; } = null!;
@@ -240,6 +242,9 @@
     private Models.OpenPracticeSession? _session;
     private NaeTime.Query.Abstractions.Models.OpenPracticeSessionTimingInformation? _timingInfo;
     private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> _pilots = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Pilot>();
+
+    private TimeSpan _minimumLapTime = TimeSpan.Zero;
+    private TimeSpan _maximumLapTime = TimeSpan.FromSeconds(30);
 
     private DateTime? GetPilotLastDetectionTime(Guid? pilotId)
     {
@@ -268,7 +273,13 @@
 
         if (_session != null)
         {
-            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+            NaeTime.Query.Abstractions.Models.Track? track = await TrackQueryHandler.GetTrack(_session.TrackId);
+            if(track != null)
+            {
+                _maximumLapTime = track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue;
+                _minimumLapTime = track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero;
+            }
+            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
         }
 
         ReactionProvider.On<NaeTime.Events.OpenPracticePilotDetectionOccured>(async x =>
@@ -278,7 +289,7 @@
                 return;
             }
 
-            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
 
             StateHasChanged();
         });
@@ -290,7 +301,7 @@
                 return;
             }
 
-            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, TimeSpan.Zero, TimeSpan.FromSeconds(30));
+            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
 
             StateHasChanged();
         });
