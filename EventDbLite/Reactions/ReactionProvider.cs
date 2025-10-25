@@ -128,10 +128,19 @@ public class ReactionProvider : IReactionProvider
     {
         _cancellationTokenSource.Cancel();
 
-        await _processTask;
+        try
+        {
+            await _processTask;
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignore
+        }
 
         _handlers.Clear();
         _waiters.Clear();
+
+        _subscription.Dispose();
     }
     public IDisposable On(Type type, Func<ReactionEvent, Task> handler)
     {

@@ -25,3 +25,4 @@ public record ImmersionRCLapRFLaneGainMismatch(Guid TimerId, byte Lane, ushort D
 
 public record ImmersionRCLapRFTimerConnected(Guid TimerId);
 public record ImmersionRCLapRFTimerDisconnected(Guid TimerId);
+public record ImmersionRCLapRFConfigurationUnconfirmed(Guid TimerId);

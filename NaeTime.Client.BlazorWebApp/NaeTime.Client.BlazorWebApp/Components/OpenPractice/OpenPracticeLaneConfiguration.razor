@@ -1,0 +1,234 @@
+﻿@using EventDbLite.Abstractions
+@using NaeTime.Hardware.Abstractions
+@using NaeTime.Hardware.Frequency
+
+@implements IAsyncDisposable
+<div class="shadow rounded p-2" style="width: 200px">
+                <table class="w-100 pb-2">
+                    <tbody>
+                        <tr>
+                            <td class="align-start" style="width:10px">
+                                <MudSwitch Color=Color.Primary T=bool Value="_lane.IsEnabled" ValueChanged="x => EnabledChanged(x)"></MudSwitch>
+                            </td>
+                            <td>
+                                <div class="h4 text-start">
+                                    @_lane.Lane
+                                </div>
+                            </td>
+                            <td>
+                                <div class="h5 text-end">
+                                    @_lane.FrequencyInMHz<sup style="font-size:0.5em">MHz</sup>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="w-100 pb-2">
+                    <MudMenu Class="w-100">
+                        <ActivatorContent>
+                            <MudButton Variant=Variant.Filled Size=Size.Small Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(AllPilots.FirstOrDefault(x => x.Id == _lane.PilotId)?.Callsign ?? "[None]")</MudButton>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudMenuItem OnClick="x => OnPilotSelectionChanged(null)">[Clear]</MudMenuItem>
+                            @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots())
+                            {
+                                <MudMenuItem OnClick="x => OnPilotSelectionChanged(pilot.Id)">@pilot.Callsign</MudMenuItem>
+                            }
+                        </ChildContent>
+                    </MudMenu>                    
+                </div>
+                <div class="w-100 pb-2">
+                    <MudMenu Class="w-100">
+                        <ActivatorContent>
+                            <MudButton Variant=Variant.Outlined Size=Size.Small Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetBandString(_lane.BandId))</MudButton>
+                        </ActivatorContent>
+                        <ChildContent>
+                            <MudMenuItem Label="Custom" OnClick="() => ChangeFrequency(null, _lane.FrequencyInMHz)"></MudMenuItem>
+                            @foreach (NaeTime.Hardware.Frequency.Band band in NaeTime.Hardware.Frequency.Band.Bands)
+                            {
+                                <MudMenuItem Label="@band.ShortName" OnClick="() => ChangeFrequency(band.Id, _lane.FrequencyInMHz)"></MudMenuItem>
+                            }
+                        </ChildContent>
+                    </MudMenu>
+                </div>
+                <div class="w-100" style="min-height:48px;">
+                    @if (Band.Bands.Any(b => b.Id == _lane.BandId))
+                    {
+                        <MudMenu Class="w-100">
+                            <ActivatorContent>
+                                <MudButton Variant=Variant.Outlined Size=Size.Medium Color=Color.Primary FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetFrequencyString(_lane.BandId, _lane.FrequencyInMHz))</MudButton>
+                            </ActivatorContent>
+                            <ChildContent>
+                                @{
+                                    Band band = Band.Bands.FirstOrDefault(b => b.Id == _lane.BandId);
+                                    foreach (NaeTime.Hardware.Frequency.BandFrequency bandFrequency in band.Frequencies)
+                                    {
+                                        <MudMenuItem Label="@bandFrequency.Name" OnClick="() => ChangeFrequency(band.Id, bandFrequency.FrequencyInMhz)"></MudMenuItem>
+                                    }
+                                }
+                            </ChildContent>
+                        </MudMenu>
+                    }
+                    else
+                    {
+                        <MudNumericField T=int Value=_lane.FrequencyInMHz Label="Custom" ValueChanged="x => ChangeFrequency(null, x)"></MudNumericField>
+                    }
+                </div>
+
+                <TimerDisplay Start="_pilotLastDetection" MaxTime=MaxTime></TimerDisplay>
+                <div class="w-100 pb-2">
+                    <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"><i class="fa-solid fa-stopwatch"></i></MudButton>                
+                </div>
+            </div>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public NaeTime.Client.Models.OpenPracticeSession Session{ get; set; }
+    [Parameter]
+    [EditorRequired]
+    public byte LaneId { get; set; }
+    [Parameter]
+    [EditorRequired]
+    public IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> AllPilots { get; set; }
+    [Parameter]
+    public TimeSpan? MaxTime { get; set; }
+
+    private NaeTime.Client.Models.OpenPracticeLane _lane => Session.Lanes[LaneId];
+
+    [Inject]
+    private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
+    [Inject]
+    private ISoftwareTimer SoftwareTimer { get; set; } = null!;
+    [Inject]
+    private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
+    [Inject]
+    private IReactionProvider ReactionProvider { get; set; } = null!;
+
+    private DateTime? _pilotLastDetection = null;
+
+    private async Task GetLastDetection()
+    {
+        if (_lane.PilotId.HasValue)
+        {
+            NaeTime.Query.Abstractions.Models.OpenPracticeDetection? lastDetection = await OpenPracticeQueryHandler.GetPilotLastDetection(Session.Id, Session.TrackId, _lane.PilotId.Value);
+            _pilotLastDetection = lastDetection?.UtcTime;
+        }
+        else
+        {
+            _pilotLastDetection = null;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetLastDetection();
+
+        ReactionProvider.On<NaeTime.Events.OpenPracticePilotDetectionOccured>(async x =>
+        {
+            await GetLastDetection();
+            StateHasChanged();
+        });
+        ReactionProvider.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async x =>
+        {
+            await GetLastDetection();
+            StateHasChanged();
+        });
+    }
+
+    private async Task TriggerDetection()
+    {
+        await OpenPracticeCommandHandler.TriggerDetection(Guid.NewGuid(), Session.Id, LaneId, 0, null, SoftwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
+    }
+
+    private string GetPilotName(Guid pilotId)
+    {
+        NaeTime.Query.Abstractions.Models.Pilot? pilot = AllPilots.FirstOrDefault(x => x.Id == pilotId);
+        if (pilot != null)
+        {
+            return pilot.Callsign ?? pilot.Firstname ?? pilot.Lastname ?? "[No Name]";
+        }
+        return "[Unknown Pilot]";
+    }
+
+    private async Task EnabledChanged(bool enabled)
+    {
+        if (enabled)
+        {
+            await OpenPracticeCommandHandler.EnableLane(Session.Id, LaneId);
+        }
+        else
+        {
+            await OpenPracticeCommandHandler.DisableLane(Session.Id, LaneId);
+        }
+        _lane.IsEnabled = enabled;
+    }
+
+    private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> GetUnassignedPilots()
+    {
+        Guid? currentPilot = _lane.PilotId;
+
+        IEnumerable<Guid> usedPilots = Session.Lanes.Where(x => x.PilotId.HasValue).Select(x => x.PilotId!.Value);
+
+        return AllPilots.Where(x => !usedPilots.Contains(x.Id) || x.Id == currentPilot);
+    }
+    private async Task OnPilotSelectionChanged(Guid? pilotId)
+    {
+        if (pilotId.HasValue)
+        {
+            await OpenPracticeCommandHandler.SetLanePilot(Session.Id, LaneId, pilotId.Value);
+        }
+        else
+        {
+            await OpenPracticeCommandHandler.ResetLanePilot(Session.Id, LaneId);
+        }
+
+        _lane.PilotId = pilotId;
+
+        await GetLastDetection();
+    }
+    private string GetBandString(byte? bandId)
+    {
+        if (Band.Bands.Any(x => x.Id == bandId))
+        {
+            Band band = Band.Bands.First(x => x.Id == bandId);
+
+            return band.ShortName;
+        }
+
+        return $"Custom";
+    }
+    private string GetFrequencyString(byte? bandId, int frequencyInMhz)
+    {
+        if (Band.Bands.Any(x => x.Id == bandId))
+        {
+            Band band = Band.Bands.First(x => x.Id == bandId);
+
+            if (band.Frequencies.Any(x => x.FrequencyInMhz == frequencyInMhz))
+            {
+                BandFrequency frequency = band.Frequencies.First(x => x.FrequencyInMhz == frequencyInMhz);
+                return frequency.Name;
+            }
+        }
+
+        return $"{frequencyInMhz} MHz";
+    }
+
+    public ValueTask DisposeAsync() => ReactionProvider.DisposeAsync();
+
+    private async Task ChangeFrequency(byte? bandId, int frequencyInMhz)
+    {
+        if (Session == null)
+        {
+            return;
+        }
+
+        await OpenPracticeCommandHandler.TuneLane(Session.Id, LaneId, bandId, frequencyInMhz);
+
+        _lane.BandId = bandId;
+        _lane.FrequencyInMHz = frequencyInMhz;
+
+        StateHasChanged();
+    }
+}
