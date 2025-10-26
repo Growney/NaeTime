@@ -4,6 +4,12 @@ using NaeTime.Events;
 namespace NaeTime.Command.Aggregates;
 public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>
 {
+    private enum LaneStatus
+    {
+        Mismatched,
+        Pending,
+        Confirmed,
+    }
     public record ImmersionRCLapRFLaneId(Guid SessionId, byte LaneId);
     private class Field<T>
     {
@@ -15,6 +21,8 @@ public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.Immersion
     private Field<int?> _frequencyInMHz = new();
     private Field<float?> _threshold = new();
     private Field<ushort?> _gain = new();
+
+    private LaneStatus _status = LaneStatus.Pending;
 
     public ImmersionRCLapRFLane(Guid timerId, byte laneId)
     {
@@ -79,6 +87,45 @@ public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.Immersion
         _threshold.ConfirmedValue = null;
         _gain.ConfirmedValue = null;
     }
+
+    private void When(TimerLaneMismatch _)
+    {
+        _status = LaneStatus.Mismatched;
+    }
+    private void When(TimerLanePending _)
+    {
+        _status = LaneStatus.Pending;
+    }
+    private void When(TimerLaneConfirmed _)
+    {
+        _status = LaneStatus.Confirmed;
+    }
+
+    private void CheckAndRaiseMismatch()
+    {
+        ThrowIfIdNotSet();
+        if (_status != LaneStatus.Mismatched)
+        {
+            Raise(new TimerLaneMismatch(Id.SessionId, Id.LaneId));
+        }
+    }
+    private void CheckAndRaisePending()
+    {
+        ThrowIfIdNotSet();
+        if (_status != LaneStatus.Pending)
+        {
+            Raise(new TimerLanePending(Id.SessionId, Id.LaneId));
+        }
+    }
+    private void CheckAndRaiseConfirmed()
+    {
+        ThrowIfIdNotSet();
+        if (_status != LaneStatus.Confirmed)
+        {
+            Raise(new TimerLaneConfirmed(Id.SessionId, Id.LaneId));
+        }
+    }
+
     public void ConfirmLaneStatus(bool status)
     {
         ThrowIfIdNotSet();
@@ -98,11 +145,11 @@ public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.Immersion
         if (_isEnabled.RequestedValue.HasValue && _isEnabled.RequestedValue != status)
         {
             Raise(new ImmersionRCLapRFLaneStatusMismatch(Id.SessionId, Id.LaneId, _isEnabled.RequestedValue.Value, status));
-            Raise(new TimerLaneMismatch(Id.SessionId, Id.LaneId));
+            CheckAndRaiseMismatch();
         }
         else
         {
-            Raise(new TimerLaneConfirmed(Id.SessionId, Id.LaneId));
+            CheckAndRaiseConfirmed();
         }
     }
     public void RequestLaneStatus(bool desiredStatus)
@@ -112,12 +159,12 @@ public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.Immersion
         if (desiredStatus)
         {
             Raise(new ImmersionRCLapRFLaneEnableRequested(Id.SessionId, Id.LaneId));
-            Raise(new TimerLanePending(Id.SessionId, Id.LaneId));
+            CheckAndRaisePending();
         }
         else
         {
             Raise(new ImmersionRCLapRFLaneDisableRequested(Id.SessionId, Id.LaneId));
-            Raise(new TimerLanePending(Id.SessionId, Id.LaneId));
+            CheckAndRaisePending();
         }
     }
     public void RequestTuneLaneVideoFrequency(byte? bandId, int frequencyInMHz)
@@ -125,7 +172,7 @@ public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.Immersion
         ThrowIfIdNotSet();
 
         Raise(new ImmersionRCLapRFLaneFrequencyRequested(Id.SessionId, Id.LaneId, bandId, frequencyInMHz));
-        Raise(new TimerLanePending(Id.SessionId, Id.LaneId));
+        CheckAndRaisePending();
     }
     public void ConfirmLaneVideoFrequencyTuned(byte? bandId, int frequencyInMHz)
     {
@@ -139,11 +186,11 @@ public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.Immersion
         if (_frequencyInMHz.RequestedValue.HasValue && _frequencyInMHz.RequestedValue != frequencyInMHz)
         {
             Raise(new ImmersionRCLapRFLaneFrequencyMismatch(Id.SessionId, Id.LaneId, _bandId.RequestedValue, _frequencyInMHz.RequestedValue.Value, bandId, frequencyInMHz));
-            Raise(new TimerLaneMismatch(Id.SessionId, Id.LaneId));
+            CheckAndRaiseMismatch();
         }
         else
         {
-            Raise(new TimerLaneConfirmed(Id.SessionId, Id.LaneId));
+            CheckAndRaiseConfirmed();
         }
     }
     public void RequestLaneThreshold(float threshold)
@@ -166,11 +213,11 @@ public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.Immersion
         if (_threshold.RequestedValue.HasValue && _threshold.RequestedValue != threshold)
         {
             Raise(new ImmersionRCLapRFLaneThresholdMismatch(Id.SessionId, Id.LaneId, _threshold.RequestedValue.Value, threshold));
-            Raise(new TimerLaneMismatch(Id.SessionId, Id.LaneId));
+            CheckAndRaiseMismatch();
         }
         else
         {
-            Raise(new TimerLaneConfirmed(Id.SessionId, Id.LaneId));
+            CheckAndRaiseConfirmed();
         }
     }
     public void RequestLaneGain(ushort gain)
@@ -178,7 +225,7 @@ public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.Immersion
         ThrowIfIdNotSet();
 
         Raise(new ImmersionRCLapRFLaneGainRequested(Id.SessionId, Id.LaneId, gain));
-        Raise(new TimerLanePending(Id.SessionId, Id.LaneId));
+        CheckAndRaisePending();
     }
 
     public void ConfirmLaneGainConfigured(ushort gain)
@@ -193,11 +240,11 @@ public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.Immersion
         if (_gain.RequestedValue.HasValue && _gain.RequestedValue != gain)
         {
             Raise(new ImmersionRCLapRFLaneGainMismatch(Id.SessionId, Id.LaneId, _gain.RequestedValue.Value, gain));
-            Raise(new TimerLaneMismatch(Id.SessionId, Id.LaneId));
+            CheckAndRaiseMismatch();
         }
         else
         {
-            Raise(new TimerLaneConfirmed(Id.SessionId, Id.LaneId));
+            CheckAndRaiseConfirmed();
         }
     }
 }
