@@ -8,6 +8,15 @@ namespace EventDbLite.Aggregates;
 public abstract class AggregateRoot<T> : AggregateRoot
 {
     public T? Id { get; protected set; }
+
+    [MemberNotNull(nameof(Id))]
+    protected void ThrowIfIdNotSet()
+    {
+        if (Id is null || Id.Equals(default(T)))
+        {
+            throw new InvalidOperationException("Aggregate Id is not set.");
+        }
+    }
 }
 public abstract class AggregateRoot
 {

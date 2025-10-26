@@ -11,30 +11,30 @@ public class ImmersionRCLapRFCommandHandler(IAggregateRepository repository) : I
 
     public async Task ConfirmLaneStatus(Guid id, byte lane, bool isEnabled)
     {
-        ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
-        aggregate.ConfirmLaneStatus(lane, isEnabled);
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        ImmersionRCLapRFLane aggregate = await _repository.Get<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(new ImmersionRCLapRFLane.ImmersionRCLapRFLaneId(id, lane)) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.ConfirmLaneStatus(isEnabled);
+        await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(aggregate);
     }
 
     public async Task ConfirmLaneFrequencyTuned(Guid id, byte lane, byte? bandId, int frequencyInMHz)
     {
-        ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
-        aggregate.ConfirmLaneVideoFrequencyTuned(lane, bandId, frequencyInMHz);
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        ImmersionRCLapRFLane aggregate = await _repository.Get<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(new ImmersionRCLapRFLane.ImmersionRCLapRFLaneId(id, lane)) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.ConfirmLaneVideoFrequencyTuned(bandId, frequencyInMHz);
+        await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(aggregate);
     }
 
     public async Task ConfirmLaneGainConfigured(Guid id, byte lane, ushort gain)
     {
-        ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
-        aggregate.ConfirmLaneGainConfigured(lane, gain);
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        ImmersionRCLapRFLane aggregate = await _repository.Get<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(new ImmersionRCLapRFLane.ImmersionRCLapRFLaneId(id, lane)) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.ConfirmLaneGainConfigured(gain);
+        await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(aggregate);
     }
 
     public async Task ConfirmLaneThresholdConfigured(Guid id, byte lane, float threshold)
     {
-        ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
-        aggregate.ConfirmThresholdConfigured(lane, (int)threshold);
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        ImmersionRCLapRFLane aggregate = await _repository.Get<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(new ImmersionRCLapRFLane.ImmersionRCLapRFLaneId(id, lane)) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.ConfirmThresholdConfigured(threshold);
+        await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(aggregate);
     }
 
     public async Task MarkAsConnected(Guid id)
@@ -62,6 +62,12 @@ public class ImmersionRCLapRFCommandHandler(IAggregateRepository repository) : I
     {
         ImmersionRCLapRF aggregate = _repository.CreateNew<ImmersionRCLapRF>(() => new ImmersionRCLapRF(id, name, address, port, 8));
         await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+
+        for (byte i = 0; i < 8; i++)
+        {
+            ImmersionRCLapRFLane laneAggregate = _repository.CreateNew<ImmersionRCLapRFLane>(() => new ImmersionRCLapRFLane(id, i));
+            await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(laneAggregate);
+        }
     }
 
     public async Task RenameDevice(Guid id, string name)
@@ -73,47 +79,47 @@ public class ImmersionRCLapRFCommandHandler(IAggregateRepository repository) : I
 
     public async Task RequestLaneStatus(Guid id, byte lane, bool isEnabled)
     {
-        ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
-        aggregate.RequestLaneStatus(lane, isEnabled);
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        ImmersionRCLapRFLane aggregate = await _repository.Get<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(new ImmersionRCLapRFLane.ImmersionRCLapRFLaneId(id, lane)) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.RequestLaneStatus(isEnabled);
+        await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(aggregate);
     }
 
     public async Task RequestLaneFrequency(Guid id, byte lane, byte? bandId, int frequencyInMHz)
     {
-        ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
-        aggregate.RequestTuneLaneVideoFrequency(lane, bandId, frequencyInMHz);
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        ImmersionRCLapRFLane aggregate = await _repository.Get<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(new ImmersionRCLapRFLane.ImmersionRCLapRFLaneId(id, lane)) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.RequestTuneLaneVideoFrequency(bandId, frequencyInMHz);
+        await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(aggregate);
     }
 
     public async Task RequestLaneGain(Guid id, byte lane, ushort gain)
     {
-        ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
-        aggregate.RequestLaneGain(lane, gain);
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        ImmersionRCLapRFLane aggregate = await _repository.Get<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(new ImmersionRCLapRFLane.ImmersionRCLapRFLaneId(id, lane)) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.RequestLaneGain(gain);
+        await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(aggregate);
     }
 
     public async Task RequestLaneThreshold(Guid id, byte lane, float threshold)
     {
-        ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
-        aggregate.RequestLaneThreshold(lane, (int)threshold);
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        ImmersionRCLapRFLane aggregate = await _repository.Get<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(new ImmersionRCLapRFLane.ImmersionRCLapRFLaneId(id, lane)) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.RequestLaneThreshold(threshold);
+        await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(aggregate);
     }
 
     public async Task SetupLaneForSession(Guid id, byte lane, bool isEnabled, byte? bandId, int frequencyInMHz)
     {
-        ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
-        aggregate.RequestLaneStatus(lane, isEnabled);
-        aggregate.RequestTuneLaneVideoFrequency(lane, bandId, frequencyInMHz);
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        ImmersionRCLapRFLane aggregate = await _repository.Get<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(new ImmersionRCLapRFLane.ImmersionRCLapRFLaneId(id, lane)) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.RequestLaneStatus(isEnabled);
+        aggregate.RequestTuneLaneVideoFrequency(bandId, frequencyInMHz);
+        await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(aggregate);
     }
 
     public async Task ConfirmLaneSetup(Guid id, byte lane, bool isEnabled, byte? bandId, int frequencyInMHz, float threshold, ushort gain)
     {
-        ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
-        aggregate.ConfirmLaneStatus(lane, isEnabled);
-        aggregate.ConfirmLaneVideoFrequencyTuned(lane, bandId, frequencyInMHz);
-        aggregate.ConfirmThresholdConfigured(lane, (int)threshold);
-        aggregate.ConfirmLaneGainConfigured(lane, gain);
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        ImmersionRCLapRFLane aggregate = await _repository.Get<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(new ImmersionRCLapRFLane.ImmersionRCLapRFLaneId(id, lane)) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        aggregate.ConfirmLaneStatus(isEnabled);
+        aggregate.ConfirmLaneVideoFrequencyTuned(bandId, frequencyInMHz);
+        aggregate.ConfirmThresholdConfigured((int)threshold);
+        aggregate.ConfirmLaneGainConfigured(gain);
+        await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(aggregate);
     }
 }

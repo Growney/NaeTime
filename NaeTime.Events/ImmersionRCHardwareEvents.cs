@@ -2,6 +2,7 @@
 
 public record ImmersionRCLapRFNetworkDeviceRegistered(Guid TimerId, string Name, string IPAddress, ushort Port, byte Lanes);
 public record ImmersionRCLapRFNetworkConfigurationChanged(Guid TimerId, string IPAddress, ushort Port);
+public record ImmersionRCLapRFLaneCreated(Guid TimerId, byte LaneId);
 
 public record ImmersionRCLapRFRenamed(Guid TimerId, string Name);
 
