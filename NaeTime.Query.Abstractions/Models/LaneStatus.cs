@@ -1,5 +1,5 @@
 ﻿namespace NaeTime.Query.Abstractions.Models;
-public enum TimerStatus
+public enum LaneStatus
 {
     Ok,
     Pending,

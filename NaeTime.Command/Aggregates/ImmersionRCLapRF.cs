@@ -13,7 +13,6 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
 
 
     private Type _type;
-    private byte _lanes;
 
     public ImmersionRCLapRF()
     {
@@ -23,13 +22,13 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     public ImmersionRCLapRF(Guid id, string name, IPAddress address, ushort port, byte lanes)
     {
         Raise(new ImmersionRCLapRFNetworkDeviceRegistered(id, name, address.ToString(), port, lanes));
+        Raise(new TimerRenamed(id, name));
     }
 
     private void When(ImmersionRCLapRFNetworkDeviceRegistered changed)
     {
         Id = changed.TimerId;
         _type = Type.Network;
-        _lanes = changed.Lanes;
     }
 
     public void ConfigureNetwork(IPAddress address, ushort port)
@@ -45,24 +44,18 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     public void Rename(string name)
     {
         Raise(new ImmersionRCLapRFRenamed(Id, name));
+        Raise(new TimerRenamed(Id, name));
     }
-
-    private void ThrowIfLaneNotExists(byte lane)
-    {
-        if (lane < 0 || lane >= _lanes)
-        {
-            throw new ArgumentException("Lane does not exist.", nameof(lane));
-        }
-    }
-
     public void MarkAsConnected()
     {
         Raise(new ImmersionRCLapRFTimerConnected(Id));
         Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id));
+        Raise(new TimerConnected(Id));
     }
     public void MarkAsDisconnected()
     {
         Raise(new ImmersionRCLapRFTimerDisconnected(Id));
         Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id));
+        Raise(new TimerDisconnected(Id));
     }
 }

@@ -9,7 +9,7 @@ public interface IHardwareQueryHandler
     public Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id);
     public Task<IEnumerable<ImmersionRCLapRF>> GetAllImmersionRCLapRFs();
     public Task<IEnumerable<DesiredImmersionRCLapRFLane>> GetActiveImmersionRCLapRFLanesConfiguration(Guid timerId);
-    public Task<IEnumerable<TimerDetails>> GetDetails(Guid timerId);
-    public Task<IEnumerable<TimerDetails>> GetLaneDetails(Guid timerId, byte laneId);
+    public Task<TimerDetails> GetDetails(Guid timerId);
+    public Task<TimerLaneDetails> GetLaneDetails(Guid timerId, byte laneId);
     //public Task<SerialNaeTimeNode?> GetSerialNaeTimeNode(Guid id);
 }

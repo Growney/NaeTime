@@ -1,4 +1,5 @@
 ﻿@using EventDbLite.Abstractions
+@using NaeTime.Events
 @implements IAsyncDisposable
 
 <i class="fa-solid fa-microchip @GetCssClass()"></i>
@@ -9,7 +10,10 @@
         Pending,
         Mismatched,
         Confirmed,
+        Unknown,
     }
+
+    private bool _isConnected = false;
 
 
     [Parameter]
@@ -19,14 +23,21 @@
     public byte? LaneId{ get; set; }
 
     [Inject]
-    private IReactionProvider ReactionProvider { get; set; }
+    private IReactionProvider ReactionProvider { get; set; } = null!;
+    [Inject]
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
 
     private string GetCssClass()
     {
+        if(!_isConnected)
+        {
+            return "text-error";
+        }
+
         return _timeStatus switch
         {
-            TimeStatus.Pending => "text-secondary",
-            TimeStatus.Mismatched => "text-warning",
+            TimeStatus.Pending => "text-warning",
+            TimeStatus.Mismatched => "text-danger",
             TimeStatus.Confirmed => "text-success",
             _ => "text-secondary",
         };
@@ -36,8 +47,97 @@
 
     public ValueTask DisposeAsync() => ReactionProvider.DisposeAsync();
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        return base.OnInitializedAsync();
+        if (LaneId.HasValue)
+        {
+            ReactionProvider.On<TimerLaneMismatch>(x =>
+            {
+                if(x.TimerId != TimerId)
+                {
+                    return Task.CompletedTask;
+                }
+
+                if(x.LaneId != LaneId.Value)
+                {
+                    return Task.CompletedTask;
+                }
+
+                _timeStatus = TimeStatus.Mismatched;
+
+                StateHasChanged();
+
+                return Task.CompletedTask;
+            });
+            ReactionProvider.On<TimerLaneConfirmed>(x =>
+            {
+                if (x.TimerId != TimerId)
+                {
+                    return Task.CompletedTask;
+                }
+                if (x.LaneId != LaneId.Value)
+                {
+                    return Task.CompletedTask;
+                }
+                _timeStatus = TimeStatus.Confirmed;
+                StateHasChanged();
+                return Task.CompletedTask;
+            });
+            ReactionProvider.On<TimerLanePending>(x =>
+            {
+                if (x.TimerId != TimerId)
+                {
+                    return Task.CompletedTask;
+                }
+                if (x.LaneId != LaneId.Value)
+                {
+                    return Task.CompletedTask;
+                }
+                _timeStatus = TimeStatus.Pending;
+                StateHasChanged();
+                return Task.CompletedTask;
+            });
+        }
+
+        ReactionProvider.On<TimerDisconnected>(x =>
+        {
+            if (x.TimerId != TimerId)
+            {
+                return Task.CompletedTask;
+            }
+            _isConnected = false;
+            StateHasChanged();
+            return Task.CompletedTask;
+        });
+        ReactionProvider.On<TimerConnected>(x =>
+        {
+            if (x.TimerId != TimerId)
+            {
+                return Task.CompletedTask;
+            }
+            _isConnected = true;
+            StateHasChanged();
+            return Task.CompletedTask;
+        });
+
+        NaeTime.Query.Abstractions.Models.TimerDetails details = await HardwareQueryHandler.GetDetails(TimerId);
+
+        _isConnected = details.IsConnected;
+
+        if(LaneId.HasValue)
+        {
+            NaeTime.Query.Abstractions.Models.TimerLaneDetails? laneDetails = details.Lanes.FirstOrDefault(x => x.LaneId == LaneId.Value);
+
+            if(laneDetails != null)
+            {
+                _timeStatus = laneDetails.Status switch
+                {
+                    NaeTime.Query.Abstractions.Models.LaneStatus.Pending => TimeStatus.Pending,
+                    NaeTime.Query.Abstractions.Models.LaneStatus.Mismatched => TimeStatus.Mismatched,
+                    NaeTime.Query.Abstractions.Models.LaneStatus.Ok => TimeStatus.Confirmed,
+                    _ => TimeStatus.Unknown,
+                };
+            }
+        }
     }
 }
