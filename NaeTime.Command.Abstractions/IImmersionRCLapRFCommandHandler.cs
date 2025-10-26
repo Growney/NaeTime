@@ -6,7 +6,7 @@ public interface IImmersionRCLapRFCommandHandler
     public Task RegisterNetworkLapRF8Channel(Guid id, string name, IPAddress address, ushort port);
     public Task ReconfigureNetworkDevice(Guid id, IPAddress address, ushort port);
     public Task RenameDevice(Guid id, string name);
-    public Task SetupLane(Guid id, byte lane, bool isEnabled, byte? bandId, int frequencyInMHz, float threshold, ushort gain);
+    public Task SetupLaneForSession(Guid id, byte lane, bool isEnabled, byte? bandId, int frequencyInMHz);
     public Task ConfirmLaneSetup(Guid id, byte lane, bool isEnabled, byte? bandId, int frequencyInMHz, float threshold, ushort gain);
 
     public Task RequestLaneStatus(Guid id, byte lane, bool isEnabled);

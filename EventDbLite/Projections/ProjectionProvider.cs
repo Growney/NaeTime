@@ -14,7 +14,7 @@ public class ProjectionProvider(IServiceProvider serviceProvider, IEventStreamCo
 
     public async Task<T> Load<T>(string? streamName = null)
     {
-        T projection = ActivatorUtilities.CreateInstance<T>(_serviceProvider);
+        T projection = ActivatorUtilities.GetServiceOrCreateInstance<T>(_serviceProvider);
 
         IAsyncEnumerable<StreamEvent> streamEvents = (streamName is null)
             ? _connection.ReadAllStreamEvents(StreamDirection.Forward, StreamPosition.Beginning)

@@ -88,7 +88,7 @@ internal class LapRFConnection : ILapRFConnection
 
                 Pass passingRecord = nullablePassingRecord.Value;
 
-                await _writer.AppendToStream(_detectionsStream, new NaeTime.Events.HardwareDetectionOccured(Guid.NewGuid(), _timerId, (byte)passingRecord.TransponderId, passingRecord.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
+                await _writer.AppendToStream(_detectionsStream, new NaeTime.Events.HardwareDetectionOccured(Guid.NewGuid(), _timerId, passingRecord.LaneId, passingRecord.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
             }
             catch
             {
@@ -136,13 +136,13 @@ internal class LapRFConnection : ILapRFConnection
                 continue;
             }
 
-            channels.Add(new LapRFLaneConfiguration(setup.TransponderId, null, setup.Frequency ?? 0, setup.IsEnabled, setup.Attenuation ?? 0, setup.Threshold ?? 0));
+            channels.Add(new LapRFLaneConfiguration(setup.LaneId, (byte)(setup.Band ?? 0), setup.Frequency ?? 0, setup.IsEnabled, setup.Attenuation ?? 0, setup.Threshold ?? 0));
         }
 
         return channels;
     }
     public Task<IEnumerable<LapRFLaneConfiguration>> GetLaneConfigurations(params byte[] lanes) => GetLaneConfigurations(lanes.AsEnumerable<byte>());
-    public Task<IEnumerable<LapRFLaneConfiguration>> GetAllLaneConfigurations() => GetLaneConfigurations([1, 2, 3, 4, 5, 6, 7, 8]);
+    public Task<IEnumerable<LapRFLaneConfiguration>> GetAllLaneConfigurations() => GetLaneConfigurations([0, 1, 2, 3, 4, 5, 6, 7]);
     public async Task SetLaneStatus(byte Lane, bool isEnabled)
     {
         if (!IsConnected)
@@ -150,16 +150,16 @@ internal class LapRFConnection : ILapRFConnection
             return;
         }
 
-        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, isEnabled: isEnabled).ConfigureAwait(false);
+        await _protocol.RadioFrequencySetupProtocol.SetupLane(Lane, isEnabled: isEnabled).ConfigureAwait(false);
     }
-    public async Task SetLaneRadioFrequency(byte Lane,byte? bandId, int frequencyInMhz)
+    public async Task SetLaneRadioFrequency(byte Lane, byte? bandId, int frequencyInMhz)
     {
         if (!IsConnected)
         {
             return;
         }
 
-        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, band: bandId, frequencyInMHz: (ushort)frequencyInMhz).ConfigureAwait(false);
+        await _protocol.RadioFrequencySetupProtocol.SetupLane(Lane, band: bandId, frequencyInMHz: (ushort)frequencyInMhz).ConfigureAwait(false);
     }
     public async Task SetLaneThreshold(byte lane, float threshold)
     {
@@ -168,7 +168,7 @@ internal class LapRFConnection : ILapRFConnection
             return;
         }
 
-        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(lane, threshold: threshold).ConfigureAwait(false);
+        await _protocol.RadioFrequencySetupProtocol.SetupLane(lane, threshold: threshold).ConfigureAwait(false);
     }
     public async Task SetLaneGain(byte lane, ushort gain)
     {
@@ -177,7 +177,7 @@ internal class LapRFConnection : ILapRFConnection
             return;
         }
 
-        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(lane, attenuation: gain).ConfigureAwait(false);
+        await _protocol.RadioFrequencySetupProtocol.SetupLane(lane, attenuation: gain).ConfigureAwait(false);
     }
     public async Task SetupLane(LapRFLaneConfiguration configuration)
     {
@@ -185,7 +185,7 @@ internal class LapRFConnection : ILapRFConnection
         {
             return;
         }
-        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(configuration.Lane, isEnabled: configuration.IsEnabled, frequencyInMHz: (ushort?)configuration.FrequencyInMhz, attenuation: configuration.Gain, threshold: configuration.Threshold).ConfigureAwait(false);
+        await _protocol.RadioFrequencySetupProtocol.SetupLane(configuration.Lane, isEnabled: configuration.IsEnabled, frequencyInMHz: (ushort?)configuration.FrequencyInMhz, attenuation: configuration.Gain, threshold: configuration.Threshold).ConfigureAwait(false);
     }
     public Task Stop()
     {

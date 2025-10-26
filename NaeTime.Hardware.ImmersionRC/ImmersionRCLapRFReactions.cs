@@ -1,14 +1,8 @@
 ﻿using EventDbLite.Abstractions;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using NaeTime.Command.Abstractions;
 using NaeTime.Events;
 using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NaeTime.Hardware.ImmersionRC;
 internal class ImmersionRCLapRFReactions
@@ -28,9 +22,9 @@ internal class ImmersionRCLapRFReactions
         => HandleTuneRequest(requested.TimerId, requested.Lane, requested.BandId, requested.FrequencyInMHz);
     private Task When(ImmersionRCLapRFLaneFrequencyMismatch mismatch)
         => HandleTuneRequest(mismatch.TimerId, mismatch.Lane, mismatch.DesiredBandId, mismatch.DesiredFrequencyInMHz);
-    private Task When(ImmersionRCLapRFLaneEnableRequested requested) 
+    private Task When(ImmersionRCLapRFLaneEnableRequested requested)
         => HandleStatusRequest(requested.TimerId, requested.Lane, true);
-    private Task When(ImmersionRCLapRFLaneDisableRequested requested) 
+    private Task When(ImmersionRCLapRFLaneDisableRequested requested)
         => HandleStatusRequest(requested.TimerId, requested.Lane, false);
     private Task When(ImmersionRCLapRFLaneStatusMismatch mismatch)
         => HandleStatusRequest(mismatch.TimerId, mismatch.Lane, mismatch.DesiredStatus);
@@ -45,6 +39,20 @@ internal class ImmersionRCLapRFReactions
 
     private async Task When(ImmersionRCLapRFConfigurationUnconfirmed unconfirmed)
     {
+        ILapRFConnection? connection = _lapRFConnectionProvider.GetLapRFConnection(unconfirmed.TimerId);
+        if (connection == null)
+        {
+            return;
+        }
+        if (!connection.IsConnected)
+        {
+            return;
+        }
+        IEnumerable<LapRFLaneConfiguration> timerConfigurations = await connection.GetAllLaneConfigurations();
+        foreach (LapRFLaneConfiguration laneConfiguration in timerConfigurations)
+        {
+            await _immersionRCLapRFCommandHandler.ConfirmLaneSetup(unconfirmed.TimerId, laneConfiguration.Lane, laneConfiguration.IsEnabled, laneConfiguration.BandId, laneConfiguration.FrequencyInMhz, laneConfiguration.Threshold, laneConfiguration.Gain);
+        }
     }
 
     private async Task HandleTuneRequest(Guid timerId, byte lane, byte? bandId, int frequencyInMhz)
@@ -57,7 +65,7 @@ internal class ImmersionRCLapRFReactions
             return;
         }
 
-        if(!connection.IsConnected)
+        if (!connection.IsConnected)
         {
             await _streamEventWriter.AppendToStream($"LapRF_Errors_{timerId}",
                 new ImmersionRCLapRFLaneFrequencyTuningFailed(timerId, lane, bandId, frequencyInMhz, "Connection is not established"));
@@ -85,7 +93,7 @@ internal class ImmersionRCLapRFReactions
             return;
         }
 
-        if(!connection.IsConnected)
+        if (!connection.IsConnected)
         {
             await _streamEventWriter.AppendToStream($"LapRF_Errors_{timerId}",
                 new ImmersionRCLapRFLaneStatusConfigurationFailed(timerId, lane, isEnabled, "Connection is not established"));
@@ -113,7 +121,7 @@ internal class ImmersionRCLapRFReactions
             return;
         }
 
-        if(!connection.IsConnected)
+        if (!connection.IsConnected)
         {
             await _streamEventWriter.AppendToStream($"LapRF_Errors_{timerId}",
                 new ImmersionRCLapRFLaneThresholdConfigurationFailed(timerId, lane, threshold, "Connection is not established"));
@@ -141,7 +149,7 @@ internal class ImmersionRCLapRFReactions
             return;
         }
 
-        if(!connection.IsConnected)
+        if (!connection.IsConnected)
         {
             await _streamEventWriter.AppendToStream($"LapRF_Errors_{timerId}",
                 new ImmersionRCLapRFLaneGainConfigurationFailed(timerId, lane, gain, "Connection is not established"));

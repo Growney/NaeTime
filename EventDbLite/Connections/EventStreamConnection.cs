@@ -60,6 +60,10 @@ internal class EventStreamConnection(EventDbLiteContext context) : IEventStreamC
         {
             throw new ConcurrencyException(expectedState.Version, currentStreamVersion);
         }
+        catch (DbUpdateException)
+        {
+            throw new ConcurrencyException(expectedState.Version, currentStreamVersion);
+        }
     }
     public async Task<StreamEvent> AppendToStreamAsync(string streamName, EventData data, StreamPosition expectedState) => (await AppendToStreamAsync(streamName, Enumerable.Repeat(data, 1), expectedState)).First();
     public void Dispose() => _context.Dispose();

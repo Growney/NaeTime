@@ -99,13 +99,11 @@ public class ImmersionRCLapRFCommandHandler(IAggregateRepository repository) : I
         await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
     }
 
-    public async Task SetupLane(Guid id, byte lane, bool isEnabled, byte? bandId, int frequencyInMHz, float threshold, ushort gain)
+    public async Task SetupLaneForSession(Guid id, byte lane, bool isEnabled, byte? bandId, int frequencyInMHz)
     {
         ImmersionRCLapRF aggregate = await _repository.Get<ImmersionRCLapRF, Guid>(id) ?? throw new ArgumentException("Aggregate not found", nameof(id));
         aggregate.RequestLaneStatus(lane, isEnabled);
         aggregate.RequestTuneLaneVideoFrequency(lane, bandId, frequencyInMHz);
-        aggregate.RequestLaneThreshold(lane, (int)threshold);
-        aggregate.RequestLaneGain(lane, gain);
         await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
     }
 

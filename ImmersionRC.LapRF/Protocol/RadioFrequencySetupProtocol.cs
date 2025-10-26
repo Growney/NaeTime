@@ -61,16 +61,16 @@ internal class RadioFrequencySetupProtocol(ILapRFCommunication lapRFCommunicatio
 
         if (transponderId.HasValue)
         {
-            RFSetup setup = new(transponderId.Value, isEnabled == 1, channel, band, attenuation, frequency, threshold);
+            RFSetup setup = new(LapRFProtocol.GetLaneId(transponderId.Value), isEnabled == 1, channel, band, attenuation, frequency, threshold);
             HandleTransponderSetup(setup);
         }
     }
     private void HandleTransponderSetup(RFSetup setup)
     {
-        _latestSetup.AddOrUpdate(LapRFProtocol.GetLaneId(setup.TransponderId), setup,
+        _latestSetup.AddOrUpdate(setup.LaneId, setup,
                     (key, oldValue) => setup);
 
-        if (_responders.TryGetValue(LapRFProtocol.GetLaneId(setup.TransponderId), out List<TaskCompletionSource<RFSetup>>? responders))
+        if (_responders.TryGetValue(setup.LaneId, out List<TaskCompletionSource<RFSetup>>? responders))
         {
             foreach (TaskCompletionSource<RFSetup> responder in responders)
             {

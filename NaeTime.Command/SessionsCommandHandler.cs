@@ -5,17 +5,24 @@ using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
 
 namespace NaeTime.Command;
-public class SessionsCommandHandler(IAggregateRepository repository, ISessionQueryHandler sessionsQueryHandler) : ISessionsCommandHandler
+public class SessionsCommandHandler : ISessionsCommandHandler
 {
     private const string _activeSessionStreamName = "activesession";
 
-    private readonly IAggregateRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-    private readonly ISessionQueryHandler _sessionsQueryHandler = sessionsQueryHandler ?? throw new ArgumentNullException(nameof(sessionsQueryHandler));
+    private readonly IAggregateRepository _repository;
+    private readonly IProjectionProvider _projectionProvider;
+
+    public SessionsCommandHandler(IAggregateRepository repository, IProjectionProvider projectionProvider)
+    {
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _projectionProvider = projectionProvider ?? throw new ArgumentNullException(nameof(projectionProvider));
+    }
 
     private async Task ThrowIfSessionDoesNotExist(Guid id, Query.Abstractions.Models.SessionType type)
     {
-        var session = await _sessionsQueryHandler.GetSession(id) ?? throw new ArgumentException($"Session with ID {id} does not exist.", nameof(id));
-        if (session.Type != type)
+        ISessionQueryHandler queryHandler = await _projectionProvider.Load<ISessionQueryHandler>();
+        Session? session = await queryHandler.GetSession(id);
+        if (session == null || session.Type != type)
         {
             throw new ArgumentException($"Session with ID {id} is not of type {type}.", nameof(id));
         }

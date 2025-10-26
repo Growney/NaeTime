@@ -48,7 +48,14 @@ internal partial class LapRFProtocol(ILapRFCommunication communication,
             {
                 for (int i = 0; i < data.Length; i++)
                 {
-                    ProcessByte(data.Span[i]);
+                    try
+                    {
+                        ProcessByte(data.Span[i]);
+                    }
+                    catch
+                    {
+                        //TODO Do something with erroring bytes
+                    }
                 }
             }
         }
