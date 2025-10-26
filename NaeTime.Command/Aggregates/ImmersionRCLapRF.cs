@@ -10,9 +10,8 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
         Network,
         Serial,
     }
-
-
     private Type _type;
+    private bool _isConnected;
 
     public ImmersionRCLapRF()
     {
@@ -48,14 +47,28 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     }
     public void MarkAsConnected()
     {
-        Raise(new ImmersionRCLapRFTimerConnected(Id));
-        Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id));
-        Raise(new TimerConnected(Id));
+        if (!_isConnected)
+        {
+            Raise(new ImmersionRCLapRFTimerConnected(Id));
+            Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id));
+            Raise(new TimerConnected(Id));
+        }
+    }
+    private void When(ImmersionRCLapRFTimerConnected connected)
+    {
+        _isConnected = true;
     }
     public void MarkAsDisconnected()
     {
-        Raise(new ImmersionRCLapRFTimerDisconnected(Id));
-        Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id));
-        Raise(new TimerDisconnected(Id));
+        if (_isConnected)
+        {
+            Raise(new ImmersionRCLapRFTimerDisconnected(Id));
+            Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id));
+            Raise(new TimerDisconnected(Id));
+        }
+    }
+    private void When(ImmersionRCLapRFTimerDisconnected disconnected)
+    {
+        _isConnected = false;
     }
 }
