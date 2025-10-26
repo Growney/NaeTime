@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NaeTime.Client;
+﻿namespace NaeTime.Client;
 public static class OpenPracticeSessionProjector
 {
     public static Models.OpenPracticeSession? Project(Query.Abstractions.Models.OpenPracticeSession? session)
     {
-        if(session == null)
+        if (session == null)
         {
             return null;
         }
@@ -19,6 +13,7 @@ public static class OpenPracticeSessionProjector
             Id = session.Id,
             Name = session.Name,
             TrackId = session.TrackId,
+            TrackDetectorIds = session.TrackDetectorIds,
             Lanes = session.Lanes.Select(l => new Models.OpenPracticeLane()
             {
                 Lane = l.Lane,

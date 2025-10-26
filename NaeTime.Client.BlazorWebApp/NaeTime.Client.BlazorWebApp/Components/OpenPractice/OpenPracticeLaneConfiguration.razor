@@ -75,7 +75,12 @@
                         <MudNumericField T=int Value=_lane.FrequencyInMHz Label="Custom" ValueChanged="x => ChangeFrequency(null, x)"></MudNumericField>
                     }
                 </div>
-
+                <div class="w-100 pb-2 d-flex justify-content-center">
+                    @foreach (Guid detectorId in Session.TrackDetectorIds)
+                    {
+                        <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus>
+                    }
+                </div>
                 <TimerDisplay Start="_pilotLastDetection" MaxTime=MaxTime></TimerDisplay>
                 <div class="w-100 pb-2">
                     <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"><i class="fa-solid fa-stopwatch"></i></MudButton>                
@@ -92,6 +97,7 @@
     [Parameter]
     [EditorRequired]
     public IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> AllPilots { get; set; }
+
     [Parameter]
     public TimeSpan? MaxTime { get; set; }
 

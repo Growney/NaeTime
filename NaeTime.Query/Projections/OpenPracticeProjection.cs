@@ -19,6 +19,7 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public Guid TrackId { get; set; }
+        public IEnumerable<Guid> TrackDetectorIds { get; set; } = Enumerable.Empty<Guid>();
         public List<ListOpenPracticeSessionLane> Lanes { get; set; } = [];
 
     }
@@ -28,7 +29,7 @@ public class OpenPracticeProjection : IOpenPracticeProjection
     {
         if (_sessions.TryGetValue(sessionId, out var session))
         {
-            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, [.. session.Lanes.Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
+            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, session.TrackDetectorIds, [.. session.Lanes.Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
         }
         return null;
     }
@@ -39,7 +40,8 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         {
             Id = scheduled.SessionId,
             Name = scheduled.Name,
-            TrackId = scheduled.TrackId
+            TrackId = scheduled.TrackId,
+            TrackDetectorIds = scheduled.TrackDetectors
         });
     }
     private void When(OpenPracticeSessionRenamed renamed)
