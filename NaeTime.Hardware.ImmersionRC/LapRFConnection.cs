@@ -45,17 +45,18 @@ internal class LapRFConnection : ILapRFConnection
 
     private async Task MaintainConnectionAsync(CancellationToken token)
     {
+        await _commandHandler.MarkAsDisconnected(_timerId);
         while (!token.IsCancellationRequested)
         {
             try
             {
                 await _communication.ConnectAsync(token).ConfigureAwait(false);
                 IsConnected = true;
+                await _commandHandler.MarkAsConnected(_timerId);
 
                 //We must start the run task before we dispatch the connection established as data may be requested when the connection is established
                 System.Runtime.CompilerServices.ConfiguredTaskAwaitable runTask = _protocol.RunAsync(token).ConfigureAwait(false);
 
-                await _commandHandler.MarkAsConnected(_timerId);
 
                 await runTask;
             }
