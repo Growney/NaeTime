@@ -9,7 +9,7 @@ internal class PassingRecordProtocol : IPassingRecordProtocol
 
     public void HandleRecordData(ReadOnlySpanReader<byte> recordReader)
     {
-        byte? pilotId = null;
+        byte? transponderId = null;
         uint? passingNumber = null;
         ulong? realTimeClockTime = null;
 
@@ -27,7 +27,7 @@ internal class PassingRecordProtocol : IPassingRecordProtocol
             switch ((ProtocolFields)fieldSignature)
             {
                 case ProtocolFields.TransponderId:
-                    pilotId = recordReader.ReadByte();
+                    transponderId = recordReader.ReadByte();
                     break;
                 case ProtocolFields.PassNumber:
                     passingNumber = recordReader.ReadUInt32();
@@ -39,10 +39,10 @@ internal class PassingRecordProtocol : IPassingRecordProtocol
                     break;
             }
 
-            if (pilotId != null && passingNumber != null && realTimeClockTime != null)
+            if (transponderId != null && passingNumber != null && realTimeClockTime != null)
             {
-                _passes.Enqueue(new Pass(passingNumber.Value, pilotId.Value, 0, 0, realTimeClockTime.Value));
-                pilotId = null;
+                _passes.Enqueue(new Pass(passingNumber.Value, LapRFProtocol.GetLaneId(transponderId.Value), 0, 0, realTimeClockTime.Value));
+                transponderId = null;
                 passingNumber = null;
                 realTimeClockTime = null;
             }

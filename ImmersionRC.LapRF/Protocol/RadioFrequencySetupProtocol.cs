@@ -65,13 +65,12 @@ internal class RadioFrequencySetupProtocol(ILapRFCommunication lapRFCommunicatio
             HandleTransponderSetup(setup);
         }
     }
-
     private void HandleTransponderSetup(RFSetup setup)
     {
-        _latestSetup.AddOrUpdate(setup.TransponderId, setup,
+        _latestSetup.AddOrUpdate(LapRFProtocol.GetLaneId(setup.TransponderId), setup,
                     (key, oldValue) => setup);
 
-        if (_responders.TryGetValue(setup.TransponderId, out List<TaskCompletionSource<RFSetup>>? responders))
+        if (_responders.TryGetValue(LapRFProtocol.GetLaneId(setup.TransponderId), out List<TaskCompletionSource<RFSetup>>? responders))
         {
             foreach (TaskCompletionSource<RFSetup> responder in responders)
             {
@@ -81,14 +80,14 @@ internal class RadioFrequencySetupProtocol(ILapRFCommunication lapRFCommunicatio
             responders.Clear();
         }
     }
-    public ValueTask SetupTransponderSlot(byte transponderId, bool? isEnabled, ushort? channel = null, ushort? band = null, ushort? attenuation = null, ushort? frequencyInMHz = null, float? threshold = null, CancellationToken token = default)
+    public ValueTask SetupLane(byte laneId, bool? isEnabled, ushort? channel = null, ushort? band = null, ushort? attenuation = null, ushort? frequencyInMHz = null, float? threshold = null, CancellationToken token = default)
     {
         using MemoryStream memoryStream = new();
         using BinaryWriter writer = new(memoryStream);
 
         writer.Write(LapRFProtocol.START_OF_RECORD);
         writer.WriteRecordType(RecordType.LAPRF_TOR_RFSETUP);
-        writer.WriteField((byte)RadioFrequencySetupField.TransponderId, transponderId);
+        writer.WriteField((byte)RadioFrequencySetupField.TransponderId, LapRFProtocol.GetTransponderId(laneId));
         if (isEnabled.HasValue)
         {
             ushort enabledFlag = (ushort)(isEnabled.Value ? 1 : 0);
@@ -126,13 +125,13 @@ internal class RadioFrequencySetupProtocol(ILapRFCommunication lapRFCommunicatio
 
         return _lapRFCommunication.SendAsync(finalisedData, token);
     }
-    public async ValueTask<IEnumerable<RFSetup>> GetSetupAsync(IEnumerable<byte> transponderIds, CancellationToken cancellationToken = default)
+    public async ValueTask<IEnumerable<RFSetup>> GetSetupAsync(IEnumerable<byte> laneIds, CancellationToken cancellationToken = default)
     {
         List<TaskCompletionSource<RFSetup>> responders = [];
 
-        foreach (byte transponderId in transponderIds)
+        foreach (byte laneId in laneIds)
         {
-            TaskCompletionSource<RFSetup> listner = AddListenerForTransponderId(transponderId, cancellationToken);
+            TaskCompletionSource<RFSetup> listner = AddListenerForLaneId(laneId, cancellationToken);
             responders.Add(listner);
         }
 
@@ -142,9 +141,9 @@ internal class RadioFrequencySetupProtocol(ILapRFCommunication lapRFCommunicatio
 
         writer.Write(LapRFProtocol.START_OF_RECORD);
         writer.WriteRecordType(RecordType.LAPRF_TOR_RFSETUP);
-        foreach (byte transponderId in transponderIds)
+        foreach (byte laneId in laneIds)
         {
-            writer.WriteField((byte)RadioFrequencySetupField.TransponderId, transponderId);
+            writer.WriteField((byte)RadioFrequencySetupField.TransponderId, LapRFProtocol.GetTransponderId(laneId));
         }
 
         writer.Write(LapRFProtocol.END_OF_RECORD);
@@ -165,13 +164,13 @@ internal class RadioFrequencySetupProtocol(ILapRFCommunication lapRFCommunicatio
 
         return results;
     }
-    private TaskCompletionSource<RFSetup> AddListenerForTransponderId(byte transponderId, CancellationToken cancellationToken)
+    private TaskCompletionSource<RFSetup> AddListenerForLaneId(byte laneId, CancellationToken cancellationToken)
     {
         TaskCompletionSource<RFSetup> responderCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         cancellationToken.Register(() => responderCompletionSource.TrySetCanceled());
 
-        _responders.AddOrUpdate(transponderId, [responderCompletionSource], (key, oldValue) =>
+        _responders.AddOrUpdate(laneId, [responderCompletionSource], (key, oldValue) =>
         {
             oldValue.Add(responderCompletionSource);
             return oldValue;

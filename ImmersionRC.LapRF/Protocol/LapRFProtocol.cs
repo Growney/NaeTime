@@ -8,6 +8,15 @@ internal partial class LapRFProtocol(ILapRFCommunication communication,
     IRadioFrequencySetupProtocol radioFrequencySetupProtocol) : ILapRFProtocol
 {
 
+    public static byte GetTransponderId(byte lane)
+    {
+        return (byte)(lane + 1);
+    }
+    public static byte GetLaneId(byte transponderId)
+    {
+        return (byte)(transponderId - 1);
+    }
+
     public const byte START_OF_RECORD = 0x5a;
     public const byte END_OF_RECORD = 0x5b;
     public const byte ESCAPE = 0x5c;
