@@ -17,11 +17,11 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     }
     private class LaneInfo
     {
-        public required Field<bool> IsEnabled { get; init; }
+        public required Field<bool?> IsEnabled { get; init; }
         public required Field<byte?> BandId { get; init; }
-        public required Field<int> FrequencyInMHz { get; init; }
-        public required Field<float> Threshold { get; init; }
-        public required Field<ushort> Gain { get; init; }
+        public required Field<int?> FrequencyInMHz { get; init; }
+        public required Field<float?> Threshold { get; init; }
+        public required Field<ushort?> Gain { get; init; }
     }
 
     private Type _type;
@@ -132,9 +132,9 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
             }
         }
 
-        if (laneInfo.IsEnabled.RequestedValue != status)
+        if (laneInfo.IsEnabled.RequestedValue.HasValue && laneInfo.IsEnabled.RequestedValue != status)
         {
-            Raise(new ImmersionRCLapRFLaneStatusMismatch(Id, lane, GetLaneInfo(lane).IsEnabled.RequestedValue, status));
+            Raise(new ImmersionRCLapRFLaneStatusMismatch(Id, lane, laneInfo.IsEnabled.RequestedValue.Value, status));
         }
     }
 
@@ -174,9 +174,9 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
             Raise(new ImmersionRCLapRFLaneFrequencyTuned(Id, lane, bandId, frequencyInMHz));
         }
 
-        if (laneInfo.BandId.RequestedValue != bandId || laneInfo.FrequencyInMHz.RequestedValue != frequencyInMHz)
+        if (laneInfo.FrequencyInMHz.RequestedValue.HasValue && laneInfo.FrequencyInMHz.RequestedValue != frequencyInMHz)
         {
-            Raise(new ImmersionRCLapRFLaneFrequencyMismatch(Id, lane, laneInfo.BandId.RequestedValue, laneInfo.FrequencyInMHz.RequestedValue, bandId, frequencyInMHz));
+            Raise(new ImmersionRCLapRFLaneFrequencyMismatch(Id, lane, laneInfo.BandId.RequestedValue, laneInfo.FrequencyInMHz.RequestedValue.Value, bandId, frequencyInMHz));
         }
     }
 
@@ -210,9 +210,9 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
             Raise(new ImmersionRCLapRFLaneThresholdConfigured(Id, lane, threshold));
         }
 
-        if (laneInfo.Threshold.RequestedValue != threshold)
+        if (laneInfo.Threshold.RequestedValue.HasValue && laneInfo.Threshold.RequestedValue != threshold)
         {
-            Raise(new ImmersionRCLapRFLaneThresholdMismatch(Id, lane, laneInfo.Threshold.RequestedValue, threshold));
+            Raise(new ImmersionRCLapRFLaneThresholdMismatch(Id, lane, laneInfo.Threshold.RequestedValue.Value, threshold));
         }
     }
 
@@ -246,9 +246,9 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
             Raise(new ImmersionRCLapRFLaneGainConfigured(Id, lane, gain));
         }
 
-        if (laneInfo.Gain.RequestedValue != gain)
+        if (laneInfo.Gain.RequestedValue.HasValue && laneInfo.Gain.RequestedValue != gain)
         {
-            Raise(new ImmersionRCLapRFLaneGainMismatch(Id, lane, GetLaneInfo(lane).Gain.RequestedValue, gain));
+            Raise(new ImmersionRCLapRFLaneGainMismatch(Id, lane, laneInfo.Gain.RequestedValue.Value, gain));
         }
     }
 
@@ -258,12 +258,27 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
         laneInfo.Gain.ConfirmedValue = changed.Gain;
     }
 
+    private void When(ImmersionRCLapRFConfigurationUnconfirmed _)
+    {
+        foreach (byte lane in _laneInfo.Keys)
+        {
+            LaneInfo laneInfo = GetLaneInfo(lane);
+            laneInfo.IsEnabled.ConfirmedValue = null;
+            laneInfo.BandId.ConfirmedValue = null;
+            laneInfo.FrequencyInMHz.ConfirmedValue = null;
+            laneInfo.Threshold.ConfirmedValue = null;
+            laneInfo.Gain.ConfirmedValue = null;
+        }
+    }
+
     public void MarkAsConnected()
     {
         Raise(new ImmersionRCLapRFTimerConnected(Id));
+        Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id));
     }
     public void MarkAsDisconnected()
     {
         Raise(new ImmersionRCLapRFTimerDisconnected(Id));
+        Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id));
     }
 }

@@ -152,14 +152,14 @@ internal class LapRFConnection : ILapRFConnection
 
         await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, isEnabled: isEnabled).ConfigureAwait(false);
     }
-    public async Task SetLaneRadioFrequency(byte Lane, int frequencyInMhz)
+    public async Task SetLaneRadioFrequency(byte Lane,byte? bandId, int frequencyInMhz)
     {
         if (!IsConnected)
         {
             return;
         }
 
-        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, frequencyInMHz: (ushort)frequencyInMhz).ConfigureAwait(false);
+        await _protocol.RadioFrequencySetupProtocol.SetupTransponderSlot(Lane, band: bandId, frequencyInMHz: (ushort)frequencyInMhz).ConfigureAwait(false);
     }
     public async Task SetLaneThreshold(byte lane, float threshold)
     {

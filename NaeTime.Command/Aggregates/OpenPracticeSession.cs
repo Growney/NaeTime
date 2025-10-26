@@ -50,11 +50,11 @@ public class OpenPracticeSession : AggregateRoot<Guid>
     {
         for (byte i = 0; i < laneCount; i++)
         {
-            Raise(new OpenPracticeSessionLaneEnabled(Id, i));
+            Raise(new OpenPracticeSessionLaneEnabled(Id, i, _trackDetectors));
 
             int frequencyIndex = i % Hardware.Frequency.Band.R.Frequencies.Count();
 
-            Raise(new OpenPracticeSessionLaneVideoFrequencyTuned(Id, i, Hardware.Frequency.Band.R.Id, Hardware.Frequency.Band.R.Frequencies.ElementAt(frequencyIndex).FrequencyInMhz));
+            Raise(new OpenPracticeSessionLaneVideoFrequencyTuned(Id, i, Hardware.Frequency.Band.R.Id, Hardware.Frequency.Band.R.Frequencies.ElementAt(frequencyIndex).FrequencyInMhz, _trackDetectors));
         }
     }
 
@@ -150,7 +150,7 @@ public class OpenPracticeSession : AggregateRoot<Guid>
     }
     public void TuneLaneVideoFrequency(byte lane, byte? bandId, int frequencyInMHz)
     {
-        Raise(new OpenPracticeSessionLaneVideoFrequencyTuned(Id, lane, bandId, frequencyInMHz));
+        Raise(new OpenPracticeSessionLaneVideoFrequencyTuned(Id, lane, bandId, frequencyInMHz, _trackDetectors));
     }
     public void EnableLane(byte lane)
     {
@@ -158,12 +158,12 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         {
             if (!laneInfo.IsEnabled)
             {
-                Raise(new OpenPracticeSessionLaneEnabled(Id, lane));
+                Raise(new OpenPracticeSessionLaneEnabled(Id, lane, _trackDetectors));
             }
         }
         else
         {
-            Raise(new OpenPracticeSessionLaneEnabled(Id, lane));
+            Raise(new OpenPracticeSessionLaneEnabled(Id, lane, _trackDetectors));
         }
     }
     public void DisableLane(byte lane)
@@ -172,12 +172,12 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         {
             if (laneInfo.IsEnabled)
             {
-                Raise(new OpenPracticeSessionLaneDisabled(Id, lane));
+                Raise(new OpenPracticeSessionLaneDisabled(Id, lane, _trackDetectors));
             }
         }
         else
         {
-            Raise(new OpenPracticeSessionLaneDisabled(Id, lane));
+            Raise(new OpenPracticeSessionLaneDisabled(Id, lane, _trackDetectors));
         }
     }
     public OpenPracticeSession Clone(Guid newId, string newName)

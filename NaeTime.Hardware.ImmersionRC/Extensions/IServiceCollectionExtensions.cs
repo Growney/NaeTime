@@ -14,6 +14,9 @@ public static class IServiceCollectionExtensions
         services.AddTransient<ILapRFConnectionFactory, LapRFConnectionFactory>();
         services.AddSingleton<ILapRFConnectionProvider, LapRFConnectionProvider>();
         services.AddImmersionRCLapRF();
+
+        services.AddConstantReactionClass<ImmersionRCLapRFReactions>();
+
         return services;
     }
 }
