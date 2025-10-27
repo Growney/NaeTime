@@ -51,11 +51,11 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         }
         return CalculateDuration(endTimerId, endHardwareTime, endSoftwareTime, endUtcTime, startTimerId, startHardwareTime, startSoftwareTime, startUtcTime);
     }
-    private static IEnumerable<OpenPracticeLap> GetPilotSessionLaps(Guid sessionId, Guid trackId, Guid pilotId, IEnumerable<OpenPracticeDetection> pilotDetections, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    private static IEnumerable<IEnumerable<OpenPracticeLap>> GetPilotSessionLapGroups(Guid sessionId, Guid trackId, Guid pilotId, IEnumerable<OpenPracticeDetection> pilotDetections, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
     {
         if (!pilotDetections.Any())
         {
-            return Enumerable.Empty<OpenPracticeLap>();
+            return Enumerable.Empty<IEnumerable<OpenPracticeLap>>();
         }
 
         List<OpenPracticeDetection> orderedDetections = pilotDetections.OrderBy(d => d.UtcTime).ToList();
@@ -64,7 +64,7 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
 
         if (firstValidDetectionIndex < 0)
         {
-            return Enumerable.Empty<OpenPracticeLap>();
+            return Enumerable.Empty<IEnumerable<OpenPracticeLap>>();
         }
 
         List<OpenPracticeLap> laps = new();
@@ -113,9 +113,9 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
             initialDetection = currentDetection;
         }
 
-        return laps;
+        return GetConsecutiveLapGroups(laps);
     }
-    private static List<List<OpenPracticeLap>> GetConsecutiveLapGroups(IEnumerable<OpenPracticeLap> laps)
+    private static IEnumerable<IEnumerable<OpenPracticeLap>> GetConsecutiveLapGroups(IEnumerable<OpenPracticeLap> laps)
     {
         List<OpenPracticeLap> orderedLaps = laps.OrderBy(l => l.StartDetection.UtcTime).ToList();
 
@@ -185,9 +185,8 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
 
         return records;
     }
-    private static Dictionary<uint, OpenPracticeLapRecord> GetPilotRecords(Guid sessionId, Guid trackId, Guid pilotId, IEnumerable<OpenPracticeLap> laps)
+    private static Dictionary<uint, OpenPracticeLapRecord> GetPilotRecords(Guid sessionId, Guid trackId, Guid pilotId, IEnumerable<IEnumerable<OpenPracticeLap>> lapGroups)
     {
-        List<List<OpenPracticeLap>> lapGroups = GetConsecutiveLapGroups(laps);
         Dictionary<uint, OpenPracticeLapRecord> pilotRecords = new();
         foreach (List<OpenPracticeLap> lapGroup in lapGroups)
         {
@@ -218,9 +217,9 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
                 sessionRecords[lapCount].Add(record);
             }
         }
-        foreach(var lapCount in sessionRecords.Keys.ToList())
+        foreach (var lapCount in sessionRecords.Keys.ToList())
         {
-            sessionRecords[lapCount].Sort((x,y)=> x.Record.CompareTo(y.Record));
+            sessionRecords[lapCount].Sort((x, y) => x.Record.CompareTo(y.Record));
         }
         return sessionRecords.ToDictionary(kvp => kvp.Key, kvp => (IEnumerable<OpenPracticeLapRecord>)kvp.Value);
     }
@@ -230,7 +229,7 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         ConcurrentDictionary<Guid, ConcurrentBag<OpenPracticeDetection>> trackPilotsDetections = GetSessionDetections(sessionId, trackId);
 
         Dictionary<Guid, IEnumerable<OpenPracticeDetection>> allDetections = new();
-        Dictionary<Guid, IEnumerable<OpenPracticeLap>> allLaps = new();
+        Dictionary<Guid, IEnumerable<IEnumerable<OpenPracticeLap>>> pilotLaps = new();
         Dictionary<Guid, IDictionary<uint, OpenPracticeLapRecord>> allRecords = new();
 
         foreach (KeyValuePair<Guid, ConcurrentBag<OpenPracticeDetection>> pilotEntry in trackPilotsDetections)
@@ -239,21 +238,21 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
 
             IEnumerable<OpenPracticeDetection> pilotDetections = pilotEntry.Value.ToList();
             allDetections[pilotId] = pilotDetections;
-            IEnumerable<OpenPracticeLap> pilotLaps = GetPilotSessionLaps(sessionId, trackId, pilotId, pilotDetections, minimumLapTime, maximumLapTime);
-            allLaps[pilotId] = pilotLaps;
-            allRecords[pilotId] = GetPilotRecords(sessionId, trackId, pilotId, pilotLaps);
+            IEnumerable<IEnumerable<OpenPracticeLap>> pilotLapGroups = GetPilotSessionLapGroups(sessionId, trackId, pilotId, pilotDetections, minimumLapTime, maximumLapTime);
+            pilotLaps[pilotId] = pilotLapGroups;
+            allRecords[pilotId] = GetPilotRecords(sessionId, trackId, pilotId, pilotLapGroups);
         }
 
         Dictionary<uint, IEnumerable<OpenPracticeLapRecord>> sessionRecords = GetSessionRecords(allRecords);
 
-        return new OpenPracticeSessionTimingInformation(allDetections, allLaps, allRecords, sessionRecords);
+        return new OpenPracticeSessionTimingInformation(allDetections, pilotLaps, allRecords, sessionRecords);
     }
     public OpenPracticeSessionPilotTimingInfo GetSessionPilotTimingInfo(Guid sessionId, Guid trackId, Guid pilotId)
     {
         ConcurrentBag<OpenPracticeDetection> detections = GetPilotDetections(sessionId, trackId, pilotId);
 
         IEnumerable<OpenPracticeDetection> pilotDetections = detections.ToList();
-        IEnumerable<OpenPracticeLap> pilotLaps = GetPilotSessionLaps(sessionId, trackId, pilotId, pilotDetections, TimeSpan.Zero, TimeSpan.MaxValue);
+        IEnumerable<IEnumerable<OpenPracticeLap>> pilotLaps = GetPilotSessionLapGroups(sessionId, trackId, pilotId, pilotDetections, TimeSpan.Zero, TimeSpan.MaxValue);
         IDictionary<uint, OpenPracticeLapRecord> pilotRecords = GetPilotRecords(sessionId, trackId, pilotId, pilotLaps);
 
         return new OpenPracticeSessionPilotTimingInfo(pilotDetections, pilotLaps, pilotRecords);

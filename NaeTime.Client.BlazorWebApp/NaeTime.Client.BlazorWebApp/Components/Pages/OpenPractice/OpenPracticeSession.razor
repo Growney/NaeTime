@@ -58,83 +58,55 @@
                     </div>
                 </div>
             }
+        </div>
 
-            @foreach (var kvp in _timingInfo.PilotLaps)
+        <div class="d-flex flex-wrap justify-content-center">
+            @foreach (var kvp in _timingInfo.PilotLapGroups)
             {
                 <div class="shadow-sm p-3">
-                    <h5 style="height: 1em;" class="w-100 text-center">@GetPilotName(kvp.Key) </h5>
-                    <div style="width:300px;">
-                        <table class="table table-striped">
-                            <tr class="px-2">
-                                <th>
-                                    #
-                                </th>
-                                <th class="text-center">
-                                    Time
-                                </th>
-                            </tr>
-                            <tbody>
-                                @foreach (var lap in kvp.Value)
-                                {
-                                    <tr>
-                                        <td>
-                                            @lap.StartDetection.UtcTime.ToString("HH:mm:ss")
-                                        </td>
-                                        <td>
-                                            @lap.EndDetection.UtcTime.ToString("HH:mm:ss")
-                                        </td>
-                                        <td>
-                                            @($"{lap.Duration:m\\:ss\\:fff}")
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            }
+                    
 
-            @foreach (var kvp in _timingInfo.PilotDetections)
-            {
-                <div class="shadow-sm p-3">
-                    <h5 style="height: 1em;" class="w-100 text-center">@GetPilotName(kvp.Key) </h5>
-                    <div style="width:300px;">
-                        <table class="table table-striped">
-                            <tr class="px-2">
-                                <th>
-                                    Lane
-                                </th>
-                                <th class="text-center">
-                                    Software Time
-                                </th>
-                                <th class="text-center">
-                                    Hardware Time
-                                </th>
-                                <th class="text-center">
-                                    Date Time
-                                </th>
-                            </tr>
-                            <tbody>
-                                @foreach (var detection in kvp.Value)
+                        @{
+                            int lapGroupCount = kvp.Value.Count();
+                            int totalLapCount = kvp.Value.Sum(x => x.Count());
+
+                            <h5 style="height: 1em;" class="w-100 text-center">@GetPilotName(kvp.Key)  </h5>
+                            <h6 class="text-muted w-100 text-center">@lapGroupCount packs @totalLapCount laps</h6>
+                            <div style="width:300px; max-height:600px; overflow-y:scroll;">
+
+                                @foreach (var lapGroup in kvp.Value.OrderByDescending(x => x.Max(d => d.StartDetection.UtcTime)))
                                 {
-                                    <tr>
-                                        <td>
-                                            @detection.Lane
-                                        </td>
-                                        <td>
-                                            @detection.SoftwareTime
-                                        </td>
-                                        <td>
-                                            @detection.HardwareTime
-                                        </td>
-                                        <td>
-                                            @detection.UtcTime.ToString("HH:mm:ss.fff")
-                                        </td>
-                                    </tr>
+                                    <h7 style="height: 1em;" class="w-100 text-center">Pack @lapGroupCount </h7>
+                                    <hr />
+                                    <table class="table table-striped">
+                                        <tbody>
+                                            @{
+                                                int lapCount = lapGroup.Count();
+                                                foreach (var lap in lapGroup.OrderByDescending(x => x.StartDetection.UtcTime))
+                                                {
+                                                    <tr>
+                                                        <td class="text-muted" style="width:2rem;">
+                                                            @totalLapCount
+                                                        </td>
+                                                        <td class="text-muted" style="width:2rem;">
+                                                            @lapCount
+                                                        </td>
+                                                        <td class="text-center">
+                                                            @($"{lap.Duration:m\\:ss\\:fff}")
+                                                        </td>
+                                                    </tr>
+                                                    lapCount--;
+                                                    totalLapCount--;
+                                                }
+                                            }
+
+                                        </tbody>
+                                    </table>
+                                    lapGroupCount --;
+                                
                                 }
-                            </tbody>
-                        </table>
-                    </div>
+                            </div>
+                        }
                 </div>
             }
         </div>
@@ -227,8 +199,6 @@
             _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
 
             StateHasChanged();
-
-            NaeTime.Query.Abstractions.Models.OpenPracticeLap? lap = _timingInfo.PilotLaps.ContainsKey(detection.PilotId) ? _timingInfo.PilotLaps[detection.PilotId].FirstOrDefault(x=>x.EndDetection.Id == detection.DetectionId) : null;
         });
     }
     private string GetLapCallout(TimeSpan timeSpan, int roundedTo = 3)
