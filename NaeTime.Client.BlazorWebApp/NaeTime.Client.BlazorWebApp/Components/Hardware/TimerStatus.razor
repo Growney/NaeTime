@@ -2,7 +2,9 @@
 @using NaeTime.Events
 @implements IAsyncDisposable
 
-<i class="fa-solid fa-microchip @GetCssClass()"></i>
+<div class="@GetCssClass()">
+    <i class="fa-solid fa-microchip"></i>
+</div>
 
 @code {
     private enum TimeStatus
