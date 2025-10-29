@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace EventDbLite.Reactions;
-public class ReactionService(IServiceProvider serviceProvider) : IHostedService
+public class ConstantReactionService(IServiceProvider serviceProvider) : IHostedService
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider;
 

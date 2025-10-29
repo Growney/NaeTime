@@ -68,6 +68,7 @@ internal class OpenPracticeReactions
 
     private async Task When(OpenPracticeSessionLaneEnabled enabled)
     {
+
         NaeTime.Query.Abstractions.Models.Session? activeSession = await _sessionQueryHandler.GetActiveSession();
         if (activeSession is null || activeSession.Id != enabled.SessionId)
         {

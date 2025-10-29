@@ -47,10 +47,11 @@ public class ReactionProvider : IReactionProvider
     private readonly IStreamSubscription _subscription;
     protected readonly IEventSerializer _eventSerializer;
 
-    private Task _processTask;
+    private Task? _processTask;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private readonly Func<Task>? _onStart;
 
-    public ReactionProvider(IStreamSubscription subscription, IEventSerializer eventSerializer)
+    public ReactionProvider(IStreamSubscription subscription, IEventSerializer eventSerializer, Func<Task> onStart)
     {
         _subscription = subscription ?? throw new ArgumentNullException(nameof(subscription));
         _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
@@ -130,7 +131,10 @@ public class ReactionProvider : IReactionProvider
 
         try
         {
-            await _processTask;
+            if (_processTask != null)
+            {
+                await _processTask;
+            }
         }
         catch (OperationCanceledException)
         {

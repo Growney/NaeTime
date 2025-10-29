@@ -25,7 +25,7 @@ public static class IServiceCollectionExtensions
         });
         services.AddHostedService<SQLiteDatabaseManager<EventDbLiteContext>>();
 
-        services.AddHostedService<ReactionService>();
+        services.AddHostedService<ConstantReactionService>();
 
         services.AddSingleton<IEventStoreLite, EventStoreLite>();
         services.AddSingleton<ILiveProjectionRepository, LiveProjectionRepository>();
@@ -41,6 +41,7 @@ public static class IServiceCollectionExtensions
         services.AddTransient<IStreamEventWriter, StreamEventWriter>();
         services.AddTransient<IReactionProviderFactory, ReactionProviderFactory>();
         services.AddTransient(x => x.GetRequiredService<IReactionProviderFactory>().CreateProvider(StreamPosition.End));
+        services.AddTransient<IReactionClassFactory, ReactionClassFactory>();
 
         services.AddHostedService<LiveProjectionService>();
         return services;
