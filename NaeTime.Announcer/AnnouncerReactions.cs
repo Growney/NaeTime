@@ -1,6 +1,6 @@
 ﻿using NaeTime.Announcer.Abstractions;
 using NaeTime.Collections;
-using System.Runtime.CompilerServices;
+using NaeTime.Events;
 
 namespace NaeTime.Announcer;
 public class AnnouncerReactions : IAnnouncementStream
@@ -12,7 +12,7 @@ public class AnnouncerReactions : IAnnouncementStream
         _announcementQueue.Dispose();
     }
 
-    public async IAsyncEnumerable<string> StreamAnnouncments([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerator<string> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -22,5 +22,17 @@ public class AnnouncerReactions : IAnnouncementStream
                 yield return announcement;
             }
         }
+    }
+
+    private void When(OpenPracticePilotDetectionOccured occured)
+    {
+        string announcement = "Detected";
+
+        _announcementQueue.Enqueue(announcement);
+    }
+    private void When(OpenPracticePilotDetectionTriggered triggered)
+    {
+        string announcement = "Triggered";
+        _announcementQueue.Enqueue(announcement);
     }
 }

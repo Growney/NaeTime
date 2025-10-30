@@ -40,6 +40,7 @@ internal class EventStreamConnection(EventDbLiteContext context) : IEventStreamC
                 StreamOrdinal = ++currentStreamVersion,
                 Metadata = eventData.Metadata,
                 Payload = eventData.Payload,
+                Identifier = eventData.Identifier,
             };
             createdPersistedEvents.Add(newEvent);
             _context.PersistedEvents.Add(newEvent);
@@ -54,13 +55,13 @@ internal class EventStreamConnection(EventDbLiteContext context) : IEventStreamC
         {
             await _context.SaveChangesAsync();
 
-            return createdPersistedEvents.Select(x => new StreamEvent(x.Id, x.StreamName, x.StreamOrdinal, x.GlobalOrdinal, new EventData(x.Payload, x.Metadata)));
+            return createdPersistedEvents.Select(x => new StreamEvent(x.Id, x.StreamName, x.StreamOrdinal, x.GlobalOrdinal, new EventData(x.Payload, x.Metadata, x.Identifier)));
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateConcurrencyException ex)
         {
             throw new ConcurrencyException(expectedState.Version, currentStreamVersion);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex)
         {
             throw new ConcurrencyException(expectedState.Version, currentStreamVersion);
         }
@@ -69,25 +70,28 @@ internal class EventStreamConnection(EventDbLiteContext context) : IEventStreamC
     public void Dispose() => _context.Dispose();
     public IAsyncEnumerable<StreamEvent> ReadAllStreamEvents(StreamDirection direction, StreamPosition position)
     {
+        var query = _context.PersistedEvents.AsQueryable()
+            .AsNoTracking();
 
-        var query = _context.PersistedEvents.AsQueryable();
         query = direction == StreamDirection.Forward ? query.Where(x => x.GlobalOrdinal > position.Version) : query.Where(x => x.GlobalOrdinal < position.Version);
         query = direction == StreamDirection.Forward ? query.OrderBy(x => x.GlobalOrdinal) : query.OrderByDescending(x => x.GlobalOrdinal);
+
         return query
-            .Select(x => new StreamEvent(x.Id, x.StreamName, x.StreamOrdinal, x.GlobalOrdinal, new EventData(x.Payload, x.Metadata)))
+            .Select(x => new StreamEvent(x.Id, x.StreamName, x.StreamOrdinal, x.GlobalOrdinal, new EventData(x.Payload, x.Metadata, x.Identifier)))
             .AsAsyncEnumerable();
     }
 
     public IAsyncEnumerable<StreamEvent> ReadStreamEvents(string streamName, StreamDirection direction, StreamPosition position)
     {
         var query = _context.PersistedEvents
-                .Where(x => x.StreamName == streamName);
+                .Where(x => x.StreamName == streamName)
+                .AsNoTracking();
 
         query = direction == StreamDirection.Forward ? query.Where(x => x.StreamOrdinal > position.Version) : query.Where(x => x.StreamOrdinal < position.Version);
         query = direction == StreamDirection.Forward ? query.OrderBy(x => x.StreamOrdinal) : query.OrderByDescending(x => x.StreamOrdinal);
 
         return query
-            .Select(x => new StreamEvent(x.Id, x.StreamName, x.StreamOrdinal, x.GlobalOrdinal, new EventData(x.Payload, x.Metadata)))
+            .Select(x => new StreamEvent(x.Id, x.StreamName, x.StreamOrdinal, x.GlobalOrdinal, new EventData(x.Payload, x.Metadata, x.Identifier)))
             .AsAsyncEnumerable();
     }
 }

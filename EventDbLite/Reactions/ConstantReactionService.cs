@@ -5,14 +5,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace EventDbLite.Reactions;
-public class ConstantReactionService(IServiceProvider serviceProvider) : IHostedService
+public class ConstantReactionService : IHostedService
 {
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
-
-    private IReactionProvider? _reactionProvider;
+    private readonly IServiceProvider _serviceProvider;
 
     private CancellationTokenSource? _cancellationTokenSource;
     private Task _completionTask = Task.CompletedTask;
+
+    public ConstantReactionService(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -20,25 +23,28 @@ public class ConstantReactionService(IServiceProvider serviceProvider) : IHosted
         _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         IEnumerable<ConstantReactionSource> reactionSources = _serviceProvider.GetServices<ConstantReactionSource>();
 
-        Dictionary<Type, List<Func<IServiceProvider, object, Task>>> reactionMap = new();
+        Dictionary<string, List<ConstantReaction>> reactionMap = new();
 
         foreach (ConstantReactionSource reactionSource in reactionSources)
         {
+            string reactionKey = reactionSource.ReactionKey ?? "default-reactions";
+
+            if (!reactionMap.TryGetValue(reactionKey, out var reactions))
+            {
+                reactions = new List<ConstantReaction>();
+                reactionMap.Add(reactionKey, reactions);
+            }
+
             foreach (ConstantReaction reaction in reactionSource.Reactions)
             {
-                if (!reactionMap.TryGetValue(reaction.TargetType, out var handlers))
-                {
-                    handlers = new List<Func<IServiceProvider, object, Task>>();
-                    reactionMap[reaction.TargetType] = handlers;
-                }
-                handlers.Add(reaction.Handler);
+                reactions.Add(reaction);
             }
         }
 
         List<Task> reactionTasks = new();
         foreach (var kvp in reactionMap)
         {
-            reactionTasks.Add(StreamEventType(kvp.Key, kvp.Value, _cancellationTokenSource.Token));
+            reactionTasks.Add(StreamReactions(kvp.Key, kvp.Value, _cancellationTokenSource.Token));
         }
 
         _completionTask = Task.WhenAll(reactionTasks);
@@ -46,36 +52,93 @@ public class ConstantReactionService(IServiceProvider serviceProvider) : IHosted
         return Task.CompletedTask;
     }
 
-    private async Task StreamEventType(Type targetType, IEnumerable<Func<IServiceProvider, object, Task>> handlers, CancellationToken token)
+    private async Task StreamReactions(string reactionKey, IEnumerable<ConstantReaction> handlers, CancellationToken token)
     {
         using IServiceScope scope = _serviceProvider.CreateScope();
 
-        IReactionProviderFactory factory = scope.ServiceProvider.GetRequiredService<IReactionProviderFactory>();
+        IEventStoreLite store = scope.ServiceProvider.GetRequiredService<IEventStoreLite>();
 
-        StreamPosition position = await GetReactionPosition(targetType, scope.ServiceProvider);
+        StreamPosition position = await GetReactionPosition(reactionKey, scope.ServiceProvider);
 
-        IReactionProvider provider = factory.CreateProvider(position);
+        IStreamSubscription subscription = store.SubscribeToAllStreams(position);
 
-        await foreach (ReactionEvent streamEvent in provider.StreamSubscription(targetType, token))
+        IEventSerializer serializer = scope.ServiceProvider.GetRequiredService<IEventSerializer>();
+        Dictionary<string, Dictionary<Type, List<ConstantReaction>>> identifiedReactions = GroupReactions(handlers, serializer);
+        await foreach (SubscriptionEvent streamEvent in subscription.StreamEvents(token))
         {
-            using IServiceScope eventScope = scope.ServiceProvider.CreateScope();
+            EventMetadata metadata = serializer.DeserializeMetadata(streamEvent.Event.Data.Metadata);
 
-            foreach (Func<IServiceProvider, object, Task> handler in handlers)
+            if (!identifiedReactions.TryGetValue(metadata.Identifier, out var eventHandlers))
             {
-                await handler(eventScope.ServiceProvider, streamEvent.Payload);
+                continue;
             }
 
-            await StoreReactionPosition(targetType, streamEvent.SubscriptionEvent.Event, eventScope.ServiceProvider);
+            bool handledAny = false;
+            foreach (var kvp in eventHandlers)
+            {
+                object? eventObject = serializer.DeserializeEvent(streamEvent.Event.Data.Payload, kvp.Key);
+
+                if (eventObject is null)
+                {
+                    continue;
+                }
+
+                using IServiceScope eventScope = scope.ServiceProvider.CreateScope();
+
+                foreach (ConstantReaction handler in kvp.Value)
+                {
+                    try
+                    {
+                        await handler.Handler(eventScope.ServiceProvider, eventObject);
+                        handledAny = true;
+                    }
+                    catch
+                    {
+                        //TODO do something with the exception
+                    }
+                }
+            }
+            if (handledAny)
+            {
+                await StoreReactionPosition(reactionKey, streamEvent.Event, scope.ServiceProvider);
+            }
         }
     }
-    private static string GetStreamName(Type targetType) => $"$reactions-{targetType.FullName}";
-    private static async Task<StreamPosition> GetReactionPosition(Type targetType, IServiceProvider services)
+
+    private static Dictionary<string, Dictionary<Type, List<ConstantReaction>>> GroupReactions(IEnumerable<ConstantReaction> handlers, IEventSerializer serializer)
+    {
+        Dictionary<string, Dictionary<Type, List<ConstantReaction>>> identifiedReactions = new();
+
+        foreach (ConstantReaction handler in handlers)
+        {
+            string identifier = serializer.GetIdentifier(handler.TargetType);
+
+            if (!identifiedReactions.TryGetValue(identifier, out var typeReactions))
+            {
+                typeReactions = new Dictionary<Type, List<ConstantReaction>>();
+                identifiedReactions.Add(identifier, typeReactions);
+            }
+
+            if (!typeReactions.TryGetValue(handler.TargetType, out var identifierReactions))
+            {
+                identifierReactions = new List<ConstantReaction>();
+                typeReactions.Add(handler.TargetType, identifierReactions);
+            }
+
+            identifierReactions.Add(handler);
+        }
+
+        return identifiedReactions;
+    }
+
+    private static string GetStreamName(string reactionKey) => $"$reactions-{reactionKey}";
+    private static async Task<StreamPosition> GetReactionPosition(string reactionKey, IServiceProvider services)
     {
         IEventSerializer _eventSerializer = services.GetRequiredService<IEventSerializer>();
         IEventStoreLite _eventStreamConnection = services.GetRequiredService<IEventStoreLite>();
         string reactionEventIdentifier = _eventSerializer.GetIdentifier(typeof(ReactionHandled));
 
-        await foreach (StreamEvent streamEvent in _eventStreamConnection.ReadStreamEvents(GetStreamName(targetType), StreamDirection.Reverse, StreamPosition.End))
+        await foreach (StreamEvent streamEvent in _eventStreamConnection.ReadStreamEvents(GetStreamName(reactionKey), StreamDirection.Reverse, StreamPosition.End))
         {
             EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
 
@@ -96,7 +159,7 @@ public class ConstantReactionService(IServiceProvider serviceProvider) : IHosted
 
         return StreamPosition.Beginning;
     }
-    private static Task StoreReactionPosition(Type targetType, StreamEvent streamEvent, IServiceProvider services)
+    private static Task StoreReactionPosition(string reactionKey, StreamEvent streamEvent, IServiceProvider services)
     {
         IStreamEventWriter _streamEventWriter = services.GetRequiredService<IStreamEventWriter>();
 
@@ -105,17 +168,12 @@ public class ConstantReactionService(IServiceProvider serviceProvider) : IHosted
             GlobalOrdinal = streamEvent.GlobalOrdinal,
         };
 
-        return _streamEventWriter.AppendToStream(GetStreamName(targetType), handledEvent);
+        return _streamEventWriter.AppendToStream(GetStreamName(reactionKey), handledEvent);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         _cancellationTokenSource?.Cancel();
-        if (_reactionProvider != null)
-        {
-            await _reactionProvider.DisposeAsync();
-        }
-
         await _completionTask;
     }
 }

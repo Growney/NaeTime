@@ -1,6 +1,5 @@
 ﻿@using EventDbLite.Abstractions
 @using NaeTime.Events
-@implements IAsyncDisposable
 
 <div class="@GetCssClass()">
     <i class="fa-solid fa-microchip"></i>
@@ -25,7 +24,7 @@
     public byte? LaneId{ get; set; }
 
     [Inject]
-    private IReactionProvider ReactionProvider { get; set; } = null!;
+    private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
     [Inject]
     private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
 
@@ -47,13 +46,11 @@
 
     private TimeStatus _timeStatus = TimeStatus.Pending;
 
-    public ValueTask DisposeAsync() => ReactionProvider.DisposeAsync();
-
     protected override async Task OnInitializedAsync()
     {
         if (LaneId.HasValue)
         {
-            ReactionProvider.On<TimerLaneMismatch>(x =>
+            _ = ReactionProviderFactory.On<TimerLaneMismatch>(x =>
             {
                 if(x.TimerId != TimerId)
                 {
@@ -71,7 +68,7 @@
 
                 return Task.CompletedTask;
             });
-            ReactionProvider.On<TimerLaneConfirmed>(x =>
+            _ = ReactionProviderFactory.On<TimerLaneConfirmed>(x =>
             {
                 if (x.TimerId != TimerId)
                 {
@@ -85,7 +82,7 @@
                 StateHasChanged();
                 return Task.CompletedTask;
             });
-            ReactionProvider.On<TimerLanePending>(x =>
+            _ = ReactionProviderFactory.On<TimerLanePending>(x =>
             {
                 if (x.TimerId != TimerId)
                 {
@@ -101,7 +98,7 @@
             });
         }
 
-        ReactionProvider.On<TimerDisconnected>(x =>
+        _ = ReactionProviderFactory.On<TimerDisconnected>(x =>
         {
             if (x.TimerId != TimerId)
             {
@@ -111,7 +108,7 @@
             StateHasChanged();
             return Task.CompletedTask;
         });
-        ReactionProvider.On<TimerConnected>(x =>
+        _ = ReactionProviderFactory.On<TimerConnected>(x =>
         {
             if (x.TimerId != TimerId)
             {

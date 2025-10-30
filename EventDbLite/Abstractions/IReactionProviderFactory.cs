@@ -1,8 +1,7 @@
 ﻿using EventDbLite.Streams;
 
 namespace EventDbLite.Abstractions;
-public interface IReactionProviderFactory
+public interface IReactionProviderFactory : IDisposable
 {
-    public IReactionProvider CreateProvider(StreamPosition initialPosition, string? streamName = null);
-    public Task<IReactionProvider> CreateProviderAsync(StreamPosition initialPosition, Func<Task>? onStart = null, string? streamName = null);
+    public IReactionProvider<TEvent> CreateProvider<TEvent>(StreamPosition initialPosition, string? streamName = null);
 }

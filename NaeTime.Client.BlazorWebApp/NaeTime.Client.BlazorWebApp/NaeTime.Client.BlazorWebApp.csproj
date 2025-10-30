@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\EventDbLite\EventDbLite.csproj" />
+    <ProjectReference Include="..\..\NaeTime.Announcer\NaeTime.Announcer.csproj" />
     <ProjectReference Include="..\..\NaeTime.Client\NaeTime.Client.csproj" />
     <ProjectReference Include="..\..\NaeTime.Command\NaeTime.Command.csproj" />
     <ProjectReference Include="..\..\NaeTime.Hardware.ImmersionRC\NaeTime.Hardware.ImmersionRC.csproj" />

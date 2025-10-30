@@ -22,9 +22,7 @@ public class StreamEventWriter(IEventSerializer eventSerializer, IEventStoreLite
         byte[] metadataPayload = _eventSerializer.SerializeMetadata(metaData);
         byte[] eventPayload = _eventSerializer.SerializeEvent(payload);
 
-        EventData data = new(eventPayload, metadataPayload);
-
-        string identifier = _eventSerializer.GetIdentifier(payload.GetType());
+        EventData data = new(eventPayload, metadataPayload, metaData.Identifier);
 
         await _connection.AppendToStreamAsync(streamName, data, StreamPosition.Any);
     }

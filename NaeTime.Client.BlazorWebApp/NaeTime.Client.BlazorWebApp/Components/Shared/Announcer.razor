@@ -1,0 +1,29 @@
+﻿@using EventDbLite.Abstractions
+@using NaeTime.Announcer
+@using Toolbelt.Blazor.SpeechSynthesis
+@code {
+
+    [Inject]
+    public IReactionClassFactory ReactionClassFactory { get; set; } = null!;
+
+    [Inject]
+    public SpeechSynthesis SpeechSynthesis { get; set; } = null!;
+
+    protected override Task OnInitializedAsync()
+    {
+        var reaction = ReactionClassFactory.Create<AnnouncerReactions>();
+
+        _ = HandleAnnouncements(reaction.Instance);
+
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleAnnouncements(AnnouncerReactions announcer)
+    {
+        await foreach(var message in announcer)
+        {
+            // Handle each announcement message (e.g., display it in the UI)
+            await InvokeAsync(()=> SpeechSynthesis.SpeakAsync(message));
+        }
+    }
+}

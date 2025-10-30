@@ -7,6 +7,7 @@ using EventDbLite.Handlers;
 using EventDbLite.Projections;
 using EventDbLite.Reactions;
 using EventDbLite.Streams;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NaeTime.Persistence.SQLite;
 
@@ -19,7 +20,16 @@ public static class IServiceCollectionExtensions
     {
         services.AddDbContext<EventDbLiteContext>(options =>
         {
-            options.UseSqlite("Data Source=eventdblite.db;Cache=Shared;Pooling=true;")
+            SqliteConnectionStringBuilder builder = new()
+            {
+                DataSource = "eventdblite.db",
+                Cache = SqliteCacheMode.Private,
+                Pooling = false,
+            };
+
+            string connectionString = builder.ToString();
+
+            options.UseSqlite(connectionString)
                    .EnableSensitiveDataLogging()
                    .EnableDetailedErrors();
         });
@@ -40,7 +50,6 @@ public static class IServiceCollectionExtensions
 
         services.AddTransient<IStreamEventWriter, StreamEventWriter>();
         services.AddTransient<IReactionProviderFactory, ReactionProviderFactory>();
-        services.AddTransient(x => x.GetRequiredService<IReactionProviderFactory>().CreateProvider(StreamPosition.End));
         services.AddTransient<IReactionClassFactory, ReactionClassFactory>();
 
         services.AddHostedService<LiveProjectionService>();
@@ -99,7 +108,7 @@ public static class IServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddConstantReaction<T>(this IServiceCollection services, Func<IServiceProvider, T, Task> reaction)
+    public static IServiceCollection AddConstantReaction<T>(this IServiceCollection services, Func<IServiceProvider, T, Task> reaction, string? reactionKey = null)
     {
         services.AddSingleton(new ConstantReactionSource([new ConstantReaction((serviceProvider, obj) =>
         {
@@ -108,7 +117,7 @@ public static class IServiceCollectionExtensions
                 return reaction(serviceProvider, t);
             }
             return Task.CompletedTask;
-        }, typeof(T))]));
+        }, typeof(T))], reactionKey));
 
         return services;
     }
@@ -116,25 +125,8 @@ public static class IServiceCollectionExtensions
     {
         services.AddSingleton(serviceProvider =>
         {
-            IAsyncHandlerProvider handlerProvider = serviceProvider.GetRequiredService<IAsyncHandlerProvider>();
-            IEnumerable<AsyncHandler> handlers = handlerProvider.GetHandlerMethods(typeof(T));
-
-            List<ConstantReaction> reactions = [];
-
-            foreach (AsyncHandler handler in handlers)
-            {
-                ConstantReaction reaction = new(async (reactionServiceProvider, eventObject) =>
-                {
-                    object? instance = ActivatorUtilities.GetServiceOrCreateInstance(reactionServiceProvider, typeof(T));
-
-                    await handler.Action.Invoke(instance, eventObject);
-
-                }, handler.TargetType);
-
-                reactions.Add(reaction);
-            }
-
-            return new ConstantReactionSource(reactions);
+            List<ConstantReaction> reactions = GetReactions<T>(serviceProvider);
+            return new ConstantReactionSource(reactions, typeof(T).Name);
         });
         return services;
     }
@@ -145,5 +137,44 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<TService, TImplementation>();
         services.AddConstantReactionClass<TService>();
         return services;
+    }
+    public static IServiceCollection AddConstantReactionClass<T>(this IServiceCollection services, string? reactionKey)
+    {
+        services.AddSingleton(serviceProvider =>
+        {
+            List<ConstantReaction> reactions = GetReactions<T>(serviceProvider);
+            return new ConstantReactionSource(reactions, reactionKey);
+        });
+        return services;
+    }
+    public static IServiceCollection AddConstantReactionService<TService, TImplementation>(this IServiceCollection services, string? reactionKey)
+        where TService : class
+        where TImplementation : class, TService
+    {
+        services.AddSingleton<TService, TImplementation>();
+        services.AddConstantReactionClass<TService>(reactionKey);
+        return services;
+    }
+
+    private static List<ConstantReaction> GetReactions<T>(IServiceProvider serviceProvider)
+    {
+        IAsyncHandlerProvider handlerProvider = serviceProvider.GetRequiredService<IAsyncHandlerProvider>();
+        IEnumerable<AsyncHandler> handlers = handlerProvider.GetHandlerMethods(typeof(T));
+
+        List<ConstantReaction> reactions = [];
+
+        foreach (AsyncHandler handler in handlers)
+        {
+            ConstantReaction reaction = new(async (reactionServiceProvider, eventObject) =>
+            {
+                object? instance = ActivatorUtilities.GetServiceOrCreateInstance(reactionServiceProvider, typeof(T));
+
+                await handler.Action.Invoke(instance, eventObject);
+
+            }, handler.TargetType);
+
+            reactions.Add(reaction);
+        }
+        return reactions;
     }
 }

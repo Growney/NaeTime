@@ -2,17 +2,20 @@
 using EventDbLite.Streams;
 
 namespace EventDbLite.Reactions;
-public class ReactionProviderFactory(IEventStoreLite eventStore, IEventSerializer eventSerializer) : IReactionProviderFactory
+public class ReactionProviderFactory : IReactionProviderFactory
 {
-    private readonly IEventStoreLite _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
-    private readonly IEventSerializer _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
+    private readonly IEventStoreLite _eventStore;
+    private readonly IEventSerializer _eventSerializer;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    public IReactionProvider CreateProvider(StreamPosition initialPosition, string? streamName = null)
+    public ReactionProviderFactory(IEventStoreLite eventStore, IEventSerializer eventSerializer)
     {
-        IStreamSubscription subscription = streamName is not null
-            ? _eventStore.SubscribeToStream(streamName, initialPosition)
-            : _eventStore.SubscribeToAllStreams(initialPosition);
-
-        return new ReactionProvider(subscription, _eventSerializer);
+        _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
+        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
     }
+
+    public IReactionProvider<TEvent> CreateProvider<TEvent>(StreamPosition initialPosition, string? streamName = null)
+        => new ReactionProvider<TEvent>(_eventStore, _eventSerializer, initialPosition, streamName, _cancellationTokenSource.Token);
+
+    public void Dispose() => _cancellationTokenSource.Cancel();
 }

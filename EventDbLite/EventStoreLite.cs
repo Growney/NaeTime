@@ -2,6 +2,7 @@
 using EventDbLite.Streams;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace EventDbLite;
@@ -112,7 +113,9 @@ public class EventStoreLite(IServiceProvider serviceProvider) : IEventStoreLite,
             targetDictionary.TryRemove(subscriptionId, out _);
         }
 
-        StreamSubscription subscription = new(this, streamName, initialPosition, onDispose);
+        ILogger<StreamSubscription>? logger = _serviceProvider.GetService<ILoggerFactory>()?.CreateLogger<StreamSubscription>();
+
+        StreamSubscription subscription = new(logger, this, streamName, initialPosition, onDispose);
         targetDictionary.TryAdd(subscriptionId, subscription);
         return subscription;
     }

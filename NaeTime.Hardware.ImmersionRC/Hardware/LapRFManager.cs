@@ -1,5 +1,4 @@
 ﻿using EventDbLite.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Query.Abstractions;
@@ -8,60 +7,25 @@ using System.Collections.Concurrent;
 using System.Net;
 
 namespace NaeTime.Timing.ImmersionRC.Hardware;
-internal class LapRFManager : IHostedService
+internal class LapRFManager : BackgroundService
 {
     private readonly ILapRFConnectionFactory _connectionFactory;
     private readonly IHardwareQueryHandler _queryHandler;
     private readonly ILapRFConnectionProvider _connectionProvider;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IReactionProviderFactory _reactionProviderFactory;
 
     private readonly ConcurrentDictionary<Guid, ILapRFConnection> _hardwareProcesses = new();
 
-    public LapRFManager(ILapRFConnectionFactory connectionFactory, IHardwareQueryHandler queryHandler, ILapRFConnectionProvider connectionProvider, IServiceProvider serviceProvider)
+    public LapRFManager(ILapRFConnectionFactory connectionFactory, IHardwareQueryHandler queryHandler, ILapRFConnectionProvider connectionProvider, IReactionProviderFactory reactionProviderFactory)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         _queryHandler = queryHandler ?? throw new ArgumentNullException(nameof(queryHandler));
         _connectionProvider = connectionProvider ?? throw new ArgumentNullException(nameof(connectionProvider));
-        _serviceProvider = serviceProvider ?? throw new ArgumentException("Connection factory must implement IServiceProvider to allow access to reaction provider.", nameof(connectionFactory));
-
+        _reactionProviderFactory = reactionProviderFactory ?? throw new ArgumentException("Connection factory must implement IServiceProvider to allow access to reaction provider.", nameof(connectionFactory));
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        IReactionProvider provider = _serviceProvider.GetRequiredService<IReactionProvider>();
-
-        provider.On<Events.ImmersionRCLapRFNetworkConfigurationChanged>(async x =>
-        {
-            if (_hardwareProcesses.TryGetValue(x.TimerId, out ILapRFConnection? existingConnection))
-            {
-                await existingConnection.Stop();
-                _hardwareProcesses.TryRemove(x.TimerId, out _);
-            }
-
-            if (IPAddress.TryParse(x.IPAddress, out IPAddress? ipAddress))
-            {
-                ILapRFConnection connection = _connectionFactory.CreateEthernetConnection(x.TimerId, ipAddress, x.Port);
-                _connectionProvider.SetLapRFConnection(x.TimerId, connection);
-                _hardwareProcesses[x.TimerId] = connection;
-            }
-        });
-
-        provider.On<Events.ImmersionRCLapRFNetworkDeviceRegistered>(async x =>
-        {
-            if (_hardwareProcesses.TryGetValue(x.TimerId, out ILapRFConnection? existingConnection))
-            {
-                await existingConnection.Stop();
-                _hardwareProcesses.TryRemove(x.TimerId, out _);
-            }
-
-            if (IPAddress.TryParse(x.IPAddress, out IPAddress? ipAddress))
-            {
-                ILapRFConnection connection = _connectionFactory.CreateEthernetConnection(x.TimerId, ipAddress, x.Port);
-                _connectionProvider.SetLapRFConnection(x.TimerId, connection);
-                _hardwareProcesses[x.TimerId] = connection;
-            }
-        });
-
         IEnumerable<Query.Abstractions.Models.ImmersionRCLapRF> devices = await _queryHandler.GetAllImmersionRCLapRFs();
 
         foreach (Query.Abstractions.Models.ImmersionRCLapRF device in devices)
@@ -76,12 +40,39 @@ internal class LapRFManager : IHostedService
 
             _hardwareProcesses[device.Id] = connection;
         }
+
+        await Task.WhenAll(
+            _reactionProviderFactory.On<Events.ImmersionRCLapRFNetworkConfigurationChanged>(HandleNetworkConfigurationChange, stoppingToken),
+            _reactionProviderFactory.On<Events.ImmersionRCLapRFNetworkDeviceRegistered>(HandleNetworkDeviceRegistered, stoppingToken));
     }
-    public async Task StopAsync(CancellationToken cancellationToken)
+
+    private async Task HandleNetworkConfigurationChange(Events.ImmersionRCLapRFNetworkConfigurationChanged e)
     {
-        foreach (KeyValuePair<Guid, ILapRFConnection> device in _hardwareProcesses)
+        if (_hardwareProcesses.TryGetValue(e.TimerId, out ILapRFConnection? existingConnection))
         {
-            await device.Value.Stop().ConfigureAwait(false);
+            await existingConnection.Stop();
+            _hardwareProcesses.TryRemove(e.TimerId, out _);
+        }
+        if (IPAddress.TryParse(e.IPAddress, out IPAddress? ipAddress))
+        {
+            ILapRFConnection connection = _connectionFactory.CreateEthernetConnection(e.TimerId, ipAddress, e.Port);
+            _connectionProvider.SetLapRFConnection(e.TimerId, connection);
+            _hardwareProcesses[e.TimerId] = connection;
+        }
+    }
+
+    private async Task HandleNetworkDeviceRegistered(Events.ImmersionRCLapRFNetworkDeviceRegistered e)
+    {
+        if (_hardwareProcesses.TryGetValue(e.TimerId, out ILapRFConnection? existingConnection))
+        {
+            await existingConnection.Stop();
+            _hardwareProcesses.TryRemove(e.TimerId, out _);
+        }
+        if (IPAddress.TryParse(e.IPAddress, out IPAddress? ipAddress))
+        {
+            ILapRFConnection connection = _connectionFactory.CreateEthernetConnection(e.TimerId, ipAddress, e.Port);
+            _connectionProvider.SetLapRFConnection(e.TimerId, connection);
+            _hardwareProcesses[e.TimerId] = connection;
         }
     }
 }

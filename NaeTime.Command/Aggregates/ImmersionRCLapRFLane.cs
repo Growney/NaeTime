@@ -10,7 +10,11 @@ public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.Immersion
         Pending,
         Confirmed,
     }
-    public record ImmersionRCLapRFLaneId(Guid SessionId, byte LaneId);
+    public record ImmersionRCLapRFLaneId(Guid SessionId, byte LaneId)
+    {
+        public override string ToString() => $"{SessionId}-{LaneId}";
+
+    }
     private class Field<T>
     {
         public T? RequestedValue { get; set; }

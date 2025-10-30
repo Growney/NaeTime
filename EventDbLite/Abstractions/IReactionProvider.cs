@@ -2,8 +2,6 @@
 
 namespace EventDbLite.Abstractions;
 
-public interface IReactionProvider : IAsyncDisposable
+public interface IReactionProvider<TEvent> : IAsyncEnumerable<ReactionEvent<TEvent>>
 {
-    IDisposable On(Type handlerType, Func<ReactionEvent, Task> handler);
-    IAsyncEnumerable<ReactionEvent> StreamSubscription(Type handlerType, CancellationToken cancellationToken);
 }

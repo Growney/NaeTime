@@ -1,5 +1,4 @@
 ﻿namespace NaeTime.Announcer.Abstractions;
-public interface IAnnouncementStream : IDisposable
+public interface IAnnouncementStream : IAsyncEnumerable<string>, IDisposable
 {
-    public IAsyncEnumerable<string> StreamAnnouncments(CancellationToken cancellationToken = default);
 }

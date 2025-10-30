@@ -12,6 +12,7 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     }
     private Type _type;
     private bool _isConnected;
+    private byte _lanes;
 
     public ImmersionRCLapRF()
     {
@@ -27,6 +28,7 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     private void When(ImmersionRCLapRFNetworkDeviceRegistered changed)
     {
         Id = changed.TimerId;
+        _lanes = _lanes;
         _type = Type.Network;
     }
 
@@ -50,7 +52,7 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
         if (!_isConnected)
         {
             Raise(new ImmersionRCLapRFTimerConnected(Id));
-            Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id));
+            Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id, _lanes));
             Raise(new TimerConnected(Id));
         }
     }
@@ -63,7 +65,7 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
         if (_isConnected)
         {
             Raise(new ImmersionRCLapRFTimerDisconnected(Id));
-            Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id));
+            Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id, _lanes));
             Raise(new TimerDisconnected(Id));
         }
     }

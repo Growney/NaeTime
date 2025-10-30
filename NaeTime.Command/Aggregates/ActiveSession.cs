@@ -49,7 +49,7 @@ public class ActiveSession : AggregateRoot
 
         if (_sessionId.HasValue && _sessionType.HasValue)
         {
-            Raise(new OpenPracticeSessionActivated(_sessionId.Value));
+            Raise(new OpenPracticeSessionDeactivated(_sessionId.Value));
         }
     }
     private void When(OpenPracticeSessionDeactivated _)

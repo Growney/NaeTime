@@ -60,14 +60,16 @@ public class ImmersionRCLapRFCommandHandler(IAggregateRepository repository) : I
 
     public async Task RegisterNetworkLapRF8Channel(Guid id, string name, IPAddress address, ushort port)
     {
-        ImmersionRCLapRF aggregate = _repository.CreateNew<ImmersionRCLapRF>(() => new ImmersionRCLapRF(id, name, address, port, 8));
-        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
+        byte lanes = 8;
 
-        for (byte i = 0; i < 8; i++)
+        for (byte i = 0; i < lanes; i++)
         {
             ImmersionRCLapRFLane laneAggregate = _repository.CreateNew<ImmersionRCLapRFLane>(() => new ImmersionRCLapRFLane(id, i));
             await _repository.Save<ImmersionRCLapRFLane, ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>(laneAggregate);
         }
+
+        ImmersionRCLapRF aggregate = _repository.CreateNew<ImmersionRCLapRF>(() => new ImmersionRCLapRF(id, name, address, port, lanes));
+        await _repository.Save<ImmersionRCLapRF, Guid>(aggregate);
     }
 
     public async Task RenameDevice(Guid id, string name)

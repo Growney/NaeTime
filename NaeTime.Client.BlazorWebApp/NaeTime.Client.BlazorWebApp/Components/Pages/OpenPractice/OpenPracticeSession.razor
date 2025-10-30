@@ -2,7 +2,6 @@
 @using EventDbLite.Abstractions
 @using NaeTime.Hardware.Abstractions
 @using NaeTime.Hardware.Frequency
-@implements IAsyncDisposable
 
 @if(_session != null)
 {
@@ -119,7 +118,7 @@
     public Guid Id { get; set; }
 
     [Inject]
-    private IReactionProvider ReactionProvider { get; set; } = null!;
+    private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
     [Inject]
@@ -176,7 +175,7 @@
             _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
         }
 
-        ReactionProvider.On<NaeTime.Events.OpenPracticePilotDetectionOccured>(async x =>
+        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionOccured>(async x =>
         {
             if (_session == null)
             {
@@ -187,7 +186,7 @@
 
             StateHasChanged();
         });
-        ReactionProvider.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async detection =>
+        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async detection =>
         {
 
             if (_session == null)
@@ -303,8 +302,6 @@
 
         StateHasChanged();
     }
-
-    public ValueTask DisposeAsync() => ReactionProvider.DisposeAsync();
 
     private async Task TriggerDetection(byte lane)
     {

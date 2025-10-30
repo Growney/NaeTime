@@ -30,5 +30,5 @@ public record ImmersionRCLapRFLaneGainConfigurationFailed(Guid TimerId, byte Lan
 
 public record ImmersionRCLapRFTimerConnected(Guid TimerId);
 public record ImmersionRCLapRFTimerDisconnected(Guid TimerId);
-public record ImmersionRCLapRFConfigurationUnconfirmed(Guid TimerId);
+public record ImmersionRCLapRFConfigurationUnconfirmed(Guid TimerId, byte Lanes);
 public record ImmersionRCLapRFLaneConfigurationUnconfirmed(Guid TimerId, byte Lane);

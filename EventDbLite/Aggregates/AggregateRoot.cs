@@ -89,7 +89,7 @@ public abstract class AggregateRoot
 
         byte[] eventPayload = _eventSerializer.SerializeEvent(payload);
 
-        _uncommittedEvents.Add(new EventData(eventPayload, metadataPayload));
+        _uncommittedEvents.Add(new EventData(eventPayload, metadataPayload, metadata.Identifier));
 
         string identifier = _eventSerializer.GetIdentifier(payload.GetType());
 

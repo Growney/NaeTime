@@ -14,7 +14,7 @@ public class SQLiteDatabaseManager<T>(IServiceProvider serviceProvider) : IHoste
         try
         {
             T dbContext = scope.ServiceProvider.GetRequiredService<T>();
-            await dbContext.Database.MigrateAsync();
+            await dbContext.Database.EnsureCreatedAsync();
         }
         finally
         {
