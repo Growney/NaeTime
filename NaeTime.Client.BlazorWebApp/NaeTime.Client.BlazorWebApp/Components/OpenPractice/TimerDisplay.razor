@@ -15,6 +15,7 @@
                     var timeSinceStart = DateTime.UtcNow - Start.Value;
 
                     string colour = MaxTime.HasValue && timeSinceStart > MaxTime ? "text-danger" : "";
+                    colour = MinTime.HasValue && timeSinceStart < MinTime ? "text-warning" : colour;
 
                     <td class="h2 align-bottom @colour" style="font-variant-numeric: tabular-nums">
                         @timeSinceStart.ToString("mm\\:ss\\:")
@@ -35,6 +36,8 @@
     public DateTime? Start { get; set; }
     [Parameter]
     public TimeSpan? MaxTime { get; set; }
+    [Parameter]
+    public TimeSpan? MinTime { get; set; }
 
     private Timer? _timer;
 

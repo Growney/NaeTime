@@ -8,7 +8,7 @@
     <div class="lane-container">
         @foreach (Models.OpenPracticeLane lane in _session.Lanes)
         {
-            <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime></NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration>        
+            <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime></NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration>        
         }
     </div>
     @if(_timingInfo != null)

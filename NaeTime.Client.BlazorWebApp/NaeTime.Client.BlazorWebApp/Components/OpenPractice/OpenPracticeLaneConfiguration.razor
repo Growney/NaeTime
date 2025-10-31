@@ -80,7 +80,7 @@
                         <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus>
                     }
                 </div>
-                <TimerDisplay Start="_pilotLastDetection" MaxTime=MaxTime></TimerDisplay>
+                <TimerDisplay Start="_pilotLastDetection" MaxTime=MaxTime MinTime=MinTime></TimerDisplay>
                 <div class="w-100 pb-2">
                     <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"><i class="fa-solid fa-stopwatch"></i></MudButton>                
                 </div>
@@ -99,6 +99,8 @@
 
     [Parameter]
     public TimeSpan? MaxTime { get; set; }
+    [Parameter]
+    public TimeSpan? MinTime { get; set; }
 
     private NaeTime.Client.Models.OpenPracticeLane _lane => Session.Lanes[LaneId];
 
