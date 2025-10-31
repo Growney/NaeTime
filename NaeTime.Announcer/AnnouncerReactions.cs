@@ -14,13 +14,15 @@ public class AnnouncerReactions : IAnnouncementStream
     private readonly ITrackProjection _trackProjection;
     private readonly IPilotProjection _pilotProjection;
     private readonly IOpenPracticeProjection _openPracticeProjection;
+    private readonly IDetectorProjection _detectorProjection;
 
-    public AnnouncerReactions(IOpenPracticeTimingProjection openPracticeTimingProjection, ITrackProjection trackProjection, IPilotProjection pilotProjection, IOpenPracticeProjection openPracticeProjection)
+    public AnnouncerReactions(IOpenPracticeTimingProjection openPracticeTimingProjection, ITrackProjection trackProjection, IPilotProjection pilotProjection, IOpenPracticeProjection openPracticeProjection, IDetectorProjection detectorProjection)
     {
         _openPracticeTimingProjection = openPracticeTimingProjection ?? throw new ArgumentNullException(nameof(openPracticeTimingProjection));
         _trackProjection = trackProjection ?? throw new ArgumentNullException(nameof(trackProjection));
         _pilotProjection = pilotProjection ?? throw new ArgumentNullException(nameof(pilotProjection));
         _openPracticeProjection = openPracticeProjection ?? throw new ArgumentNullException(nameof(openPracticeProjection));
+        _detectorProjection = detectorProjection ?? throw new ArgumentNullException(nameof(detectorProjection));
     }
 
     private IEnumerable<Type> GetProjectionDependencies() => [typeof(IOpenPracticeTimingProjection), typeof(ITrackProjection), typeof(IPilotProjection)];
@@ -176,4 +178,28 @@ public class AnnouncerReactions : IAnnouncementStream
     }
     private void When(OpenPracticeSessionLanePilotSet pilotSet) => AnnouncePilotFrequency(pilotSet.SessionId, pilotSet.PilotId, pilotSet.Lane);
     private void When(OpenPracticeSessionLaneVideoFrequencyTuned frequencyTuned) => AnnouncePilotFrequency(frequencyTuned.SessionId, null, frequencyTuned.Lane);
+
+    private void When(TimerConnected connected)
+    {
+        Detector? detector = _detectorProjection.GetDetector(connected.TimerId);
+
+        if (detector is null)
+        {
+            return;
+        }
+
+        _announcementQueue.Enqueue($"{detector.Name} connected");
+    }
+
+    private void When(TimerDisconnected disconnected)
+    {
+        Detector? detector = _detectorProjection.GetDetector(disconnected.TimerId);
+
+        if (detector is null)
+        {
+            return;
+        }
+
+        _announcementQueue.Enqueue($"{detector.Name} disconnected");
+    }
 }
