@@ -1,6 +1,7 @@
 ﻿using NaeTime.Announcer.Abstractions;
 using NaeTime.Collections;
 using NaeTime.Events;
+using NaeTime.Hardware.Frequency;
 using NaeTime.Query.Abstractions.Models;
 using NaeTime.Query.Abstractions.Projections;
 
@@ -12,12 +13,14 @@ public class AnnouncerReactions : IAnnouncementStream
     private readonly IOpenPracticeTimingProjection _openPracticeTimingProjection;
     private readonly ITrackProjection _trackProjection;
     private readonly IPilotProjection _pilotProjection;
+    private readonly IOpenPracticeProjection _openPracticeProjection;
 
-    public AnnouncerReactions(IOpenPracticeTimingProjection openPracticeTimingProjection, ITrackProjection trackProjection, IPilotProjection pilotProjection)
+    public AnnouncerReactions(IOpenPracticeTimingProjection openPracticeTimingProjection, ITrackProjection trackProjection, IPilotProjection pilotProjection, IOpenPracticeProjection openPracticeProjection)
     {
         _openPracticeTimingProjection = openPracticeTimingProjection ?? throw new ArgumentNullException(nameof(openPracticeTimingProjection));
         _trackProjection = trackProjection ?? throw new ArgumentNullException(nameof(trackProjection));
         _pilotProjection = pilotProjection ?? throw new ArgumentNullException(nameof(pilotProjection));
+        _openPracticeProjection = openPracticeProjection ?? throw new ArgumentNullException(nameof(openPracticeProjection));
     }
 
     private IEnumerable<Type> GetProjectionDependencies() => [typeof(IOpenPracticeTimingProjection), typeof(ITrackProjection), typeof(IPilotProjection)];
@@ -45,11 +48,16 @@ public class AnnouncerReactions : IAnnouncementStream
 
         _announcementQueue.Enqueue(announcement);
     }
+
+    private string? GetPilotCallout(Guid pilotId)
+    {
+        Pilot? pilot = _pilotProjection.GetPilotById(pilotId);
+        return pilot?.Callsign ?? pilot?.Firstname ?? pilot?.Lastname;
+    }
     private async Task When(OpenPracticePilotDetectionTriggered triggered)
     {
-        Pilot? pilot = _pilotProjection.GetPilotById(triggered.PilotId);
-        string? callout = pilot?.Callsign ?? pilot?.Firstname ?? pilot?.Lastname;
-        if (pilot == null || string.IsNullOrEmpty(callout))
+        string? callout = GetPilotCallout(triggered.PilotId);
+        if (string.IsNullOrEmpty(callout))
         {
             return;
         }
@@ -126,4 +134,46 @@ public class AnnouncerReactions : IAnnouncementStream
 
     private static string GetLapCallout(TimeSpan timeSpan, int roundedTo = 3) => Math.Round(timeSpan.TotalSeconds, roundedTo).ToString();
 
+    private void AnnouncePilotFrequency(Guid sessionId, Guid? pilotId, byte laneId)
+    {
+        OpenPracticeSession? session = _openPracticeProjection.GetSession(sessionId);
+        if (session is null)
+        {
+            return;
+        }
+
+        OpenPracticeLane? lane = session.Lanes.FirstOrDefault(l => l.Lane == laneId);
+        if (lane is null)
+        {
+            return;
+        }
+
+        pilotId ??= lane.PilotId;
+
+        if (!pilotId.HasValue)
+        {
+            return;
+        }
+
+        string? callout = GetPilotCallout(pilotId.Value);
+        if (string.IsNullOrEmpty(callout))
+        {
+            return;
+        }
+
+        Band band = Band.Bands.FirstOrDefault(b => b.Id == lane.BandId);
+
+        BandFrequency? frequency = band.Frequencies.FirstOrDefault(f => f.FrequencyInMhz == lane.FrequencyInMHz);
+
+        if (!frequency.HasValue)
+        {
+            _announcementQueue.Enqueue($"{callout} on {lane.FrequencyInMHz} MHz");
+        }
+        else
+        {
+            _announcementQueue.Enqueue($"{callout} on {frequency.Value.Name}");
+        }
+    }
+    private void When(OpenPracticeSessionLanePilotSet pilotSet) => AnnouncePilotFrequency(pilotSet.SessionId, pilotSet.PilotId, pilotSet.Lane);
+    private void When(OpenPracticeSessionLaneVideoFrequencyTuned frequencyTuned) => AnnouncePilotFrequency(frequencyTuned.SessionId, null, frequencyTuned.Lane);
 }
