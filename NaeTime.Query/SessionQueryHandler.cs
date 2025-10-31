@@ -1,6 +1,6 @@
 ﻿using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
-using NaeTime.Query.Projections.Abstractions;
+using NaeTime.Query.Abstractions.Projections;
 
 namespace NaeTime.Query;
 public class SessionQueryHandler : ISessionQueryHandler

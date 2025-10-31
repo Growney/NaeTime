@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EventDbLite\EventDbLite.csproj" />
     <ProjectReference Include="..\NaeTime.Command.Abstractions\NaeTime.Command.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Events\NaeTime.Events.csproj" />
     <ProjectReference Include="..\NaeTime.Query.Abstractions\NaeTime.Query.Abstractions.csproj" />

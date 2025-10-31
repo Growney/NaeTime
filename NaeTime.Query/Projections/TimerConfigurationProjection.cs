@@ -1,5 +1,5 @@
 ﻿using NaeTime.Events;
-using NaeTime.Query.Projections.Abstractions;
+using NaeTime.Query.Abstractions.Projections;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Query.Projections;

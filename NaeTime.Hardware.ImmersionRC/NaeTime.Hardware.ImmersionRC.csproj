@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EventDbLite\EventDbLite.csproj" />
     <ProjectReference Include="..\ImmersionRC.LapRF\ImmersionRC.LapRF.csproj" />
     <ProjectReference Include="..\NaeTime.Command.Abstractions\NaeTime.Command.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />

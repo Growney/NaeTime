@@ -1,7 +1,7 @@
 ﻿using NaeTime.Query;
 using NaeTime.Query.Abstractions;
+using NaeTime.Query.Abstractions.Projections;
 using NaeTime.Query.Projections;
-using NaeTime.Query.Projections.Abstractions;
 
 namespace Microsoft.Extensions.DependencyInjection;
 public static class IServiceCollectionExtensions

@@ -1,22 +1,17 @@
 ﻿using EventDbLite.Abstractions;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EventDbLite.Projections;
 public class LiveProjectionRepository : ILiveProjectionRepository
 {
-    private ConcurrentDictionary<Type,ILiveProjectionManager> _managers = new();
-    public ILiveProjectionManager GetManager(Type projectionServiceType)
+    private ConcurrentDictionary<Type, ILiveProjectionManager> _managers = new();
+    public ILiveProjectionManager? GetManager(Type projectionServiceType)
     {
-        if (_managers.TryGetValue(projectionServiceType, out var manager))
+        if (!_managers.TryGetValue(projectionServiceType, out var manager))
         {
-            return manager;
+            return null;
         }
-        throw new InvalidOperationException($"No live projection manager registered for projection service type {projectionServiceType.FullName}");
+        return manager;
     }
 
     public void RegisterManager(Type projectionServiceType, ILiveProjectionManager manager)

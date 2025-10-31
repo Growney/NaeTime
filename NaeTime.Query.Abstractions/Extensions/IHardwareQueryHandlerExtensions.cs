@@ -1,6 +1,6 @@
 ﻿using NaeTime.Query.Abstractions.Models;
 
-namespace NaeTime.Query.Abstractions.Extensions;
+namespace NaeTime.Query.Abstractions;
 public static class IHardwareQueryHandlerExtensions
 {
     public static async Task<Detector[]> GetDetectorsInOrder(this IHardwareQueryHandler handler, IEnumerable<Guid> ids)

@@ -1,6 +1,6 @@
 ﻿using NaeTime.Query.Abstractions.Models;
 
-namespace NaeTime.Query.Projections.Abstractions;
+namespace NaeTime.Query.Abstractions.Projections;
 public interface IOpenPracticeProjection
 {
     OpenPracticeSession? GetSession(Guid sessionId);

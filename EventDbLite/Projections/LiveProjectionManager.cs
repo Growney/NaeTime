@@ -29,6 +29,8 @@ internal class LiveProjectionManager : IAsyncDisposable, ILiveProjectionManager
         }
     }
 
+    private long _currentGlobalPosition = -1;
+
     private ConcurrentBag<VersionWaiter> _waitingTasks = new();
     public LiveProjectionManager(IServiceProvider serviceProvider, IEventSerializer serializer, IAsyncHandlerProvider asyncHandlerProvider, IEventStoreLite eventStore, LiveProjectionRequirement requirement)
     {
@@ -64,6 +66,11 @@ internal class LiveProjectionManager : IAsyncDisposable, ILiveProjectionManager
 
     public Task WaitForVersion(long globalPosition, CancellationToken cancellationToken)
     {
+        if (_currentGlobalPosition >= globalPosition)
+        {
+            return Task.CompletedTask;
+        }
+
         VersionWaiter waiter = new(globalPosition);
         _waitingTasks.Add(waiter);
         cancellationToken.Register(() => waiter.CompletionSource.TrySetCanceled(cancellationToken));
@@ -85,7 +92,8 @@ internal class LiveProjectionManager : IAsyncDisposable, ILiveProjectionManager
         await foreach (SubscriptionEvent nextEvent in subscription.StreamEvents(token))
         {
             await RaiseProjectionEvent(nextEvent);
-            NotifyWaitingTasks(nextEvent.Event.GlobalOrdinal);
+            _currentGlobalPosition = nextEvent.Event.GlobalOrdinal;
+            NotifyWaitingTasks(_currentGlobalPosition);
         }
     }
     private async Task RaiseProjectionEvent(SubscriptionEvent subscriptionEvent)
