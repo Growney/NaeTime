@@ -1,0 +1,18 @@
+﻿.overlay-container {
+    display: grid;
+    grid-template-rows: 7vh 1fr 5vh;
+    grid-template-areas:
+        'header'
+        '.'
+        'footer';
+}
+
+.overlay-header {
+    grid-area: header;
+    font-size: 6vh;
+}
+
+.overlay-footer {
+    grid-area: footer;
+    font-size: 4vh;
+}

@@ -1,41 +1,46 @@
-﻿@using NaeTime.Hardware.Frequency
+﻿@using EventDbLite.Abstractions
+@using EventDbLite.Reactions
+@using NaeTime.Hardware.Frequency
 
-<div>
-    @{
-        BandFrequency? bandFrequency = BandFrequency;
+<div class="overlay-container h-100 w-100">
+    <div class="overlay-header bg-primary d-flex text-white">
+        @{
+            BandFrequency? bandFrequency = BandFrequency;
 
-        if (bandFrequency.HasValue)
-        {
-            <h1>@bandFrequency.Value.Name</h1>
-        }
-        else
-        {
-            <h1>@Details.FrequencyInMHz<span class="h3">MHz</span></h1>
-        }
-        <h2>@PilotName</h2>
-    }
-</div>
-@if (_pilotTimingInfo != null)
-{
-    <div>
-        <NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay MinTime="MinTime" MaxTime="MaxTime" Start="_pilotTimingInfo.Detections.OrderByDescending(x => x.UtcTime).FirstOrDefault()?.UtcTime"></NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay>
-
-        @foreach (var lapRecord in _pilotTimingInfo.LapRecords.Where(x => IncludedLapRecords.Contains((int)x.Key)).OrderBy(x => x.Value))
-        {
-            <div>
-                @if (lapRecord.Key == 1)
-                {
-                    <span>Fastest Single:</span>
-                }
-                else
-                {
-                    <span>@lapRecord.Key Consecutive:</span>
-                }
-                <span>@lapRecord.Value.Record.ToString(@"mm\:ss\.fff")</span>
-            </div>
+            if (bandFrequency.HasValue)
+            {
+                <div>@bandFrequency.Value.Name</div>
+            }
+            else
+            {
+                <div>@Details.FrequencyInMHz<span class="h3">MHz</span></div>
+            }
+            <div>@PilotName</div>
         }
     </div>
-}
+    @if (_pilotTimingInfo != null)
+    {
+        <div class="overlay-footer bg-primary d-flex text-white">
+            <NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay MinTime="MinTime" MaxTime="MaxTime" Start="_lastDetection"></NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay>
+
+            @foreach (var lapRecord in _pilotTimingInfo.LapRecords.Where(x => IncludedLapRecords.Contains((int)x.Key)).OrderBy(x => x.Value))
+            {
+                <div>
+                    @if (lapRecord.Key == 1)
+                    {
+                        <span>Fastest Single:</span>
+                    }
+                    else
+                    {
+                        <span>@lapRecord.Key Consecutive:</span>
+                    }
+                    <span>@lapRecord.Value.Record.ToString(@"mm\:ss\.fff")</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
 
 @code {
     [Parameter]
@@ -91,6 +96,7 @@
     }
     private NaeTime.Query.Abstractions.Models.Pilot? _pilot;
     private NaeTime.Query.Abstractions.Models.OpenPracticeSessionPilotTimingInfo? _pilotTimingInfo;
+    private DateTime? _lastDetection;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -99,6 +105,8 @@
             _pilot = await PilotQueryHandler.GetPilotById(Details.PilotId.Value);
 
             _pilotTimingInfo = await OpenPracticeQueryHandler.GetTimingInformation(SessionId, TrackId, Details.PilotId.Value, MinTime, MaxTime);
+
+            _lastDetection = _pilotTimingInfo?.Detections.OrderByDescending(x => x.UtcTime).FirstOrDefault()?.UtcTime;
         }
     }
 }

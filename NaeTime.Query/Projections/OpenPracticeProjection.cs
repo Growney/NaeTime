@@ -13,6 +13,8 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         public bool IsEnabled { get; set; }
         public byte? BandId { get; set; }
         public int FrequencyInMHz { get; set; }
+
+        public override string ToString() => $"Lane {Lane}, PilotId: {PilotId}, IsEnabled: {IsEnabled}, BandId: {BandId}, FrequencyInMHz: {FrequencyInMHz}";
     }
     private class ListOpenPracticeSession
     {
@@ -22,6 +24,8 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         public IEnumerable<Guid> TrackDetectorIds { get; set; } = Enumerable.Empty<Guid>();
         public ConcurrentBag<ListOpenPracticeSessionLane> Lanes { get; set; } = [];
 
+        public override string ToString() => $"Session {Id}, Name: {Name}, TrackId: {TrackId}";
+
     }
     private readonly ConcurrentDictionary<Guid, ListOpenPracticeSession> _sessions = new();
 
@@ -29,7 +33,7 @@ public class OpenPracticeProjection : IOpenPracticeProjection
     {
         if (_sessions.TryGetValue(sessionId, out var session))
         {
-            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, session.TrackDetectorIds, [.. session.Lanes.Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
+            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, session.TrackDetectorIds, [.. session.Lanes.OrderBy(x=>x.Lane).Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
         }
         return null;
     }
