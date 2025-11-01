@@ -9,22 +9,22 @@ public class PilotCommandHandler(IAggregateRepository repository) : IPilotComman
 
     public async Task ChangePilotBindingPhrase(Guid id, string bindingPhrase)
     {
-        Pilot? pilot = await _repository.Get<Pilot, Guid>(id) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
+        Pilot? pilot = await _repository.Get<Pilot, Guid>(id).ConfigureAwait(false) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
         pilot.ChangeBindingPhrase(bindingPhrase);
-        await _repository.Save<Pilot, Guid>(pilot);
+        await _repository.Save<Pilot, Guid>(pilot).ConfigureAwait(false);
     }
 
     public async Task RemovePilotBindingPhrase(Guid id)
     {
-        Pilot? pilot = await _repository.Get<Pilot, Guid>(id) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
+        Pilot? pilot = await _repository.Get<Pilot, Guid>(id).ConfigureAwait(false) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
         pilot.RemoveBindingPhrase();
-        await _repository.Save<Pilot, Guid>(pilot);
+        await _repository.Save<Pilot, Guid>(pilot).ConfigureAwait(false);
     }
     public async Task ChangePilotCallsign(Guid id, string? callSign)
     {
-        Pilot? pilot = await _repository.Get<Pilot, Guid>(id) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
+        Pilot? pilot = await _repository.Get<Pilot, Guid>(id).ConfigureAwait(false) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
         pilot.ChangeCallsign(callSign);
-        await _repository.Save<Pilot, Guid>(pilot);
+        await _repository.Save<Pilot, Guid>(pilot).ConfigureAwait(false);
     }
 
     public async Task CreatePilot(Guid id, string? firstName, string? lastName, string? callSign, string? bindingPhrase)
@@ -44,14 +44,14 @@ public class PilotCommandHandler(IAggregateRepository repository) : IPilotComman
             pilot.ChangeBindingPhrase(bindingPhrase);
         }
 
-        await _repository.Save<Pilot, Guid>(pilot);
+        await _repository.Save<Pilot, Guid>(pilot).ConfigureAwait(false);
     }
 
     public async Task RenamePilot(Guid id, string? firstName, string? lastName)
     {
-        Pilot? pilot = await _repository.Get<Pilot, Guid>(id) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
+        Pilot? pilot = await _repository.Get<Pilot, Guid>(id).ConfigureAwait(false) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
         pilot.RenamePilot(firstName, lastName);
-        await _repository.Save<Pilot, Guid>(pilot);
+        await _repository.Save<Pilot, Guid>(pilot).ConfigureAwait(false);
 
     }
 }

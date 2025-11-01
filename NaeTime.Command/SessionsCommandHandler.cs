@@ -20,7 +20,7 @@ public class SessionsCommandHandler : ISessionsCommandHandler
 
     private async Task ThrowIfSessionDoesNotExist(Guid id, Query.Abstractions.Models.SessionType type)
     {
-        ISessionQueryHandler queryHandler = await _projectionProvider.Load<ISessionQueryHandler>();
+        ISessionQueryHandler queryHandler = await _projectionProvider.Load<ISessionQueryHandler>().ConfigureAwait(false);
         Session? session = await queryHandler.GetSession(id);
         if (session == null || session.Type != type)
         {
@@ -29,25 +29,25 @@ public class SessionsCommandHandler : ISessionsCommandHandler
     }
     public async Task ActivateOpenPracticeSession(Guid id)
     {
-        await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
+        await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice).ConfigureAwait(false);
 
-        ActiveSession activeSession = await _repository.Get<ActiveSession>(_activeSessionStreamName)
+        ActiveSession activeSession = await _repository.Get<ActiveSession>(_activeSessionStreamName).ConfigureAwait(false)
             ?? _repository.CreateNew<ActiveSession>();
 
         activeSession.ActivateOpenPracticeSession(id);
 
-        await _repository.Save<ActiveSession>(activeSession, _activeSessionStreamName);
+        await _repository.Save<ActiveSession>(activeSession, _activeSessionStreamName).ConfigureAwait(false);
     }
 
     public async Task DeactivateOpenPracticeSession(Guid id)
     {
-        await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice);
+        await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice).ConfigureAwait(false);
 
-        ActiveSession activeSession = await _repository.Get<ActiveSession>(_activeSessionStreamName)
+        ActiveSession activeSession = await _repository.Get<ActiveSession>(_activeSessionStreamName).ConfigureAwait(false)
             ?? _repository.CreateNew<ActiveSession>();
 
         activeSession.DeactivateSession(id);
 
-        await _repository.Save<ActiveSession>(activeSession, _activeSessionStreamName);
+        await _repository.Save<ActiveSession>(activeSession, _activeSessionStreamName).ConfigureAwait(false);
     }
 }
