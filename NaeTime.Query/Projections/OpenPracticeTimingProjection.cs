@@ -247,12 +247,12 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
 
         return new OpenPracticeSessionTimingInformation(allDetections, pilotLaps, allRecords, sessionRecords);
     }
-    public OpenPracticeSessionPilotTimingInfo GetSessionPilotTimingInfo(Guid sessionId, Guid trackId, Guid pilotId)
+    public OpenPracticeSessionPilotTimingInfo GetSessionPilotTimingInfo(Guid sessionId, Guid trackId, Guid pilotId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
     {
         ConcurrentBag<OpenPracticeDetection> detections = GetPilotDetections(sessionId, trackId, pilotId);
 
         IEnumerable<OpenPracticeDetection> pilotDetections = detections.ToList();
-        IEnumerable<IEnumerable<OpenPracticeLap>> pilotLaps = GetPilotSessionLapGroups(sessionId, trackId, pilotId, pilotDetections, TimeSpan.Zero, TimeSpan.MaxValue);
+        IEnumerable<IEnumerable<OpenPracticeLap>> pilotLaps = GetPilotSessionLapGroups(sessionId, trackId, pilotId, pilotDetections, minimumLapTime, maximumLapTime);
         IDictionary<uint, OpenPracticeLapRecord> pilotRecords = GetPilotRecords(sessionId, trackId, pilotId, pilotLaps);
 
         return new OpenPracticeSessionPilotTimingInfo(pilotDetections, pilotLaps, pilotRecords);

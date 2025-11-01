@@ -20,7 +20,7 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         public string Name { get; set; } = string.Empty;
         public Guid TrackId { get; set; }
         public IEnumerable<Guid> TrackDetectorIds { get; set; } = Enumerable.Empty<Guid>();
-        public List<ListOpenPracticeSessionLane> Lanes { get; set; } = [];
+        public ConcurrentBag<ListOpenPracticeSessionLane> Lanes { get; set; } = [];
 
     }
     private readonly ConcurrentDictionary<Guid, ListOpenPracticeSession> _sessions = new();

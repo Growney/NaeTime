@@ -1,0 +1,98 @@
+﻿@page "/overlay/openpractice/frequency/{channel}"
+@layout BlankLayout
+
+@if(!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @_errorMessage
+    </div>
+}
+else
+{
+    if(_laneDetails == null)
+    {
+        <div>Loading lane details...</div>
+    }
+    else
+    {
+        <div style="height:100vh; width:100vw;">
+            <LaneDetails Details="_laneDetails" SessionId="_sessionId" TrackId="_trackId" IncludedLapRecords="IncludedLapRecords" MaxTime="_maxTime" MinTime="_minTime"></LaneDetails>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public string? Channel { get; set; }
+    [Parameter]
+    public IEnumerable<int> IncludedLapRecords { get; set; } = Enumerable.Empty<int>();
+    [Inject]
+    private ISessionQueryHandler SessionQueryHandler { get; set; } = null!;
+    [Inject]
+    private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
+    [Inject]
+    private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
+
+    private string? _errorMessage;
+    private NaeTime.Query.Abstractions.Models.OpenPracticeLane? _laneDetails;
+    private Guid _sessionId;
+    private Guid _trackId;
+    private TimeSpan _minTime;
+    private TimeSpan _maxTime;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if(string.IsNullOrWhiteSpace(Channel) || !NaeTime.Hardware.Frequency.Band.TryFindByName(Channel, out NaeTime.Hardware.Frequency.BandFrequency selectedFrequency))
+        {
+            _errorMessage = "Invalid channel specified.";
+            return;
+        }
+
+        NaeTime.Query.Abstractions.Models.Session? currentSession = await SessionQueryHandler.GetActiveSession();
+
+        if(currentSession == null)
+        {
+            _errorMessage = "No active session found.";
+            return;
+        }
+
+        if(currentSession.Type != NaeTime.Query.Abstractions.Models.SessionType.OpenPractice)
+        {
+            _errorMessage = "The active session is not an open practice session.";
+            return;
+        }
+
+        NaeTime.Query.Abstractions.Models.OpenPracticeSession? openPracticeSession = await OpenPracticeQueryHandler.GetByIdAsync(currentSession.Id);
+
+        if(openPracticeSession == null)
+        {
+            _errorMessage = "Open practice session details could not be found.";
+            return;
+        }
+
+        _sessionId = openPracticeSession.Id;
+        _trackId = openPracticeSession.TrackId;
+
+        NaeTime.Query.Abstractions.Models.OpenPracticeLane? lane = openPracticeSession.Lanes.FirstOrDefault(x => x.BandId == selectedFrequency.BandId && x.FrequencyInMHz == selectedFrequency.FrequencyInMhz);
+
+        if(lane == null)
+        {
+            _errorMessage = "No lane found for the specified channel in the current open practice session.";
+            return;
+        }
+
+        NaeTime.Query.Abstractions.Models.Track? track = await TrackQueryHandler.GetTrack(openPracticeSession.TrackId);
+
+        if(track == null)
+        {
+            _errorMessage = "Track details could not be found.";
+            return;
+        }
+
+        _minTime = track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero;
+        _maxTime = track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue;
+
+        _laneDetails = lane;
+
+    }
+}

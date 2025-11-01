@@ -1,0 +1,104 @@
+﻿@using NaeTime.Hardware.Frequency
+
+<div>
+    @{
+        BandFrequency? bandFrequency = BandFrequency;
+
+        if (bandFrequency.HasValue)
+        {
+            <h1>@bandFrequency.Value.Name</h1>
+        }
+        else
+        {
+            <h1>@Details.FrequencyInMHz<span class="h3">MHz</span></h1>
+        }
+        <h2>@PilotName</h2>
+    }
+</div>
+@if (_pilotTimingInfo != null)
+{
+    <div>
+        <NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay MinTime="MinTime" MaxTime="MaxTime" Start="_pilotTimingInfo.Detections.OrderByDescending(x => x.UtcTime).FirstOrDefault()?.UtcTime"></NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay>
+
+        @foreach (var lapRecord in _pilotTimingInfo.LapRecords.Where(x => IncludedLapRecords.Contains((int)x.Key)).OrderBy(x => x.Value))
+        {
+            <div>
+                @if (lapRecord.Key == 1)
+                {
+                    <span>Fastest Single:</span>
+                }
+                else
+                {
+                    <span>@lapRecord.Key Consecutive:</span>
+                }
+                <span>@lapRecord.Value.Record.ToString(@"mm\:ss\.fff")</span>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public Guid SessionId { get; set; }
+    [Parameter]
+    [EditorRequired]
+    public Guid TrackId { get; set; }
+    [Parameter]
+    [EditorRequired]
+    public NaeTime.Query.Abstractions.Models.OpenPracticeLane Details { get; set; } = null!;
+    [Parameter]
+    [EditorRequired]
+    public TimeSpan MaxTime { get; set; }
+    [Parameter]
+    [EditorRequired]
+    public TimeSpan MinTime { get; set; }
+
+    [Parameter]
+    public IEnumerable<int> IncludedLapRecords { get; set; } = Enumerable.Empty<int>();
+
+    [Inject]
+    public IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
+    [Inject]
+    public IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
+
+    private BandFrequency? BandFrequency 
+    { 
+        get
+        {
+            NaeTime.Hardware.Frequency.Band? band = NaeTime.Hardware.Frequency.Band.Bands.FirstOrDefault(x => x.Id == Details.BandId);
+
+            if (!band.HasValue)
+            {
+                return null;
+            }
+
+            return band.Value.Frequencies.FirstOrDefault(x => x.FrequencyInMhz == Details.FrequencyInMHz);
+        }
+    }
+
+    private string? PilotName
+    {
+        get
+        {
+            if(_pilot == null)
+            {
+                return string.Empty;
+            }
+
+            return _pilot.Callsign ?? _pilot.Firstname + " " + _pilot.Lastname;
+        }
+    }
+    private NaeTime.Query.Abstractions.Models.Pilot? _pilot;
+    private NaeTime.Query.Abstractions.Models.OpenPracticeSessionPilotTimingInfo? _pilotTimingInfo;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Details.PilotId.HasValue)
+        {
+            _pilot = await PilotQueryHandler.GetPilotById(Details.PilotId.Value);
+
+            _pilotTimingInfo = await OpenPracticeQueryHandler.GetTimingInformation(SessionId, TrackId, Details.PilotId.Value, MinTime, MaxTime);
+        }
+    }
+}
