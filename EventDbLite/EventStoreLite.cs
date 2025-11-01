@@ -24,7 +24,7 @@ public class EventStoreLite(IServiceProvider serviceProvider) : IEventStoreLite,
 
         IEventStreamConnection connection = scope.ServiceProvider.GetRequiredService<IEventStreamConnection>();
 
-        IEnumerable<StreamEvent> storedEvents = await connection.AppendToStreamAsync(streamName, data, expectedState);
+        IEnumerable<StreamEvent> storedEvents = await connection.AppendToStreamAsync(streamName, data, expectedState).ConfigureAwait(false);
 
         DispatchEvents(streamName, storedEvents);
     }
