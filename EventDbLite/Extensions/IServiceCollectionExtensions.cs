@@ -33,6 +33,8 @@ public static class IServiceCollectionExtensions
                    .EnableSensitiveDataLogging()
                    .EnableDetailedErrors();
         });
+        services.AddTransient<ISqliteConnectionFactory, SqliteConnectionFactory>();
+
         services.AddHostedService<SQLiteDatabaseManager<EventDbLiteContext>>();
 
         services.AddHostedService<ConstantReactionService>();

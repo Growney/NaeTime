@@ -2,96 +2,196 @@
 using EventDbLite.DbModels;
 using EventDbLite.Exceptions;
 using EventDbLite.Streams;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace EventDbLite.Connections;
 
-internal class EventStreamConnection(EventDbLiteContext context) : IEventStreamConnection
+internal class EventStreamConnection(ISqliteConnectionFactory connectionFactory) : IEventStreamConnection
 {
-    private readonly EventDbLiteContext _context = context ?? throw new ArgumentNullException(nameof(context));
+    private readonly ISqliteConnectionFactory _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
 
     public async Task<IEnumerable<StreamEvent>> AppendToStreamAsync(string streamName, IEnumerable<EventData> data, StreamPosition expectedState)
     {
-        if (expectedState == StreamPosition.NoStream)
+        //This feels wrong, using it to allow the use of IasyncEnumerable on a clearly synchronous method
+        //Lets see how it get on
+        await Task.CompletedTask;
+
+        SqliteConnection sqliteConnection = _connectionFactory.CreateConnection(SqliteOpenMode.ReadWrite);
+
+        sqliteConnection.Open();
+
+        SqliteTransaction transaction = sqliteConnection.BeginTransaction(deferred: true);
+
+        if (expectedState == StreamPosition.NoStream || expectedState == StreamPosition.StreamExists)
         {
-            if (await _context.PersistedEvents.AnyAsync(s => s.StreamName == streamName))
+            using(SqliteCommand checkNoStreamCommand = sqliteConnection.CreateCommand())
             {
-                throw new ConcurrencyException(StreamPosition.NoStream, StreamPosition.End);
+                checkNoStreamCommand.CommandText =
+                    @"SELECT COUNT(1)
+                        FROM PersistedEvents
+                        WHERE StreamName = $streamName;";
+                checkNoStreamCommand.Parameters.AddWithValue("$streamName", streamName);
+
+                long existingCount = (long)checkNoStreamCommand.ExecuteScalar()!;
+
+                if(expectedState == StreamPosition.NoStream && existingCount > 0)
+                {
+                    throw new ConcurrencyException(StreamPosition.NoStream, StreamPosition.StreamExists);
+                }
+                else if(expectedState == StreamPosition.StreamExists && existingCount == 0)
+                {
+                    throw new ConcurrencyException(StreamPosition.StreamExists, StreamPosition.NoStream);
+                }
+            }
+        }
+        long currentStreamVersion = 0;
+        using (SqliteCommand currentStreamVersionCommand = sqliteConnection.CreateCommand())
+        {
+            currentStreamVersionCommand.CommandText =
+                @"SELECT IFNULL(MAX(StreamOrdinal), 0)
+                    FROM PersistedEvents
+                    WHERE StreamName = $streamName;";
+            currentStreamVersionCommand.Parameters.AddWithValue("$streamName", streamName);
+            currentStreamVersion = (long)currentStreamVersionCommand.ExecuteScalar()!;
+            if (!expectedState.IsValidUpdateVersion(currentStreamVersion + data.Count()))
+            {
+                throw new ConcurrencyException(expectedState.Version, currentStreamVersion);
             }
         }
 
-        if (expectedState == StreamPosition.StreamExists)
+        using (SqliteCommand writeCommand = sqliteConnection.CreateCommand())
         {
-            if (!await _context.PersistedEvents.AnyAsync(s => s.StreamName == streamName))
+            writeCommand.CommandText =
+                @"INSERT INTO PersistedEvents (Id, StreamName, StreamOrdinal, Payload, Metadata, Identifier)
+                    VALUES ($id, $streamName, $streamOrdinal, $payload, $metadata, $identifier);";
+            SqliteParameter idParam = writeCommand.Parameters.Add("$id", SqliteType.Text);
+            SqliteParameter streamNameParam = writeCommand.Parameters.Add("$streamName", SqliteType.Text);
+            SqliteParameter streamOrdinalParam = writeCommand.Parameters.Add("$streamOrdinal", SqliteType.Integer);
+            SqliteParameter payloadParam = writeCommand.Parameters.Add("$payload", SqliteType.Blob);
+            SqliteParameter metadataParam = writeCommand.Parameters.Add("$metadata", SqliteType.Blob);
+            SqliteParameter identifierParam = writeCommand.Parameters.Add("$identifier", SqliteType.Text);
+            List<StreamEvent> createdEvents = new();
+            foreach (var eventData in data)
             {
-                throw new ConcurrencyException(StreamPosition.StreamExists, StreamPosition.NoStream);
+                idParam.Value = Guid.NewGuid().ToString();
+                streamNameParam.Value = streamName;
+                streamOrdinalParam.Value = ++currentStreamVersion;
+                payloadParam.Value = eventData.Payload;
+                metadataParam.Value = eventData.Metadata;
+                identifierParam.Value = eventData.Identifier;
+                writeCommand.ExecuteNonQuery();
+                createdEvents.Add(new StreamEvent(
+                    Guid.Parse(idParam.Value.ToString()!),
+                    streamName,
+                    (long)streamOrdinalParam.Value,
+                    0,
+                    new EventData((byte[])payloadParam.Value, (byte[])metadataParam.Value, identifierParam.Value.ToString()!)
+                ));
             }
-        }
-
-        long currentStreamVersion = await _context.PersistedEvents.Where(x => x.StreamName == streamName).OrderByDescending(x => x.StreamOrdinal).Select(x => x.StreamOrdinal).FirstOrDefaultAsync();
-        List<PersistedEvent> createdPersistedEvents = [];
-
-        foreach (var eventData in data)
-        {
-            var newEvent = new DbModels.PersistedEvent()
-            {
-                Id = Guid.NewGuid(),
-                StreamName = streamName,
-                StreamOrdinal = ++currentStreamVersion,
-                Metadata = eventData.Metadata,
-                Payload = eventData.Payload,
-                Identifier = eventData.Identifier,
-            };
-            createdPersistedEvents.Add(newEvent);
-            _context.PersistedEvents.Add(newEvent);
-        }
-
-        if (!expectedState.IsValidUpdateVersion(currentStreamVersion))
-        {
-            throw new ConcurrencyException(expectedState.Version, currentStreamVersion);
-        }
-
-        try
-        {
-            await _context.SaveChangesAsync();
-
-            return createdPersistedEvents.Select(x => new StreamEvent(x.Id, x.StreamName, x.StreamOrdinal, x.GlobalOrdinal, new EventData(x.Payload, x.Metadata, x.Identifier)));
-        }
-        catch (DbUpdateConcurrencyException ex)
-        {
-            throw new ConcurrencyException(expectedState.Version, currentStreamVersion);
-        }
-        catch (DbUpdateException ex)
-        {
-            throw new ConcurrencyException(expectedState.Version, currentStreamVersion);
+            transaction.Commit();
+            return createdEvents;
         }
     }
     public async Task<StreamEvent> AppendToStreamAsync(string streamName, EventData data, StreamPosition expectedState) => (await AppendToStreamAsync(streamName, Enumerable.Repeat(data, 1), expectedState)).First();
-    public void Dispose() => _context.Dispose();
-    public IAsyncEnumerable<StreamEvent> ReadAllStreamEvents(StreamDirection direction, StreamPosition position)
+    public async IAsyncEnumerable<StreamEvent> ReadAllStreamEvents(StreamDirection direction, StreamPosition position)
     {
-        var query = _context.PersistedEvents.AsQueryable()
-            .AsNoTracking();
+        //This feels wrong, using it to allow the use of IasyncEnumerable on a clearly synchronous method
+        //Lets see how it get on
+        await Task.CompletedTask;
 
-        query = direction == StreamDirection.Forward ? query.Where(x => x.GlobalOrdinal > position.Version) : query.Where(x => x.GlobalOrdinal < position.Version);
-        query = direction == StreamDirection.Forward ? query.OrderBy(x => x.GlobalOrdinal) : query.OrderByDescending(x => x.GlobalOrdinal);
+        SqliteConnection sqliteConnection = _connectionFactory.CreateConnection(SqliteOpenMode.ReadOnly);
 
-        return query
-            .Select(x => new StreamEvent(x.Id, x.StreamName, x.StreamOrdinal, x.GlobalOrdinal, new EventData(x.Payload, x.Metadata, x.Identifier)))
-            .AsAsyncEnumerable();
+        sqliteConnection.Open();
+
+        SqliteCommand command = sqliteConnection.CreateCommand();
+
+        try
+        {
+            command.CommandText =
+            @"SELECT Id, StreamName, StreamOrdinal, GlobalOrdinal, Payload, Metadata, Identifier
+              FROM PersistedEvents
+              WHERE (( $direction = 0 AND GlobalOrdinal > $position ) OR ( $direction = 1 AND GlobalOrdinal < $position ))
+              ORDER BY GlobalOrdinal " + (direction == StreamDirection.Forward ? "ASC" : "DESC") + ";";
+
+            command.Parameters.AddWithValue("$direction", direction == StreamDirection.Forward ? 0 : 1);
+            command.Parameters.AddWithValue("$position", position.Version);
+
+
+            SqliteDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                yield return new StreamEvent(
+                    reader.GetGuid(0),
+                    reader.GetString(1),
+                    reader.GetInt64(2),
+                    reader.GetInt64(3),
+                    new EventData(
+                        (byte[])reader["Payload"],
+                        (byte[])reader["Metadata"],
+                        reader.GetString(6)
+                    )
+                );
+            }
+        }
+        finally
+        {
+            command.Dispose();
+            sqliteConnection.Close();
+            sqliteConnection.Dispose();
+        }
+
     }
 
-    public IAsyncEnumerable<StreamEvent> ReadStreamEvents(string streamName, StreamDirection direction, StreamPosition position)
+    public async IAsyncEnumerable<StreamEvent> ReadStreamEvents(string streamName, StreamDirection direction, StreamPosition position)
     {
-        var query = _context.PersistedEvents
-                .Where(x => x.StreamName == streamName)
-                .AsNoTracking();
+        //This feels wrong, using it to allow the use of IasyncEnumerable on a clearly synchronous method
+        //Lets see how it get on
+        await Task.CompletedTask;
 
-        query = direction == StreamDirection.Forward ? query.Where(x => x.StreamOrdinal > position.Version) : query.Where(x => x.StreamOrdinal < position.Version);
-        query = direction == StreamDirection.Forward ? query.OrderBy(x => x.StreamOrdinal) : query.OrderByDescending(x => x.StreamOrdinal);
+        SqliteConnection sqliteConnection = _connectionFactory.CreateConnection(SqliteOpenMode.ReadOnly);
 
-        return query
-            .Select(x => new StreamEvent(x.Id, x.StreamName, x.StreamOrdinal, x.GlobalOrdinal, new EventData(x.Payload, x.Metadata, x.Identifier)))
-            .AsAsyncEnumerable();
+        sqliteConnection.Open();
+
+        SqliteCommand command = sqliteConnection.CreateCommand();
+
+        try
+        {
+            command.CommandText =
+            @"SELECT Id, StreamName, StreamOrdinal, GlobalOrdinal, Payload, Metadata, Identifier
+              FROM PersistedEvents
+              WHERE StreamName = $streamName
+              AND (( $direction = 0 AND StreamOrdinal > $position ) OR ( $direction = 1 AND StreamOrdinal < $position ))
+              ORDER BY StreamOrdinal " + (direction == StreamDirection.Forward ? "ASC" : "DESC") + ";";
+
+            command.Parameters.AddWithValue("$streamName", streamName);
+            command.Parameters.AddWithValue("$direction", direction == StreamDirection.Forward ? 0 : 1);
+            command.Parameters.AddWithValue("$position", position.Version);
+
+            SqliteDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                yield return new StreamEvent(
+                    reader.GetGuid(0),
+                    reader.GetString(1),
+                    reader.GetInt64(2),
+                    reader.GetInt64(3),
+                    new EventData(
+                        (byte[])reader["Payload"],
+                        (byte[])reader["Metadata"],
+                        reader.GetString(6)
+                    )
+                );
+            }
+        }
+        finally
+        {
+            command.Dispose();
+            sqliteConnection.Close();
+            sqliteConnection.Dispose();
+        }
     }
 }

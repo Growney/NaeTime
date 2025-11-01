@@ -2,7 +2,7 @@
 
 namespace EventDbLite.Abstractions;
 
-public interface IEventStreamConnection : IDisposable
+public interface IEventStreamConnection
 {
     IAsyncEnumerable<StreamEvent> ReadStreamEvents(string streamName, StreamDirection direction, StreamPosition fromPosition);
     IAsyncEnumerable<StreamEvent> ReadAllStreamEvents(StreamDirection direction, StreamPosition fromPosition);
