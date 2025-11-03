@@ -2,8 +2,11 @@
 @using EventDbLite.Reactions
 @using NaeTime.Hardware.Frequency
 
-<div class="overlay-container h-100 w-100">
-    <div class="overlay-header bg-primary d-flex text-white">
+<div class="overlay-container h-100 w-100 text-white text-center">
+    <div class="overlay-header bg-primary">
+        <div>@PilotName</div>
+    </div>
+    <div class="overlay-header-details bg-primary">
         @{
             BandFrequency? bandFrequency = BandFrequency;
 
@@ -15,26 +18,26 @@
             {
                 <div>@Details.FrequencyInMHz<span class="h3">MHz</span></div>
             }
-            <div>@PilotName</div>
         }
     </div>
     @if (_pilotTimingInfo != null)
     {
-        <div class="overlay-footer bg-primary d-flex text-white">
+        <div class="overlay-footer-details bg-primary d-flex align-items-center">
             <NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay MinTime="MinTime" MaxTime="MaxTime" Start="_lastDetection"></NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay>
-
-            @foreach (var lapRecord in _pilotTimingInfo.LapRecords.Where(x => IncludedLapRecords.Contains((int)x.Key)).OrderBy(x => x.Value))
+        </div>
+        <div class="overlay-footer bg-primary d-flex justify-content-evenly text-white">
+            @foreach (var lapRecord in GetIncludedLapRecords())
             {
                 <div>
-                    @if (lapRecord.Key == 1)
+                    @if (lapRecord.LapCount == 1)
                     {
                         <span>Fastest Single:</span>
                     }
                     else
                     {
-                        <span>@lapRecord.Key Consecutive:</span>
+                        <span>@lapRecord.LapCount Consecutive:</span>
                     }
-                    <span>@lapRecord.Value.Record.ToString(@"mm\:ss\.fff")</span>
+                    <span>@lapRecord.Record.ToString(@"mm\:ss\.fff")</span>
                 </div>
             }
         </div>
@@ -97,6 +100,29 @@
     private NaeTime.Query.Abstractions.Models.Pilot? _pilot;
     private NaeTime.Query.Abstractions.Models.OpenPracticeSessionPilotTimingInfo? _pilotTimingInfo;
     private DateTime? _lastDetection;
+
+    private IEnumerable<NaeTime.Query.Abstractions.Models.OpenPracticeLapRecord> GetIncludedLapRecords()
+    {
+        if (_pilotTimingInfo == null)
+        {
+            yield break;
+        }
+
+        if (!_pilotTimingInfo.LapRecords.Any())
+        {
+            yield break;
+        }
+
+        IEnumerable<NaeTime.Query.Abstractions.Models.OpenPracticeLapRecord> sortedRecords = _pilotTimingInfo.LapRecords.OrderBy(x => x.Key).Select(x => x.Value);
+
+        foreach(var record in sortedRecords)
+        {
+            if (IncludedLapRecords.Contains((int)record.LapCount))
+            {
+                yield return record;
+            }
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {

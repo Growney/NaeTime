@@ -1,6 +1,6 @@
 @implements IDisposable
 @rendermode InteractiveAuto
-<table class="mx-auto" style="height:50px">
+<table class="mx-auto">
     <tbody>
         <tr>
             @{
@@ -17,10 +17,10 @@
                     string colour = MaxTime.HasValue && timeSinceStart > MaxTime ? "text-danger" : "";
                     colour = MinTime.HasValue && timeSinceStart < MinTime ? "text-warning" : colour;
 
-                    <td class="h2 align-bottom @colour" style="font-variant-numeric: tabular-nums">
+                    <td class="align-bottom @colour" style="font-variant-numeric: tabular-nums">
                         @timeSinceStart.ToString("mm\\:ss\\:")
                     </td>
-                    <td class="align-bottom h4 @colour" style="font-variant-numeric: tabular-nums">
+                    <td class="align-bottom @colour" style="font-variant-numeric: tabular-nums; font-size:0.75em;">
 
                         @timeSinceStart.Milliseconds.ToString("000")
                     </td>
