@@ -5,4 +5,5 @@ public interface IImmersionRCProjection
 {
     Ethernet8ChannelImmersionRCLapRF? GetImmersionRCLapRF(Guid id);
     IEnumerable<ImmersionRCLapRF> GetAllImmersionRCLapRFs();
+    ImmersionRCLapRFLane? GetImmersionRCLapRFLane(Guid timerId, byte laneId);
 }

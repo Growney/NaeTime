@@ -38,7 +38,7 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         {
             if (endHardwareTime.Value >= startHardwareTime.Value)
             {
-                return TimeSpan.FromMilliseconds(endHardwareTime.Value - startHardwareTime.Value);
+                return TimeSpan.FromMicroseconds(endHardwareTime.Value - startHardwareTime.Value);
             }
         }
         if (endSoftwareTime >= startSoftwareTime)

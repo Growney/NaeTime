@@ -27,6 +27,7 @@ public class HardwareQueryHandler : IHardwareQueryHandler
 
     public Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id) => Task.FromResult(_immersionRCProjection.GetImmersionRCLapRF(id));
 
+    public Task<ImmersionRCLapRFLane?> GetImmersionRCLapRFLane(Guid timerId, byte laneId) => Task.FromResult(_immersionRCProjection.GetImmersionRCLapRFLane(timerId, laneId));
     public Task<IEnumerable<ImmersionRCLapRF>> GetAllImmersionRCLapRFs() => Task.FromResult(_immersionRCProjection.GetAllImmersionRCLapRFs());
     public Task<IEnumerable<DesiredImmersionRCLapRFLane>> GetActiveImmersionRCLapRFLanesConfiguration(Guid timerId) => Task.FromResult(_timerConfigurationProjection.GetActiveImmersionRCLapRFLanesConfiguration(timerId));
 

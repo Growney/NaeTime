@@ -3,90 +3,97 @@
 @using NaeTime.Hardware.Frequency
 
 <div class="shadow rounded p-2" style="width: 200px">
-                <table class="w-100 pb-2">
-                    <tbody>
-                        <tr>
-                            <td class="align-start" style="width:10px">
-                                <MudSwitch Color=Color.Primary T=bool Value="_lane.IsEnabled" ValueChanged="x => EnabledChanged(x)"></MudSwitch>
-                            </td>
-                            <td>
-                                <div class="h4 text-start">
-                                    @_lane.Lane
-                                </div>
-                            </td>
-                            <td>
-                                <div class="h5 text-end">
-                                    @_lane.FrequencyInMHz<sup style="font-size:0.5em">MHz</sup>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+    <table class="w-100 pb-2">
+        <tbody>
+            <tr>
+                <td class="align-start" style="width:10px">
+                    <MudSwitch Color=Color.Primary T=bool Value="_lane.IsEnabled" ValueChanged="x => EnabledChanged(x)"></MudSwitch>
+                </td>
+                <td>
+                    <div class="h4 text-start">
+                        @_lane.Lane
+                    </div>
+                </td>
+                <td>
+                    <div class="h5 text-end">
+                        @_lane.FrequencyInMHz<sup style="font-size:0.5em">MHz</sup>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
-                <div class="w-100 pb-2">
-                    <MudMenu Class="w-100">
-                        <ActivatorContent>
-                            <MudButton Variant=Variant.Filled Size=Size.Small Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(AllPilots.FirstOrDefault(x => x.Id == _lane.PilotId)?.Callsign ?? "[None]")</MudButton>
-                        </ActivatorContent>
-                        <ChildContent>
-                            <MudMenuItem OnClick="x => OnPilotSelectionChanged(null)">[Clear]</MudMenuItem>
-                            @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots())
-                            {
-                                <MudMenuItem OnClick="x => OnPilotSelectionChanged(pilot.Id)">@pilot.Callsign</MudMenuItem>
-                            }
-                        </ChildContent>
-                    </MudMenu>                    
-                </div>
-                <div class="w-100 pb-2">
-                    <MudMenu Class="w-100">
-                        <ActivatorContent>
-                            <MudButton Variant=Variant.Outlined Size=Size.Small Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetBandString(_lane.BandId))</MudButton>
-                        </ActivatorContent>
-                        <ChildContent>
-                            <MudMenuItem Label="Custom" OnClick="() => ChangeFrequency(null, _lane.FrequencyInMHz)"></MudMenuItem>
-                            @foreach (NaeTime.Hardware.Frequency.Band band in NaeTime.Hardware.Frequency.Band.Bands)
-                            {
-                                <MudMenuItem Label="@band.ShortName" OnClick="() => ChangeFrequency(band.Id, _lane.FrequencyInMHz)"></MudMenuItem>
-                            }
-                        </ChildContent>
-                    </MudMenu>
-                </div>
-                <div class="w-100" style="min-height:48px;">
-                    @if (Band.Bands.Any(b => b.Id == _lane.BandId))
-                    {
-                        <MudMenu Class="w-100">
-                            <ActivatorContent>
-                                <MudButton Variant=Variant.Outlined Size=Size.Medium Color=Color.Primary FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetFrequencyString(_lane.BandId, _lane.FrequencyInMHz))</MudButton>
-                            </ActivatorContent>
-                            <ChildContent>
-                                @{
-                                    Band band = Band.Bands.FirstOrDefault(b => b.Id == _lane.BandId);
-                                    foreach (NaeTime.Hardware.Frequency.BandFrequency bandFrequency in band.Frequencies)
-                                    {
-                                        <MudMenuItem Label="@bandFrequency.Name" OnClick="() => ChangeFrequency(band.Id, bandFrequency.FrequencyInMhz)"></MudMenuItem>
-                                    }
-                                }
-                            </ChildContent>
-                        </MudMenu>
+    <div class="w-100 pb-2">
+        <MudMenu Class="w-100">
+            <ActivatorContent>
+                <MudButton Variant=Variant.Filled Size=Size.Small Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(AllPilots.FirstOrDefault(x => x.Id == _lane.PilotId)?.Callsign ?? "[None]")</MudButton>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem OnClick="x => OnPilotSelectionChanged(null)">[Clear]</MudMenuItem>
+                @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots())
+                {
+                    <MudMenuItem OnClick="x => OnPilotSelectionChanged(pilot.Id)">@pilot.Callsign</MudMenuItem>
+                }
+            </ChildContent>
+        </MudMenu>                    
+    </div>
+    <div class="w-100 pb-2">
+        <MudMenu Class="w-100">
+            <ActivatorContent>
+                <MudButton Variant=Variant.Outlined Size=Size.Small Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetBandString(_lane.BandId))</MudButton>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem Label="Custom" OnClick="() => ChangeFrequency(null, _lane.FrequencyInMHz)"></MudMenuItem>
+                @foreach (NaeTime.Hardware.Frequency.Band band in NaeTime.Hardware.Frequency.Band.Bands)
+                {
+                    <MudMenuItem Label="@band.ShortName" OnClick="() => ChangeFrequency(band.Id, _lane.FrequencyInMHz)"></MudMenuItem>
+                }
+            </ChildContent>
+        </MudMenu>
+    </div>
+    <div class="w-100" style="min-height:48px;">
+        @if (Band.Bands.Any(b => b.Id == _lane.BandId))
+        {
+            <MudMenu Class="w-100">
+                <ActivatorContent>
+                    <MudButton Variant=Variant.Outlined Size=Size.Medium Color=Color.Primary FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetFrequencyString(_lane.BandId, _lane.FrequencyInMHz))</MudButton>
+                </ActivatorContent>
+                <ChildContent>
+                    @{
+                        Band band = Band.Bands.FirstOrDefault(b => b.Id == _lane.BandId);
+                        foreach (NaeTime.Hardware.Frequency.BandFrequency bandFrequency in band.Frequencies)
+                        {
+                            <MudMenuItem Label="@bandFrequency.Name" OnClick="() => ChangeFrequency(band.Id, bandFrequency.FrequencyInMhz)"></MudMenuItem>
+                        }
                     }
-                    else
-                    {
-                        <MudNumericField T=int Value=_lane.FrequencyInMHz Label="Custom" ValueChanged="x => ChangeFrequency(null, x)"></MudNumericField>
-                    }
-                </div>
-                <div class="w-100 pb-2 d-flex justify-content-center">
-                    @foreach (Guid detectorId in Session.TrackDetectorIds)
-                    {
-                        <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus>
-                    }
-                </div>
-                <div class="d-flex align-content-center" style="font-size: 2.5em; min-height:1.5em;">
-                    <TimerDisplay Start="_pilotLastDetection" MaxTime=MaxTime MinTime=MinTime></TimerDisplay>
-                </div>
-                <div class="w-100 pb-2">
-                    <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"><i class="fa-solid fa-stopwatch"></i></MudButton>                
-                </div>
-            </div>
+                </ChildContent>
+            </MudMenu>
+        }
+        else
+        {
+            <MudNumericField T=int Value=_lane.FrequencyInMHz Label="Custom" ValueChanged="x => ChangeFrequency(null, x)"></MudNumericField>
+        }
+    </div>
+    <div class="w-100 pb-2 d-flex justify-content-center">
+        @foreach (Guid detectorId in Session.TrackDetectorIds)
+        {
+            <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus>
+        }
+    </div>
+    <div class="d-flex align-content-center" style="font-size: 2.5em; min-height:1.5em;">
+        <TimerDisplay Start="_pilotLastDetection" MaxTime=MaxTime MinTime=MinTime></TimerDisplay>
+    </div>
+    @if (IsTuningEnabled)
+    {
+        @foreach(Guid detectorId in Session.TrackDetectorIds)
+        {
+            <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner>
+        }
+    }
+    <div class="w-100 pb-2">
+        <MudButton Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"><i class="fa-solid fa-stopwatch"></i></MudButton>                
+    </div>
+</div>
 
 @code {
     [Parameter]
@@ -103,6 +110,8 @@
     public TimeSpan? MaxTime { get; set; }
     [Parameter]
     public TimeSpan? MinTime { get; set; }
+    [Parameter]
+    public bool IsTuningEnabled { get; set; } = false;
 
     private NaeTime.Client.Models.OpenPracticeLane _lane => Session.Lanes[LaneId];
 

@@ -2,6 +2,7 @@
 using ImmersionRC.LapRF;
 using ImmersionRC.LapRF.Abstractions;
 using NaeTime.Command.Abstractions;
+using NaeTime.Hardware;
 using NaeTime.Hardware.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Models;
@@ -15,6 +16,7 @@ internal class LapRFConnection : ILapRFConnection
     private readonly ISoftwareTimer _softwareTimer;
     private readonly IStreamEventWriter _writer;
     private readonly IImmersionRCLapRFCommandHandler _commandHandler;
+    private readonly IRssiChannel _rssiChannel;
     private readonly Guid _timerId;
 
     private readonly CancellationTokenSource _cancellationTokenSource;
@@ -24,7 +26,7 @@ internal class LapRFConnection : ILapRFConnection
 
     private readonly string _detectionsStream;
 
-    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol, IStreamEventWriter writer, IImmersionRCLapRFCommandHandler commandHandler)
+    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol, IStreamEventWriter writer, IImmersionRCLapRFCommandHandler commandHandler, IRssiChannel rssiChannel)
     {
         _timerId = timerId;
 
@@ -35,6 +37,7 @@ internal class LapRFConnection : ILapRFConnection
         _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
         _writer = writer ?? throw new ArgumentNullException(nameof(writer));
         _commandHandler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
+        _rssiChannel = rssiChannel ?? throw new ArgumentNullException(nameof(rssiChannel));
 
         _cancellationTokenSource = new CancellationTokenSource();
 
@@ -111,6 +114,8 @@ internal class LapRFConnection : ILapRFConnection
                 }
 
                 ReceivedSignalStrengthIndicator status = nullableStatus.Value;
+
+                await _rssiChannel.WriteAsync(new RssiValue(_timerId, status.LaneId,status.Level,_softwareTimer.ElapsedMilliseconds,status.RealTimeClockTime)).ConfigureAwait(false);
 
             }
             catch

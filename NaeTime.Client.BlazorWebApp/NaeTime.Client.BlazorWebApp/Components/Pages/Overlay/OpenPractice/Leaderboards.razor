@@ -1,0 +1,192 @@
+﻿@page "/overlay/openpractice/leaderboard"
+@layout BlankLayout
+@using EventDbLite.Abstractions
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @_errorMessage
+    </div>
+}
+else
+{
+    if (_timingInfo == null)
+    {
+        <div>Loading timing information...</div>
+    }
+    else
+    {
+        <div class="d-flex flex-column" style="font-size: 5vw; height:100vh; width:100vw;">
+            @foreach(int includedRecord in IncludedLapRecords.OrderBy(x=>x))
+            {
+                if(!_timingInfo.SessionLapRecords.ContainsKey((uint)includedRecord))
+                {
+                    continue;
+                }
+
+                <div style="width: 100vw;">
+                    <div class="bg-primary w-100 text-white p-2">
+                        @if (includedRecord == 1)
+                        {
+                            <div>Fastest Single</div>
+                        }
+                        else
+                        {
+                            <div>Fastest @includedRecord Consecutive</div>
+                        }
+                    </div>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>
+                                    #
+                                </th>
+                                <th>
+                                    Pilot
+                                </th>
+                                <th>
+                                    Record
+                                </th>
+                                <th>
+                                    Interval
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        
+                        @{
+                            int position = 1;
+                            Query.Abstractions.Models.OpenPracticeLapRecord? previousRecord = null;
+                            foreach (var record in _timingInfo.SessionLapRecords[(uint)includedRecord].OrderBy(x => x.Record))
+                            {
+                                <tr>
+                                    <td>
+                                        @position
+                                    </td>
+                                    <td>
+                                        @(GetPilotName(record.PilotId))
+                                    </td>
+                                    <td>
+                                        @($"{record.Record:m\\:ss\\:fff}")
+                                    </td>
+                                    <td>
+                                        @if (previousRecord != null)
+                                        {
+                                            TimeSpan interval = record.Record - previousRecord.Record;
+                                            @($" +{interval:m\\:ss\\:fff}")
+                                        }
+                                        else
+                                        {
+                                            @(" - ")
+                                        }
+                                    </td>
+                                </tr>
+
+                                previousRecord = record;
+                                position++;
+                            }
+
+                        }
+                        </tbody>
+                    </table>
+                </div>
+                
+            }
+        </div>
+    }
+}
+
+@code {
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int[] IncludedLapRecords { get; set; } = Array.Empty<int>();
+    [Inject]
+    private ISessionQueryHandler SessionQueryHandler { get; set; } = null!;
+    [Inject]
+    private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
+    [Inject]
+    private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
+    [Inject]
+    private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
+    [Inject]
+    private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
+
+    private string _errorMessage = string.Empty;
+    private Query.Abstractions.Models.OpenPracticeSessionTimingInformation? _timingInfo;
+    private IEnumerable<Query.Abstractions.Models.Pilot> _pilots = Array.Empty<Query.Abstractions.Models.Pilot>();
+
+    private async Task Setup()
+    {
+        if(!IncludedLapRecords.Any())
+        {
+            _errorMessage = "No lap records specified.";
+            return;
+        }
+
+        NaeTime.Query.Abstractions.Models.Session? currentSession = await SessionQueryHandler.GetActiveSession();
+
+        if (currentSession == null)
+        {
+            _errorMessage = "No active session found.";
+            return;
+        }
+
+        if (currentSession.Type != NaeTime.Query.Abstractions.Models.SessionType.OpenPractice)
+        {
+            _errorMessage = "The active session is not an open practice session.";
+            return;
+        }
+
+        NaeTime.Query.Abstractions.Models.OpenPracticeSession? openPracticeSession = await OpenPracticeQueryHandler.GetByIdAsync(currentSession.Id);
+
+        if (openPracticeSession == null)
+        {
+            _errorMessage = "Open practice session details could not be found.";
+            return;
+        }
+
+        NaeTime.Query.Abstractions.Models.Track? track = await TrackQueryHandler.GetTrack(openPracticeSession.TrackId);
+
+        if (track == null)
+        {
+            _errorMessage = "Track details could not be found.";
+            return;
+        }
+
+        TimeSpan minTime= track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero;
+        TimeSpan maxTime = track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue;
+
+        _pilots = await PilotQueryHandler.GetAllPilots();
+        _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(openPracticeSession.Id,openPracticeSession.TrackId, minTime, maxTime);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Setup();
+
+        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionOccured>(async x =>
+        {
+            await Setup();
+            StateHasChanged();
+        });
+        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async x =>
+        {
+            await Setup();
+            StateHasChanged();
+        });
+    }
+
+    private string GetPilotName(Guid id)
+    {
+        Query.Abstractions.Models.Pilot? pilot = _pilots.FirstOrDefault(x => x.Id == id);
+
+        if (pilot != null)
+        {
+            return pilot.Callsign ?? pilot.Firstname ?? pilot.Lastname ?? "[No Name]";
+        }
+
+        return "N/A";
+    }
+}

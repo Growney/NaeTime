@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Query.Abstractions.Models;
-public record ImmersionRCLapRFLane(byte LaneId, RequestableValue<bool> IsEnabled, RequestableValue<ushort> Gain, RequestableValue<float> Threshold, RequestableValue<byte?> BandId, RequestableValue<int> FrequencyInMHz) : TuneableLane(BandId, FrequencyInMHz);
+public record ImmersionRCLapRFLane(byte LaneId, RequestableValue<bool> IsEnabled, RequestableValue<ushort?> Gain, RequestableValue<float?> Threshold, RequestableValue<byte?> BandId, RequestableValue<int> FrequencyInMHz) : TuneableLane(BandId, FrequencyInMHz);

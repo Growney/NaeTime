@@ -41,7 +41,7 @@ internal class PassingRecordProtocol : IPassingRecordProtocol
 
             if (transponderId != null && passingNumber != null && realTimeClockTime != null)
             {
-                _passes.Enqueue(new Pass(passingNumber.Value, LapRFProtocol.GetLaneId(transponderId.Value), 0, 0, realTimeClockTime.Value));
+                _passes.Enqueue(new Pass(passingNumber.Value,0 , LapRFProtocol.GetLaneId(transponderId.Value), 0, realTimeClockTime.Value));
                 transponderId = null;
                 passingNumber = null;
                 realTimeClockTime = null;

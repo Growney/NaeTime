@@ -5,10 +5,12 @@
 
 @if(_session != null)
 {
+
+    <MudSwitch Color=Color.Primary T=bool @bind-Value=_isTuningEnabled></MudSwitch>
     <div class="lane-container">
         @foreach (Models.OpenPracticeLane lane in _session.Lanes)
         {
-            <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime></NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration>        
+            <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration>
         }
     </div>
     @if(_timingInfo != null)
@@ -138,6 +140,8 @@
 
     private TimeSpan _minimumLapTime = TimeSpan.Zero;
     private TimeSpan _maximumLapTime = TimeSpan.FromSeconds(30);
+
+    private bool _isTuningEnabled = false;
 
     private DateTime? GetPilotLastDetectionTime(Guid? pilotId)
     {

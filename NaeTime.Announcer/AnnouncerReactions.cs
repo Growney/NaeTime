@@ -43,34 +43,21 @@ public class AnnouncerReactions : IAnnouncementStream
             }
         }
     }
-
-    private void When(OpenPracticePilotDetectionOccured occured)
+    private async Task HandleDetection(Guid pilotId, Guid detectionId, Guid sessionId, Guid trackId)
     {
-        string announcement = "Detected";
-
-        _announcementQueue.Enqueue(announcement);
-    }
-
-    private string? GetPilotCallout(Guid pilotId)
-    {
-        Pilot? pilot = _pilotProjection.GetPilotById(pilotId);
-        return pilot?.Callsign ?? pilot?.Firstname ?? pilot?.Lastname;
-    }
-    private async Task When(OpenPracticePilotDetectionTriggered triggered)
-    {
-        string? callout = GetPilotCallout(triggered.PilotId);
+        string? callout = GetPilotCallout(pilotId);
         if (string.IsNullOrEmpty(callout))
         {
             return;
         }
 
-        Track? track = await _trackProjection.GetTrack(triggered.TrackId);
+        Track? track = await _trackProjection.GetTrack(trackId);
         if (track is null)
         {
             return;
         }
 
-        OpenPracticeSessionTimingInformation? timingInfo = _openPracticeTimingProjection.GetSessionTimingInfo(triggered.SessionId, triggered.TrackId,
+        OpenPracticeSessionTimingInformation? timingInfo = _openPracticeTimingProjection.GetSessionTimingInfo(sessionId, trackId,
             track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero,
             track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue);
 
@@ -79,12 +66,12 @@ public class AnnouncerReactions : IAnnouncementStream
             return;
         }
 
-        if (!timingInfo.PilotLapGroups.TryGetValue(triggered.PilotId, out IEnumerable<IEnumerable<OpenPracticeLap>>? lapGroups))
+        if (!timingInfo.PilotLapGroups.TryGetValue(pilotId, out IEnumerable<IEnumerable<OpenPracticeLap>>? lapGroups))
         {
             return;
         }
 
-        OpenPracticeLap? detectionFinalisedLap = lapGroups.SelectMany(x => x).Where(lap => lap.EndDetection.Id == triggered.DetectionId).FirstOrDefault();
+        OpenPracticeLap? detectionFinalisedLap = lapGroups.SelectMany(x => x).Where(lap => lap.EndDetection.Id == detectionId).FirstOrDefault();
 
         if (detectionFinalisedLap is null)
         {
@@ -93,9 +80,9 @@ public class AnnouncerReactions : IAnnouncementStream
         }
 
         IEnumerable<OpenPracticeLapRecord> includedInLapRecords = Enumerable.Empty<OpenPracticeLapRecord>();
-        if (timingInfo.PilotLapRecords.TryGetValue(triggered.PilotId, out IDictionary<uint, OpenPracticeLapRecord>? pilotLapRecords))
+        if (timingInfo.PilotLapRecords.TryGetValue(pilotId, out IDictionary<uint, OpenPracticeLapRecord>? pilotLapRecords))
         {
-            includedInLapRecords = pilotLapRecords.Values.Where(record => record.IncludedLaps.Any(lap => lap.EndDetection.Id == triggered.DetectionId));
+            includedInLapRecords = pilotLapRecords.Values.Where(record => record.IncludedLaps.Any(lap => lap.EndDetection.Id == detectionId));
         }
 
         if (!includedInLapRecords.Any())
@@ -133,6 +120,14 @@ public class AnnouncerReactions : IAnnouncementStream
             }
         }
     }
+    private Task When(OpenPracticePilotDetectionOccured occured) => HandleDetection(occured.PilotId, occured.DetectionId, occured.SessionId, occured.TrackId);
+
+    private string? GetPilotCallout(Guid pilotId)
+    {
+        Pilot? pilot = _pilotProjection.GetPilotById(pilotId);
+        return pilot?.Callsign ?? pilot?.Firstname ?? pilot?.Lastname;
+    }
+    private Task When(OpenPracticePilotDetectionTriggered triggered) => HandleDetection(triggered.PilotId, triggered.DetectionId, triggered.SessionId, triggered.TrackId);
 
     private static string GetLapCallout(TimeSpan timeSpan, int roundedTo = 3) => Math.Round(timeSpan.TotalSeconds, roundedTo).ToString();
 

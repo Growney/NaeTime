@@ -23,13 +23,20 @@ public class ImmersionRCProjection : IImmersionRCProjection
     {
         return _timers.Values;
     }
-
+    public ImmersionRCLapRFLane? GetImmersionRCLapRFLane(Guid timerId, byte laneId)
+    {
+        if (_timers.TryGetValue(timerId, out ImmersionRCLapRF? timer))
+        {
+            return timer.Lanes[laneId];
+        }
+        return null;
+    }
     private void When(ImmersionRCLapRFNetworkDeviceRegistered register)
     {
         ImmersionRCLapRFLane[] lanes = new ImmersionRCLapRFLane[register.Lanes];
         for (byte i = 0; i < register.Lanes; i++)
         {
-            lanes[i] = new ImmersionRCLapRFLane(i, new(false, false, false), new(0, 0, false), new(0, 0, false), new(null, null, false), new(0, 0, false));
+            lanes[i] = new ImmersionRCLapRFLane(i, new(false, false, false), new(null, null, false), new(null, null, false), new(null, null, false), new(0, 0, false));
         }
 
         Ethernet8ChannelImmersionRCLapRF timer = new(register.TimerId, register.Name, false, lanes, IPAddress.Parse(register.IPAddress), register.Port);

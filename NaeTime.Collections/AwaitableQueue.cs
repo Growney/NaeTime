@@ -27,7 +27,14 @@ public class AwaitableQueue<T>(int maxSize) : IDisposable
     {
         if (_queue.IsEmpty)
         {
-            await _signal.WaitAsync(cancellationToken);
+            try
+            {
+                await _signal.WaitAsync(cancellationToken);
+            }
+            catch(OperationCanceledException)
+            {
+                return default;
+            }
         }
 
         return _queue.TryDequeue(out T? item) ? item : default;

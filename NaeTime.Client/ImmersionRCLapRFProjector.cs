@@ -19,8 +19,8 @@ public class ImmersionRCLapRFProjector
             {
                 LaneId = lane.LaneId,
                 IsEnabled = lane.IsEnabled.Requested,
-                Gain = lane.Gain.Requested,
-                Threshold = lane.Threshold.Requested,
+                Gain = lane.Gain.Requested ?? 0,
+                Threshold = lane.Threshold.Requested ?? 0,
                 BandId = lane.BandId.Requested,
                 FrequencyInMHz = lane.FrequencyInMHz.Requested,
             }).ToList(),

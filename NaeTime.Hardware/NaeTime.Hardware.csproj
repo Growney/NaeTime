@@ -10,4 +10,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NaeTime.Collections\NaeTime.Collections.csproj" />
+  </ItemGroup>
+
 </Project>

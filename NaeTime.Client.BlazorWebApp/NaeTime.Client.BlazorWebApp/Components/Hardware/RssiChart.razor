@@ -1,0 +1,77 @@
+﻿@implements IAsyncDisposable
+
+<canvas id="@_chartId" style="width:100%; height: 200px"></canvas>
+
+@code {
+    [Parameter]
+    public Guid TimerId { get; set; }
+    [Parameter]
+    public byte LaneId { get; set; }
+
+    private IJSObjectReference? _chart;
+    private IJSObjectReference? _rssiSeries;
+
+    private readonly CancellationTokenSource _source = new();
+
+    [Inject]
+    private NaeTime.Hardware.Abstractions.IRssiChannel RssiChannel { get; set; } = null!;
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = null!;
+
+    private int _chartId;
+
+    protected override void OnInitialized()
+    {
+        _chartId = GetHashCode();
+        _ = ProcessStream();
+
+        base.OnInitialized();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _chart = await JSRuntime.InvokeAsync<IJSObjectReference>("createRssiSmootheChart", "rssi", _chartId, 0, 3800);
+            _rssiSeries = await JSRuntime.InvokeAsync<IJSObjectReference>("addRssiLine", _chart);
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task ProcessStream()
+    {
+        await foreach (var rssi in RssiChannel.WithCancellation(_source.Token))
+        {
+            if(_rssiSeries is null || _chart is null)
+            {
+                continue;
+            }
+
+            if(rssi.TimerId != TimerId || rssi.LaneId != LaneId)
+            {
+                continue;
+            }
+
+            if (_rssiSeries is not null)
+            {
+                await JSRuntime.InvokeVoidAsync("addValueToLine", _rssiSeries, DateTime.Now, rssi.Rssi);
+            }
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _source.Cancel();
+        _source.Dispose();
+
+        if(_rssiSeries is not null)
+        {
+            await _rssiSeries.DisposeAsync();
+        }
+        if (_chart is not null)
+        {
+            await _chart.DisposeAsync();
+        }
+    }
+}

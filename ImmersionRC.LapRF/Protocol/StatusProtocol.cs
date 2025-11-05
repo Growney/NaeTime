@@ -62,7 +62,7 @@ internal class StatusProtocol : IStatusProtocol, IDisposable
                     float receivedSignalStrengthIndicator = recordReader.ReadSingle();
                     if (currentTransponderId != null)
                     {
-                        AddReceivedSignalStrengthIndicator(new ReceivedSignalStrengthIndicator(currentTransponderId.Value, receivedSignalStrengthIndicator, currentTimestamp));
+                        AddReceivedSignalStrengthIndicator(new ReceivedSignalStrengthIndicator(LapRFProtocol.GetLaneId(currentTransponderId.Value), receivedSignalStrengthIndicator, currentTimestamp));
                         currentTransponderId = null;
                     }
 
@@ -87,13 +87,13 @@ internal class StatusProtocol : IStatusProtocol, IDisposable
     }
     private void AddReceivedSignalStrengthIndicator(ReceivedSignalStrengthIndicator receivedSignalStrengthIndicator)
     {
-        _lastReceivedSignalStrengthIndicators.AddOrUpdate(receivedSignalStrengthIndicator.TransponderId
+        _lastReceivedSignalStrengthIndicators.AddOrUpdate(receivedSignalStrengthIndicator.LaneId
             , receivedSignalStrengthIndicator, (key, oldValue) => receivedSignalStrengthIndicator);
         _receivedSignalStrengthIndicators.Enqueue(receivedSignalStrengthIndicator);
     }
-    public ReceivedSignalStrengthIndicator? GetLastReceivedSignalStrengthIndicator(byte transponderId)
+    public ReceivedSignalStrengthIndicator? GetLastReceivedSignalStrengthIndicator(byte laneId)
     {
-        if (_lastReceivedSignalStrengthIndicators.TryGetValue(transponderId, out ReceivedSignalStrengthIndicator receivedSignalStrengthIndicator))
+        if (_lastReceivedSignalStrengthIndicators.TryGetValue(laneId, out ReceivedSignalStrengthIndicator receivedSignalStrengthIndicator))
         {
             return receivedSignalStrengthIndicator;
         }
