@@ -1,6 +1,7 @@
 ﻿@page "/overlay/openpractice/leaderboard"
 @layout BlankLayout
 @using EventDbLite.Abstractions
+@implements IDisposable
 
 @if (!string.IsNullOrEmpty(_errorMessage))
 {
@@ -117,6 +118,8 @@ else
     private Query.Abstractions.Models.OpenPracticeSessionTimingInformation? _timingInfo;
     private IEnumerable<Query.Abstractions.Models.Pilot> _pilots = Array.Empty<Query.Abstractions.Models.Pilot>();
 
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
     private async Task Setup()
     {
         if(!IncludedLapRecords.Any())
@@ -170,12 +173,18 @@ else
         {
             await Setup();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
         _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async x =>
         {
             await Setup();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
     }
 
     private string GetPilotName(Guid id)

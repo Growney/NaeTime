@@ -2,6 +2,7 @@
 @using EventDbLite.Abstractions
 @using NaeTime.Hardware.Abstractions
 @using NaeTime.Hardware.Frequency
+@implements IDisposable
 
 @if(_session != null)
 {
@@ -143,6 +144,8 @@
 
     private bool _isTuningEnabled = false;
 
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
     private DateTime? GetPilotLastDetectionTime(Guid? pilotId)
     {
         if(pilotId is null)
@@ -189,7 +192,7 @@
             _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
 
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
         _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async detection =>
         {
 
@@ -201,7 +204,7 @@
             _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
 
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
     }
     private string GetLapCallout(TimeSpan timeSpan, int roundedTo = 3)
     {
@@ -305,6 +308,12 @@
         lane.FrequencyInMHz = frequencyInMhz;
 
         StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
     }
 
     private async Task TriggerDetection(byte lane)

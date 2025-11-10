@@ -1,6 +1,7 @@
 ﻿@page "/overlay/openpractice/frequency/{channel}"
 @using EventDbLite.Abstractions
 @layout BlankLayout
+@implements IDisposable
 
 @if(!string.IsNullOrEmpty(_errorMessage))
 {
@@ -44,6 +45,8 @@ else
     private Guid _trackId;
     private TimeSpan _minTime;
     private TimeSpan _maxTime;
+
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     private async Task SetupFromSession()
     {
@@ -100,6 +103,12 @@ else
         _laneDetails = lane;
     }
 
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
     protected override async Task OnInitializedAsync()
     {
 
@@ -107,43 +116,43 @@ else
         {
             await SetupFromSession();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
 
         _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async evt =>
         {
             await SetupFromSession();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
 
         _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticeSessionDeactivated>(async evt =>
         {
             await SetupFromSession();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
 
         _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticeSessionActivated>(async evt =>
         {
             await SetupFromSession();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
 
         _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticeSessionLanePilotReset>(async evt =>
         {
             await SetupFromSession();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
 
         _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticeSessionLanePilotSet>(async evt =>
         {
             await SetupFromSession();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
 
         _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticeSessionLaneVideoFrequencyTuned>(async evt =>
         {
             await SetupFromSession();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
 
         await SetupFromSession();
     }

@@ -1,6 +1,7 @@
 ﻿@using EventDbLite.Abstractions
 @using NaeTime.Hardware.Abstractions
 @using NaeTime.Hardware.Frequency
+@implements IDisposable
 
 <div class="shadow rounded p-2" style="width: 200px">
     <table class="w-100 pb-2">
@@ -125,6 +126,7 @@
     private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
 
     private DateTime? _pilotLastDetection = null;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     private async Task GetLastDetection()
     {
@@ -147,12 +149,12 @@
         {
             await GetLastDetection();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
         _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async x =>
         {
             await GetLastDetection();
             StateHasChanged();
-        });
+        }, _cancellationTokenSource.Token);
     }
 
     private async Task TriggerDetection()
@@ -231,6 +233,12 @@
         }
 
         return $"{frequencyInMhz} MHz";
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
     }
 
     private async Task ChangeFrequency(byte? bandId, int frequencyInMhz)

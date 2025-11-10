@@ -1,6 +1,8 @@
 ﻿@using EventDbLite.Abstractions
 @using NaeTime.Events
 
+@implements IDisposable
+
 <div class="@GetCssClass()">
     <i class="fa-solid fa-microchip"></i>
 </div>
@@ -46,6 +48,14 @@
 
     private TimeStatus _timeStatus = TimeStatus.Pending;
 
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         if (LaneId.HasValue)
@@ -67,7 +77,7 @@
                 StateHasChanged();
 
                 return Task.CompletedTask;
-            });
+            }, _cancellationTokenSource.Token);
             _ = ReactionProviderFactory.On<TimerLaneConfirmed>(x =>
             {
                 if (x.TimerId != TimerId)
@@ -81,7 +91,7 @@
                 _timeStatus = TimeStatus.Confirmed;
                 StateHasChanged();
                 return Task.CompletedTask;
-            });
+            }, _cancellationTokenSource.Token);
             _ = ReactionProviderFactory.On<TimerLanePending>(x =>
             {
                 if (x.TimerId != TimerId)
@@ -95,7 +105,7 @@
                 _timeStatus = TimeStatus.Pending;
                 StateHasChanged();
                 return Task.CompletedTask;
-            });
+            }, _cancellationTokenSource.Token);
         }
 
         _ = ReactionProviderFactory.On<TimerDisconnected>(x =>
@@ -107,7 +117,7 @@
             _isConnected = false;
             StateHasChanged();
             return Task.CompletedTask;
-        });
+        }, _cancellationTokenSource.Token);
         _ = ReactionProviderFactory.On<TimerConnected>(x =>
         {
             if (x.TimerId != TimerId)
@@ -117,7 +127,7 @@
             _isConnected = true;
             StateHasChanged();
             return Task.CompletedTask;
-        });
+        }, _cancellationTokenSource.Token);
 
         NaeTime.Query.Abstractions.Models.TimerDetails details = await HardwareQueryHandler.GetDetails(TimerId);
 
