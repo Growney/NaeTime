@@ -8,6 +8,8 @@ using NaeTime.Query.Abstractions.Projections;
 namespace NaeTime.Announcer;
 public class AnnouncerReactions : IAnnouncementStream
 {
+
+    private static readonly uint[] _announcedLapRecords = { 1, 3 };
     private readonly AwaitableQueue<string> _announcementQueue = new(100);
 
     private readonly IOpenPracticeTimingProjection _openPracticeTimingProjection;
@@ -82,7 +84,7 @@ public class AnnouncerReactions : IAnnouncementStream
         IEnumerable<OpenPracticeLapRecord> includedInLapRecords = Enumerable.Empty<OpenPracticeLapRecord>();
         if (timingInfo.PilotLapRecords.TryGetValue(pilotId, out IDictionary<uint, OpenPracticeLapRecord>? pilotLapRecords))
         {
-            includedInLapRecords = pilotLapRecords.Values.Where(record => record.IncludedLaps.Any(lap => lap.EndDetection.Id == detectionId));
+            includedInLapRecords = pilotLapRecords.Values.Where(record => _announcedLapRecords.Contains(record.LapCount) && record.IncludedLaps.Last().EndDetection.Id == detectionId);
         }
 
         if (!includedInLapRecords.Any())
@@ -91,6 +93,7 @@ public class AnnouncerReactions : IAnnouncementStream
             return;
         }
 
+        
         uint highestLapCount = includedInLapRecords.Max(record => record.LapCount);
         OpenPracticeLapRecord record = includedInLapRecords.First(x => x.LapCount == highestLapCount);
 
