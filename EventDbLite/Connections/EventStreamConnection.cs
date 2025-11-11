@@ -65,7 +65,8 @@ internal class EventStreamConnection(ISqliteConnectionFactory connectionFactory)
         {
             writeCommand.CommandText =
                 @"INSERT INTO PersistedEvents (Id, StreamName, StreamOrdinal, Payload, Metadata, Identifier)
-                    VALUES ($id, $streamName, $streamOrdinal, $payload, $metadata, $identifier);";
+                    VALUES ($id, $streamName, $streamOrdinal, $payload, $metadata, $identifier);
+                    SELECT last_insert_rowid();";
             SqliteParameter idParam = writeCommand.Parameters.Add("$id", SqliteType.Text);
             SqliteParameter streamNameParam = writeCommand.Parameters.Add("$streamName", SqliteType.Text);
             SqliteParameter streamOrdinalParam = writeCommand.Parameters.Add("$streamOrdinal", SqliteType.Integer);
@@ -81,12 +82,19 @@ internal class EventStreamConnection(ISqliteConnectionFactory connectionFactory)
                 payloadParam.Value = eventData.Payload;
                 metadataParam.Value = eventData.Metadata;
                 identifierParam.Value = eventData.Identifier;
-                writeCommand.ExecuteNonQuery();
+                long globalId = 0;
+                using (var reader = writeCommand.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        globalId = reader.GetInt64(0);
+                    }
+                }
                 createdEvents.Add(new StreamEvent(
                     Guid.Parse(idParam.Value.ToString()!),
                     streamName,
                     (long)streamOrdinalParam.Value,
-                    0,
+                    globalId,
                     new EventData((byte[])payloadParam.Value, (byte[])metadataParam.Value, identifierParam.Value.ToString()!)
                 ));
             }
