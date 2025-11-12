@@ -1,4 +1,5 @@
 ﻿using EventDbLite.Abstractions;
+using EventDbLite.Exceptions;
 using NaeTime.Command.Abstractions;
 using NaeTime.Command.Aggregates;
 using NaeTime.Query.Abstractions;
@@ -18,7 +19,7 @@ public class SessionsCommandHandler : ISessionsCommandHandler
         _projectionProvider = projectionProvider ?? throw new ArgumentNullException(nameof(projectionProvider));
     }
 
-    private async Task ThrowIfSessionDoesNotExist(Guid id, Query.Abstractions.Models.SessionType type)
+    private Task ThrowIfSessionDoesNotExist(Guid id, Query.Abstractions.Models.SessionType type) => ConcurrencyException.Retry(async () =>
     {
         ISessionQueryHandler queryHandler = await _projectionProvider.Load<ISessionQueryHandler>().ConfigureAwait(false);
         Session? session = await queryHandler.GetSession(id);
@@ -26,8 +27,8 @@ public class SessionsCommandHandler : ISessionsCommandHandler
         {
             throw new ArgumentException($"Session with ID {id} is not of type {type}.", nameof(id));
         }
-    }
-    public async Task ActivateOpenPracticeSession(Guid id)
+    });
+    public Task ActivateOpenPracticeSession(Guid id) => ConcurrencyException.Retry(async () =>
     {
         await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice).ConfigureAwait(false);
 
@@ -37,9 +38,9 @@ public class SessionsCommandHandler : ISessionsCommandHandler
         activeSession.ActivateOpenPracticeSession(id);
 
         await _repository.Save<ActiveSession>(activeSession, _activeSessionStreamName).ConfigureAwait(false);
-    }
+    });
 
-    public async Task DeactivateOpenPracticeSession(Guid id)
+    public Task DeactivateOpenPracticeSession(Guid id) => ConcurrencyException.Retry(async () =>
     {
         await ThrowIfSessionDoesNotExist(id, SessionType.OpenPractice).ConfigureAwait(false);
 
@@ -49,5 +50,5 @@ public class SessionsCommandHandler : ISessionsCommandHandler
         activeSession.DeactivateSession(id);
 
         await _repository.Save<ActiveSession>(activeSession, _activeSessionStreamName).ConfigureAwait(false);
-    }
+    });
 }

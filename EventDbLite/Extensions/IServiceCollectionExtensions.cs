@@ -46,7 +46,7 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IHandlerProvider, HandlerProvider>();
         services.AddSingleton<IAsyncHandlerProvider, AsyncHandlerProvider>();
 
-        services.AddTransient<IEventStreamConnection, EventStreamConnection>();
+        services.AddSingleton<IEventStreamConnection, EventStreamConnection>();
         services.AddTransient<IAggregateRepository, AggregateRepository>();
         services.AddTransient<IProjectionProvider, ProjectionProvider>();
 

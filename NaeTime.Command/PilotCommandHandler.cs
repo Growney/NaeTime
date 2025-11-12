@@ -1,4 +1,5 @@
 ﻿using EventDbLite.Abstractions;
+using EventDbLite.Exceptions;
 using NaeTime.Command.Abstractions;
 using NaeTime.Command.Aggregates;
 
@@ -7,27 +8,28 @@ public class PilotCommandHandler(IAggregateRepository repository) : IPilotComman
 {
     private readonly IAggregateRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
 
-    public async Task ChangePilotBindingPhrase(Guid id, string bindingPhrase)
+    public Task ChangePilotBindingPhrase(Guid id, string bindingPhrase) => ConcurrencyException.Retry(async () =>
     {
         Pilot? pilot = await _repository.Get<Pilot, Guid>(id).ConfigureAwait(false) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
         pilot.ChangeBindingPhrase(bindingPhrase);
         await _repository.Save<Pilot, Guid>(pilot).ConfigureAwait(false);
-    }
+    });
 
-    public async Task RemovePilotBindingPhrase(Guid id)
+    public Task RemovePilotBindingPhrase(Guid id) => ConcurrencyException.Retry(async () =>
     {
         Pilot? pilot = await _repository.Get<Pilot, Guid>(id).ConfigureAwait(false) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
         pilot.RemoveBindingPhrase();
         await _repository.Save<Pilot, Guid>(pilot).ConfigureAwait(false);
-    }
-    public async Task ChangePilotCallsign(Guid id, string? callSign)
+    });
+
+    public Task ChangePilotCallsign(Guid id, string? callSign) => ConcurrencyException.Retry(async () =>
     {
         Pilot? pilot = await _repository.Get<Pilot, Guid>(id).ConfigureAwait(false) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
         pilot.ChangeCallsign(callSign);
         await _repository.Save<Pilot, Guid>(pilot).ConfigureAwait(false);
-    }
+    });
 
-    public async Task CreatePilot(Guid id, string? firstName, string? lastName, string? callSign, string? bindingPhrase)
+    public Task CreatePilot(Guid id, string? firstName, string? lastName, string? callSign, string? bindingPhrase) => ConcurrencyException.Retry(async () =>
     {
         Pilot pilot = _repository.CreateNew<Pilot>(() => new Pilot(id));
 
@@ -45,13 +47,13 @@ public class PilotCommandHandler(IAggregateRepository repository) : IPilotComman
         }
 
         await _repository.Save<Pilot, Guid>(pilot).ConfigureAwait(false);
-    }
+    });
 
-    public async Task RenamePilot(Guid id, string? firstName, string? lastName)
+    public Task RenamePilot(Guid id, string? firstName, string? lastName) => ConcurrencyException.Retry(async () =>
     {
         Pilot? pilot = await _repository.Get<Pilot, Guid>(id).ConfigureAwait(false) ?? throw new ArgumentException($"Pilot with ID {id} does not exist.", nameof(id));
         pilot.RenamePilot(firstName, lastName);
         await _repository.Save<Pilot, Guid>(pilot).ConfigureAwait(false);
 
-    }
+    });
 }
