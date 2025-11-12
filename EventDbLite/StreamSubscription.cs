@@ -76,7 +76,14 @@ internal class StreamSubscription : IStreamSubscription
 
             if (_liveQueue.IsEmpty)
             {
-                await _signal.WaitAsync(token);
+                try
+                {
+                    await _signal.WaitAsync(token);
+                }
+                catch (OperationCanceledException)
+                {
+                    yield break;
+                }
             }
 
             while (!_liveQueue.IsEmpty)
