@@ -51,6 +51,69 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         }
         return CalculateDuration(endTimerId, endHardwareTime, endSoftwareTime, endUtcTime, startTimerId, startHardwareTime, startSoftwareTime, startUtcTime);
     }
+    private static IEnumerable<OpenPracticeTimingMoment> GetTimingMoments(Guid sessionId, Guid trackId, Guid pilotId, IEnumerable<OpenPracticeDetection> pilotDetections, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    {
+        if (!pilotDetections.Any())
+        {
+            return Enumerable.Empty<OpenPracticeTimingMoment>();
+        }
+
+        List<OpenPracticeDetection> orderedDetections = pilotDetections.OrderBy(d => d.UtcTime).ToList();
+
+        int firstValidDetectionIndex = orderedDetections.FindIndex(d => d.IsValid && d.TrackTimerOrdinal == 0);
+
+        if (firstValidDetectionIndex < 0)
+        {
+            return Enumerable.Empty<OpenPracticeTimingMoment>();
+        }
+        List<OpenPracticeTimingMoment> moments = new();
+
+        OpenPracticeDetection lapInitialDetection = orderedDetections[firstValidDetectionIndex];
+        for (int i = firstValidDetectionIndex + 1; i < orderedDetections.Count; i++)
+        {
+            OpenPracticeDetection currentDetection = orderedDetections[i];
+
+            //We shall skip split times for now
+            if (currentDetection.TrackTimerOrdinal != 0)
+            {
+                continue;
+            }
+
+            if (!currentDetection.IsValid)
+            {
+                moments.Add( new OpenPracticeTimingMoment(sessionId,trackId,pilotId, OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedDueToInvalidDetection, currentDetection));
+                continue;
+            }
+
+            TimeSpan duration = CalculateDuration(
+                lapInitialDetection.TimerId, lapInitialDetection.HardwareTime, lapInitialDetection.SoftwareTime, lapInitialDetection.UtcTime,
+                currentDetection.TimerId, currentDetection.HardwareTime, currentDetection.SoftwareTime, currentDetection.UtcTime);
+
+            if (duration < minimumLapTime)
+            {
+                moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedDueToMinimumLapTime, currentDetection));
+                continue;
+            }
+
+            if (duration > maximumLapTime)
+            {
+                lapInitialDetection = currentDetection;
+                moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, OpenPracticeTimingMoment.TimingMomentType.LapDiscardedDueToMaximumLapTime, currentDetection));
+                continue;
+            }
+
+            OpenPracticeLap lap = new(
+                SessionId: sessionId,
+                TrackId: trackId,
+                PilotId: pilotId,
+                StartDetection: lapInitialDetection,
+                EndDetection: currentDetection,
+                Duration: duration);
+
+            lapInitialDetection = currentDetection;
+        }
+        return moments;
+    }
     private static IEnumerable<IEnumerable<OpenPracticeLap>> GetPilotSessionLapGroups(Guid sessionId, Guid trackId, Guid pilotId, IEnumerable<OpenPracticeDetection> pilotDetections, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
     {
         if (!pilotDetections.Any())
@@ -66,7 +129,6 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         {
             return Enumerable.Empty<IEnumerable<OpenPracticeLap>>();
         }
-
         List<OpenPracticeLap> laps = new();
 
         OpenPracticeDetection initialDetection = orderedDetections[firstValidDetectionIndex];
