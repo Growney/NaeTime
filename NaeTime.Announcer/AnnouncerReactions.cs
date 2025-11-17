@@ -9,7 +9,7 @@ namespace NaeTime.Announcer;
 public class AnnouncerReactions : IAnnouncementStream
 {
 
-    private static readonly uint[] _announcedLapRecords = { 1, 3 };
+    private static readonly uint[] _announcedLapRecords = { 1 };
     private readonly AwaitableQueue<string> _announcementQueue = new(100);
 
     private readonly IOpenPracticeTimingProjection _openPracticeTimingProjection;
