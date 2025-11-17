@@ -32,7 +32,7 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         pilotDetections.Add(new OpenPracticeDetection(occured.DetectionId, occured.SessionId, occured.PilotId, occured.TimerId, true, occured.TrackTimerOrdinal, occured.TrackTimerTotal, occured.Lane, occured.HardwareTime, occured.SoftwareTime, occured.UtcTime));
     }
 
-    private static TimeSpan CalculateDuration(Guid? startTimerId, ulong? startHardwareTime, long startSoftwareTime, DateTime startUtcTime, Guid? endTimerId, ulong? endHardwareTime, long endSoftwareTime, DateTime endUtcTime)
+    private static TimeSpan CalculateDuration(Guid? startTimerId, ulong? startHardwareTime, long? startSoftwareTime, DateTime startUtcTime, Guid? endTimerId, ulong? endHardwareTime, long? endSoftwareTime, DateTime endUtcTime)
     {
         if (startTimerId.HasValue && endTimerId.HasValue && startTimerId == endTimerId && startHardwareTime.HasValue && endHardwareTime.HasValue)
         {
@@ -41,9 +41,9 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
                 return TimeSpan.FromMicroseconds(endHardwareTime.Value - startHardwareTime.Value);
             }
         }
-        if (endSoftwareTime >= startSoftwareTime)
+        if (startSoftwareTime.HasValue && endSoftwareTime.HasValue && endSoftwareTime >= startSoftwareTime)
         {
-            return TimeSpan.FromMilliseconds(endSoftwareTime - startSoftwareTime);
+            return TimeSpan.FromMilliseconds(endSoftwareTime.Value - startSoftwareTime.Value);
         }
         if (endUtcTime >= startUtcTime)
         {
@@ -58,123 +58,132 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
             return Enumerable.Empty<OpenPracticeTimingMoment>();
         }
 
-        List<OpenPracticeDetection> orderedDetections = pilotDetections.OrderBy(d => d.UtcTime).ToList();
+        IEnumerable<OpenPracticeDetection> orderedDetections = pilotDetections.OrderBy(d => d.UtcTime);
 
-        int firstValidDetectionIndex = orderedDetections.FindIndex(d => d.IsValid && d.TrackTimerOrdinal == 0);
-
-        if (firstValidDetectionIndex < 0)
-        {
-            return Enumerable.Empty<OpenPracticeTimingMoment>();
-        }
         List<OpenPracticeTimingMoment> moments = new();
 
-        OpenPracticeDetection lapInitialDetection = orderedDetections[firstValidDetectionIndex];
-        for (int i = firstValidDetectionIndex + 1; i < orderedDetections.Count; i++)
+        OpenPracticeDetection? lapStartedDetection = null;
+        OpenPracticeDetection? splitStartDetection = null;
+        byte? currentSplit = null;
+        OpenPracticeDetection? previousDetection = null;
+
+        foreach (OpenPracticeDetection detection in orderedDetections)
         {
-            OpenPracticeDetection currentDetection = orderedDetections[i];
-
-            //We shall skip split times for now
-            if (currentDetection.TrackTimerOrdinal != 0)
+            if (!detection.IsValid)
             {
+                moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedAsItsInvalid));
                 continue;
             }
 
-            if (!currentDetection.IsValid)
+            if (detection.TrackTimerOrdinal == 0)
             {
-                moments.Add( new OpenPracticeTimingMoment(sessionId,trackId,pilotId, OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedDueToInvalidDetection, currentDetection));
-                continue;
+                // Lap start
+                if (lapStartedDetection == null)
+                {
+                    lapStartedDetection = detection;
+                    moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.LapStarted));
+                }
+                else
+                {
+                    // Lap end
+                    TimeSpan lapDuration = CalculateDuration(
+                        lapStartedDetection.TimerId, lapStartedDetection.HardwareTime, lapStartedDetection.SoftwareTime, lapStartedDetection.UtcTime,
+                        detection.TimerId, detection.HardwareTime, detection.SoftwareTime, detection.UtcTime);
+                    if (lapDuration < minimumLapTime)
+                    {
+                        moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedDueToMinimiumLapTime));
+                    }
+                    else if (lapDuration > maximumLapTime)
+                    {
+                        moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.LapInvalidatedDueToMaximumLapTime));
+                        moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.LapStarted));
+                        lapStartedDetection = detection; // Start a new lap from this detection
+                    }
+                    else
+                    {
+                        moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.LapCompleted));
+                        moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.LapStarted));
+                        lapStartedDetection = detection; // Start a new lap from this detection
+                    }
+                }
+                // Reset split tracking for new lap
+                splitStartDetection = null;
+                currentSplit = null;
             }
-
-            TimeSpan duration = CalculateDuration(
-                lapInitialDetection.TimerId, lapInitialDetection.HardwareTime, lapInitialDetection.SoftwareTime, lapInitialDetection.UtcTime,
-                currentDetection.TimerId, currentDetection.HardwareTime, currentDetection.SoftwareTime, currentDetection.UtcTime);
-
-            if (duration < minimumLapTime)
+            else
             {
-                moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedDueToMinimumLapTime, currentDetection));
-                continue;
-            }
+                // Split handling can be added here if needed
+                if (currentSplit != null && detection.TrackTimerOrdinal == currentSplit + 1)
+                {
+                    // Split completed
+                    TimeSpan splitDuration = CalculateDuration(
+                        splitStartDetection!.TimerId, splitStartDetection.HardwareTime, splitStartDetection.SoftwareTime, splitStartDetection.UtcTime,
+                        detection.TimerId, detection.HardwareTime, detection.SoftwareTime, detection.UtcTime);
+                    moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.SplitCompleted));
+                    moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.SplitStarted));
+                    splitStartDetection = detection;
+                    currentSplit = detection.TrackTimerOrdinal;
+                }
+                else if (currentSplit == null && detection.TrackTimerOrdinal == 1)
+                {
+                    // First split started
+                    splitStartDetection = detection;
+                    currentSplit = detection.TrackTimerOrdinal;
+                    moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.SplitStarted));
 
-            if (duration > maximumLapTime)
+                }
+                else
+                {
+                    // Split skipped or out of order
+                    moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, detection.Id, OpenPracticeTimingMoment.TimingMomentType.SplitSkipped));
+                }
+            }
+            previousDetection = detection;
+        }
+
+        if(lapStartedDetection != null)
+        {
+            TimeSpan lapDuration = CalculateDuration(
+                        lapStartedDetection.TimerId, lapStartedDetection.HardwareTime, lapStartedDetection.SoftwareTime, lapStartedDetection.UtcTime,
+                        null, null, null, DateTime.UtcNow);
+
+            if(lapDuration > maximumLapTime)
             {
-                lapInitialDetection = currentDetection;
-                moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, OpenPracticeTimingMoment.TimingMomentType.LapDiscardedDueToMaximumLapTime, currentDetection));
-                continue;
+                moments.Add(new OpenPracticeTimingMoment(sessionId, trackId, pilotId, null, OpenPracticeTimingMoment.TimingMomentType.LapInvalidatedDueToMaximumLapTime));
             }
-
-            OpenPracticeLap lap = new(
-                SessionId: sessionId,
-                TrackId: trackId,
-                PilotId: pilotId,
-                StartDetection: lapInitialDetection,
-                EndDetection: currentDetection,
-                Duration: duration);
-
-            lapInitialDetection = currentDetection;
         }
         return moments;
     }
-    private static IEnumerable<IEnumerable<OpenPracticeLap>> GetPilotSessionLapGroups(Guid sessionId, Guid trackId, Guid pilotId, IEnumerable<OpenPracticeDetection> pilotDetections, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    private static IEnumerable<IEnumerable<OpenPracticeLap>> GetPilotSessionLapGroups(Guid sessionId, Guid trackId, Guid pilotId,IDictionary<Guid,OpenPracticeDetection> pilotDetections, IEnumerable<OpenPracticeTimingMoment> moments)
     {
         if (!pilotDetections.Any())
         {
             return Enumerable.Empty<IEnumerable<OpenPracticeLap>>();
         }
 
-        List<OpenPracticeDetection> orderedDetections = pilotDetections.OrderBy(d => d.UtcTime).ToList();
-
-        int firstValidDetectionIndex = orderedDetections.FindIndex(d => d.IsValid && d.TrackTimerOrdinal == 0);
-
-        if (firstValidDetectionIndex < 0)
-        {
-            return Enumerable.Empty<IEnumerable<OpenPracticeLap>>();
-        }
         List<OpenPracticeLap> laps = new();
-
-        OpenPracticeDetection initialDetection = orderedDetections[firstValidDetectionIndex];
-        for (int i = firstValidDetectionIndex + 1; i < orderedDetections.Count; i++)
+        OpenPracticeDetection? lapStartDetection = null;
+        foreach (OpenPracticeTimingMoment moment in moments)
         {
-            OpenPracticeDetection currentDetection = orderedDetections[i];
-
-            //We shall skip split times for now
-            if (currentDetection.TrackTimerOrdinal != 0)
+            if (!moment.MomentId.HasValue)
             {
                 continue;
             }
 
-            if (!currentDetection.IsValid)
+            if (moment.Type == OpenPracticeTimingMoment.TimingMomentType.LapStarted)
             {
-                continue;
+                lapStartDetection = pilotDetections[moment.MomentId.Value];
             }
-
-            TimeSpan duration = CalculateDuration(
-                initialDetection.TimerId, initialDetection.HardwareTime, initialDetection.SoftwareTime, initialDetection.UtcTime,
-                currentDetection.TimerId, currentDetection.HardwareTime, currentDetection.SoftwareTime, currentDetection.UtcTime);
-
-            if (duration < minimumLapTime)
+            else if (moment.Type == OpenPracticeTimingMoment.TimingMomentType.LapCompleted && lapStartDetection != null)
             {
-                continue;
+                OpenPracticeDetection lapEndDetection = pilotDetections[moment.MomentId.Value];
+                TimeSpan lapDuration = CalculateDuration(
+                    lapStartDetection.TimerId, lapStartDetection.HardwareTime, lapStartDetection.SoftwareTime, lapStartDetection.UtcTime,
+                    lapEndDetection.TimerId, lapEndDetection.HardwareTime, lapEndDetection.SoftwareTime, lapEndDetection.UtcTime);
+                laps.Add(new OpenPracticeLap(sessionId, trackId, pilotId, lapStartDetection, lapEndDetection, lapDuration));
+                lapStartDetection = null;
             }
-
-            if (duration > maximumLapTime)
-            {
-                initialDetection = currentDetection;
-                continue;
-            }
-
-            OpenPracticeLap lap = new(
-                SessionId: sessionId,
-                TrackId: trackId,
-                PilotId: pilotId,
-                StartDetection: initialDetection,
-                EndDetection: currentDetection,
-                Duration: duration);
-
-            laps.Add(lap);
-
-            initialDetection = currentDetection;
         }
-
         return GetConsecutiveLapGroups(laps);
     }
     private static IEnumerable<IEnumerable<OpenPracticeLap>> GetConsecutiveLapGroups(IEnumerable<OpenPracticeLap> laps)
@@ -290,7 +299,8 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
     {
         ConcurrentDictionary<Guid, ConcurrentBag<OpenPracticeDetection>> trackPilotsDetections = GetSessionDetections(sessionId, trackId);
 
-        Dictionary<Guid, IEnumerable<OpenPracticeDetection>> allDetections = new();
+        Dictionary<Guid, IEnumerable<OpenPracticeTimingMoment>> allMoments = new();
+        Dictionary<Guid, IDictionary<Guid,OpenPracticeDetection>> allDetections = new();
         Dictionary<Guid, IEnumerable<IEnumerable<OpenPracticeLap>>> pilotLaps = new();
         Dictionary<Guid, IDictionary<uint, OpenPracticeLapRecord>> allRecords = new();
 
@@ -298,26 +308,28 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         {
             Guid pilotId = pilotEntry.Key;
 
-            IEnumerable<OpenPracticeDetection> pilotDetections = pilotEntry.Value.ToList();
+            IDictionary<Guid,OpenPracticeDetection> pilotDetections = pilotEntry.Value.ToDictionary(x=>x.Id);
             allDetections[pilotId] = pilotDetections;
-            IEnumerable<IEnumerable<OpenPracticeLap>> pilotLapGroups = GetPilotSessionLapGroups(sessionId, trackId, pilotId, pilotDetections, minimumLapTime, maximumLapTime);
+            IEnumerable<OpenPracticeTimingMoment> pilotMoments = GetTimingMoments(sessionId, trackId, pilotId, pilotDetections.Values, minimumLapTime, maximumLapTime);
+            allMoments[pilotId] = pilotMoments;
+            IEnumerable<IEnumerable<OpenPracticeLap>> pilotLapGroups = GetPilotSessionLapGroups(sessionId, trackId, pilotId, pilotDetections,pilotMoments);
             pilotLaps[pilotId] = pilotLapGroups;
             allRecords[pilotId] = GetPilotRecords(sessionId, trackId, pilotId, pilotLapGroups);
         }
 
         Dictionary<uint, IEnumerable<OpenPracticeLapRecord>> sessionRecords = GetSessionRecords(allRecords);
 
-        return new OpenPracticeSessionTimingInformation(allDetections, pilotLaps, allRecords, sessionRecords);
+        return new OpenPracticeSessionTimingInformation(allMoments, allDetections, pilotLaps, allRecords, sessionRecords);
     }
     public OpenPracticeSessionPilotTimingInfo GetSessionPilotTimingInfo(Guid sessionId, Guid trackId, Guid pilotId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
     {
         ConcurrentBag<OpenPracticeDetection> detections = GetPilotDetections(sessionId, trackId, pilotId);
-
-        IEnumerable<OpenPracticeDetection> pilotDetections = detections.ToList();
-        IEnumerable<IEnumerable<OpenPracticeLap>> pilotLaps = GetPilotSessionLapGroups(sessionId, trackId, pilotId, pilotDetections, minimumLapTime, maximumLapTime);
+        IEnumerable<OpenPracticeTimingMoment> moments = GetTimingMoments(sessionId, trackId, pilotId, detections, minimumLapTime, maximumLapTime);
+        IDictionary<Guid,OpenPracticeDetection> pilotDetections = detections.ToDictionary(x=>x.Id);
+        IEnumerable<IEnumerable<OpenPracticeLap>> pilotLaps = GetPilotSessionLapGroups(sessionId, trackId, pilotId, pilotDetections,moments);
         IDictionary<uint, OpenPracticeLapRecord> pilotRecords = GetPilotRecords(sessionId, trackId, pilotId, pilotLaps);
 
-        return new OpenPracticeSessionPilotTimingInfo(pilotDetections, pilotLaps, pilotRecords);
+        return new OpenPracticeSessionPilotTimingInfo(moments,pilotDetections, pilotLaps, pilotRecords);
     }
     public OpenPracticeDetection? GetLastPilotDetection(Guid sessionId, Guid trackId, Guid pilotId)
     {

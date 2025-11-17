@@ -162,7 +162,7 @@
         {
             return null;
         }
-        return _timingInfo.PilotDetections[pilotId.Value].OrderByDescending(x => x.UtcTime).First().UtcTime;
+        return _timingInfo.PilotDetections[pilotId.Value].Values.OrderByDescending(x => x.UtcTime).First().UtcTime;
     }
 
     protected override async Task OnInitializedAsync()

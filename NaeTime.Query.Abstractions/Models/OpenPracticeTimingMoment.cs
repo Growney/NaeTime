@@ -1,18 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace NaeTime.Query.Abstractions.Models;
-public record OpenPracticeTimingMoment(Guid SessionId, Guid TrackId, Guid PilotId,OpenPracticeTimingMoment.TimingMomentType Type, OpenPracticeDetection Detection)
+[DebuggerDisplay("{Type}")]
+public record OpenPracticeTimingMoment(Guid SessionId, Guid TrackId, Guid PilotId,Guid? MomentId,OpenPracticeTimingMoment.TimingMomentType Type)
 {
     public enum TimingMomentType
     {
-        DetectionDiscardedDueToMinimumLapTime,
         LapStarted,
+        SplitStarted,
+        SplitCompleted,
+        SplitSkipped,
+        DetectionDiscardedDueToMinimiumLapTime,
         LapCompleted,
-        LapDiscardedDueToMaximumLapTime,
-        DetectionDiscardedDueToInvalidDetection
+        LapInvalidatedDueToMaximumLapTime,
+        DetectionDiscardedAsItsInvalid,
+        LapStoppedByEndOfPack,
+        EndOfPack,
     }
 }
