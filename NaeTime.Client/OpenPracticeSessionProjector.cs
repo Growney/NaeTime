@@ -15,6 +15,7 @@ public static class OpenPracticeSessionProjector
             TrackId = session.TrackId,
             IsActive = session.IsActive,
             TrackDetectorIds = session.TrackDetectorIds,
+            AttendingPilots = session.AttendingPilots,
             Lanes = session.Lanes.Select(l => new Models.OpenPracticeLane()
             {
                 Lane = l.Lane,

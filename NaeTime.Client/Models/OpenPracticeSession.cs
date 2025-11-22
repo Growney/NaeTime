@@ -5,6 +5,7 @@ public class OpenPracticeSession
     public string Name { get; set; }
     public Guid TrackId { get; set; }
     public bool IsActive { get; set; }
+    public IEnumerable<Guid> AttendingPilots { get; set; } = Enumerable.Empty<Guid>();
     public IEnumerable<Guid> TrackDetectorIds { get; set; } = Enumerable.Empty<Guid>();
     public IReadOnlyList<OpenPracticeLane> Lanes { get; set; } = new List<OpenPracticeLane>();
 }

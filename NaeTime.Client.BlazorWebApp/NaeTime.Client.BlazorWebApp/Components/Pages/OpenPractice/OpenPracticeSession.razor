@@ -3,30 +3,34 @@
 @using NaeTime.Hardware.Abstractions
 @using NaeTime.Hardware.Frequency
 
-@if (_session != null && _session.IsActive)
+@if (_session != null)
 {
+    if (_session.IsActive)
+    {
+        <MudSwitch Color=Color.Primary T=bool @bind-Value=_isTuningEnabled></MudSwitch>
+        <div class="lane-container">
+            @foreach (Models.OpenPracticeLane lane in _session.Lanes)
+            {
+                <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration>
+            }
+        </div>
+    }
 
-    <MudSwitch Color=Color.Primary T=bool @bind-Value=_isTuningEnabled></MudSwitch>
-    <div class="lane-container">
-        @foreach (Models.OpenPracticeLane lane in _session.Lanes)
+    <div class="d-flex flex-wrap justify-content-center">
+        @foreach (Guid pilotId in _session.AttendingPilots)
         {
-            <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration>
+            <div class="shadow-sm p-3" style="width:400px;">
+                <MudText Align="Align.Center" Typo="Typo.h5">@GetPilotName(pilotId)</MudText>
+                <div class="w-100" style="max-height:50vh; overflow-y:scroll;">
+                    <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilotId>
+                    </NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments>
+                </div>
+
+            </div>
         }
     </div>
  }
-<div class="d-flex flex-wrap justify-content-center">
-    @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in _pilots)
-    {
-        <div class="shadow-sm p-3" style="width:400px;" >
-            <MudText Align="Align.Center" Typo="Typo.h5">@GetPilotName(pilot.Id)</MudText>
-            <div class="w-100" style="max-height:50vh; overflow-y:scroll;">
-                <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilot.Id>
-                </NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments>
-            </div>
-            
-        </div>
-    }
-</div>
+
 
 @code {
 
