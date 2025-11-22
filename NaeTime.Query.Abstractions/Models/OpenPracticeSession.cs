@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Query.Abstractions.Models;
-public record OpenPracticeSession(Guid Id, string Name, Guid TrackId, IEnumerable<Guid> TrackDetectorIds, IReadOnlyList<OpenPracticeLane> Lanes);
+public record OpenPracticeSession(Guid Id, string Name, Guid TrackId, bool IsActive, IEnumerable<Guid> TrackDetectorIds, IReadOnlyList<OpenPracticeLane> Lanes);

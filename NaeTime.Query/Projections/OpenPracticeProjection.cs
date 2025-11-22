@@ -21,6 +21,7 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public Guid TrackId { get; set; }
+        public bool IsActive { get; set; }
         public IEnumerable<Guid> TrackDetectorIds { get; set; } = Enumerable.Empty<Guid>();
         public ConcurrentBag<ListOpenPracticeSessionLane> Lanes { get; set; } = [];
 
@@ -33,11 +34,24 @@ public class OpenPracticeProjection : IOpenPracticeProjection
     {
         if (_sessions.TryGetValue(sessionId, out var session))
         {
-            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, session.TrackDetectorIds, [.. session.Lanes.OrderBy(x=>x.Lane).Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
+            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, session.IsActive, session.TrackDetectorIds, [.. session.Lanes.OrderBy(x => x.Lane).Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
         }
         return null;
     }
-
+    private void When(OpenPracticeSessionActivated activated)
+    {
+        if (_sessions.TryGetValue(activated.SessionId, out var session))
+        {
+            session.IsActive = true;
+        }
+    }
+    private void When(OpenPracticeSessionDeactivated deactivated)
+    {
+        if (_sessions.TryGetValue(deactivated.SessionId, out var session))
+        {
+            session.IsActive = false;
+        }
+    }
     private void When(OpenPracticeSessionScheduled scheduled)
     {
         _sessions.GetOrAdd(scheduled.SessionId, id => new ListOpenPracticeSession

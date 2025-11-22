@@ -3,7 +3,7 @@
 @using NaeTime.Hardware.Abstractions
 @using NaeTime.Hardware.Frequency
 
-@if (_session != null)
+@if (_session != null && _session.IsActive)
 {
 
     <MudSwitch Color=Color.Primary T=bool @bind-Value=_isTuningEnabled></MudSwitch>
@@ -48,7 +48,7 @@
     private TimeSpan _maximumLapTime = TimeSpan.FromSeconds(30);
 
     private bool _isTuningEnabled = false;
-
+    private bool _isActive = false;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     protected override async Task OnInitializedAsync()
