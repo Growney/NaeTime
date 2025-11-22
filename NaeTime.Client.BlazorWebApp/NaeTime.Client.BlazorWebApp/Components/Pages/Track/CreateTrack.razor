@@ -2,50 +2,41 @@
 
 @if (_track != null)
 {
-    <div>
-        <a class="btn btn-primary" href="/track/list"><i class="fa-solid fa-backward-step"></i></a>
-    </div>
-    <div>
-        <label>
-            Name:
-            <input @bind="_track.Name"> </input>
-        </label>
-    </div>
-    <div>
-        <label>
-            Redetection Delay (ms):
-            <input type="number" @bind="_track.RedetectionDelay"> </input>
-        </label>
-    </div>
-    <div>
-        <label>
-            Maximum Lap Time (ms):
-            <input type="number" @bind="_track.MaximumLapTimeMilliseconds"> </input>
-        </label>
-    </div>
-    <div>
-        <InputSelect @bind-Value=_selectedDetector>
-            @foreach (var detector in GetAvailableDetectors())
-            {
-                <option value="@detector.Id">@detector.Name</option>
-            }
-        </InputSelect>
-        <button type="button" @onclick=AddGate class="btn btn-primary"><i class="fa-solid fa-plus"></i></button>
-    </div>
-    <div>
-        @foreach(var detector in _track.Detectors)
-        {
-            <div class="mt-2">
-                <label>@detector.Name</label>
-                <button type="button" disabled="@_track.CanMoveDetectorUp(detector.Id)" @onclick="() => _track.MoveDetectorUp(detector.Id)" class="btn btn-secondary"><i class="fa-solid fa-arrow-up"></i></button>
-                <button type="button" disabled="@_track.CanMoveDetectorDown(detector.Id)" @onclick="() => _track.MoveDetectorDown(detector.Id)" class="btn btn-secondary"><i class="fa-solid fa-arrow-down"></i></button>
-                <button type="button" @onclick="() => _track.Detectors.Remove(detector)" class="btn btn-secondary"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-        }
-    </div>
-    <div>
-        <button class="btn btn-primary" @onclick="Create">Create</button>
-    </div>
+    <MudGrid Justify=Justify.Center>
+        <MudItem xs=3>
+            <MudIconButton Icon=@Icons.Material.Filled.ArrowLeft Href="/track/list"></MudIconButton>
+            <MudPaper Class="p-4">
+                <MudForm @bind-IsValid="_isValid">
+                    <MudTextField @bind-Value="_track.Name" Label="Name" Required="true"></MudTextField>
+                    <MudTextField @bind-Value="_track.RedetectionDelay" Label="Redetection Delay (ms)" Required="true"></MudTextField>
+                    <MudTextField @bind-Value="_track.MaximumLapTimeMilliseconds" Label="Maximum Lap Time (ms)" Required="true"></MudTextField>
+
+                    <MudSelect T="Guid" @bind-Value="_selectedDetector" Label="Add Detector">
+                        @foreach (var detector in GetAvailableDetectors())
+                        {
+                            <MudSelectItem Value="@detector.Id">@detector.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudIconButton Icon=@Icons.Material.Filled.Add onclick=AddGate></MudIconButton>
+                    <MudList T="string">
+                        @foreach(var detector in _track.Detectors)
+                        {
+                            <MudListItem>
+                                <div class="d-flex align-items-center">
+                                    <span>@detector.Name</span>
+                                    <MudSpacer />
+                                    <MudIconButton Disabled="@(!_track.CanMoveDetectorUp(detector.Id))" Icon="@Icons.Material.Filled.ArrowUpward" OnClick="() => _track.MoveDetectorUp(detector.Id)"></MudIconButton>
+                                    <MudIconButton Disabled="@(!_track.CanMoveDetectorDown(detector.Id))" Icon="@Icons.Material.Filled.ArrowDownward" OnClick="() => _track.MoveDetectorDown(detector.Id)"></MudIconButton>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => _track.Detectors.Remove(detector)"></MudIconButton>
+                                </div>
+                            </MudListItem>
+                        }
+                    </MudList>
+                    <MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Primary" OnClick="Create">Create</MudButton>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 }
 
 @code {
@@ -58,6 +49,8 @@
     private Guid _selectedDetector;
     private NaeTime.Client.Models.Track? _track;
     private IEnumerable<NaeTime.Query.Abstractions.Models.Detector> _allDetectors = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Detector>();
+
+    private bool _isValid = false;
 
     protected override async Task OnInitializedAsync()
     {
