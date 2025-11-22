@@ -1,7 +1,24 @@
 ﻿@page "/"
+@using NaeTime.Query.Abstractions.Models
 
-<PageTitle>Home</PageTitle>
+@code{
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
 
-<h1>Hello, world!</h1>
+    [Inject]
+    private ISessionQueryHandler SessionQueryHandler { get; set; } = null!;
 
-Welcome to your new app.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var activeSession = await SessionQueryHandler.GetActiveSession();
+
+        if(activeSession != null && activeSession.Type == SessionType.OpenPractice)
+        {
+            NavigationManager.NavigateTo($"/open-practice/{activeSession.Id}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/session/list");
+        }
+    }
+}
