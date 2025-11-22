@@ -2,40 +2,26 @@
 
 @if (_pilot != null)
 {
-    <div>
-        <a class="btn btn-primary" href="/pilot/list"><i class="fa-solid fa-backward-step"></i></a>
-    </div>
-    <div>
-        <label>
-            Firstname:
-            <input @bind:get="_pilot.Firstname" @bind:set="(x) => FirstnameChanged(x)"> </input>
-        </label>
-    </div>
-    <div>
-        <label>
-            Lastname:
-            <input @bind:get="_pilot.Lastname" @bind:set="(x) => LastnameChanged(x)"> </input>
-        </label>
-    </div>
-    <div>
-        <label>
-            Callsign:
-            <input @bind:get="_pilot.Callsign" @bind:set="(x) => CallsignChanged(x)"> </input>
-        </label>
-    </div>
-    <div>
-        @if (_pilot.HasBindingPhrase)
-        {
-            <button class="btn btn-danger" @onclick="ClearBindingPhrase">Remove Binding Phrase</button>
-        }
-        else
-        {
-            <label>
-                Binding Phrase:
-                <input @bind="_pilot.BindingPhrase"> </input><button class="btn btn-success" @onclick="ConfirmBindingPhrase"><i class="fa-solid fa-check"></i></button>
-            </label>
-        }
-    </div>
+    <MudGrid Justify=Justify.Center>
+        <MudItem xs=3>
+            <MudIconButton Icon=@Icons.Material.Filled.ArrowLeft Href="/pilot/list"></MudIconButton>
+            <MudPaper Class="p-4">
+                <MudForm @bind-IsValid="_isValid">
+                    <MudTextField T=string Value="_pilot.Firstname" ValueChanged="FirstnameChanged" Label="Firstname" Required="true"></MudTextField>
+                    <MudTextField T=string Value="_pilot.Lastname" ValueChanged="LastnameChanged" Label="Lastname" Required="true"></MudTextField>
+                    <MudTextField T=string Value=_pilot.Callsign ValueChanged="CallsignChanged" Label="Callsign" Required="true"></MudTextField>
+                    @if(_pilot.HasBindingPhrase)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="ClearBindingPhrase">Clear Binding Phrase</MudButton>
+                    }
+                    else
+                    {
+                        <MudTextField T=string Value=_pilot.BindingPhrase ValueChanged="ConfirmBindingPhrase" Label="Binding Phrase" Clearable=true></MudTextField>
+                    }
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 }
 
 @code {
@@ -51,6 +37,8 @@
     private NavigationManager NavigationManager { get; set; } = null!;
 
     private NaeTime.Client.Models.Pilot? _pilot;
+
+    private bool _isValid = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -103,21 +91,22 @@
         _pilot.HasBindingPhrase = false;
         _pilot.BindingPhrase = string.Empty;
     }
-    private async Task ConfirmBindingPhrase()
+    private async Task ConfirmBindingPhrase(string value)
     {
         if(_pilot == null)
         {
             return;
         }
 
-        if(string.IsNullOrEmpty(_pilot.BindingPhrase))
+        if(string.IsNullOrEmpty(value))
         {
-            await PilotCommandHandler.RemovePilotBindingPhrase(_pilot.Id);
+            await PilotCommandHandler.RemovePilotBindingPhrase(Id);
+            _pilot.HasBindingPhrase = false;
         }
         else
         {
-            await PilotCommandHandler.ChangePilotBindingPhrase(_pilot.Id, _pilot.BindingPhrase);
+            await PilotCommandHandler.ChangePilotBindingPhrase(Id, value);
+            _pilot.HasBindingPhrase = true;
         }
-        _pilot.HasBindingPhrase = true;
     }
 }
