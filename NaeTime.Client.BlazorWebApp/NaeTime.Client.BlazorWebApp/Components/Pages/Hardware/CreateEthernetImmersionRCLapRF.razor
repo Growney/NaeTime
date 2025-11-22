@@ -3,30 +3,19 @@
 
 @if(_immersionRCLapRF != null)
 {
-    <div>
-        <a class="btn btn-primary" href="/pilot/list"><i class="fa-solid fa-backward-step"></i></a>
-    </div>
-    <div>
-        <label>
-            Name:
-            <input @bind="_immersionRCLapRF.Name"> </input>
-        </label>
-    </div>
-    <div>
-        <label>
-            IP Address:
-            <input @bind="_immersionRCLapRF.IPAddress"> </input>
-        </label>
-    </div>
-    <div>
-        <label>
-            Port:
-            <input type="number" @bind="_immersionRCLapRF.Port"> </input>
-        </label>
-    </div>
-    <div>
-        <button class="btn btn-primary" @onclick="Create">Create</button>
-    </div>
+    <MudGrid Justify=Justify.Center>
+        <MudItem xs=3>
+            <MudIconButton Icon=@Icons.Material.Filled.ArrowLeft Href="/hardware/list"></MudIconButton>
+            <MudPaper Class="p-4">
+                <MudForm @bind-IsValid="_isValid">
+                    <MudTextField @bind-Value="_immersionRCLapRF.Name" Label="Name" Required="true"></MudTextField>
+                    <MudTextField @bind-Value="_immersionRCLapRF.IPAddress" Label="IP Address" Required="true"></MudTextField>
+                    <MudNumericField T=ushort @bind-Value="_immersionRCLapRF.Port" Label="Port" Required="true" Min="1" Max="65535"></MudNumericField>
+                    <MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Primary" OnClick="Create">Create</MudButton>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 }
 
 @code {
@@ -37,6 +26,8 @@
     private NavigationManager NavigationManager { get; set; } = null!;
 
     private NaeTime.Client.Models.EthernetImmersionRCLapRF? _immersionRCLapRF;
+
+    private bool _isValid = false;
 
     protected override void OnInitialized()
     {
