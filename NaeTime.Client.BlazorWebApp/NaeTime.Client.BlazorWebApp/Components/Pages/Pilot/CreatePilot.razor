@@ -2,36 +2,20 @@
 
 @if (_pilot != null)
 {
-    <div>
-        <a class="btn btn-primary" href="/pilot/list"><i class="fa-solid fa-backward-step"></i></a>
-    </div>
-    <div>
-        <label>
-            Firstname:
-            <input @bind="_pilot.Firstname"> </input>
-        </label>
-    </div>
-    <div>
-        <label>
-            Lastname:
-            <input @bind="_pilot.Lastname"> </input>
-        </label>
-    </div>
-    <div>
-        <label>
-            Callsign:
-            <input @bind="_pilot.Callsign"> </input>
-        </label>
-    </div>
-    <div>
-        <label>
-            Binding Phrase:
-            <input @bind="_pilot.BindingPhrase"> </input>
-        </label>
-    </div>
-    <div>
-        <button class="btn btn-primary" @onclick="Create">Create</button>
-    </div>
+    <MudGrid Justify=Justify.Center>
+        <MudItem xs=3>
+            <MudIconButton Icon=@Icons.Material.Filled.ArrowLeft Href="/pilot/list"></MudIconButton>
+            <MudPaper Class="p-4">
+                <MudForm @bind-IsValid="_isValid">
+                    <MudTextField @bind-Value="_pilot.Firstname" Label="Firstname" Required="true"></MudTextField>
+                    <MudTextField @bind-Value="_pilot.Lastname" Label="Lastname" Required="true"></MudTextField>
+                    <MudTextField @bind-Value="_pilot.Callsign" Label="Callsign" Required="true"></MudTextField>
+                    <MudTextField @bind-Value="_pilot.BindingPhrase" Label="Binding Phrase"></MudTextField>
+                    <MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Primary" OnClick="Create">Create</MudButton>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 }
 
 @code {
@@ -42,6 +26,8 @@
     private NavigationManager NavigationManager { get; set; } = null!;
 
     private NaeTime.Client.Models.Pilot? _pilot;
+
+    private bool _isValid = false;
 
     protected override void OnInitialized()
     {
