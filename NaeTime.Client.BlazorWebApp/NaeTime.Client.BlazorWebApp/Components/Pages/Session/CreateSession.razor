@@ -1,31 +1,29 @@
 ﻿@page "/session/create"
 
-<div>
-    <a class="btn btn-primary" href="/session/list"><i class="fa-solid fa-backward-step"></i></a>
-</div>
-<div>
-    <MudBlazor.MudTextField @bind-Value="_session.Name" Label="Name"></MudBlazor.MudTextField>
-</div>
-<div>
-    <MudBlazor.MudSelect T="Models.SessionType" @bind-Value="_session.SessionType" Label="Type">
-        @foreach(Models.SessionType sessionType in Enum.GetValues<Models.SessionType>())
-        {
-            <MudBlazor.MudSelectItem Value="sessionType">@sessionType</MudBlazor.MudSelectItem>
-        }
-    </MudBlazor.MudSelect>
-</div>
-<div>
-    <MudBlazor.MudSelect T="Guid" @bind-Value="_session.TrackId" Label="Track">
-        @foreach (NaeTime.Query.Abstractions.Models.Track track in _tracks)
-        {
-            <MudBlazor.MudSelectItem Value="track.Id">@track.Name</MudBlazor.MudSelectItem>
-        }
-    </MudBlazor.MudSelect>
-</div>
-<MudBlazor.MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="Start">Start</MudBlazor.MudButton>
-<MudBlazor.MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="Create">Create</MudBlazor.MudButton>
-
-
+<MudGrid Justify=Justify.Center>
+    <MudItem xs=3>
+        <MudIconButton Icon=@Icons.Material.Filled.ArrowLeft Href="/pilot/list"></MudIconButton>
+        <MudPaper Class="p-4">
+            <MudForm @bind-IsValid="_isValid">
+                <MudBlazor.MudTextField @bind-Value="_session.Name" Label="Name"></MudBlazor.MudTextField>
+                <MudBlazor.MudSelect T="Models.SessionType" @bind-Value="_session.SessionType" Label="Type">
+                    @foreach (Models.SessionType sessionType in Enum.GetValues<Models.SessionType>())
+                    {
+                        <MudBlazor.MudSelectItem Value="sessionType">@sessionType</MudBlazor.MudSelectItem>
+                    }
+                </MudBlazor.MudSelect>
+                <MudBlazor.MudSelect T="Guid" @bind-Value="_session.TrackId" Label="Track">
+                    @foreach (NaeTime.Query.Abstractions.Models.Track track in _tracks)
+                    {
+                        <MudBlazor.MudSelectItem Value="track.Id">@track.Name</MudBlazor.MudSelectItem>
+                    }
+                </MudBlazor.MudSelect>
+                <MudBlazor.MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Primary" @onclick="Start">Start</MudBlazor.MudButton>
+                <MudBlazor.MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Secondary" @onclick="Create">Create</MudBlazor.MudButton>
+            </MudForm>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 @code {
     [Inject]
     private ISessionsCommandHandler SessionsCommandHandler { get; set; } = null!;
@@ -35,6 +33,8 @@
     private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
+
+    private bool _isValid;
 
     private NaeTime.Client.Models.Session _session = new()
         {
