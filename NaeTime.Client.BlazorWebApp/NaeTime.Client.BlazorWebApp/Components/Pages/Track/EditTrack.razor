@@ -2,49 +2,40 @@
 
 @if (_track != null)
 {
-    <div>
-        <a class="btn btn-primary" href="/track/list"><i class="fa-solid fa-backward-step"></i></a>
-    </div>
-    <div>
-        <label>
-            Name:
-            <input @bind:get="_track.Name" @bind:set="(x) => RenameTrack(x)"> </input>
-        </label>
-    </div>
-    <div>
-        <label>
-            Redetection delay (ms):
-            <input type="number" @bind:get="_track.RedetectionDelay" @bind:set="(x) => SetMinimumLapTime(x ?? 0)"> </input>
-            <button type="button" disabled="@(!_track.RedetectionDelay.HasValue)" class="btn btn-secondary" @onclick="ResetMinimumLapTime">Reset</button>
-        </label>
-    </div>
-    <div>
-        <label>
-            Maximum Lap Time (ms):
-            <input type="number" @bind:get="_track.MaximumLapTimeMilliseconds" @bind:set="(x) => SetMaximumLapTime(x ?? 0)"> </input>
-            <button type="button" disabled="@(!_track.MaximumLapTimeMilliseconds.HasValue)" class="btn btn-secondary" @onclick="ResetMaximumLapTime">Reset</button>
-        </label>
-    </div>
-    <div>
-        <InputSelect @bind-Value=_selectedDetector>
-            @foreach (var detector in GetAvailableDetectors())
-            {
-                <option value="@detector.Id">@detector.Name</option>
-            }
-        </InputSelect>
-        <button type="button" @onclick=AddGate class="btn btn-primary"><i class="fa-solid fa-plus"></i></button>
-    </div>
-    <div>
-        @foreach (var detector in _track.Detectors)
-        {
-            <div class="mt-2">
-                <label>@detector.Name</label>
-                <button type="button" disabled="@_track.CanMoveDetectorUp(detector.Id)" @onclick="() => MoveDetectorUp(detector.Id)" class="btn btn-secondary"><i class="fa-solid fa-arrow-up"></i></button>
-                <button type="button" disabled="@_track.CanMoveDetectorDown(detector.Id)" @onclick="() => MoveDetectorDown(detector.Id)" class="btn btn-secondary"><i class="fa-solid fa-arrow-down"></i></button>
-                <button type="button" @onclick="() => RemoveDetector(detector.Id)" class="btn btn-secondary"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-        }
-    </div>
+    <MudGrid Justify=Justify.Center>
+        <MudItem xs=3>
+            <MudIconButton Icon=@Icons.Material.Filled.ArrowLeft Href="/track/list"></MudIconButton>
+            <MudPaper Class="p-4">
+                <MudForm>
+                    <MudTextField T=string Value="_track.Name" ValueChanged=RenameTrack Label="Name" Required="true"></MudTextField>
+                    <MudNumericField T=long? Value=_track.RedetectionDelay ValueChanged=SetMinimumLapTime Label="Redetection Delay (ms)" Clearable=true></MudNumericField>
+                    <MudNumericField T=long? Value="_track.MaximumLapTimeMilliseconds" ValueChanged=SetMaximumLapTime Label="Maximum Lap Time (ms)" Required="true"></MudNumericField>
+
+                    <MudSelect T="Guid" @bind-Value="_selectedDetector" Label="Add Detector">
+                        @foreach (var detector in GetAvailableDetectors())
+                        {
+                            <MudSelectItem Value="@detector.Id">@detector.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudIconButton Icon=@Icons.Material.Filled.Add onclick=AddGate></MudIconButton>
+                    <MudList T="string">
+                        @foreach (var detector in _track.Detectors)
+                        {
+                            <MudListItem>
+                                <div class="d-flex align-items-center">
+                                    <span>@detector.Name</span>
+                                    <MudSpacer />
+                                    <MudIconButton Disabled="@(!_track.CanMoveDetectorUp(detector.Id))" Icon="@Icons.Material.Filled.ArrowUpward" OnClick="() => MoveDetectorUp(detector.Id)"></MudIconButton>
+                                    <MudIconButton Disabled="@(!_track.CanMoveDetectorDown(detector.Id))" Icon="@Icons.Material.Filled.ArrowDownward" OnClick="() => MoveDetectorDown(detector.Id)"></MudIconButton>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => RemoveDetector(detector.Id)"></MudIconButton>
+                                </div>
+                            </MudListItem>
+                        }
+                    </MudList>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 }
 
 @code {
@@ -65,7 +56,7 @@
     protected override async Task OnInitializedAsync()
     {
         _allDetectors = await HardwareQueryHandler.GetAllDetectors();
-        
+
         _track = TrackProjector.Project(await TrackQueryHandler.GetTrack(Id));
         if(_track == null)
         {
@@ -147,23 +138,37 @@
         _track.Name = value;
         await TrackCommandHandler.RenameTrack(_track.Id, value);
     }
-    private async Task SetMinimumLapTime(long value)
+    private async Task SetMinimumLapTime(long? value)
     {
         if (_track == null)
         {
             return;
         }
         _track.RedetectionDelay = value;
-        await TrackCommandHandler.SetMinimumDetectionDelay(_track.Id, value);
+        if (value.HasValue)
+        {
+            await TrackCommandHandler.SetMinimumDetectionDelay(_track.Id, value.Value);
+        }
+        else
+        {
+            await TrackCommandHandler.ResetMinimumDetectionDelay(_track.Id);
+        }
     }
-    private async Task SetMaximumLapTime(long value)
+    private async Task SetMaximumLapTime(long? value)
     {
         if (_track == null)
         {
             return;
         }
         _track.MaximumLapTimeMilliseconds = value;
-        await TrackCommandHandler.SetMaximumLapTime(_track.Id, value);
+        if (value.HasValue)
+        {
+            await TrackCommandHandler.SetMaximumLapTime(_track.Id, value.Value);
+        }
+        else
+        {
+            await TrackCommandHandler.ResetMaximumLapTime(_track.Id);
+        }
     }
     private async Task ResetMinimumLapTime()
     {
