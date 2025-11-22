@@ -1,0 +1,191 @@
+﻿@using EventDbLite.Abstractions
+@implements IDisposable
+@if(_timingInfo != null)
+{
+    @if(_fastestLap != null)
+    {
+        <MudButton Color="Color.Error" OnClick="() => InvalidateDetection(_fastestLap.IncludedLaps.First().StartDetection.Id)">Invalidate Fastest Lap: @_fastestLap.Record.ToString("m\\:ss\\:fff")</MudButton>
+    }
+    <MudTimeline TimelinePosition="TimelinePosition.Left" >
+        @foreach(Query.Abstractions.Models.OpenPracticeTimingMoment moment in _timingInfo.Moments.Reverse())
+        {
+            <MudTimelineItem Color="GetMomentColor(moment)">
+                
+                <div class="d-flex justify-content-between hidden-hover-parent">
+                    <div>
+
+                        <MudText Typo="Typo.body1">
+                            @GetMomentPrimaryText(moment)
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            @GetMomentSecondaryText(moment)
+                        </MudText>
+                    </div>
+                    <div class="hidden-until-hover">
+                        @if(moment.MomentId.HasValue 
+                            && moment.Type != Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.EndOfPack
+                            && moment.Type != Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapStoppedByEndOfPack)
+                        {
+
+                            <MudFab Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" OnClick="() => InsertPackEndBeforeDetection(moment.MomentId.Value)"></MudFab>
+                            <MudFab Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" OnClick="() => InsertPackEndAfterDetection(moment.MomentId.Value)"></MudFab>
+                        }
+                        else if (moment.MomentId.HasValue)
+                        {
+                            <MudFab Color="Color.Error" StartIcon="@Icons.Material.Filled.Remove" Size="Size.Small" OnClick="() => RemoveLapEnd(moment.MomentId.Value)"></MudFab>
+                        }
+
+                        @if (moment.MomentId.HasValue && moment.Type == Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapCompleted)
+                        {
+                            <MudFab Color="Color.Error" StartIcon="@Icons.Material.Filled.Remove" Size="Size.Small" OnClick="()=> InvalidateDetection(moment.MomentId.Value)"></MudFab>
+                        }
+                        else if(moment.MomentId.HasValue && moment.Type == Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedAsItsInvalid)
+                        {
+                            <MudFab Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="() => ValidateDetection(moment.MomentId.Value)"></MudFab>
+                        }
+                    </div>
+                       
+                </div>
+            </MudTimelineItem>
+        }
+    </MudTimeline>
+}
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public Guid SessionId { get; set; }
+    [Parameter]
+    [EditorRequired]
+    public Guid TrackId { get; set; }
+    [Parameter]
+    [EditorRequired]
+    public Guid PilotId { get; set; }
+
+    [Inject]
+    private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
+    [Inject]
+    private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
+    [Inject]
+    private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
+    [Inject]
+    private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
+
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    private Query.Abstractions.Models.OpenPracticeSessionPilotTimingInfo? _timingInfo;
+    private Query.Abstractions.Models.OpenPracticeLapRecord? _fastestLap => _timingInfo?.LapRecords.FirstOrDefault(x => x.Key == 1).Value;
+    protected override async Task OnParametersSetAsync()
+    {
+        await Refresh();
+        await base.OnParametersSetAsync();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        ReactionProviderFactory.On<Events.OpenPracticePilotTimingChangeOccured>(async x =>
+        {
+            if (x.SessionId == SessionId && x.PilotId == PilotId)
+            {
+                await Refresh();
+            }
+        }, _cancellationTokenSource.Token);
+
+        return base.OnInitializedAsync();
+    }
+    private TimeSpan GetLapTime(Guid? momentId)
+    {
+        Query.Abstractions.Models.OpenPracticeLap? lap = _timingInfo?.LapGroups.SelectMany(x => x).FirstOrDefault(x => x.EndDetection.Id == momentId);
+        if (lap != null)
+        {
+            return lap.Duration;
+        }
+        return TimeSpan.Zero;
+    }
+    private  string GetMomentPrimaryText(Query.Abstractions.Models.OpenPracticeTimingMoment moment)
+    {
+        return moment.Type switch
+        {
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapCompleted => $"Lap Completed",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapStarted => $"Lap Started",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedAsItsInvalid 
+                or Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedDueToMinimiumLapTime => $"Detection Discarded",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapInvalidatedDueToMaximumLapTime => $"Lap Invalidated",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapStoppedByEndOfPack => $"Lap Stopped",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.EndOfPack => $"End of Pack",
+            _ => string.Empty
+        };
+    }
+    private string GetMomentSecondaryText(Query.Abstractions.Models.OpenPracticeTimingMoment moment)
+    {
+        return moment.Type switch
+        {
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapCompleted => $"{GetLapTime(moment.MomentId):m\\:ss\\:fff}",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedAsItsInvalid => $"Invalid",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedDueToMinimiumLapTime => $"Below Minimum Lap Time",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapInvalidatedDueToMaximumLapTime => $"Above Maximum Lap Time",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapStoppedByEndOfPack => $"End of Pack",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.EndOfPack => $"End of Pack Reached",
+            _ => string.Empty
+        };
+    }
+    private  Color GetMomentColor(Query.Abstractions.Models.OpenPracticeTimingMoment moment)
+    {
+        return moment.Type switch
+        {
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapCompleted => Color.Success,
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapStarted => Color.Info,
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedAsItsInvalid 
+                or Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedDueToMinimiumLapTime => Color.Warning,
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapInvalidatedDueToMaximumLapTime 
+                or Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapStoppedByEndOfPack
+                or Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.EndOfPack=> Color.Error,
+            _ => Color.Default
+        };
+    }
+    private async Task Refresh()
+    {
+        Query.Abstractions.Models.Track? track = await TrackQueryHandler.GetTrack(TrackId);
+
+        if (track == null)
+        {
+            return;
+        }
+
+        TimeSpan maximumLapTime = track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue;
+        TimeSpan minimumLapTime = track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero;
+
+        _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(SessionId, TrackId, PilotId, minimumLapTime, maximumLapTime);
+        StateHasChanged();
+    }
+
+    private async Task InvalidateDetection(Guid detectionId)
+    {
+        await OpenPracticeCommandHandler.InvalidateDetection(detectionId, SessionId);
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+    }
+
+    private async Task ValidateDetection(Guid detectionid)
+    {
+        await OpenPracticeCommandHandler.ValidateDetection(detectionid, SessionId);
+    }
+
+    private async Task RemoveLapEnd(Guid lapStopId)
+    {
+        await OpenPracticeCommandHandler.RemovePilotPackEnd(SessionId, lapStopId);
+    }
+
+    private async Task InsertPackEndAfterDetection(Guid detection)
+    {
+        await OpenPracticeCommandHandler.InsertPilotPackEndAfterDetection(SessionId, detection);
+    }
+
+    private async Task InsertPackEndBeforeDetection(Guid detection)
+    {
+        await OpenPracticeCommandHandler.InsertPilotPackEndBeforeDetection(SessionId, detection);
+    }
+}

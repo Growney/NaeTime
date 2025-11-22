@@ -3,6 +3,7 @@ using EventDbLite.Exceptions;
 using NaeTime.Command.Abstractions;
 using NaeTime.Command.Aggregates;
 using NaeTime.Query.Abstractions;
+using System.Xml.Linq;
 
 namespace NaeTime.Command;
 public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
@@ -55,6 +56,13 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
         await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
     });
 
+    public async Task InvalidateDetection(Guid detectionId, Guid sessionId)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.InvalidatePilotDetection(detectionId);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    }
+
     public Task RenameSession(Guid sessionId, string name) => ConcurrencyException.Retry(async () =>
     {
         OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
@@ -99,4 +107,32 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
         session.TuneLaneVideoFrequency(lane, bandId, frequencyInMhz);
         await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
     });
+
+    public async Task ValidateDetection(Guid detectionId, Guid sessionId)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.ValidatePilotDetection(detectionId);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    }
+
+    public async Task InsertPilotPackEndBeforeDetection(Guid sessionId,Guid detectionId)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {detectionId} does not exist.", nameof(detectionId));
+        session.InsertPilotPackEndBeforeDetection(detectionId);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    }
+
+    public async Task InsertPilotPackEndAfterDetection(Guid sessionId,Guid detectionId)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.InsertPilotPackEndAfterDetection(detectionId);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    }
+
+    public async Task RemovePilotPackEnd(Guid sessionId,Guid packEndId)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.RemovePilotPackEnd(packEndId);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    }
 }

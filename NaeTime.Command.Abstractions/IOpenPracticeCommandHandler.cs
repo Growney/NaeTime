@@ -13,4 +13,10 @@ public interface IOpenPracticeCommandHandler
 
     public Task AssignHardwareDetectionToSession(Guid detectionId, Guid sessionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime);
     public Task TriggerDetection(Guid detectionId, Guid sessionId, byte lane, byte ordinalPosition, ulong? hardwareTime, long softwareTime, DateTime utcTime);
+    public Task InvalidateDetection(Guid detectionId, Guid sessionId);
+    public Task ValidateDetection(Guid detectionId, Guid sessionId);
+    public Task InsertPilotPackEndBeforeDetection(Guid sessionId, Guid detectionId);
+    public Task InsertPilotPackEndAfterDetection(Guid sessionId, Guid detectionId);
+    public Task RemovePilotPackEnd(Guid sessionId, Guid packEndId);
+
 }

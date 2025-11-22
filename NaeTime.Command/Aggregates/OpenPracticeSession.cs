@@ -1,5 +1,7 @@
 ﻿using EventDbLite.Aggregates;
 using NaeTime.Events;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.Contracts;
 namespace NaeTime.Command.Aggregates;
 public class OpenPracticeSession : AggregateRoot<Guid>
 {
@@ -25,10 +27,14 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         public ulong? HardwareTime { get; init; }
         public long SoftwareTime { get; init; }
         public DateTime UtcTime { get; init; }
+        public bool IsValid { get; set; } = true;
+        public Guid? PackEndBeforeDetection { get; set; }
+        public Guid? PackEndAfterDetection { get; set; }
     }
-
+    private readonly Dictionary<Guid,Detection> _detections = [];
     private readonly Dictionary<Guid, Detection> _pilotLastDetection = [];
     private readonly Dictionary<byte, LaneInfo> _lanes = [];
+    private readonly Dictionary<Guid, Detection> _packEndDetections = [];
     private Guid[] _trackDetectors = [];
     private Guid _trackId;
     private TimeSpan? _redetectionDelay;
@@ -102,7 +108,7 @@ public class OpenPracticeSession : AggregateRoot<Guid>
     }
     private void When(OpenPracticePilotDetectionTriggered triggered)
     {
-        _pilotLastDetection[triggered.PilotId] = new()
+        Detection detection = new()
         {
             Id = triggered.DetectionId,
             PilotId = triggered.PilotId,
@@ -112,13 +118,16 @@ public class OpenPracticeSession : AggregateRoot<Guid>
             TrackTimerTotal = triggered.TrackDetectorCount,
             HardwareTime = triggered.HardwareTime,
             SoftwareTime = triggered.SoftwareTime,
-            UtcTime = triggered.UtcTime
+            UtcTime = triggered.UtcTime,
         };
+
+        _pilotLastDetection[triggered.PilotId] = detection;
+        _detections[triggered.DetectionId] = detection;
     }
 
     private void When(OpenPracticePilotDetectionOccured occured)
     {
-        _pilotLastDetection[occured.PilotId] = new()
+        Detection detection = new ()
         {
             Id = occured.DetectionId,
             TimerId = occured.TimerId,
@@ -126,8 +135,105 @@ public class OpenPracticeSession : AggregateRoot<Guid>
             TrackTimerTotal = occured.TrackTimerTotal,
             HardwareTime = occured.HardwareTime,
             SoftwareTime = occured.SoftwareTime,
-            UtcTime = occured.UtcTime
+            UtcTime = occured.UtcTime,
+            PilotId = occured.PilotId,
         };
+
+        _pilotLastDetection[occured.PilotId] = detection;
+        _detections[occured.DetectionId] = detection;
+    }
+
+    private void When(OpenPracticePilotDetectionInvalidated invalidated)
+    {
+        _detections[invalidated.DetectionId].IsValid = false;
+    }
+
+    private void When(OpenPracticePilotDetectionValidated validated)
+    {
+        _detections[validated.DetectionId].IsValid = true;
+    }
+
+    private void When(OpenPracticePilotPackEndInsertedAfterDetection inserted)
+    {
+        _detections[inserted.DetectionId].PackEndAfterDetection = inserted.PackEndId;
+        _packEndDetections[inserted.PackEndId] = _detections[inserted.DetectionId];
+    }
+
+    private void When(OpenPracticePilotPackEndInsertedBeforeDetection inserted)
+    {
+        _detections[inserted.DetectionId].PackEndBeforeDetection = inserted.PackEndId;
+        _packEndDetections[inserted.PackEndId] = _detections[inserted.DetectionId];
+    }
+    private void When(OpenPracticePilotPackEndRemoved removed)
+    {
+        Detection detection = _detections[removed.DetectionId];
+        if (detection.PackEndBeforeDetection == removed.PackEndId)
+        {
+            detection.PackEndBeforeDetection = null;
+        }
+        if (detection.PackEndAfterDetection == removed.PackEndId)
+        {
+            detection.PackEndAfterDetection = null;
+        }
+        _packEndDetections.Remove(removed.PackEndId);
+    }
+    public void InsertPilotPackEndBeforeDetection(Guid detectionId)
+    {
+        _detections.TryGetValue(detectionId, out Detection? detection);
+        if (detection is null)
+        {
+            throw new ValidationException($"Detection {detectionId} does not exist.");
+        }
+        Raise(new OpenPracticePilotPackEndInsertedBeforeDetection(detectionId, Guid.NewGuid(), Id, _trackId, detection.PilotId));
+        Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, detection.PilotId));
+    }
+    public void InsertPilotPackEndAfterDetection(Guid detectionId)
+    {
+        _detections.TryGetValue(detectionId, out Detection? detection);
+        if (detection is null)
+        {
+            throw new ValidationException($"Detection {detectionId} does not exist.");
+        }
+        Raise(new OpenPracticePilotPackEndInsertedAfterDetection(detectionId,Guid.NewGuid(),Id,_trackId,detection.PilotId));
+        Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, detection.PilotId));
+    }
+    public void RemovePilotPackEnd(Guid packEndId)
+    {
+        _packEndDetections.TryGetValue(packEndId, out Detection? detection);
+        if (detection is null)
+        {
+            throw new ValidationException($"Detection does not exist. For pack end");
+        }
+        if (detection.PackEndBeforeDetection != packEndId && detection.PackEndAfterDetection != packEndId)
+        {
+            throw new ValidationException($"Pack end {packEndId} is not associated with detection {detection.Id}.");
+        }
+        Raise(new OpenPracticePilotPackEndRemoved(packEndId,detection.Id,Id,_trackId, detection.PilotId));
+        Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, detection.PilotId));
+    }
+    public void InvalidatePilotDetection(Guid detectionId)
+    {
+        _detections.TryGetValue(detectionId, out Detection? detection);
+        
+        if (detection is null)
+        {
+            throw new ValidationException($"Detection {detectionId} does not exist.");
+        }
+
+        Raise(new OpenPracticePilotDetectionInvalidated(detectionId, Id, _trackId, detection.PilotId));
+        Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, detection.PilotId));
+    }
+    public void ValidatePilotDetection(Guid detectionId)
+    {
+        _detections.TryGetValue(detectionId, out Detection? detection);
+
+        if (detection is null)
+        {
+            throw new ValidationException($"Detection {detectionId} does not exist.");
+        }
+
+        Raise(new OpenPracticePilotDetectionValidated(detectionId, Id, _trackId, _detections[detectionId].PilotId));
+        Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, detection.PilotId));
     }
     public void SetLanePilot(byte lane, Guid pilotId)
     {
@@ -243,6 +349,7 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         }
 
         Raise(new OpenPracticePilotDetectionOccured(detectionId, Id, _trackId, pilotId, timerId, (byte)trackTimerOrdinal, (byte)_trackDetectors.Length, lane, hardwareTime, softwareTime, utcTime));
+        Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, pilotId));
     }
     public void TriggerDetection(Guid detectionId, byte lane, byte ordinalPosition, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
@@ -277,6 +384,7 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         }
 
         Raise(new OpenPracticePilotDetectionTriggered(detectionId, Id, _trackId, pilotId.Value, lane, ordinalPosition, (byte)_trackDetectors.Length, hardwareTime, softwareTime, utcTime));
+        Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, pilotId.Value));
     }
     private static TimeSpan CalculateDuration(Guid? startTimerId, ulong? startHardwareTime, long startSoftwareTime, DateTime startUtcTime,
         Guid? endTimerId, ulong? endHardwareTime, long endSoftwareTime, DateTime endUtcTime)

@@ -145,12 +145,7 @@
     {
         await GetLastDetection();
 
-        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionOccured>(async x =>
-        {
-            await GetLastDetection();
-            StateHasChanged();
-        }, _cancellationTokenSource.Token);
-        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async x =>
+        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotTimingChangeOccured>(async x =>
         {
             await GetLastDetection();
             StateHasChanged();

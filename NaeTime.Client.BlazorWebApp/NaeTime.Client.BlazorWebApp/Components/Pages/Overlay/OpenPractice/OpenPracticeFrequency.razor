@@ -112,13 +112,7 @@ else
     protected override async Task OnInitializedAsync()
     {
 
-        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionOccured>(async evt =>
-        {
-            await SetupFromSession();
-            StateHasChanged();
-        }, _cancellationTokenSource.Token);
-
-        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async evt =>
+        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotTimingChangeOccured>(async evt =>
         {
             await SetupFromSession();
             StateHasChanged();

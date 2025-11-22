@@ -1,0 +1,7 @@
+﻿.hidden-until-hover {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+.hidden-hover-parent:hover .hidden-until-hover {
+    opacity: 1;
+}

@@ -2,9 +2,8 @@
 @using EventDbLite.Abstractions
 @using NaeTime.Hardware.Abstractions
 @using NaeTime.Hardware.Frequency
-@implements IDisposable
 
-@if(_session != null)
+@if (_session != null)
 {
 
     <MudSwitch Color=Color.Primary T=bool @bind-Value=_isTuningEnabled></MudSwitch>
@@ -14,129 +13,35 @@
             <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration>
         }
     </div>
-    @if(_timingInfo != null)
+ }
+<div class="d-flex flex-wrap justify-content-center">
+    @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in _pilots)
     {
-        <div class="d-flex flex-wrap justify-content-center">
-            @foreach (var kvp in _timingInfo.SessionLapRecords)
-            {
-                <div class="shadow-sm p-3">
-                    @if (kvp.Key == 1)
-                    {
-                        <h5 style="height: 1em;" class="w-100 text-center">Fastest Single Lap </h5>
-                    }
-                    else
-                    {
-                        <h5 style="height: 1em;" class="w-100 text-center">Fastest @kvp.Key Consecutive </h5>
-                    }
-                    <div style="width:300px;">
-                        <table class="table table-striped">
-                            <tr class="px-2">
-                                <th>
-                                    #
-                                </th>
-                                <th>
-                                    Pilot
-                                </th>
-                                <th class="text-center">
-                                    Time
-                                </th>
-                            </tr>
-                            <tbody>
-                                @foreach (var position in kvp.Value)
-                                {
-                                    <tr>
-                                        <td>
-                                        </td>
-                                        <td>
-                                            @GetPilotName(position.PilotId)
-                                        </td>
-                                        <td>
-                                            @($"{position.Record:m\\:ss\\:fff}")
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            }
-        </div>
-
-        <div class="d-flex flex-wrap justify-content-center">
-            @foreach (var kvp in _timingInfo.PilotLapGroups)
-            {
-                <div class="shadow-sm p-3">
-                    
-                        @{
-                            int lapGroupCount = kvp.Value.Count();
-                            int totalLapCount = kvp.Value.Sum(x => x.Count());
-
-                            <h5 style="height: 1em;" class="w-100 text-center">@GetPilotName(kvp.Key)  </h5>
-                            <h6 class="text-muted w-100 text-center">@lapGroupCount packs @totalLapCount laps</h6>
-                            <div style="width:300px; max-height:600px; overflow-y:scroll;">
-
-                                @foreach (var lapGroup in kvp.Value.OrderByDescending(x => x.Max(d => d.StartDetection.UtcTime)))
-                                {
-                                    <h7 style="height: 1em;" class="w-100 text-center">Pack @lapGroupCount </h7>
-                                    <hr />
-                                    <table class="table table-striped">
-                                        <tbody>
-                                            @{
-                                                int lapCount = lapGroup.Count();
-                                                foreach (var lap in lapGroup.OrderByDescending(x => x.StartDetection.UtcTime))
-                                                {
-                                                    <tr>
-                                                        <td class="text-muted" style="width:2rem;">
-                                                            @totalLapCount
-                                                        </td>
-                                                        <td class="text-muted" style="width:2rem;">
-                                                            @lapCount
-                                                        </td>
-                                                        <td class="text-center">
-                                                            @($"{lap.Duration:m\\:ss\\:fff}")
-                                                        </td>
-                                                    </tr>
-                                                    lapCount--;
-                                                    totalLapCount--;
-                                                }
-                                            }
-
-                                        </tbody>
-                                    </table>
-                                    lapGroupCount --;
-                                
-                                }
-                            </div>
-                        }
-                </div>
-            }
+        <div class="shadow-sm p-3" style="width:400px;" >
+            <MudText Align="Align.Center" Typo="Typo.h5">@GetPilotName(pilot.Id)</MudText>
+            <div class="w-100" style="max-height:50vh; overflow-y:scroll;">
+                <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilot.Id>
+                </NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments>
+            </div>
+            
         </div>
     }
-}
-
+</div>
 
 @code {
 
     [Parameter]
     public Guid Id { get; set; }
-
-    [Inject]
-    private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
-    [Inject]
-    private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
     [Inject]
     private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
     [Inject]
     private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
     [Inject]
     private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
-    [Inject]
-    private ISoftwareTimer SoftwareTimer { get; set; } = null!;
 
     private Models.OpenPracticeSession? _session;
-    private NaeTime.Query.Abstractions.Models.OpenPracticeSessionTimingInformation? _timingInfo;
     private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> _pilots = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Pilot>();
 
     private TimeSpan _minimumLapTime = TimeSpan.Zero;
@@ -145,25 +50,6 @@
     private bool _isTuningEnabled = false;
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();
-
-    private DateTime? GetPilotLastDetectionTime(Guid? pilotId)
-    {
-        if(pilotId is null)
-        {
-            return null;
-        }
-
-        if(_timingInfo is null)
-        {
-            return null;
-        }
-
-        if(!_timingInfo.PilotDetections.ContainsKey(pilotId.Value))
-        {
-            return null;
-        }
-        return _timingInfo.PilotDetections[pilotId.Value].Values.OrderByDescending(x => x.UtcTime).First().UtcTime;
-    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -179,36 +65,7 @@
                 _maximumLapTime = track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue;
                 _minimumLapTime = track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero;
             }
-            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
         }
-
-        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionOccured>(async x =>
-        {
-            if (_session == null)
-            {
-                return;
-            }
-
-            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
-
-            StateHasChanged();
-        }, _cancellationTokenSource.Token);
-        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotDetectionTriggered>(async detection =>
-        {
-
-            if (_session == null)
-            {
-                return;
-            }
-
-            _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
-
-            StateHasChanged();
-        }, _cancellationTokenSource.Token);
-    }
-    private string GetLapCallout(TimeSpan timeSpan, int roundedTo = 3)
-    {
-        return Math.Round(timeSpan.TotalSeconds, roundedTo).ToString();
     }
     private string GetPilotName(Guid pilotId)
     {
@@ -218,111 +75,5 @@
             return pilot.Callsign ?? pilot.Firstname ?? pilot.Lastname ?? "[No Name]";
         }
         return "[Unknown Pilot]";
-    }
-
-    private async Task EnabledChanged(bool enabled, byte lane)
-    {
-        if(_session == null)
-        {
-            return;
-        }
-
-        if(enabled)
-        {
-            await OpenPracticeCommandHandler.EnableLane(_session.Id, lane);
-        }
-        else
-        {
-            await OpenPracticeCommandHandler.DisableLane(_session.Id, lane);
-        }
-        _session.Lanes[lane].IsEnabled = enabled;
-    }
-
-    private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> GetUnassignedPilots(byte lane)
-    {
-        if(_session == null)
-        {
-            return Enumerable.Empty<NaeTime.Query.Abstractions.Models.Pilot>();
-        }
-
-        Guid? currentPilot = _session.Lanes[lane].PilotId;
-
-        IEnumerable<Guid> usedPilots = _session.Lanes.Where(x => x.PilotId.HasValue).Select(x => x.PilotId!.Value);
-
-        return _pilots.Where(x => !usedPilots.Contains(x.Id) || x.Id == currentPilot);
-    }
-    private async Task OnPilotSelectionChanged(Guid? pilotId, byte lane)
-    {
-        if(_session == null)
-        {
-            return;
-        }
-
-        if (pilotId.HasValue)
-        {
-            await OpenPracticeCommandHandler.SetLanePilot(_session.Id, lane, pilotId.Value);
-        }
-        else
-        {
-            await OpenPracticeCommandHandler.ResetLanePilot(_session.Id, lane);
-        }
-
-        _session.Lanes[lane].PilotId = pilotId;
-    }
-    private string GetBandString(byte? bandId)
-    {
-        if (Band.Bands.Any(x => x.Id == bandId))
-        {
-            Band band = Band.Bands.First(x => x.Id == bandId);
-
-            return band.ShortName;
-        }
-
-        return $"Custom";
-    }
-    private string GetFrequencyString(byte? bandId, int frequencyInMhz)
-    {
-        if (Band.Bands.Any(x => x.Id == bandId))
-        {
-            Band band = Band.Bands.First(x => x.Id == bandId);
-
-            if (band.Frequencies.Any(x => x.FrequencyInMhz == frequencyInMhz))
-            {
-                BandFrequency frequency = band.Frequencies.First(x => x.FrequencyInMhz == frequencyInMhz);
-                return frequency.Name;
-            }
-        }
-
-        return $"{frequencyInMhz} MHz";
-    }
-    private async Task ChangeFrequency(byte? bandId, int frequencyInMhz, Models.OpenPracticeLane lane)
-    {
-        if(_session == null)
-        {
-            return;
-        }
-
-        await OpenPracticeCommandHandler.TuneLane(_session.Id, lane.Lane, bandId, frequencyInMhz);
-
-        lane.BandId = bandId;
-        lane.FrequencyInMHz = frequencyInMhz;
-
-        StateHasChanged();
-    }
-
-    public void Dispose()
-    {
-        _cancellationTokenSource.Cancel();
-        _cancellationTokenSource.Dispose();
-    }
-
-    private async Task TriggerDetection(byte lane)
-    {
-        if(_session == null)
-        {
-            return;
-        }
-
-        await OpenPracticeCommandHandler.TriggerDetection(Guid.NewGuid(), Id, lane, 0, null, SoftwareTimer.ElapsedMilliseconds, DateTime.UtcNow);  
     }
 }
