@@ -28,8 +28,8 @@
             <MudGrid Justify=Justify.SpaceEvenly>
                 @foreach (Guid pilotId in _session.AttendingPilots)
                 {
-                    <MudItem xs=2>
-                        <MudPaper Class=p3>
+                    <MudItem Style="min-width:385px;">
+                        <MudPaper Class=p-3>
                             <MudText Align="Align.Center" Typo="Typo.h5">@GetPilotName(pilotId)</MudText>
                             <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilotId>
                             </NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments>
