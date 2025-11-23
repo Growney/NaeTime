@@ -3,42 +3,43 @@
 @using NaeTime.Hardware.Frequency
 @implements IDisposable
 
-<div class="shadow rounded p-2" style="width: 200px">
-    <table class="w-100 pb-2">
-        <tbody>
-            <tr>
-                <td class="align-start" style="width:10px">
-                    <MudSwitch Color=Color.Primary T=bool Value="_lane.IsEnabled" ValueChanged="x => EnabledChanged(x)"></MudSwitch>
-                </td>
-                <td>
-                    <div class="h4 text-start">
-                        @_lane.Lane
-                    </div>
-                </td>
-                <td>
-                    <div class="h5 text-end">
-                        @_lane.FrequencyInMHz<sup style="font-size:0.5em">MHz</sup>
-                    </div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+<table class="w-100 pb-2">
+    <tbody>
+        <tr>
+            <td class="align-start" style="width:10px">
+                <MudSwitch Color=Color.Primary T=bool Value="_lane.IsEnabled" ValueChanged="x => EnabledChanged(x)"></MudSwitch>
+            </td>
+            <td>
+                <div class="h4 text-start">
+                    @_lane.Lane
+                </div>
+            </td>
+            <td>
+                <div class="h5 text-end">
+                    @_lane.FrequencyInMHz<sup style="font-size:0.5em">MHz</sup>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
 
-    <div class="w-100 pb-2">
-        <MudMenu Class="w-100">
-            <ActivatorContent>
-                <MudButton Variant=Variant.Filled Size=Size.Small Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(AllPilots.FirstOrDefault(x => x.Id == _lane.PilotId)?.Callsign ?? "[None]")</MudButton>
-            </ActivatorContent>
-            <ChildContent>
-                <MudMenuItem OnClick="x => OnPilotSelectionChanged(null)">[Clear]</MudMenuItem>
-                @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots())
-                {
-                    <MudMenuItem OnClick="x => OnPilotSelectionChanged(pilot.Id)">@pilot.Callsign</MudMenuItem>
-                }
-            </ChildContent>
-        </MudMenu>                    
-    </div>
-    <div class="w-100 pb-2">
+
+<div class="w-100 pb-2">
+    <MudMenu Class="w-100">
+        <ActivatorContent>
+            <MudButton Variant=Variant.Filled Size=Size.Small Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(AllPilots.FirstOrDefault(x => x.Id == _lane.PilotId)?.Callsign ?? "[None]")</MudButton>
+        </ActivatorContent>
+        <ChildContent>
+            <MudMenuItem OnClick="x => OnPilotSelectionChanged(null)">[Clear]</MudMenuItem>
+            @foreach (NaeTime.Query.Abstractions.Models.Pilot pilot in GetUnassignedPilots())
+            {
+                <MudMenuItem OnClick="x => OnPilotSelectionChanged(pilot.Id)">@pilot.Callsign</MudMenuItem>
+            }
+        </ChildContent>
+    </MudMenu>                    
+</div>
+<MudGrid Spacing=1 xs=12 Justify=Justify.Center>
+    <MudItem xxl=6 xl=12 lg=12 md=12 sm=12 xs=12>
         <MudMenu Class="w-100">
             <ActivatorContent>
                 <MudButton Variant=Variant.Outlined Size=Size.Small Color=Color.Info FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetBandString(_lane.BandId))</MudButton>
@@ -51,13 +52,13 @@
                 }
             </ChildContent>
         </MudMenu>
-    </div>
-    <div class="w-100" style="min-height:48px;">
+    </MudItem>
+    <MudItem xxl=6 xl=12 lg=12 md=12 sm=12 xs=12>
         @if (Band.Bands.Any(b => b.Id == _lane.BandId))
         {
             <MudMenu Class="w-100">
                 <ActivatorContent>
-                    <MudButton Variant=Variant.Outlined Size=Size.Medium Color=Color.Primary FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetFrequencyString(_lane.BandId, _lane.FrequencyInMHz))</MudButton>
+                    <MudButton Variant=Variant.Outlined Size=Size.Small Color=Color.Primary FullWidth=true EndIcon="@Icons.Material.Filled.KeyboardArrowDown">@(GetFrequencyString(_lane.BandId, _lane.FrequencyInMHz))</MudButton>
                 </ActivatorContent>
                 <ChildContent>
                     @{
@@ -74,26 +75,26 @@
         {
             <MudNumericField T=int Value=_lane.FrequencyInMHz Label="Custom" ValueChanged="x => ChangeFrequency(null, x)"></MudNumericField>
         }
-    </div>
-    <div class="w-100 pb-2 d-flex justify-content-center">
-        @foreach (Guid detectorId in Session.TrackDetectorIds)
-        {
-            <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus>
-        }
-    </div>
-    <div class="d-flex align-content-center" style="font-size: 2.5em; min-height:1.5em;">
-        <TimerDisplay Start="_pilotLastDetection" MaxTime=MaxTime MinTime=MinTime></TimerDisplay>
-    </div>
-    @if (IsTuningEnabled)
+    </MudItem>
+</MudGrid>
+<div class="w-100 pb-2 pt-2 d-flex justify-content-center">
+    @foreach (Guid detectorId in Session.TrackDetectorIds)
     {
-        @foreach(Guid detectorId in Session.TrackDetectorIds)
-        {
-            <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner>
-        }
+        <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus>
     }
-    <div class="w-100 pb-2">
-        <MudIconButton Icon=@Icons.Material.Filled.Timer Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"></MudIconButton>                
-    </div>
+</div>
+<div class="d-flex align-content-center" style="font-size: 2.5em; min-height:1.5em;">
+    <TimerDisplay Start="_pilotLastDetection" MaxTime=MaxTime MinTime=MinTime></TimerDisplay>
+</div>
+@if (IsTuningEnabled)
+{
+    @foreach(Guid detectorId in Session.TrackDetectorIds)
+    {
+        <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner>
+    }
+}
+<div class="w-100 pb-2">
+    <MudIconButton Icon=@Icons.Material.Filled.Timer Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"></MudIconButton>                
 </div>
 
 @code {

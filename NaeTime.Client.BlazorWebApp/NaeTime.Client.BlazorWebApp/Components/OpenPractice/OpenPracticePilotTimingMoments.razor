@@ -4,7 +4,9 @@
 {
     @if(_fastestLap != null)
     {
-        <MudButton Color="Color.Error" OnClick="() => InvalidateDetection(_fastestLap.IncludedLaps.First().StartDetection.Id)">Invalidate Fastest Lap: @_fastestLap.Record.ToString("m\\:ss\\:fff")</MudButton>
+        <div class="d-flex justify-content-center">
+            <MudButton Variant=Variant.Outlined EndIcon=@Icons.Material.Filled.Close Color="Color.Error" OnClick="() => InvalidateDetection(_fastestLap.IncludedLaps.First().StartDetection.Id)">Invalidate Fastest Lap: @_fastestLap.Record.ToString("m\\:ss\\:fff")</MudButton>
+        </div>
     }
     <MudTimeline TimelinePosition="TimelinePosition.Left" >
         @foreach(Query.Abstractions.Models.OpenPracticeTimingMoment moment in _timingInfo.Moments.Reverse())

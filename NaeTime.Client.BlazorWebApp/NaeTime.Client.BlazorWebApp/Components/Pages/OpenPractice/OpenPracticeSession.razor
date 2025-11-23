@@ -5,30 +5,42 @@
 
 @if (_session != null)
 {
-    if (_session.IsActive)
-    {
-        <MudSwitch Color=Color.Primary T=bool @bind-Value=_isTuningEnabled></MudSwitch>
-        <div class="lane-container">
-            @foreach (Models.OpenPracticeLane lane in _session.Lanes)
-            {
-                <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration>
-            }
-        </div>
-    }
-
-    <div class="d-flex flex-wrap justify-content-center">
-        @foreach (Guid pilotId in _session.AttendingPilots)
+    <MudGrid Justify=Justify.Center>
+        @if (_session.IsActive)
         {
-            <div class="shadow-sm p-3" style="width:400px;">
-                <MudText Align="Align.Center" Typo="Typo.h5">@GetPilotName(pilotId)</MudText>
-                <div class="w-100" style="max-height:50vh; overflow-y:scroll;">
-                    <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilotId>
-                    </NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments>
-                </div>
-
-            </div>
+            <MudItem xs=12>
+                <MudSwitch Color=Color.Primary T=bool @bind-Value=_isTuningEnabled></MudSwitch>
+                <MudGrid Justify=Justify.SpaceEvenly>
+                    @foreach (Models.OpenPracticeLane lane in _session.Lanes)
+                    {
+                        <MudItem Style="width:12%; min-width:200px;">
+                            <MudPaper Class=p-3>
+                                <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudItem>
+            
         }
-    </div>
+        <MudFlexBreak></MudFlexBreak>
+        <MudItem xs=12>
+            <MudGrid Justify=Justify.SpaceEvenly>
+                @foreach (Guid pilotId in _session.AttendingPilots)
+                {
+                    <MudItem xs=2>
+                        <MudPaper Class=p3>
+                            <MudText Align="Align.Center" Typo="Typo.h5">@GetPilotName(pilotId)</MudText>
+                            <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilotId>
+                            </NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudItem>
+        
+    </MudGrid>
+    
  }
 
 
