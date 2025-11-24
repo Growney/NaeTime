@@ -5,10 +5,10 @@
 
 @if (_session != null)
 {
-    <MudGrid Justify=Justify.Center>
+    <div class="open-practice-container">
         @if (_session.IsActive)
         {
-            <MudItem xs=12>
+            <div class="open-practice-lane-configuration">
                 <MudSwitch Color=Color.Primary T=bool @bind-Value=_isTuningEnabled></MudSwitch>
                 <MudGrid Justify=Justify.SpaceEvenly>
                     @foreach (Models.OpenPracticeLane lane in _session.Lanes)
@@ -20,26 +20,23 @@
                         </MudItem>
                     }
                 </MudGrid>
-            </MudItem>
+            </div>
             
         }
-        <MudFlexBreak></MudFlexBreak>
-        <MudItem xs=12>
-            <div class="timeline-container">
-                @foreach (Guid pilotId in _session.AttendingPilots)
-                {
-                    <div class="timeline-column">
-                        <MudPaper Class=p-3 Style="max-height:400px; overflow-y: scroll">
-                            <MudText Align="Align.Center" Typo="Typo.h5">@GetPilotName(pilotId)</MudText>
-                            <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilotId>
-                            </NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments>
-                        </MudPaper>
-                    </div>
-                }
-            </div>
-        </MudItem>
+        <div class="open-practice-timelines timeline-container">
+            @foreach (Guid pilotId in _session.AttendingPilots)
+            {
+                <div class="timeline-column">
+                    <MudPaper Class=p-3>
+                        <MudText Align="Align.Center" Typo="Typo.h5">@GetPilotName(pilotId)</MudText>
+                        <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilotId>
+                        </NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments>
+                    </MudPaper>
+                </div>
+            }
+        </div>
         
-    </MudGrid>
+    </div>
     
  }
 

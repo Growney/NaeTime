@@ -2,8 +2,8 @@
 @inherits LayoutComponentBase
 <NaeTime.Client.BlazorWebApp.Components.Shared.Announcer></NaeTime.Client.BlazorWebApp.Components.Shared.Announcer>
 <NavMenu />
-<MudMainContent>
-    @Body
+<MudMainContent Style="height: 100vh; max-height:100vh;">
+        @Body
 </MudMainContent>
  <MudPopoverProvider />
  <MudThemeProvider IsDarkMode=true/>
@@ -11,4 +11,4 @@
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
-</div>
+</div>  
