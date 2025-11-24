@@ -25,18 +25,18 @@
         }
         <MudFlexBreak></MudFlexBreak>
         <MudItem xs=12>
-            <MudGrid Justify=Justify.SpaceEvenly>
+            <div class="timeline-container">
                 @foreach (Guid pilotId in _session.AttendingPilots)
                 {
-                    <MudItem Style="min-width:385px;">
-                        <MudPaper Class=p-3>
+                    <div class="timeline-column">
+                        <MudPaper Class=p-3 Style="max-height:400px; overflow-y: scroll">
                             <MudText Align="Align.Center" Typo="Typo.h5">@GetPilotName(pilotId)</MudText>
                             <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilotId>
                             </NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticePilotTimingMoments>
                         </MudPaper>
-                    </MudItem>
+                    </div>
                 }
-            </MudGrid>
+            </div>
         </MudItem>
         
     </MudGrid>
