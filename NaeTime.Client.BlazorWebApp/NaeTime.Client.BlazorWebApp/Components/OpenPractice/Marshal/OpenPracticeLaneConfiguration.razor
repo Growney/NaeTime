@@ -80,18 +80,15 @@
 <div class="w-100 pb-2 pt-2 d-flex justify-content-center">
     @foreach (Guid detectorId in Session.TrackDetectorIds)
     {
-        <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus>
+        <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus TimerId=detectorId LaneId=LaneId OnClicked="ToggleTuningTimer"></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus>
     }
 </div>
-<div class="d-flex align-content-center" style="font-size: 2.5em; min-height:1.5em;">
+<div class="text-center" style="font-size: 2.5em; min-height:1.5em;">
     <TimerDisplay Start="_pilotLastDetection" MaxTime=MaxTime MinTime=MinTime></TimerDisplay>
 </div>
-@if (IsTuningEnabled)
+@foreach (Guid detectorId in _tuningTimers)
 {
-    @foreach(Guid detectorId in Session.TrackDetectorIds)
-    {
-        <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner>
-    }
+    <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner>
 }
 <div class="w-100 pb-2">
     <MudIconButton Icon=@Icons.Material.Filled.Timer Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"></MudIconButton>                
@@ -129,6 +126,8 @@
     private DateTime? _pilotLastDetection = null;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
+    private HashSet<Guid> _tuningTimers = new();
+
     private async Task GetLastDetection()
     {
         if (_lane.PilotId.HasValue)
@@ -140,6 +139,19 @@
         {
             _pilotLastDetection = null;
         }
+    }
+
+    private void ToggleTuningTimer(Guid timerId)
+    {
+        if (_tuningTimers.Contains(timerId))
+        {
+            _tuningTimers.Remove(timerId);
+        }
+        else
+        {
+            _tuningTimers.Add(timerId);
+        }
+        StateHasChanged();
     }
 
     protected override async Task OnInitializedAsync()

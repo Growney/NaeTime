@@ -3,9 +3,7 @@
 
 @implements IDisposable
 
-<div class="@GetCssClass()">
-    <MudIcon Icon=@Icons.Material.Filled.Memory></MudIcon>
-</div>
+<MudIconButton Color=GetColor() Icon=@Icons.Material.Filled.Memory OnClick="()=> OnClicked?.Invoke(TimerId)"></MudIconButton>
 
 @code {
     private enum TimeStatus
@@ -24,25 +22,27 @@
     public Guid TimerId { get; set; }
     [Parameter]
     public byte? LaneId{ get; set; }
+    [Parameter]
+    public Action<Guid>? OnClicked { get; set; }
 
     [Inject]
     private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
     [Inject]
     private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
 
-    private string GetCssClass()
+    private Color GetColor()
     {
-        if(!_isConnected)
+        if (!_isConnected)
         {
-            return "text-danger";
+            return Color.Error;
         }
 
         return _timeStatus switch
         {
-            TimeStatus.Pending => "text-warning",
-            TimeStatus.Mismatched => "text-danger",
-            TimeStatus.Confirmed => "text-success",
-            _ => "text-secondary",
+            TimeStatus.Pending => Color.Warning,
+            TimeStatus.Mismatched => Color.Error,
+            TimeStatus.Confirmed => Color.Success,
+            _ => Color.Secondary,
         };
     }
 

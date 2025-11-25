@@ -1,0 +1,217 @@
+﻿@page "/open-practice/{id:guid}/results"
+@implements IDisposable
+@using EventDbLite.Abstractions
+@using NaeTime.Hardware.Abstractions
+@using NaeTime.Hardware.Frequency
+
+@if (_session != null && _timingInformation != null)
+{
+    <MudSimpleTable Style="font-size:2rem">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Channel</th>
+                <th>Current</th>
+                <th>Count</th>
+                <th>Last Lap</th>
+                <th>Best</th>
+                <th>Best 2 Consecutive</th>
+                <th>Best 3 Consecutive</th>
+                <th>Average</th>
+                <th>Std Dev</th>
+                <th>Std Dev (50%)</th>
+                <th>Std Dev (10%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Guid pilotId in _session.AttendingPilots)
+            {
+                <tr>
+                    <td>@GetPilotName(pilotId)</td>
+                    <td>
+                        @{
+                            string pilotFrequency = @GetPilotFrequencyDisplay(pilotId);
+                            if (!string.IsNullOrWhiteSpace(pilotFrequency))
+                            {
+                                <MudChip T=string Color=Color.Info>
+                                    @pilotFrequency
+                                </MudChip>
+                            }
+                        }
+                    </td>
+                    <td><NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay MaxTime=_maximumLapTime MinTime=_minimumLapTime Start=GetLastDetectionIfApplicable(pilotId)></NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay></td>
+                    <td>@_timingInformation.GetLapCount(pilotId)</td>
+                    <td>@_timingInformation.GetLastLapDuration(pilotId).ToString("m\\:ss\\:fff")</td>
+                    <td>
+                        <MudBadge Content="_timingInformation.GetLapRecordLeaderboardPosition(pilotId, 1)" Color="GetLeaderboardPositionColor(_timingInformation.GetLapRecordLeaderboardPosition(pilotId, 1))">
+                            @_timingInformation?.GetLapRecord(pilotId, 1).ToString("m\\:ss\\:fff")
+                        </MudBadge>
+                    </td>
+                    <td>
+                        <MudBadge Content="_timingInformation.GetLapRecordLeaderboardPosition(pilotId, 2)" Color="GetLeaderboardPositionColor(_timingInformation.GetLapRecordLeaderboardPosition(pilotId, 2))">
+                            @_timingInformation.GetLapRecord(pilotId, 2).ToString("m\\:ss\\:fff")
+                        </MudBadge>
+                    </td>
+                    <td>
+                        <MudBadge Content="_timingInformation.GetLapRecordLeaderboardPosition(pilotId, 3)" Color="GetLeaderboardPositionColor(_timingInformation.GetLapRecordLeaderboardPosition(pilotId, 3))">
+                            @_timingInformation.GetLapRecord(pilotId, 3).ToString("m\\:ss\\:fff")
+                        </MudBadge>
+                    </td>
+                    <td>@_timingInformation.GetAverageLapDuration(pilotId).ToString("m\\:ss\\:fff")</td>
+                    <td>@_timingInformation.GetLapStandardDeviation(pilotId)?.ToString("m\\:ss\\:fff")</td>
+                    <td>@_timingInformation.GetLapStandardDeviation(pilotId, 0.5f)?.ToString("m\\:ss\\:fff")</td>
+                    <td>@_timingInformation.GetLapStandardDeviation(pilotId, 0.1f)?.ToString("m\\:ss\\:fff")</td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+
+}
+
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject]
+    private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
+    [Inject]
+    private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
+    [Inject]
+    private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
+    [Inject]
+    private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
+
+    private Query.Abstractions.Models.OpenPracticeSession? _session;
+    private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> _pilots = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Pilot>();
+
+    private Query.Abstractions.Models.OpenPracticeSessionTimingInformation? _timingInformation;
+
+    private TimeSpan _minimumLapTime = TimeSpan.Zero;
+    private TimeSpan _maximumLapTime = TimeSpan.FromSeconds(30);
+
+    private bool _isTuningEnabled = false;
+    private bool _isActive = false;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    private string GetPilotFrequencyDisplay(Guid pilotId)
+    {
+        Query.Abstractions.Models.OpenPracticeLane? lane = _session?.Lanes.FirstOrDefault(x => x.PilotId == pilotId);
+
+        if(lane == null)
+        {
+            return string.Empty;
+        }
+        NaeTime.Hardware.Frequency.Band? band = NaeTime.Hardware.Frequency.Band.Bands.FirstOrDefault(x => x.Id == lane.BandId);
+
+        BandFrequency? frequency = band?.Frequencies.FirstOrDefault(x => x.FrequencyInMhz == lane.FrequencyInMHz);
+        if (!band.HasValue || !frequency.HasValue)
+        {
+            return lane.FrequencyInMHz.ToString();
+        }
+
+        return frequency.Value.Name;
+    }
+
+    protected override Task OnInitializedAsync() => RefreshTimingData();
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            ReactionProviderFactory.On<Events.OpenPracticePilotTimingChangeOccured>(async x =>
+            {
+                if (x.SessionId == Id)
+                {
+                    await RefreshTimingData();
+                }
+            }, _cancellationTokenSource.Token);
+            ReactionProviderFactory.On<Events.OpenPracticeSessionLanePilotReset>(async x =>
+            {
+                if (x.SessionId == Id)
+                {
+                    await RefreshTimingData();
+                }
+            }, _cancellationTokenSource.Token);
+            ReactionProviderFactory.On<Events.OpenPracticeSessionLanePilotSet>(async x =>
+            {
+                if (x.SessionId == Id)
+                {
+                    await RefreshTimingData();
+                }
+            }, _cancellationTokenSource.Token);
+        }
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    private Color GetLeaderboardPositionColor(int position)
+    {
+        if(position == 1)
+        {
+            return Color.Success;
+        }
+        else if(position == 2)
+        {
+            return Color.Warning;
+        }
+        else if(position == 3)
+        {
+            return Color.Primary;
+        }
+        else
+        {
+            return Color.Info;
+        }
+    }
+
+    private DateTime? GetLastDetectionIfApplicable(Guid pilotId)
+    {
+        if(!(_session?.Lanes.Any(x=> x.PilotId == pilotId) ?? false))
+        {
+            return null;
+        }
+
+        return _timingInformation?.GetLastDetection(pilotId);
+    }
+
+    private async Task RefreshTimingData()
+    {
+        _pilots = await PilotQueryHandler.GetAllPilots();
+
+        _session = await OpenPracticeQueryHandler.GetByIdAsync(Id);
+
+        if (_session != null)
+        {
+            NaeTime.Query.Abstractions.Models.Track? track = await TrackQueryHandler.GetTrack(_session.TrackId);
+            if (track != null)
+            {
+                _maximumLapTime = track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue;
+                _minimumLapTime = track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero;
+            }
+
+            _timingInformation = await OpenPracticeQueryHandler.GetTimingInformation(_session.Id, _session.TrackId, _minimumLapTime, _maximumLapTime);
+
+        }
+
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
+    private string GetPilotName(Guid pilotId)
+    {
+        NaeTime.Query.Abstractions.Models.Pilot? pilot = _pilots.FirstOrDefault(x => x.Id == pilotId);
+        if (pilot != null)
+        {
+            return pilot.Callsign ?? pilot.Firstname ?? pilot.Lastname ?? "[No Name]";
+        }
+        return "[Unknown Pilot]";
+    }
+}

@@ -1,34 +1,24 @@
 @implements IDisposable
 @rendermode InteractiveAuto
-<table class="mx-auto">
-    <tbody>
-        <tr>
-            @{
-                if (Start == null)
-                {
-                    <td class="h5">
-                        --:--
-                    </td>
-                }
-                else
-                {
-                    var timeSinceStart = DateTime.UtcNow - Start.Value;
+<div class="w-100">
+    @if (Start == null)
+    {
+        <div>
+            --:--
+        </div>
+    }
+    else
+    {
+        var timeSinceStart = DateTime.UtcNow - Start.Value;
 
-                    string colour = MaxTime.HasValue && timeSinceStart > MaxTime ? "text-danger" : "";
-                    colour = MinTime.HasValue && timeSinceStart < MinTime ? "text-warning" : colour;
+        string colour = MaxTime.HasValue && timeSinceStart > MaxTime ? "text-danger" : "";
+        colour = MinTime.HasValue && timeSinceStart < MinTime ? "text-warning" : colour;
 
-                    <td class="align-bottom @colour" style="font-variant-numeric: tabular-nums">
-                        @timeSinceStart.ToString("mm\\:ss\\:")
-                    </td>
-                    <td class="align-bottom @colour" style="font-variant-numeric: tabular-nums; font-size:0.75em;">
-
-                        @timeSinceStart.Milliseconds.ToString("000")
-                    </td>
-                }
-            }
-        </tr>
-    </tbody>
-</table>
+        <div class="@colour" style="font-variant-numeric: tabular-nums">
+            @timeSinceStart.ToString("mm\\:ss\\:")<span style="font-size:0.75em;">@timeSinceStart.Milliseconds.ToString("000")</span>
+        </div>
+    }
+</div>
 
 @code {
 

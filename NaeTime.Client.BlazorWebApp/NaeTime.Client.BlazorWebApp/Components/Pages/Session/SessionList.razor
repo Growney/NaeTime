@@ -7,12 +7,13 @@
             <th>Name</th>
             <th>Type</th>
             <th>Active</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
         @foreach (NaeTime.Query.Abstractions.Models.Session session in _sessions)
         {
-            <tr @onclick="() => OpenSession(session.Id,session.Type)">
+            <tr>
                 <td>@session.Name</td>
                 <td>@session.Type</td>
                 <td>
@@ -23,6 +24,15 @@
                     else
                     {
                         <MudBlazor.MudButton OnClick="()=> ActivateSession(session.Id)" Variant="MudBlazor.Variant.Outlined" Color="MudBlazor.Color.Primary">Activate</MudBlazor.MudButton>
+                    }
+                </td>
+                <td>
+                    @if(session.Type == Query.Abstractions.Models.SessionType.OpenPractice)
+                    {
+                        <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+                            <MudButton Href=@($"/open-practice/{session.Id}/marshal") Variant=Variant.Outlined>Marshal</MudButton>
+                            <MudButton Href=@($"/open-practice/{session.Id}/results") Variant=Variant.Outlined>Results</MudButton>
+                        </MudButtonGroup>
                     }
                 </td>
             </tr>
@@ -46,16 +56,6 @@
     {
 
         _sessions = new List<NaeTime.Query.Abstractions.Models.Session>(await SessionQueryHandler.GetAllSessions());
-    }
-
-    private void OpenSession(Guid id, NaeTime.Query.Abstractions.Models.SessionType sessionType)
-    {
-        switch (sessionType)
-        {
-            case NaeTime.Query.Abstractions.Models.SessionType.OpenPractice:
-                NavigationManager.NavigateTo($"/open-practice/{id}");
-                return;
-        }
     }
 
     private async Task ActivateSession(Guid id)
