@@ -1,6 +1,8 @@
 ﻿@using EventDbLite.Abstractions
 @using NaeTime.Announcer
 @using Toolbelt.Blazor.SpeechSynthesis
+@implements IDisposable
+
 @code {
 
     [Inject]
@@ -9,18 +11,26 @@
     [Inject]
     public SpeechSynthesis SpeechSynthesis { get; set; } = null!;
 
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
     protected override Task OnInitializedAsync()
     {
         var reaction = ReactionClassFactory.Create<AnnouncerReactions>();
 
-        _ = HandleAnnouncements(reaction.Instance);
+        _ = HandleAnnouncements(reaction.Instance, _cancellationTokenSource.Token);
 
         return Task.CompletedTask;
     }
 
-    private async Task HandleAnnouncements(AnnouncerReactions announcer)
+    public void Dispose()
     {
-        await foreach(var message in announcer)
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
+    private async Task HandleAnnouncements(AnnouncerReactions announcer,CancellationToken token)
+    {
+        await foreach(var message in announcer.WithCancellation(token))
         {
             // Handle each announcement message (e.g., display it in the UI)
             await InvokeAsync(()=> SpeechSynthesis.SpeakAsync(message));

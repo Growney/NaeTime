@@ -1,0 +1,37 @@
+﻿@using EventDbLite.Abstractions
+@using NaeTime.Announcer
+@implements IDisposable
+<MudSnackbarProvider></MudSnackbarProvider>
+@code {
+
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = null!;
+    [Inject]
+    public IReactionClassFactory ReactionClassFactory { get; set; } = null!;
+
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        var reaction = ReactionClassFactory.Create<AnnouncerReactions>();
+
+        _ = HandleAnnouncements(reaction.Instance, _cancellationTokenSource.Token);
+
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+    }
+
+    private async Task HandleAnnouncements(AnnouncerReactions announcer, CancellationToken token)
+    {
+        await foreach (var message in announcer.WithCancellation(token))
+        {
+            // Handle each announcement message (e.g., display it in the UI)
+            await InvokeAsync(() => Snackbar.Add(message, Severity.Info));
+        }
+    }
+}
