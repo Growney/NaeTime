@@ -5,7 +5,7 @@
     @if(_fastestLap != null)
     {
         <div class="d-flex justify-content-center">
-            <MudButton Variant=Variant.Outlined EndIcon=@Icons.Material.Filled.Close Color="Color.Error" OnClick="() => InvalidateDetection(_fastestLap.IncludedLaps.First().StartDetection.Id)">Invalidate Fastest Lap: @_fastestLap.Record.ToString("m\\:ss\\:fff")</MudButton>
+            <MudButton Variant=Variant.Outlined EndIcon=@Icons.Material.Filled.Close Color="Color.Error" OnClick="() => InvalidateDetection(_fastestLap.IncludedLaps.First().StartDetection.Id)">@_fastestLap.Record.ToString("m\\:ss\\:fff")</MudButton>
         </div>
     }
     <MudTimeline TimelineOrientation=TimelineOrientation.Vertical TimelinePosition="TimelinePosition.Left">
@@ -128,8 +128,8 @@
         {
             Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapCompleted => $"{GetLapTime(moment.MomentId):m\\:ss\\:fff}",
             Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedAsItsInvalid => $"Invalid",
-            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedDueToMinimiumLapTime => $"Below Minimum Lap Time",
-            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapInvalidatedDueToMaximumLapTime => $"Above Maximum Lap Time",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.DetectionDiscardedDueToMinimiumLapTime => $"Too Short",
+            Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapInvalidatedDueToMaximumLapTime => $"Too Long",
             Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapStoppedByEndOfPack => $"End of Pack",
             Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.EndOfPack => $"End of Pack Reached",
             Query.Abstractions.Models.OpenPracticeTimingMoment.TimingMomentType.LapStarted => $"Started",

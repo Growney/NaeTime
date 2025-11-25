@@ -8,18 +8,16 @@
     <div class="open-practice-container">
         @if (_session.IsActive)
         {
+            <MudSwitch Color=Color.Primary T=bool @bind-Value=_isTuningEnabled></MudSwitch>
             <div class="open-practice-lane-configuration">
-                <MudSwitch Color=Color.Primary T=bool @bind-Value=_isTuningEnabled></MudSwitch>
-                <MudGrid Justify=Justify.SpaceEvenly>
                     @foreach (Models.OpenPracticeLane lane in _session.Lanes)
                     {
-                        <MudItem Style="width:12%; min-width:200px;">
+                        <div class="open-practice-lane-configuration-column">
                             <MudPaper Class=p-3>
                                 <NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Components.OpenPractice.OpenPracticeLaneConfiguration>
                             </MudPaper>
-                        </MudItem>
+                        </div>
                     }
-                </MudGrid>
             </div>
             
         }

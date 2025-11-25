@@ -8,24 +8,34 @@
     height: 100%;
 }
 
-.open-practice-lane-configuration{
+.open-practice-lane-configuration {
     grid-area: configuration;
+    display: flex;
+    gap: 10px;
+    justify-content: space-evenly;
+    overflow-x: scroll;
+}
+
+.open-practice-lane-configuration-column {
+    min-width: 270px;
+    max-width: 12%;
 }
 
 .open-practice-timelines {
     grid-area: timelines;
+    display: flex;
+    justify-content: space-evenly;
+    gap: 10px;
+    min-height: calc(max(600px,100%));
+    min-width: 0;
+    overflow-x: scroll;
 }
 
 .timeline-container {
-    display: flex;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    grid-column-gap: 5px;
-    min-height: 0;
-    min-width: 0;
-    overflow-x:scroll;
 }
 
 .timeline-column {
     overflow-y: scroll;
-    min-width:400px;
+    min-width: 270px;
+    max-width: 12%;
 }
