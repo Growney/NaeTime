@@ -223,6 +223,35 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         Raise(new OpenPracticePilotDetectionInvalidated(detectionId, Id, _trackId, detection.PilotId));
         Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, detection.PilotId));
     }
+    public void InvalidateAllPilotDetections(Guid pilotId)
+    {
+        var detectionsToInvalidate = _detections.Values.Where(d => d.PilotId == pilotId && d.IsValid).ToList();
+        foreach (var detection in detectionsToInvalidate)
+        {
+            Raise(new OpenPracticePilotDetectionInvalidated(detection.Id, Id, _trackId, pilotId));
+        }
+        if (detectionsToInvalidate.Any())
+        {
+            Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, pilotId));
+        }
+    }
+    public void InvalidatePilotDetectionsBeforeDetection(Guid detectionId)
+    {
+        _detections.TryGetValue(detectionId, out Detection? detection);
+        if (detection is null)
+        {
+            throw new ValidationException($"Detection {detectionId} does not exist.");
+        }
+        List<Detection> detectionsToInvalidate = _detections.Values.Where(d => d.PilotId == detection.PilotId && d.UtcTime < detection.UtcTime && d.IsValid).ToList();
+        foreach (var det in detectionsToInvalidate)
+        {
+            Raise(new OpenPracticePilotDetectionInvalidated(det.Id, Id, _trackId, detection.PilotId));
+        }
+        if (detectionsToInvalidate.Any())
+        {
+            Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, detection.PilotId));
+        }
+    }
     public void ValidatePilotDetection(Guid detectionId)
     {
         _detections.TryGetValue(detectionId, out Detection? detection);

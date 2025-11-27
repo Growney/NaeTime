@@ -5,7 +5,7 @@
     @if(_fastestLap != null)
     {
         <div class="d-flex justify-content-center">
-            <MudButton Variant=Variant.Outlined EndIcon=@Icons.Material.Filled.Close Color="Color.Error" OnClick="() => InvalidateDetection(_fastestLap.IncludedLaps.First().StartDetection.Id)">@_fastestLap.Record.ToString("m\\:ss\\:fff")</MudButton>
+            <MudButton Variant=Variant.Outlined EndIcon=@Icons.Material.Filled.Close Color="Color.Error" OnClick="() => InvalidateDetection(_fastestLap.IncludedLaps.First().StartDetection.Id)">@_fastestLap.Record.ToString("m\\:ss\\:fff")</MudButton>   
         </div>
     }
     <MudTimeline TimelineOrientation=TimelineOrientation.Vertical TimelinePosition="TimelinePosition.Left">
@@ -29,6 +29,7 @@
 
                                         <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" OnClick="() => InsertPackEndBeforeDetection(moment.MomentId.Value)"></MudIconButton>
                                         <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" OnClick="() => InsertPackEndAfterDetection(moment.MomentId.Value)"></MudIconButton>
+                                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Download" Size="Size.Small" OnClick="() => InvalidateBeforeDetection(moment.MomentId.Value)"></MudIconButton>
                                     }
                                     else if (moment.MomentId.HasValue)
                                     {
@@ -168,7 +169,11 @@
 
     private async Task InvalidateDetection(Guid detectionId)
     {
-        await OpenPracticeCommandHandler.InvalidateDetection(detectionId, SessionId);
+        await OpenPracticeCommandHandler.InvalidateDetection(SessionId, detectionId);
+    }
+    private async Task InvalidateBeforeDetection(Guid detectionId)
+    {
+        await OpenPracticeCommandHandler.InvalidatePilotDetectionsBeforeDetection(SessionId, detectionId);
     }
 
     public void Dispose()

@@ -56,13 +56,24 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
         await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
     });
 
-    public async Task InvalidateDetection(Guid detectionId, Guid sessionId)
+    public async Task InvalidateDetection(Guid sessionId, Guid detectionId)
     {
         OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
         session.InvalidatePilotDetection(detectionId);
         await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
     }
-
+    public async Task InvalidateAllPilotDetections(Guid sessionId, Guid pilotId)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.InvalidateAllPilotDetections(pilotId);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    }
+    public async Task InvalidatePilotDetectionsBeforeDetection(Guid sessionId, Guid detectionId)
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.InvalidatePilotDetectionsBeforeDetection(detectionId);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    }
     public Task RenameSession(Guid sessionId, string name) => ConcurrencyException.Retry(async () =>
     {
         OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
