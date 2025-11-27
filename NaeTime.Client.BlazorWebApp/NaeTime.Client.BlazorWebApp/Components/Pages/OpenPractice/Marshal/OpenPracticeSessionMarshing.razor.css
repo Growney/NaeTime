@@ -36,6 +36,6 @@
 
 .timeline-column {
     overflow-y: scroll;
-    min-width: 270px;
+    min-width: 330px;
     max-width: 12%;
 }
