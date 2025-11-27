@@ -21,6 +21,7 @@
                 <th>Std Dev</th>
                 <th>Std Dev (50%)</th>
                 <th>Std Dev (10%)</th>
+                <th>Std Dev (10)</th>
             </tr>
         </thead>
         <tbody>
@@ -61,6 +62,7 @@
                     <td>@_timingInformation.GetLapStandardDeviation(pilotId)?.ToString("m\\:ss\\:fff")</td>
                     <td>@_timingInformation.GetLapStandardDeviation(pilotId, 0.5f)?.ToString("m\\:ss\\:fff")</td>
                     <td>@_timingInformation.GetLapStandardDeviation(pilotId, 0.1f)?.ToString("m\\:ss\\:fff")</td>
+                    <td>@_timingInformation.GetLapStandardDeviation(pilotId, 10)?.ToString("m\\:ss\\:fff")</td>
                 </tr>
             }
         </tbody>
