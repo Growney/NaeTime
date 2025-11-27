@@ -35,7 +35,7 @@ public record OpenPracticeSessionTimingInformation(
         }
         IEnumerable<double> lapDurations = lapGroups.SelectMany(group => group.Select(lap => lap.Duration.TotalMilliseconds));
         int countToTake = (int)(lapDurations.Count() * topPercentage);
-        var topLapDurations = lapDurations.OrderByDescending(d => d).Take(countToTake);
+        var topLapDurations = lapDurations.OrderBy(d => d).Take(countToTake);
 
         if (!topLapDurations.Any())
         {
