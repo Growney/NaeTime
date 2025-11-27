@@ -1,0 +1,7 @@
+﻿.result-table td {
+    font-size: 1.75rem; /* Adjust to your desired size (e.g., 1rem, 16px, large) */
+}
+
+.result-table th {
+    font-size: 1rem; /* Also target the header cells if needed */
+}
