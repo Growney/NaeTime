@@ -31,11 +31,14 @@ public abstract class AggregateRoot
     private readonly List<EventData> _uncommittedEvents = [];
     public IEnumerable<EventData> GetEvents() => _uncommittedEvents;
 
-    internal void InitialiseDependencies(IHandlerProvider handlerProvider, IEventSerializer eventSerializer)
+    internal void InitialiseDependencies(IHandlerProvider? handlerProvider, IEventSerializer? eventSerializer)
     {
-        _handlerProvider = handlerProvider ?? throw new ArgumentNullException(nameof(handlerProvider));
-        _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
-        RaisePreinitialisedEvents();
+        _handlerProvider = handlerProvider;
+        _eventSerializer = eventSerializer;
+        if (IsInitialized)
+        {
+            RaisePreinitialisedEvents();
+        }
     }
     private void RaisePreinitialisedEvents()
     {
@@ -105,7 +108,6 @@ public abstract class AggregateRoot
 
     protected void Clone(AggregateRoot root)
     {
-        root._handlerProvider = _handlerProvider;
-        root._eventSerializer = _eventSerializer;
+        root.InitialiseDependencies(_handlerProvider, _eventSerializer);
     }
 }

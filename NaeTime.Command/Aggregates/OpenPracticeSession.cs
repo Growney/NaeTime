@@ -321,6 +321,7 @@ public class OpenPracticeSession : AggregateRoot<Guid>
     public OpenPracticeSession Clone(Guid newId, string newName)
     {
         OpenPracticeSession clone = new(newId, _trackId, _trackDetectors, newName);
+        
         Clone(clone);
         CloneLanes(clone);
 
@@ -450,11 +451,12 @@ public class OpenPracticeSession : AggregateRoot<Guid>
             {
                 clone.DisableLane(laneInfo.Key);
             }
+            clone.TuneLaneVideoFrequency(laneInfo.Key, laneInfo.Value.Frequency.BandId, laneInfo.Value.Frequency.FrequencyInMHz);
+            //Its important to set the pilot lane last else you end up with double notifications for the pilot changing lanes (poor design init)
             if (laneInfo.Value.PilotId.HasValue)
             {
                 clone.SetLanePilot(laneInfo.Key, laneInfo.Value.PilotId.Value);
             }
-            clone.TuneLaneVideoFrequency(laneInfo.Key, laneInfo.Value.Frequency.BandId, laneInfo.Value.Frequency.FrequencyInMHz);
         }
     }
 }

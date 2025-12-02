@@ -30,6 +30,8 @@
                     @if(session.Type == Query.Abstractions.Models.SessionType.OpenPractice)
                     {
                         <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+
+                            <MudButton OnClick="() => CloneSession(session.Id, session.Type)" Variant=Variant.Outlined>Clone</MudButton>
                             <MudButton Href=@($"/open-practice/{session.Id}/marshal") Variant=Variant.Outlined>Marshal</MudButton>
                             <MudButton Href=@($"/open-practice/{session.Id}/results") Variant=Variant.Outlined>Results</MudButton>
                         </MudButtonGroup>
@@ -48,6 +50,8 @@
     private ISessionQueryHandler SessionQueryHandler { get; set; } = null!;
     [Inject]
     private ISessionsCommandHandler SessionCommandHandler { get; set; } = null!;
+    [Inject]
+    private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
 
     private List<NaeTime.Query.Abstractions.Models.Session> _sessions = new();
     private Guid? _activeSession;
@@ -77,6 +81,21 @@
         for (int i = 0; i < _sessions.Count(); i++)
         {
             _sessions[i] = _sessions[i] with { IsActive = _sessions[i].Id == id };
+        }
+    }
+    private async Task CloneSession(Guid sessionId, Query.Abstractions.Models.SessionType type)
+    {
+        switch (type)
+        {
+            case Query.Abstractions.Models.SessionType.OpenPractice:
+                {
+                    Guid newSessionId = Guid.NewGuid();
+                    await OpenPracticeCommandHandler.CloneSession(newSessionId, sessionId, $"{DateTime.Now.ToShortDateString()} Session");
+                    await SessionCommandHandler.ActivateOpenPracticeSession(newSessionId);
+                    NavigationManager.NavigateTo($"/open-practice/{newSessionId}/marshal");
+                    break;
+                }
+                
         }
     }
 
