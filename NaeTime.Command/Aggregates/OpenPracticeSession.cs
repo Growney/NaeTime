@@ -247,6 +247,9 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         {
             Raise(new OpenPracticePilotDetectionInvalidated(det.Id, Id, _trackId, detection.PilotId));
         }
+
+        Raise(new OpenPracticePilotDetectionInvalidated(detectionId, Id, _trackId, detection.PilotId));
+        Raise(new OpenPracticePilotPackEndInsertedAfterDetection(detectionId, Guid.NewGuid(), Id, _trackId, detection.PilotId));
         if (detectionsToInvalidate.Any())
         {
             Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, detection.PilotId));
