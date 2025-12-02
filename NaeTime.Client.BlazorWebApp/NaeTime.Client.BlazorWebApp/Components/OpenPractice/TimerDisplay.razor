@@ -15,7 +15,7 @@
         colour = MinTime.HasValue && timeSinceStart < MinTime ? "text-warning" : colour;
 
         <div class="@colour" style="font-variant-numeric: tabular-nums">
-            @timeSinceStart.ToString("mm\\:ss\\:")<span style="font-size:0.75em;">@timeSinceStart.Milliseconds.ToString("000")</span>
+            @timeSinceStart.ToString("mm\\:ss")
         </div>
     }
 </div>
@@ -36,7 +36,7 @@
         base.OnInitialized();
 
         _timer = new Timer(x =>
-                       this.InvokeAsync(StateHasChanged), null, 0, 10);
+                       this.InvokeAsync(StateHasChanged), null, 0, 1000);
     }
 
     public void Dispose()
