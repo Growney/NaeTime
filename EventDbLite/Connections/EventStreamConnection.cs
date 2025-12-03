@@ -1,6 +1,7 @@
 ﻿using EventDbLite.Abstractions;
 using EventDbLite.DbModels;
 using EventDbLite.Exceptions;
+using EventDbLite.Reactions.Abstractions;
 using EventDbLite.Streams;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;

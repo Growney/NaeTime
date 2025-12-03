@@ -19,6 +19,7 @@
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.9" />
     </ItemGroup>
     <ItemGroup>
+      <ProjectReference Include="..\EventDbLite.Reactions.Abstractions\EventDbLite.Reactions.Abstractions.csproj" />
       <ProjectReference Include="..\NaeTime.SQLite\NaeTime.SQLite.csproj" />
     </ItemGroup>
 </Project>

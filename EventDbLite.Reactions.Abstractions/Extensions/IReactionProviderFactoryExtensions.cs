@@ -1,8 +1,8 @@
 ﻿using EventDbLite.Reactions;
-using EventDbLite.Streams;
+using EventDbLite.Reactions.Abstractions;
 using System.Runtime.CompilerServices;
 
-namespace EventDbLite.Abstractions;
+namespace EventDbLite.Reactions.Abstractions;
 public static class IReactionProviderFactoryExtensions
 {
     public static Task On<TEvent>(this IReactionProviderFactory factory, Func<TEvent, Task> handler, CancellationToken token, string? streamName = null)

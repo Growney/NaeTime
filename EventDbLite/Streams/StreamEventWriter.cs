@@ -1,5 +1,6 @@
 ﻿using EventDbLite.Abstractions;
 using EventDbLite.Events;
+using EventDbLite.Reactions.Abstractions;
 
 namespace EventDbLite.Streams;
 public class StreamEventWriter(IEventSerializer eventSerializer, IEventStoreLite connection) : IStreamEventWriter

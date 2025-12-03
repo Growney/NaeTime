@@ -1,5 +1,6 @@
 ﻿using EventDbLite.Abstractions;
 using EventDbLite.Projections;
+using EventDbLite.Reactions.Abstractions;
 using EventDbLite.Streams;
 
 namespace EventDbLite.Reactions;

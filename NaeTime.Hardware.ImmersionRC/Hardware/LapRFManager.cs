@@ -1,4 +1,5 @@
 ﻿using EventDbLite.Abstractions;
+using EventDbLite.Reactions.Abstractions;
 using Microsoft.Extensions.Hosting;
 using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Query.Abstractions;

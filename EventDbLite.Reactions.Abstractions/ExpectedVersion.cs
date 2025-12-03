@@ -1,4 +1,4 @@
-﻿namespace EventDbLite.Streams;
+﻿namespace EventDbLite.Reactions.Abstractions;
 
 public static class ExpectedVersion
 {

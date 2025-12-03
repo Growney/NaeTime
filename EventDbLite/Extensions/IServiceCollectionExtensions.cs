@@ -6,6 +6,7 @@ using EventDbLite.Events;
 using EventDbLite.Handlers;
 using EventDbLite.Projections;
 using EventDbLite.Reactions;
+using EventDbLite.Reactions.Abstractions;
 using EventDbLite.Streams;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;

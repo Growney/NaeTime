@@ -1,6 +1,4 @@
-﻿using EventDbLite.Streams;
-
-namespace EventDbLite.Reactions;
+﻿namespace EventDbLite.Reactions.Abstractions;
 public class ReactionEvent<T>
 {
     public ReactionEvent(T payload, SubscriptionEvent subscriptionEvent)

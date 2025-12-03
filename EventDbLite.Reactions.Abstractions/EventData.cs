@@ -1,5 +1,4 @@
-﻿
-namespace EventDbLite.Streams;
+﻿namespace EventDbLite.Reactions.Abstractions;
 
 public class EventData
 {

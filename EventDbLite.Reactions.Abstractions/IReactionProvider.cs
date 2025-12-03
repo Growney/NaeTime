@@ -1,6 +1,4 @@
-﻿using EventDbLite.Reactions;
-
-namespace EventDbLite.Abstractions;
+﻿namespace EventDbLite.Reactions.Abstractions;
 
 public interface IReactionProvider<TEvent> : IAsyncEnumerable<ReactionEvent<TEvent>>
 {

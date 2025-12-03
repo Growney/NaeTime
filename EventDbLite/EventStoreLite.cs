@@ -1,4 +1,5 @@
 ﻿using EventDbLite.Abstractions;
+using EventDbLite.Reactions.Abstractions;
 using EventDbLite.Streams;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
