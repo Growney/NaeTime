@@ -16,15 +16,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\EventDbLite.Reactions.SignalR.Client\EventDbLite.Reactions.SignalR.Client.csproj" />
+    <ProjectReference Include="..\..\NaeTime.Announcer\NaeTime.Announcer.csproj" />
     <ProjectReference Include="..\..\NaeTime.Client\NaeTime.Client.csproj" />
     <ProjectReference Include="..\..\NaeTime.Command.Abstractions\NaeTime.Command.Abstractions.csproj" />
     <ProjectReference Include="..\..\NaeTime.Command\NaeTime.Command.csproj" />
     <ProjectReference Include="..\..\NaeTime.Query.Abstractions\NaeTime.Query.Abstractions.csproj" />
     <ProjectReference Include="..\..\NaeTime.Query\NaeTime.Query.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Components\" />
   </ItemGroup>
 
 </Project>
