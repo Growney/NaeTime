@@ -8,6 +8,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EventDbLite.Abstractions\EventDbLite.Abstractions.csproj" />
+    <ProjectReference Include="..\EventDbLite\EventDbLite.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
 </Project>

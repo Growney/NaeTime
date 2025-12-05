@@ -21,6 +21,8 @@ builder.Services.AddSpeechSynthesis();
 
 // Add services to the container.
 builder.Services.AddEventDbLite();
+builder.Services.AddEventDbLiteSignalRServer();
+builder.Services.AddEventDbSignalRReactions("http://localhost:5118");
 builder.Services.AddNaeTimeQueries();
 builder.Services.AddNaeTimeCommand();
 builder.Services.AddHardwareCore();
@@ -31,7 +33,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -45,6 +47,8 @@ else
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+
+app.MapEventDbLiteService();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()

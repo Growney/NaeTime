@@ -1,6 +1,4 @@
-﻿using EventDbLite.Events;
-
-namespace EventDbLite.Abstractions;
+﻿namespace EventDbLite.Abstractions;
 
 public interface IEventSerializer
 {

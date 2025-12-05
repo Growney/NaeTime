@@ -1,12 +1,12 @@
-﻿namespace EventDbLite.Reactions.Abstractions;
+﻿namespace EventDbLite.Abstractions;
 
 public class StreamEvent
 {
-    public Guid Id { get; set; }
-    public string StreamName { get; set; }
-    public long StreamOrdinal { get; set; }
-    public long GlobalOrdinal { get; set; }
-    public EventData Data { get; set; }
+    public Guid Id { get; }
+    public string StreamName { get; }
+    public long StreamOrdinal { get; }
+    public long GlobalOrdinal { get; }
+    public EventData Data { get; }
 
     public StreamEvent(Guid id, string streamName, long streamOrdinal, long globalOrdinal, EventData data)
     {

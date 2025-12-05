@@ -1,4 +1,4 @@
-﻿namespace EventDbLite.Reactions.Abstractions;
+﻿namespace EventDbLite.Abstractions;
 public class ReactionEvent<T>
 {
     public ReactionEvent(T payload, SubscriptionEvent subscriptionEvent)

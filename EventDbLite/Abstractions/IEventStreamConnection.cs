@@ -1,5 +1,4 @@
-﻿using EventDbLite.Reactions.Abstractions;
-using EventDbLite.Streams;
+﻿using EventDbLite.Streams;
 
 namespace EventDbLite.Abstractions;
 

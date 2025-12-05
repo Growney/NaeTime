@@ -1,5 +1,4 @@
 ﻿using EventDbLite.Abstractions;
-using EventDbLite.Reactions.Abstractions;
 using EventDbLite.Streams;
 
 namespace EventDbLite.Aggregates;

@@ -1,7 +1,5 @@
 ﻿using EventDbLite.Abstractions;
-using EventDbLite.Events;
 using EventDbLite.Handlers;
-using EventDbLite.Reactions.Abstractions;
 using EventDbLite.Streams;
 using System.Diagnostics.CodeAnalysis;
 

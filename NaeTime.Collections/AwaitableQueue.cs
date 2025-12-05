@@ -15,7 +15,7 @@ public class AwaitableQueue<T>(int maxSize) : IDisposable
     public void Enqueue(T item)
     {
         _queue.Enqueue(item);
-        if (_queue.Count > _maxSize)
+        if (_queue.Count > _maxSize && _maxSize > 0)
         {
             _queue.TryDequeue(out _);
         }
@@ -31,7 +31,7 @@ public class AwaitableQueue<T>(int maxSize) : IDisposable
             {
                 await _signal.WaitAsync(cancellationToken);
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 return default;
             }

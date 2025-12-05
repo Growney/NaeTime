@@ -1,4 +1,4 @@
-﻿namespace EventDbLite.Events;
+﻿namespace EventDbLite.Abstractions;
 
 public class EventMetadata
 {

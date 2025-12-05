@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace EventDbLite.Events;
 
-internal class JsonEventSerializer : IEventSerializer
+public class JsonEventSerializer : IEventSerializer
 {
     public EventMetadata CreateMetadata(object payload)
     {

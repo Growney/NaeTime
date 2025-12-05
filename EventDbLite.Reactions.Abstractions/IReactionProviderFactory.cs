@@ -1,6 +1,7 @@
-﻿namespace EventDbLite.Reactions.Abstractions;
-public interface IReactionProviderFactory : IDisposable
+﻿using EventDbLite.Abstractions;
+
+namespace EventDbLite.Reactions.Abstractions;
+public interface IReactionProviderFactory
 {
-    public IReactionProvider<TEvent> CreateProvider<TEvent>(StreamPosition initialPosition, string? streamName = null);
-    public IReactionProvider<TEvent> CreateProvider<TEvent>(StreamPosition initialPosition,IEnumerable<Type> requirements, string? streamName = null);
+    public IAsyncEnumerable<ReactionEvent<TEvent>> CreateProvider<TEvent>(StreamPosition initialPosition, string? streamName = null);
 }

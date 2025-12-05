@@ -1,12 +1,8 @@
 ﻿using EventDbLite.Abstractions;
-using EventDbLite.Events;
-using EventDbLite.Projections;
-using EventDbLite.Reactions.Abstractions;
-using EventDbLite.Streams;
 
 namespace EventDbLite.Reactions;
 
-public class ReactionProvider<TEvent> : IReactionProvider<TEvent>
+public class ReactionProvider<TEvent> : IAsyncEnumerable<ReactionEvent<TEvent>>
 {
     private readonly IEventStoreLite _store;
     private readonly IEventSerializer _eventSerializer;
@@ -14,9 +10,8 @@ public class ReactionProvider<TEvent> : IReactionProvider<TEvent>
     private readonly IEnumerable<Type> _requirements;
     private readonly ILiveProjectionRepository _repository;
     private readonly string? _streamName;
-    private CancellationTokenSource _source;
 
-    public ReactionProvider(IEventStoreLite store, IEventSerializer eventSerializer,IEnumerable<Type> requirements,ILiveProjectionRepository repository, StreamPosition initialPosition, string? streamName, CancellationToken mainToken)
+    public ReactionProvider(IEventStoreLite store, IEventSerializer eventSerializer, IEnumerable<Type> requirements, ILiveProjectionRepository repository, StreamPosition initialPosition, string? streamName)
     {
         _store = store;
         _eventSerializer = eventSerializer;
@@ -24,10 +19,9 @@ public class ReactionProvider<TEvent> : IReactionProvider<TEvent>
         _repository = repository;
         _initialPosition = initialPosition;
         _streamName = streamName;
-        _source = CancellationTokenSource.CreateLinkedTokenSource(mainToken);
     }
 
-    private Task EnsureRequirementsAsync(long globalVersion,CancellationToken cancellationToken)
+    private Task EnsureRequirementsAsync(long globalVersion, CancellationToken cancellationToken)
     {
         List<Task> waitTasks = new();
         foreach (Type requirement in _requirements)
@@ -35,7 +29,7 @@ public class ReactionProvider<TEvent> : IReactionProvider<TEvent>
             ILiveProjectionManager? projection = _repository.GetManager(requirement);
             if (projection is not null)
             {
-                waitTasks.Add(projection.WaitForVersion(globalVersion,cancellationToken));
+                waitTasks.Add(projection.WaitForVersion(globalVersion, cancellationToken));
             }
         }
         return Task.WhenAll(waitTasks);
@@ -43,8 +37,6 @@ public class ReactionProvider<TEvent> : IReactionProvider<TEvent>
 
     public async IAsyncEnumerator<ReactionEvent<TEvent>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
-        _source = CancellationTokenSource.CreateLinkedTokenSource(_source.Token, cancellationToken);
-
         string identifier = _eventSerializer.GetIdentifier(typeof(TEvent));
 
         IStreamSubscription subscription = _streamName is not null
@@ -55,7 +47,7 @@ public class ReactionProvider<TEvent> : IReactionProvider<TEvent>
         {
             await foreach (SubscriptionEvent streamEvent in subscription.StreamEvents(cancellationToken))
             {
-                await EnsureRequirementsAsync(streamEvent.Event.GlobalOrdinal, _source.Token);
+                await EnsureRequirementsAsync(streamEvent.Event.GlobalOrdinal, cancellationToken);
 
                 EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Event.Data.Metadata);
 

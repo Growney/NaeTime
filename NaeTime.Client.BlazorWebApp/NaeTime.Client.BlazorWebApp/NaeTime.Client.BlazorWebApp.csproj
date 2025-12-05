@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\EventDbLite.Reactions.SignalR.Client\EventDbLite.Reactions.SignalR.Client.csproj" />
+    <ProjectReference Include="..\..\EventDbLite.Reactions.SignalR.Server\EventDbLite.Reactions.SignalR.Server.csproj" />
     <ProjectReference Include="..\..\EventDbLite\EventDbLite.csproj" />
     <ProjectReference Include="..\..\NaeTime.Announcer\NaeTime.Announcer.csproj" />
     <ProjectReference Include="..\..\NaeTime.Client\NaeTime.Client.csproj" />
