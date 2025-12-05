@@ -22,7 +22,6 @@ builder.Services.AddSpeechSynthesis();
 // Add services to the container.
 builder.Services.AddEventDbLite();
 builder.Services.AddEventDbLiteSignalRServer();
-builder.Services.AddEventDbSignalRReactions("http://localhost:5118");
 builder.Services.AddNaeTimeQueries();
 builder.Services.AddNaeTimeCommand();
 builder.Services.AddHardwareCore();

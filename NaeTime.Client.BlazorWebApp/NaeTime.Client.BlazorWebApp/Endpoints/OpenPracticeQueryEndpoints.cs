@@ -2,7 +2,7 @@
 
 namespace NaeTime.Client.BlazorWebApp.Endpoints;
 
-public static class OpenPracticeEndpoints
+public static class OpenPracticeQueryEndpoints
 {
     public static void MapOpenPracticeQueryHandlerEndpoints(this WebApplication app)
     {

@@ -1,7 +1,7 @@
 ﻿using NaeTime.Query.Abstractions;
 
 namespace NaeTime.Client.BlazorWebApp.Endpoints;
-public static class HardwareEndpoints
+public static class HardwareQueryEndpoints
 {
     // Call app.MapQueryHandlerEndpoints() in __Program.cs__
     public static void MapHardwareQueryHandlerEndpoints(this WebApplication app)

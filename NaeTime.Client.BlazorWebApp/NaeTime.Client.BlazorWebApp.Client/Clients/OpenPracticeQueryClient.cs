@@ -1,0 +1,70 @@
+﻿using System.Net.Http.Json;
+using NaeTime.Query.Abstractions;
+using NaeTime.Query.Abstractions.Models;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace NaeTime.Client.BlazorWebApp.Client.Clients;
+
+public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
+{
+    private readonly HttpClient _http;
+
+    public OpenPracticeQueryClient(HttpClient http)
+    {
+        _http = http ?? throw new ArgumentNullException(nameof(http));
+    }
+
+    private async Task<T?> GetFromJsonOrNullAsync<T>(string url)
+    {
+        using var res = await _http.GetAsync(url).ConfigureAwait(false);
+        if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return default;
+
+        res.EnsureSuccessStatusCode();
+        return await res.Content.ReadFromJsonAsync<T>().ConfigureAwait(false);
+    }
+
+    public async Task<OpenPracticeSession?> GetByIdAsync(Guid id)
+    {
+        return await GetFromJsonOrNullAsync<OpenPracticeSession>($"/openpractice/session/{id}").ConfigureAwait(false);
+    }
+
+    public async Task<OpenPracticeSessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    {
+        string min = Uri.EscapeDataString(minimumLapTime.ToString("c"));
+        string max = Uri.EscapeDataString(maximumLapTime.ToString("c"));
+        var url = $"/openpractice/session/{sessionId}/track/{trackId}/timing?minimumLapTime={min}&maximumLapTime={max}";
+        var result = await GetFromJsonOrNullAsync<OpenPracticeSessionTimingInformation>(url).ConfigureAwait(false);
+        if (result != null) return result;
+
+        return new OpenPracticeSessionTimingInformation(
+            new Dictionary<Guid, IEnumerable<OpenPracticeTimingMoment>>(),
+            new Dictionary<Guid, IDictionary<Guid, OpenPracticeDetection>>(),
+            new Dictionary<Guid, IEnumerable<IEnumerable<OpenPracticeLap>>>(),
+            new Dictionary<Guid, IDictionary<uint, OpenPracticeLapRecord>>(),
+            new Dictionary<uint, IEnumerable<OpenPracticeLapRecord>>()
+        );
+    }
+
+    public async Task<OpenPracticeSessionPilotTimingInfo> GetTimingInformation(Guid sessionId, Guid trackId, Guid pilotId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    {
+        string min = Uri.EscapeDataString(minimumLapTime.ToString("c"));
+        string max = Uri.EscapeDataString(maximumLapTime.ToString("c"));
+        var url = $"/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/timing?minimumLapTime={min}&maximumLapTime={max}";
+        var result = await GetFromJsonOrNullAsync<OpenPracticeSessionPilotTimingInfo>(url).ConfigureAwait(false);
+        if (result != null) return result;
+
+        return new OpenPracticeSessionPilotTimingInfo(
+            Enumerable.Empty<OpenPracticeTimingMoment>(),
+            new Dictionary<Guid, OpenPracticeDetection>(),
+            Enumerable.Empty<IEnumerable<OpenPracticeLap>>(),
+            new Dictionary<uint, OpenPracticeLapRecord>()
+        );
+    }
+
+    public async Task<OpenPracticeDetection?> GetPilotLastDetection(Guid sessionId, Guid trackId, Guid pilotId)
+    {
+        return await GetFromJsonOrNullAsync<OpenPracticeDetection>($"/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/lastdetection").ConfigureAwait(false);
+    }
+}

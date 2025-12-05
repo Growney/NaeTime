@@ -2,7 +2,7 @@
 
 public static class Endpoints
 {
-    public static IServiceCollection MapNaeTimeQueryEndpoints(WebApplication application)
+    public static WebApplication MapNaeTimeQueryEndpoints(WebApplication application)
     {
         application.MapHardwareQueryHandlerEndpoints();
         application.MapPilotQueryHandlerEndpoints();
