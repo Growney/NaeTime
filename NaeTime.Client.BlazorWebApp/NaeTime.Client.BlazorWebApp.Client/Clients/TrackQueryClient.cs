@@ -1,6 +1,6 @@
-﻿using System.Net.Http.Json;
-using NaeTime.Query.Abstractions;
+﻿using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
+using System.Net.Http.Json;
 
 namespace NaeTime.Client.BlazorWebApp.Client.Clients;
 
@@ -25,12 +25,12 @@ public class TrackQueryClient : ITrackQueryHandler
 
     public async Task<Track?> GetTrack(Guid id)
     {
-        return await GetFromJsonOrNullAsync<Track>($"/track/{id}").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<Track>($"/api/track/{id}").ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Track>> GetAllTracks()
     {
-        var result = await GetFromJsonOrNullAsync<IEnumerable<Track>>("/track/all").ConfigureAwait(false);
+        var result = await GetFromJsonOrNullAsync<IEnumerable<Track>>("/api/track/all").ConfigureAwait(false);
         return result ?? Enumerable.Empty<Track>();
     }
 }

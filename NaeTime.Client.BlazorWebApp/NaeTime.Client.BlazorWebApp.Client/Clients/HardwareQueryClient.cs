@@ -25,12 +25,12 @@ public class HardwareQueryClient : IHardwareQueryHandler
 
     public async Task<Detector?> GetDetector(Guid id)
     {
-        return await GetFromJsonOrNullAsync<Detector>($"/hardware/detector/{id}").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<Detector>($"/api/hardware/detector/{id}").ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Detector>> GetAllDetectors()
     {
-        var result = await GetFromJsonOrNullAsync<IEnumerable<Detector>>("/hardware/detectors").ConfigureAwait(false);
+        var result = await GetFromJsonOrNullAsync<IEnumerable<Detector>>("/api/hardware/detectors").ConfigureAwait(false);
         return result ?? Enumerable.Empty<Detector>();
     }
 
@@ -38,35 +38,35 @@ public class HardwareQueryClient : IHardwareQueryHandler
     {
         if (ids == null) return Enumerable.Empty<Detector>();
         var idsParam = string.Join(',', ids.Select(g => g.ToString()));
-        var result = await GetFromJsonOrNullAsync<IEnumerable<Detector>>($"/hardware/detectors/ids?ids={Uri.EscapeDataString(idsParam)}").ConfigureAwait(false);
+        var result = await GetFromJsonOrNullAsync<IEnumerable<Detector>>($"/api/hardware/detectors/ids?ids={Uri.EscapeDataString(idsParam)}").ConfigureAwait(false);
         return result ?? Enumerable.Empty<Detector>();
     }
 
     public async Task<Ethernet8ChannelImmersionRCLapRF?> GetEthernet8ChannelImmersionRCLapRF(Guid id)
     {
-        return await GetFromJsonOrNullAsync<Ethernet8ChannelImmersionRCLapRF>($"/hardware/ethernetlaprf8channel/{id}").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<Ethernet8ChannelImmersionRCLapRF>($"/api/hardware/ethernetlaprf8channel/{id}").ConfigureAwait(false);
     }
 
     public async Task<ImmersionRCLapRFLane?> GetImmersionRCLapRFLane(Guid timerId, byte laneId)
     {
-        return await GetFromJsonOrNullAsync<ImmersionRCLapRFLane>($"/hardware/immersionrclaprflane/{timerId}/{laneId}").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<ImmersionRCLapRFLane>($"/api/hardware/immersionrclaprflane/{timerId}/{laneId}").ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<ImmersionRCLapRF>> GetAllImmersionRCLapRFs()
     {
-        var result = await GetFromJsonOrNullAsync<IEnumerable<ImmersionRCLapRF>>("/hardware/immersionrclaprf/all").ConfigureAwait(false);
+        var result = await GetFromJsonOrNullAsync<IEnumerable<ImmersionRCLapRF>>("/api/hardware/immersionrclaprf/all").ConfigureAwait(false);
         return result ?? Enumerable.Empty<ImmersionRCLapRF>();
     }
 
     public async Task<IEnumerable<DesiredImmersionRCLapRFLane>> GetActiveImmersionRCLapRFLanesConfiguration(Guid timerId)
     {
-        var result = await GetFromJsonOrNullAsync<IEnumerable<DesiredImmersionRCLapRFLane>>($"/hardware/immersionrclaprf/active/{timerId}").ConfigureAwait(false);
+        var result = await GetFromJsonOrNullAsync<IEnumerable<DesiredImmersionRCLapRFLane>>($"/api/hardware/immersionrclaprf/active/{timerId}").ConfigureAwait(false);
         return result ?? Enumerable.Empty<DesiredImmersionRCLapRFLane>();
     }
 
     public async Task<TimerDetails> GetDetails(Guid timerId)
     {
-        var res = await _http.GetAsync($"/hardware/timer/details/{timerId}").ConfigureAwait(false);
+        var res = await _http.GetAsync($"/api/hardware/timer/details/{timerId}").ConfigureAwait(false);
         if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
             return null!; // preserve original signature; caller should handle null if allowed
 
@@ -76,7 +76,7 @@ public class HardwareQueryClient : IHardwareQueryHandler
 
     public async Task<TimerLaneDetails> GetLaneDetails(Guid timerId, byte laneId)
     {
-        var res = await _http.GetAsync($"/hardware/timer/{timerId}/lane/{laneId}/details").ConfigureAwait(false);
+        var res = await _http.GetAsync($"/api/hardware/timer/{timerId}/lane/{laneId}/details").ConfigureAwait(false);
         if (res.StatusCode == System.Net.HttpStatusCode.NotFound)
             return null!;
 

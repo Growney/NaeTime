@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace EventDbLite.Reactions.SignalR.Server;
 public class EventHubService : BackgroundService
@@ -10,13 +11,15 @@ public class EventHubService : BackgroundService
     private readonly IEnumerable<Type> _requirements;
     private readonly ILiveProjectionRepository _repository;
     private readonly IHubContext<EventsHub> _hubContext;
+    private readonly ILogger<EventHubService> _logger;
 
-    public EventHubService(IServiceProvider serviceProvider, IEnumerable<Type> requirements, ILiveProjectionRepository repository, IHubContext<EventsHub> hubContext)
+    public EventHubService(IServiceProvider serviceProvider, IEnumerable<Type> requirements, ILiveProjectionRepository repository, IHubContext<EventsHub> hubContext, ILogger<EventHubService> logger)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _requirements = requirements ?? throw new ArgumentNullException(nameof(requirements));
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     private Task EnsureRequirementsAsync(long globalVersion, CancellationToken cancellationToken)
@@ -47,7 +50,9 @@ public class EventHubService : BackgroundService
         {
             await EnsureRequirementsAsync(streamEvent.Event.GlobalOrdinal, stoppingToken);
 
-            await _hubContext.Clients.All.SendAsync("ReceiveEvent", streamEvent, stoppingToken);
+            _logger.LogInformation("Broadcasting event {Identifier} with GlobalOrdinal {GlobalOrdinal}", streamEvent.Event.Data.Identifier, streamEvent.Event.GlobalOrdinal);
+            await _hubContext.Clients.All.SendAsync("ReceiveEvent", streamEvent.Event);
+
         }
     }
 }

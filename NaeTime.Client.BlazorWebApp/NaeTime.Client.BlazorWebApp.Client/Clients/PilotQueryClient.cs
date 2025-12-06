@@ -25,12 +25,12 @@ public class PilotQueryClient : IPilotQueryHandler
 
     public async Task<IEnumerable<Pilot>> GetAllPilots()
     {
-        var result = await GetFromJsonOrNullAsync<IEnumerable<Pilot>>("/pilot/all").ConfigureAwait(false);
+        var result = await GetFromJsonOrNullAsync<IEnumerable<Pilot>>("/api/pilot/all").ConfigureAwait(false);
         return result ?? Enumerable.Empty<Pilot>();
     }
 
     public async Task<Pilot?> GetPilotById(Guid id)
     {
-        return await GetFromJsonOrNullAsync<Pilot>($"/pilot/{id}").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<Pilot>($"/api/pilot/{id}").ConfigureAwait(false);
     }
 }

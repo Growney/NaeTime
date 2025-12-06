@@ -1,7 +1,7 @@
 ﻿using EventDbLite.Abstractions;
 using System.Reflection;
 
-namespace EventDbLite.Events;
+namespace EventDbLite.Serialization;
 
 public class JsonEventSerializer : IEventSerializer
 {

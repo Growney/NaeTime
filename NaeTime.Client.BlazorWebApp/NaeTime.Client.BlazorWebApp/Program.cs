@@ -2,6 +2,7 @@ using MudBlazor;
 using MudBlazor.Services;
 using NaeTime.Client.BlazorWebApp.Components;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,5 +53,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(NaeTime.Client.BlazorWebApp.Client._Imports).Assembly);
+app.MapNaeTimeEndPoints();
 
 app.Run();

@@ -20,13 +20,13 @@ public class SessionsCommandClient : ISessionsCommandHandler
 
     public Task ActivateOpenPracticeSession(Guid id)
     {
-        var url = $"/sessions/activate?id={id}";
+        var url = $"/api/sessions/activate?id={id}";
         return PostNoContentAsync(url);
     }
 
     public Task DeactivateOpenPracticeSession(Guid id)
     {
-        var url = $"/sessions/deactivate?id={id}";
+        var url = $"/api/sessions/deactivate?id={id}";
         return PostNoContentAsync(url);
     }
 }

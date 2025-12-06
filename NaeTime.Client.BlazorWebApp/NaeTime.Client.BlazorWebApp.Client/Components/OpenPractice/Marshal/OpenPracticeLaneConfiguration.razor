@@ -81,7 +81,7 @@
 <div class="w-100 pb-2 pt-2 d-flex justify-content-center">
     @foreach (Guid detectorId in Session.TrackDetectorIds)
     {
-        <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus TimerId=detectorId LaneId=LaneId OnClicked="ToggleTuningTimer"></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerStatus>
+        <NaeTime.Client.BlazorWebApp.Client.Components.Hardware.TimerStatus TimerId=detectorId LaneId=LaneId OnClicked="ToggleTuningTimer"></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.TimerStatus>
     }
 </div>
 <div class="text-center" style="font-size: 2.5em; min-height:1.5em;">
@@ -89,7 +89,7 @@
 </div>
 @foreach (Guid detectorId in _tuningTimers)
 {
-    <NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Components.Hardware.TimerLaneTuner>
+    <NaeTime.Client.BlazorWebApp.Client.Components.Hardware.TimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.TimerLaneTuner>
 }
 <div class="w-100 pb-2">
     <MudIconButton Icon=@Icons.Material.Filled.Timer Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"></MudIconButton>                
@@ -117,8 +117,6 @@
 
     [Inject]
     private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
-    [Inject]
-    private ISoftwareTimer SoftwareTimer { get; set; } = null!;
     [Inject]
     private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
     [Inject]
@@ -168,7 +166,7 @@
 
     private async Task TriggerDetection()
     {
-        await OpenPracticeCommandHandler.TriggerDetection(Guid.NewGuid(), Session.Id, LaneId, 0, null, SoftwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
+        await OpenPracticeCommandHandler.TriggerDetection(Guid.NewGuid(), Session.Id, LaneId, 0);
     }
 
     private string GetPilotName(Guid pilotId)

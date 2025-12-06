@@ -21,7 +21,7 @@ public class PilotCommandClient : IPilotCommandHandler
     public Task CreatePilot(Guid id, string? firstName, string? lastName, string? callSign, string? bindingPhrase)
     {
         var sb = new System.Text.StringBuilder();
-        sb.Append($"/pilot/create?id={id}");
+        sb.Append($"/api/pilot/create?id={id}");
         if (!string.IsNullOrEmpty(firstName)) sb.Append($"&firstName={Uri.EscapeDataString(firstName)}");
         if (!string.IsNullOrEmpty(lastName)) sb.Append($"&lastName={Uri.EscapeDataString(lastName)}");
         if (!string.IsNullOrEmpty(callSign)) sb.Append($"&callSign={Uri.EscapeDataString(callSign)}");
@@ -32,7 +32,7 @@ public class PilotCommandClient : IPilotCommandHandler
     public Task RenamePilot(Guid id, string? firstName, string? lastName)
     {
         var sb = new System.Text.StringBuilder();
-        sb.Append($"/pilot/rename?id={id}");
+        sb.Append($"/api/pilot/rename?id={id}");
         if (!string.IsNullOrEmpty(firstName)) sb.Append($"&firstName={Uri.EscapeDataString(firstName)}");
         if (!string.IsNullOrEmpty(lastName)) sb.Append($"&lastName={Uri.EscapeDataString(lastName)}");
         return PostNoContentAsync(sb.ToString());
@@ -40,20 +40,20 @@ public class PilotCommandClient : IPilotCommandHandler
 
     public Task ChangePilotCallsign(Guid id, string? callSign)
     {
-        var url = $"/pilot/change-callsign?id={id}";
+        var url = $"/api/pilot/change-callsign?id={id}";
         if (!string.IsNullOrEmpty(callSign)) url += $"&callSign={Uri.EscapeDataString(callSign)}";
         return PostNoContentAsync(url);
     }
 
     public Task ChangePilotBindingPhrase(Guid id, string bindingPhrase)
     {
-        var url = $"/pilot/change-binding?id={id}&bindingPhrase={Uri.EscapeDataString(bindingPhrase)}";
+        var url = $"/api/pilot/change-binding?id={id}&bindingPhrase={Uri.EscapeDataString(bindingPhrase)}";
         return PostNoContentAsync(url);
     }
 
     public Task RemovePilotBindingPhrase(Guid id)
     {
-        var url = $"/pilot/remove-binding?id={id}";
+        var url = $"/api/pilot/remove-binding?id={id}";
         return PostNoContentAsync(url);
     }
 }

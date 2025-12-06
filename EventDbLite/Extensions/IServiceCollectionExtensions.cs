@@ -2,11 +2,11 @@
 using EventDbLite.Abstractions;
 using EventDbLite.Aggregates;
 using EventDbLite.Connections;
-using EventDbLite.Events;
 using EventDbLite.Handlers;
 using EventDbLite.Projections;
 using EventDbLite.Reactions;
 using EventDbLite.Reactions.Abstractions;
+using EventDbLite.Serialization;
 using EventDbLite.Streams;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;

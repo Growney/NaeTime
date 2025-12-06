@@ -13,7 +13,7 @@
                     {
                         <div class="open-practice-lane-configuration-column">
                             <MudPaper Class=p-3>
-                                <NaeTime.Client.BlazorWebApp.Components.OpenPractice.Marshal.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Components.OpenPractice.Marshal.OpenPracticeLaneConfiguration>
+                                <NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.Marshal.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.Marshal.OpenPracticeLaneConfiguration>
                             </MudPaper>
                         </div>
                     }
@@ -26,9 +26,10 @@
                 <div class="timeline-column">
                     <MudPaper Class=p-3>
                         <MudText Align="Align.Center" Typo="Typo.h5">@GetPilotName(pilotId)</MudText>
-                        <NaeTime.Client.BlazorWebApp.Components.OpenPractice.Marshal.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilotId>
-                        </NaeTime.Client.BlazorWebApp.Components.OpenPractice.Marshal.OpenPracticePilotTimingMoments>
+                        <NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.Marshal.OpenPracticePilotTimingMoments SessionId=_session.Id TrackId=_session.TrackId PilotId=pilotId>
+                        </NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.Marshal.OpenPracticePilotTimingMoments>
                     </MudPaper>
+
                 </div>
             }
         </div>

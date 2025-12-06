@@ -21,7 +21,7 @@ public class TrackCommandClient : ITrackCommandHandler
     public Task DesignTrack(Guid id, string name, Guid[] detectors)
     {
         var sb = new System.Text.StringBuilder();
-        sb.Append($"/tracks/design?id={id}&name={Uri.EscapeDataString(name)}");
+        sb.Append($"/api/tracks/design?id={id}&name={Uri.EscapeDataString(name)}");
         if (detectors != null && detectors.Length > 0)
         {
             // join as comma separated list
@@ -33,14 +33,14 @@ public class TrackCommandClient : ITrackCommandHandler
 
     public Task RenameTrack(Guid id, string name)
     {
-        var url = $"/tracks/rename?id={id}&name={Uri.EscapeDataString(name)}";
+        var url = $"/api/tracks/rename?id={id}&name={Uri.EscapeDataString(name)}";
         return PostNoContentAsync(url);
     }
 
     public Task ReorderTrackDetectors(Guid trackId, Guid[] detectors)
     {
         var sb = new System.Text.StringBuilder();
-        sb.Append($"/tracks/reorder-detectors?trackId={trackId}");
+        sb.Append($"/api/tracks/reorder-detectors?trackId={trackId}");
         if (detectors != null && detectors.Length > 0)
         {
             var ids = string.Join(',', detectors.Select(g => g.ToString()));
@@ -51,25 +51,25 @@ public class TrackCommandClient : ITrackCommandHandler
 
     public Task SetMaximumLapTime(Guid trackId, long milliseconds)
     {
-        var url = $"/tracks/set-max-lap?trackId={trackId}&milliseconds={milliseconds}";
+        var url = $"/api/tracks/set-max-lap?trackId={trackId}&milliseconds={milliseconds}";
         return PostNoContentAsync(url);
     }
 
     public Task SetMinimumDetectionDelay(Guid trackId, long milliseconds)
     {
-        var url = $"/tracks/set-min-detection-delay?trackId={trackId}&milliseconds={milliseconds}";
+        var url = $"/api/tracks/set-min-detection-delay?trackId={trackId}&milliseconds={milliseconds}";
         return PostNoContentAsync(url);
     }
 
     public Task ResetMaximumLapTime(Guid trackId)
     {
-        var url = $"/tracks/reset-max-lap?trackId={trackId}";
+        var url = $"/api/tracks/reset-max-lap?trackId={trackId}";
         return PostNoContentAsync(url);
     }
 
     public Task ResetMinimumDetectionDelay(Guid trackId)
     {
-        var url = $"/tracks/reset-min-detection-delay?trackId={trackId}";
+        var url = $"/api/tracks/reset-min-detection-delay?trackId={trackId}";
         return PostNoContentAsync(url);
     }
 }

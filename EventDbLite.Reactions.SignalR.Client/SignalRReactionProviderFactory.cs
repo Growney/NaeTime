@@ -5,11 +5,8 @@ using Microsoft.Extensions.Hosting;
 using System.Collections.Concurrent;
 
 namespace EventDbLite.Reactions.SignalR.Client;
-public class SignalRReactionProviderFactory : IHostedService, IReactionProviderFactory
+public class SignalRReactionProviderFactory : IReactionProviderFactory
 {
-    private ConcurrentDictionary<Guid, IEventConsumer> _consumers = new();
-
-    private HubConnection? _hubConnection;
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IEventSerializer _eventSerializer;
@@ -22,47 +19,6 @@ public class SignalRReactionProviderFactory : IHostedService, IReactionProviderF
         _baseAddress = baseAddress;
     }
 
-    public IAsyncEnumerable<ReactionEvent<TEvent>> CreateProvider<TEvent>(StreamPosition initialPosition, string? streamName = null)
-    {
-        Guid providerId = Guid.NewGuid();
-
-        void RemoveConsumer()
-        {
-            _consumers.TryRemove(providerId, out _);
-        }
-
-        ReactionProvider<TEvent> provider = new(streamName, initialPosition, _eventSerializer, _httpClientFactory, RemoveConsumer);
-
-        _consumers.TryAdd(providerId, provider);
-
-        return provider;
-    }
-
-    public async Task StartAsync(CancellationToken cancellationToken)
-    {
-        _hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{_baseAddress}/eventDbLiteHub")
-            .WithAutomaticReconnect()
-            .Build();
-
-        _hubConnection.On("ReceiveEvent", (string streamName, StreamEvent streamEvent) =>
-        {
-            foreach (IEventConsumer consumer in _consumers.Values)
-            {
-                consumer.AddEvent(streamEvent);
-            }
-        });
-
-        await _hubConnection.StartAsync(cancellationToken);
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        if (_hubConnection == null)
-        {
-            return Task.CompletedTask;
-        }
-
-        return _hubConnection.StopAsync();
-    }
+    public IAsyncEnumerable<ReactionEvent<TEvent>> CreateProvider<TEvent>(StreamPosition initialPosition, string? streamName = null) 
+        => new SignalRReactionProvider<TEvent>(streamName,_baseAddress, initialPosition, _eventSerializer, _httpClientFactory);
 }

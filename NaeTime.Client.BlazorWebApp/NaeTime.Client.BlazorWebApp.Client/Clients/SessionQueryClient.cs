@@ -25,17 +25,17 @@ public class SessionQueryClient : ISessionQueryHandler
 
     public async Task<Session?> GetSession(Guid id)
     {
-        return await GetFromJsonOrNullAsync<Session>($"/session/{id}").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<Session>($"/api/session/{id}").ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Session>> GetAllSessions()
     {
-        var result = await GetFromJsonOrNullAsync<IEnumerable<Session>>("/session/all").ConfigureAwait(false);
+        var result = await GetFromJsonOrNullAsync<IEnumerable<Session>>("/api/session/all").ConfigureAwait(false);
         return result ?? Enumerable.Empty<Session>();
     }
 
     public async Task<Session?> GetActiveSession()
     {
-        return await GetFromJsonOrNullAsync<Session>("/session/active").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<Session>("/api/session/active").ConfigureAwait(false);
     }
 }

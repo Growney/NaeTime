@@ -27,14 +27,14 @@ public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
 
     public async Task<OpenPracticeSession?> GetByIdAsync(Guid id)
     {
-        return await GetFromJsonOrNullAsync<OpenPracticeSession>($"/openpractice/session/{id}").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<OpenPracticeSession>($"/api/openpractice/session/{id}").ConfigureAwait(false);
     }
 
     public async Task<OpenPracticeSessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
     {
         string min = Uri.EscapeDataString(minimumLapTime.ToString("c"));
         string max = Uri.EscapeDataString(maximumLapTime.ToString("c"));
-        var url = $"/openpractice/session/{sessionId}/track/{trackId}/timing?minimumLapTime={min}&maximumLapTime={max}";
+        var url = $"/api/openpractice/session/{sessionId}/track/{trackId}/timing?minimumLapTime={min}&maximumLapTime={max}";
         var result = await GetFromJsonOrNullAsync<OpenPracticeSessionTimingInformation>(url).ConfigureAwait(false);
         if (result != null) return result;
 
@@ -51,7 +51,7 @@ public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
     {
         string min = Uri.EscapeDataString(minimumLapTime.ToString("c"));
         string max = Uri.EscapeDataString(maximumLapTime.ToString("c"));
-        var url = $"/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/timing?minimumLapTime={min}&maximumLapTime={max}";
+        var url = $"/api/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/timing?minimumLapTime={min}&maximumLapTime={max}";
         var result = await GetFromJsonOrNullAsync<OpenPracticeSessionPilotTimingInfo>(url).ConfigureAwait(false);
         if (result != null) return result;
 
@@ -65,6 +65,6 @@ public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
 
     public async Task<OpenPracticeDetection?> GetPilotLastDetection(Guid sessionId, Guid trackId, Guid pilotId)
     {
-        return await GetFromJsonOrNullAsync<OpenPracticeDetection>($"/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/lastdetection").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<OpenPracticeDetection>($"/api/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/lastdetection").ConfigureAwait(false);
     }
 }

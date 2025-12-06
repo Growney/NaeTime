@@ -2,6 +2,7 @@
 using EventDbLite.Exceptions;
 using NaeTime.Command.Abstractions;
 using NaeTime.Command.Aggregates;
+using NaeTime.Hardware.Abstractions;
 using NaeTime.Query.Abstractions;
 using System.Xml.Linq;
 
@@ -10,11 +11,12 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
 {
     private readonly IAggregateRepository _repository;
     private readonly ITrackQueryHandler _trackQueryHandler;
-
-    public OpenPracticeCommandHandler(IAggregateRepository repository, ITrackQueryHandler trackQueryHandler)
+    private readonly ISoftwareTimer _softwareTimer;
+    public OpenPracticeCommandHandler(IAggregateRepository repository, ITrackQueryHandler trackQueryHandler, ISoftwareTimer softwareTimer)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _trackQueryHandler = trackQueryHandler ?? throw new ArgumentNullException(nameof(trackQueryHandler));
+        _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
     }
 
     public Task AssignHardwareDetectionToSession(Guid detectionId, Guid sessionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime) => ConcurrencyException.Retry(async () =>
@@ -105,10 +107,10 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
         await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
     });
 
-    public Task TriggerDetection(Guid detectionId, Guid sessionId, byte lane, byte ordinalPosition, ulong? hardwareTime, long softwareTime, DateTime utcTime) => ConcurrencyException.Retry(async () =>
+    public Task TriggerDetection(Guid detectionId, Guid sessionId, byte lane, byte ordinalPosition) => ConcurrencyException.Retry(async () =>
     {
         OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
-        session.TriggerDetection(detectionId, lane, ordinalPosition, hardwareTime, softwareTime, utcTime);
+        session.TriggerDetection(detectionId, lane, ordinalPosition, null, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow);
         await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
     });
 
