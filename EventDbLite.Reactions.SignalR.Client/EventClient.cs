@@ -2,11 +2,34 @@
 using EventDbLite.Abstractions;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 
 namespace EventDbLite.Reactions.SignalR.Client;
 public class EventClient : IEventClient
 {
-    public event Func<StreamEvent, Task>? OnEventReceived;
+    private ConcurrentDictionary<int, Func<StreamEvent, Task>> _eventHandlers = new();
+
+    public event Func<StreamEvent, Task>? OnEventReceived
+    {
+        add
+        {
+            if (value is null)
+            {
+                return;
+            }
+            int key = value.GetHashCode();
+            _eventHandlers.TryAdd(key, value);
+        }
+        remove
+        {
+            if (value is null)
+            {
+                return;
+            }
+            int key = value.GetHashCode();
+            _eventHandlers.TryRemove(key, out _);
+        }
+    }
 
     private readonly ILogger<EventClient> _logger;
 
@@ -28,11 +51,8 @@ public class EventClient : IEventClient
 
         Connection.On<StreamEvent>("ReceiveEvent", async (streamEvent) =>
         {
-            _logger.LogDebug("Event received: {Identifier} at {GlobalPosition}", streamEvent.Data.Identifier, streamEvent.GlobalOrdinal);
-            if (OnEventReceived != null)
-            {
-                _ = OnEventReceived.Invoke(streamEvent);
-            }
+            IEnumerable<Task> eventTasks = _eventHandlers.Values.Select(handler => handler(streamEvent));
+            await Task.WhenAll(eventTasks);
         });
     }
 
