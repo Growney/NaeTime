@@ -23,7 +23,7 @@
     @if (_pilotTimingInfo != null)
     {
         <div class="overlay-footer-details bg-primary d-flex align-items-center">
-            <NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay MinTime="MinTime" MaxTime="MaxTime" Start="_lastDetection"></NaeTime.Client.BlazorWebApp.Components.OpenPractice.TimerDisplay>
+            <NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.TimerDisplay MinTime="MinTime" MaxTime="MaxTime" Start="_lastDetection"></NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.TimerDisplay>
         </div>
         <div class="overlay-footer bg-primary d-flex justify-content-evenly text-white">
             @foreach (var lapRecord in GetIncludedLapRecords())

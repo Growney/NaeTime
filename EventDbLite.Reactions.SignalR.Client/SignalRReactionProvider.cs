@@ -1,5 +1,4 @@
 ﻿using EventDbLite.Abstractions;
-using Microsoft.AspNetCore.SignalR.Client;
 using NaeTime.Collections;
 using System.Net.Http.Json;
 
@@ -8,54 +7,51 @@ namespace EventDbLite.Reactions.SignalR.Client;
 public class SignalRReactionProvider<TEvent> : IAsyncEnumerable<ReactionEvent<TEvent>>
 {
     private readonly string? _streamName;
-    private readonly string _baseAddress;
     private readonly StreamPosition _initialPosition;
     private readonly IEventSerializer _eventSerializer;
     private readonly IHttpClientFactory _reactionClientFactory;
+    private readonly IEventClient _eventClient;
 
-    public SignalRReactionProvider(string? streamName,string baseAddress, StreamPosition initialPosition, IEventSerializer eventSerializer, IHttpClientFactory reactionClientFactory)
+    public SignalRReactionProvider(string? streamName, StreamPosition initialPosition, IEventSerializer eventSerializer, IHttpClientFactory reactionClientFactory, IEventClient eventClient)
     {
         _streamName = streamName;
-        _baseAddress = baseAddress;
         _initialPosition = initialPosition;
         _eventSerializer = eventSerializer ?? throw new ArgumentNullException(nameof(eventSerializer));
         _reactionClientFactory = reactionClientFactory ?? throw new ArgumentNullException(nameof(reactionClientFactory));
+        _eventClient = eventClient ?? throw new ArgumentNullException(nameof(eventClient));
     }
 
     public async IAsyncEnumerator<ReactionEvent<TEvent>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
         Console.WriteLine("Starting SignalR Reaction Provider...");
-        HubConnection connection = new HubConnectionBuilder()
-            .WithUrl(new Uri(new Uri(_baseAddress), "/eventDbLiteHub"))
-            .WithAutomaticReconnect()
-            .Build();
 
         AwaitableQueue<ReactionEvent<TEvent>> eventQueue = new(0);
-        connection.On("ReceiveEvent", (StreamEvent streamEvent) =>
+
+        string identifier = _eventSerializer.GetIdentifier(typeof(TEvent));
+
+        Task EventReceived(StreamEvent streamEvent)
         {
-            Console.WriteLine("Received event from SignalR.");
-            string identifier = _eventSerializer.GetIdentifier(typeof(TEvent));
+            Console.WriteLine("Received event from EventClient.");
             EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
             if (!metadata.Identifier.Equals(identifier))
             {
                 Console.WriteLine("Discarding event - identifier does not match.");
-                return;
+                return Task.CompletedTask;
             }
             object? eventObject = _eventSerializer.DeserializeEvent(streamEvent.Data.Payload, typeof(TEvent));
             if (eventObject is TEvent tEvent)
             {
-                Console.WriteLine("Received event from SignalR.");
+                Console.WriteLine("Received event from EventClient.");
                 ReactionEvent<TEvent> reactionEvent = new(tEvent, new SubscriptionEvent(true, streamEvent));
                 eventQueue.Enqueue(reactionEvent);
                 Console.WriteLine("Enqueued reaction event.");
             }
-        });
 
-        await connection.StartAsync(cancellationToken);
+            return Task.CompletedTask;
+        }
 
-        Console.WriteLine("SignalR Reaction Provider started.");
+        _eventClient.OnEventReceived += EventReceived;
 
-        string identifier = _eventSerializer.GetIdentifier(typeof(TEvent));
         long currentPosition = 0;
 
         if (_initialPosition != StreamPosition.End)
@@ -119,6 +115,6 @@ public class SignalRReactionProvider<TEvent> : IAsyncEnumerable<ReactionEvent<TE
             }
         }
 
-        await connection.StopAsync(cancellationToken);
+        _eventClient.OnEventReceived -= EventReceived;
     }
 }

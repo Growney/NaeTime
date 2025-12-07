@@ -17,7 +17,7 @@
 </head>
 
 <body>
-    <Routes @rendermode="InteractiveWebAssembly" />
+    <Routes @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
     <script src="_framework/blazor.web.js"></script>
     <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
     <script src="@Assets["lib/js/fontawesome/all.min.js"]"></script>

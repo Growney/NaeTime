@@ -1,10 +1,12 @@
 ﻿using EventDbLite.Abstractions;
 using EventDbLite.Handlers;
-using EventDbLite.Streams;
+using EventDbLite.Handlers.Abstractions;
+using EventDbLite.Reactions.Abstractions;
 using System.Reflection;
 
 namespace EventDbLite.Reactions;
-public class ReactionClassContainer<T> : IDisposable
+public class ReactionClassContainer<T> : IReactionClassContainer<T>
+    where T : class
 {
     private readonly IEventStoreLite _store;
     private readonly IAsyncHandlerProvider _handlerProvider;
@@ -110,5 +112,13 @@ public class ReactionClassContainer<T> : IDisposable
 
     }
 
-    public void Dispose() => _cts.Cancel();
+    public void Dispose()
+    {
+        if (Instance is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+
+        _cts.Cancel();
+    }
 }

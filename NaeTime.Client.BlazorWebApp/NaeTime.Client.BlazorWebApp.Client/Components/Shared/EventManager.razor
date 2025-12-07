@@ -1,0 +1,13 @@
+﻿@implements IAsyncDisposable
+
+@code {
+    [Inject]
+    public EventDbLite.Reactions.SignalR.Client.IEventClient EventClient { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await EventClient.StartAsync();
+    }
+
+    public ValueTask DisposeAsync() => EventClient.DisposeAsync();
+}

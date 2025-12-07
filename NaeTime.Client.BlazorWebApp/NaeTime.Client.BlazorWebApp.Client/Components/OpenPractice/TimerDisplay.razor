@@ -36,7 +36,7 @@
         base.OnInitialized();
 
         _timer = new Timer(x =>
-                       this.InvokeAsync(StateHasChanged), null, 0, 10);
+                       this.InvokeAsync(StateHasChanged), null, 0, 50);
     }
 
     public void Dispose()

@@ -3,6 +3,7 @@ using EventDbLite.Abstractions;
 using EventDbLite.Aggregates;
 using EventDbLite.Connections;
 using EventDbLite.Handlers;
+using EventDbLite.Handlers.Abstractions;
 using EventDbLite.Projections;
 using EventDbLite.Reactions;
 using EventDbLite.Reactions.Abstractions;

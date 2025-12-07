@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EventDbLite.Handlers\EventDbLite.Handlers.csproj" />
     <ProjectReference Include="..\EventDbLite.Reactions.Abstractions\EventDbLite.Reactions.Abstractions.csproj" />
     <ProjectReference Include="..\EventDbLite.Serialization\EventDbLite.Serialization.csproj" />
     <ProjectReference Include="..\NaeTime.Collections\NaeTime.Collections.csproj" />

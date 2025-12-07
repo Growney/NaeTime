@@ -1,6 +1,4 @@
-﻿using EventDbLite.Handlers;
-
-namespace EventDbLite.Abstractions;
+﻿namespace EventDbLite.Handlers.Abstractions;
 public interface IHandlerProvider
 {
     Handler? GetHandlerMethod(Type handlerType, string identifier);

@@ -1,5 +1,6 @@
 ﻿using EventDbLite.Abstractions;
 using EventDbLite.Handlers;
+using EventDbLite.Handlers.Abstractions;
 using EventDbLite.Streams;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;

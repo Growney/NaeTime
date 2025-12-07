@@ -2,16 +2,15 @@
 using EventDbLite.Reactions.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EventDbLite.Reactions;
-public class ReactionClassFactory : IReactionClassFactory
+namespace EventDbLite.Reactions.SignalR.Client;
+internal class ClientReactionClassFactory : IReactionClassFactory
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public ReactionClassFactory(IServiceProvider serviceProvider)
+    public ClientReactionClassFactory(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     }
-
     public IReactionClassContainer<T> Create<T>()
         where T : class
     {
@@ -22,6 +21,6 @@ public class ReactionClassFactory : IReactionClassFactory
             throw new InvalidOperationException();
         }
 
-        return ActivatorUtilities.CreateInstance<ReactionClassContainer<T>>(_serviceProvider, instance);
+        return ActivatorUtilities.CreateInstance<ClientReactionClass<T>>(_serviceProvider, instance);
     }
 }

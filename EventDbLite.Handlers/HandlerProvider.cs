@@ -1,10 +1,11 @@
 ﻿using EventDbLite.Abstractions;
+using EventDbLite.Handlers.Abstractions;
 using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace EventDbLite.Handlers;
 
-internal class HandlerProvider(IEventSerializer eventSerializer) : IHandlerProvider
+public class HandlerProvider(IEventSerializer eventSerializer) : IHandlerProvider
 {
     private readonly ConcurrentDictionary<Type, Dictionary<string, Handler>> _handlerMethods = new();
 

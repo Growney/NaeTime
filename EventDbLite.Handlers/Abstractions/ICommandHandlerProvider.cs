@@ -1,6 +1,6 @@
 ﻿using EventDbLite.Handlers;
 
-namespace EventDbLite.Abstractions;
+namespace EventDbLite.Handlers.Abstractions;
 
 public interface ICommandHandlerProvider
 {

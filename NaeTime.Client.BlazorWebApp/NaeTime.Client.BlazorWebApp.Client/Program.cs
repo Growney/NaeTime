@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
 using MudBlazor.Services;
@@ -5,7 +6,7 @@ using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-builder.Services.AddHttpClient(string.Empty,x=>
+builder.Services.AddHttpClient(string.Empty, x =>
 {
     x.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 });
@@ -23,6 +24,10 @@ builder.Services.AddMudServices(config =>
 });
 builder.Services.AddSpeechSynthesis();
 builder.Services.AddApiClients();
-builder.Services.AddEventDbSignalRReactions(builder.HostEnvironment.BaseAddress);
+builder.Services.AddEventDbSignalRReactions(sp =>
+{
+    NavigationManager navigationManager = sp.GetRequiredService<NavigationManager>();
+    return navigationManager.BaseUri.TrimEnd('/');
+});
 
 await builder.Build().RunAsync();

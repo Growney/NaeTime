@@ -65,6 +65,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Serialization",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Reactions.SignalR.Server", "EventDbLite.Reactions.SignalR.Server\EventDbLite.Reactions.SignalR.Server.csproj", "{4E8067E1-5B9F-4724-AA2B-D893328B1034}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Handlers", "EventDbLite.Handlers\EventDbLite.Handlers.csproj", "{F4D99F42-C658-4079-846E-53CE827F41B2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -171,6 +173,10 @@ Global
 		{4E8067E1-5B9F-4724-AA2B-D893328B1034}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E8067E1-5B9F-4724-AA2B-D893328B1034}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E8067E1-5B9F-4724-AA2B-D893328B1034}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4D99F42-C658-4079-846E-53CE827F41B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4D99F42-C658-4079-846E-53CE827F41B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4D99F42-C658-4079-846E-53CE827F41B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4D99F42-C658-4079-846E-53CE827F41B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -205,6 +211,7 @@ Global
 		{9930FD76-1AD9-4256-B8F5-BB48182472EE} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
 		{27C722BA-1B36-43D8-96AF-0E3D6252B56B} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
 		{4E8067E1-5B9F-4724-AA2B-D893328B1034} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
+		{F4D99F42-C658-4079-846E-53CE827F41B2} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {82CDEC6F-9E00-4506-834F-C4B29556E773}

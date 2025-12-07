@@ -1,5 +1,6 @@
 ﻿using EventDbLite.Abstractions;
 using EventDbLite.Handlers;
+using EventDbLite.Handlers.Abstractions;
 
 namespace EventDbLite.Commands;
 
