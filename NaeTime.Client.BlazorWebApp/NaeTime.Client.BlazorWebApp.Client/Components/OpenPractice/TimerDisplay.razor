@@ -39,7 +39,7 @@
 
     private async Task UpdateOnTimer()
     {
-        using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(50));
+        using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(250));
         while (!_cancellationTokenSource.Token.IsCancellationRequested)
         {
 

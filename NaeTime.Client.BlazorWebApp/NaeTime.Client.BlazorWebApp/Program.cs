@@ -19,7 +19,6 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 });
 builder.Services.AddSpeechSynthesis();
-
 // Add services to the container.
 builder.Services.AddEventDbLite();
 builder.Services.AddEventDbLiteSignalRServer();
@@ -44,6 +43,14 @@ else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
 }
+// Add COOP / COEP for multithreading
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["Cross-Origin-Opener-Policy"] = "same-origin";
+    context.Response.Headers["Cross-Origin-Embedder-Policy"] = "require-corp";
+    await next();
+});
+
 app.UseAntiforgery();
 
 app.MapStaticAssets();
