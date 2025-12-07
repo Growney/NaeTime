@@ -5,6 +5,11 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
+      <Compile Remove="Handlers\**" />
+      <EmbeddedResource Remove="Handlers\**" />
+      <None Remove="Handlers\**" />
+    </ItemGroup>
+    <ItemGroup>
 	    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
 		    <_Parameter1>EventDbLite.Tests</_Parameter1>
 	    </AssemblyAttribute>
@@ -23,8 +28,5 @@
       <ProjectReference Include="..\EventDbLite.Reactions.Abstractions\EventDbLite.Reactions.Abstractions.csproj" />
       <ProjectReference Include="..\EventDbLite.Serialization\EventDbLite.Serialization.csproj" />
       <ProjectReference Include="..\NaeTime.SQLite\NaeTime.SQLite.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Handlers\" />
     </ItemGroup>
 </Project>

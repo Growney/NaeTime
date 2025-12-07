@@ -1,4 +1,6 @@
 ﻿using EventDbLite.Abstractions;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace EventDbLite.Reactions;
 
@@ -10,19 +12,22 @@ public class ReactionProvider<TEvent> : IAsyncEnumerable<ReactionEvent<TEvent>>
     private readonly IEnumerable<Type> _requirements;
     private readonly ILiveProjectionRepository _repository;
     private readonly string? _streamName;
+    private readonly ILogger<ReactionProvider<TEvent>> _logger;
 
-    public ReactionProvider(IEventStoreLite store, IEventSerializer eventSerializer, IEnumerable<Type> requirements, ILiveProjectionRepository repository, StreamPosition initialPosition, string? streamName)
+    public ReactionProvider(IEventStoreLite store, IEventSerializer eventSerializer, IEnumerable<Type> requirements, ILiveProjectionRepository repository, StreamPosition initialPosition, ILogger<ReactionProvider<TEvent>> logger, string? streamName)
     {
         _store = store;
         _eventSerializer = eventSerializer;
         _requirements = requirements;
         _repository = repository;
         _initialPosition = initialPosition;
+        _logger = logger;
         _streamName = streamName;
     }
 
-    private Task EnsureRequirementsAsync(long globalVersion, CancellationToken cancellationToken)
+    private async Task EnsureRequirementsAsync(long globalVersion, CancellationToken cancellationToken)
     {
+        Stopwatch stopwatch = Stopwatch.StartNew();
         List<Task> waitTasks = new();
         foreach (Type requirement in _requirements)
         {
@@ -32,7 +37,9 @@ public class ReactionProvider<TEvent> : IAsyncEnumerable<ReactionEvent<TEvent>>
                 waitTasks.Add(projection.WaitForVersion(globalVersion, cancellationToken));
             }
         }
-        return Task.WhenAll(waitTasks);
+        await Task.WhenAll(waitTasks);
+        stopwatch.Stop();
+        _logger.LogInformation("Waited {ElapsedMilliseconds}ms for requirements at global version {GlobalVersion}", stopwatch.ElapsedMilliseconds, globalVersion);
     }
 
     public async IAsyncEnumerator<ReactionEvent<TEvent>> GetAsyncEnumerator(CancellationToken cancellationToken = default)

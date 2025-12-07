@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace EventDbLite.Reactions.SignalR.Server;
 public class EventHubService : BackgroundService
@@ -22,8 +23,9 @@ public class EventHubService : BackgroundService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    private Task EnsureRequirementsAsync(long globalVersion, CancellationToken cancellationToken)
+    private async Task EnsureRequirementsAsync(long globalVersion, CancellationToken cancellationToken)
     {
+        Stopwatch stopwatch = Stopwatch.StartNew();
         List<Task> waitTasks = new();
         foreach (Type requirement in _requirements)
         {
@@ -33,7 +35,9 @@ public class EventHubService : BackgroundService
                 waitTasks.Add(projection.WaitForVersion(globalVersion, cancellationToken));
             }
         }
-        return Task.WhenAll(waitTasks);
+        await Task.WhenAll(waitTasks);
+        stopwatch.Stop();
+        _logger.LogInformation("Waited {ElapsedMilliseconds}ms for requirements at global version {GlobalVersion}", stopwatch.ElapsedMilliseconds, globalVersion);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
