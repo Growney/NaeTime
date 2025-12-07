@@ -29,18 +29,27 @@
     [Parameter]
     public TimeSpan? MinTime { get; set; }
 
-    private Timer? _timer;
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     protected override void OnInitialized()
     {
+        _ = UpdateOnTimer();
         base.OnInitialized();
+    }
 
-        _timer = new Timer(x =>
-                       this.InvokeAsync(StateHasChanged), null, 0, 50);
+    private async Task UpdateOnTimer()
+    {
+        using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(50));
+        while (!_cancellationTokenSource.Token.IsCancellationRequested)
+        {
+
+            await InvokeAsync(StateHasChanged);
+            await timer.WaitForNextTickAsync(_cancellationTokenSource.Token);
+        }
     }
 
     public void Dispose()
     {
-        _timer?.Dispose();
+        _cancellationTokenSource.Cancel();
     }
 }
