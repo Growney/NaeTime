@@ -159,6 +159,11 @@
 
         _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotTimingChangeOccured>(async x =>
         {
+            if(x.PilotId != _lane.PilotId)
+            {
+                return;
+            }
+
             await GetLastDetection();
             StateHasChanged();
         }, _cancellationTokenSource.Token);
