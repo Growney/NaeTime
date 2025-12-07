@@ -23,28 +23,22 @@ public class SignalRReactionProvider<TEvent> : IAsyncEnumerable<ReactionEvent<TE
 
     public async IAsyncEnumerator<ReactionEvent<TEvent>> GetAsyncEnumerator(CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("Starting SignalR Reaction Provider...");
-
         AwaitableQueue<ReactionEvent<TEvent>> eventQueue = new(0);
 
         string identifier = _eventSerializer.GetIdentifier(typeof(TEvent));
 
         Task EventReceived(StreamEvent streamEvent)
         {
-            Console.WriteLine("Received event from EventClient.");
             EventMetadata metadata = _eventSerializer.DeserializeMetadata(streamEvent.Data.Metadata);
             if (!metadata.Identifier.Equals(identifier))
             {
-                Console.WriteLine("Discarding event - identifier does not match.");
                 return Task.CompletedTask;
             }
             object? eventObject = _eventSerializer.DeserializeEvent(streamEvent.Data.Payload, typeof(TEvent));
             if (eventObject is TEvent tEvent)
             {
-                Console.WriteLine("Received event from EventClient.");
                 ReactionEvent<TEvent> reactionEvent = new(tEvent, new SubscriptionEvent(true, streamEvent));
                 eventQueue.Enqueue(reactionEvent);
-                Console.WriteLine("Enqueued reaction event.");
             }
 
             return Task.CompletedTask;
@@ -98,7 +92,6 @@ public class SignalRReactionProvider<TEvent> : IAsyncEnumerable<ReactionEvent<TE
         while (!cancellationToken.IsCancellationRequested)
         {
             ReactionEvent<TEvent>? reactionEvent = await eventQueue.WaitForDequeueAsync(cancellationToken);
-            Console.WriteLine("Received reaction event from SignalR.");
             if (reactionEvent == null)
             {
                 continue;
