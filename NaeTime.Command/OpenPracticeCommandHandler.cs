@@ -91,10 +91,10 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
         await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
     });
 
-    public Task ScheduleSession(Guid id, Guid trackId, string name) => ConcurrencyException.Retry(async () =>
+    public Task ScheduleSession(Guid id, Guid trackId, string name,TimeSpan? minimumLapTime, TimeSpan? maximumLapTime) => ConcurrencyException.Retry(async () =>
     {
         Query.Abstractions.Models.Track? track = await _trackQueryHandler.GetTrack(trackId).ConfigureAwait(false) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        OpenPracticeSession session = _repository.CreateNew<OpenPracticeSession>(() => new OpenPracticeSession(id, trackId, track.Detectors.Select(x => x.Id).ToArray(), name));
+        OpenPracticeSession session = _repository.CreateNew<OpenPracticeSession>(() => new OpenPracticeSession(id, trackId, track.Detectors.Select(x => x.Id).ToArray(), name, minimumLapTime, maximumLapTime));
         session.ConfigureDefaultLanes(track.MaxLanes);
 
         await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);

@@ -5,8 +5,6 @@ public class Track
     public string? Name { get; set; }
     public List<Detector> Detectors { get; set; } = [];
     public byte MaxLanes { get; set; }
-    public long? RedetectionDelay { get; set; }
-    public long? MaximumLapTimeMilliseconds { get; set; }
 
     public bool CanMoveDetectorUp(Guid timerId)
     {

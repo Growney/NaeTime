@@ -4,7 +4,7 @@ namespace NaeTime.Query.Abstractions;
 public interface IOpenPracticeQueryHandler
 {
     Task<OpenPracticeSession?> GetByIdAsync(Guid id);
-    Task<OpenPracticeSessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId, TimeSpan minimumLapTime, TimeSpan maximumLapTime);
-    Task<OpenPracticeSessionPilotTimingInfo> GetTimingInformation(Guid sessionId, Guid trackId,Guid pilotId, TimeSpan minimumLapTime, TimeSpan maximumLapTime);
+    Task<OpenPracticeSessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId);
+    Task<OpenPracticeSessionPilotTimingInfo> GetTimingInformation(Guid sessionId, Guid trackId,Guid pilotId);
     Task<OpenPracticeDetection?> GetPilotLastDetection(Guid sessionId, Guid trackId, Guid pilotId);
 }

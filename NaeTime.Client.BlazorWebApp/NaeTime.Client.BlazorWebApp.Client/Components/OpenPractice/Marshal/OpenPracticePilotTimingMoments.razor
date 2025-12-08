@@ -155,17 +155,8 @@
     private async Task Refresh()
     { 
         Console.WriteLine("Refreshing timing moments {PilotId}"); 
-        Query.Abstractions.Models.Track? track = await TrackQueryHandler.GetTrack(TrackId);
 
-        if (track == null)
-        {
-            return;
-        }
-
-        TimeSpan maximumLapTime = track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue;
-        TimeSpan minimumLapTime = track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero;
-
-        _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(SessionId, TrackId, PilotId, minimumLapTime, maximumLapTime);
+        _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(SessionId, TrackId, PilotId);
         StateHasChanged();
     }
 

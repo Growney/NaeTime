@@ -18,6 +18,9 @@
                         <MudBlazor.MudSelectItem Value="track.Id">@track.Name</MudBlazor.MudSelectItem>
                     }
                 </MudBlazor.MudSelect>
+
+                <MudTextField @bind-Value="_minimumLapTime" Label="Minimum Lap Time (ms)" Required="true"></MudTextField>
+                <MudTextField @bind-Value="_maximumLapTime" Label="Maximum Lap Time (ms)" Required="true"></MudTextField>
                 <MudBlazor.MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Primary" @onclick="Start">Start</MudBlazor.MudButton>
                 <MudBlazor.MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Secondary" @onclick="Create">Create</MudBlazor.MudButton>
             </MudForm>
@@ -35,7 +38,8 @@
     private NavigationManager NavigationManager { get; set; } = null!;
 
     private bool _isValid;
-
+    private long? _minimumLapTime;
+    private long? _maximumLapTime;
     private NaeTime.Client.Models.Session _session = new()
         {
             Id = Guid.NewGuid(),
@@ -57,10 +61,13 @@
             return;
         }
 
+        TimeSpan? minimumLapTime = _minimumLapTime.HasValue ? TimeSpan.FromMilliseconds(_minimumLapTime.Value) : null;
+        TimeSpan? maximumLapTime = _maximumLapTime.HasValue ? TimeSpan.FromMilliseconds(_maximumLapTime.Value) : null;
+
         switch (_session.SessionType)
         {
             case Models.SessionType.OpenPractice:
-                await OpenPracticeCommandHandler.ScheduleSession(_session.Id, _session.TrackId, _session.Name);
+                await OpenPracticeCommandHandler.ScheduleSession(_session.Id, _session.TrackId, _session.Name, minimumLapTime, maximumLapTime);
                 NavigationManager.NavigateTo("/session/list");
                 break;
         }
@@ -73,10 +80,13 @@
             return;
         }
 
+        TimeSpan? minimumLapTime = _minimumLapTime.HasValue ? TimeSpan.FromMilliseconds(_minimumLapTime.Value) : null;
+        TimeSpan? maximumLapTime = _maximumLapTime.HasValue ? TimeSpan.FromMilliseconds(_maximumLapTime.Value) : null;
+
         switch (_session.SessionType)
         {
             case Models.SessionType.OpenPractice:
-                await OpenPracticeCommandHandler.ScheduleSession(_session.Id, _session.TrackId, _session.Name);
+                await OpenPracticeCommandHandler.ScheduleSession(_session.Id, _session.TrackId, _session.Name, minimumLapTime, maximumLapTime);
                 await SessionsCommandHandler.ActivateOpenPracticeSession(_session.Id);
                 NavigationManager.NavigateTo($"/open-practice/{_session.Id}");
                 break;

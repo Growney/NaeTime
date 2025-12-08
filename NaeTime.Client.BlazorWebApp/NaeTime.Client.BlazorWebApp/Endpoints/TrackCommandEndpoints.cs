@@ -24,29 +24,5 @@ public static class TrackCommandEndpoints
             await handler.ReorderTrackDetectors(trackId, detectors).ConfigureAwait(false);
             return Results.NoContent();
         });
-
-        app.MapPost("/api/tracks/set-max-lap", async (ITrackCommandHandler handler, [FromQuery] Guid trackId, [FromQuery] long milliseconds) =>
-        {
-            await handler.SetMaximumLapTime(trackId, milliseconds).ConfigureAwait(false);
-            return Results.NoContent();
-        });
-
-        app.MapPost("/api/tracks/set-min-detection-delay", async (ITrackCommandHandler handler, [FromQuery] Guid trackId, [FromQuery] long milliseconds) =>
-        {
-            await handler.SetMinimumDetectionDelay(trackId, milliseconds).ConfigureAwait(false);
-            return Results.NoContent();
-        });
-
-        app.MapPost("/api/tracks/reset-max-lap", async (ITrackCommandHandler handler, [FromQuery] Guid trackId) =>
-        {
-            await handler.ResetMaximumLapTime(trackId).ConfigureAwait(false);
-            return Results.NoContent();
-        });
-
-        app.MapPost("/api/tracks/reset-min-detection-delay", async (ITrackCommandHandler handler, [FromQuery] Guid trackId) =>
-        {
-            await handler.ResetMinimumDetectionDelay(trackId).ConfigureAwait(false);
-            return Results.NoContent();
-        });
     }
 }

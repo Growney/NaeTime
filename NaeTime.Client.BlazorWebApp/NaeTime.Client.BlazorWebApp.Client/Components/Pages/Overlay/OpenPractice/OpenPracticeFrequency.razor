@@ -44,8 +44,8 @@ else
     private NaeTime.Query.Abstractions.Models.OpenPracticeLane? _laneDetails;
     private Guid _sessionId;
     private Guid _trackId;
-    private TimeSpan _minTime;
-    private TimeSpan _maxTime;
+    private TimeSpan? _minTime;
+    private TimeSpan? _maxTime;
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
@@ -90,16 +90,8 @@ else
             return;
         }
 
-        NaeTime.Query.Abstractions.Models.Track? track = await TrackQueryHandler.GetTrack(openPracticeSession.TrackId);
-
-        if (track == null)
-        {
-            _errorMessage = "Track details could not be found.";
-            return;
-        }
-
-        _minTime = track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero;
-        _maxTime = track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue;
+        _minTime = openPracticeSession.MinimumLapTime;
+        _maxTime = openPracticeSession.MaximumLapTime;
 
         _laneDetails = lane;
     }

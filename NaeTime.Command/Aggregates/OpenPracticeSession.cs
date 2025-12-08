@@ -41,13 +41,18 @@ public class OpenPracticeSession : AggregateRoot<Guid>
     private Guid[] _trackDetectors = [];
     private Guid _trackId;
     private TimeSpan? _redetectionDelay;
+
+    private TimeSpan? _minimumLapTime;
+    private TimeSpan? _maximumLapTime;
+    private readonly Dictionary<Guid, TimeSpan> _pilotMinimumLapTimes = [];
+    private readonly Dictionary<Guid, TimeSpan> _pilotMaximumLapTimes = [];
     public OpenPracticeSession()
     {
 
     }
-    public OpenPracticeSession(Guid id, Guid trackId, Guid[] trackDetectors, string name)
+    public OpenPracticeSession(Guid id, Guid trackId, Guid[] trackDetectors, string name,TimeSpan? minimumLapTime, TimeSpan? maximumLapTime)
     {
-        Raise(new OpenPracticeSessionScheduled(id, name, trackId, trackDetectors));
+        Raise(new OpenPracticeSessionScheduled(id, name, trackId, trackDetectors, minimumLapTime, maximumLapTime));
     }
 
     public void Rename(string name)
@@ -201,6 +206,124 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         }
         _packEndDetections.Remove(removed.PackEndId);
     }
+    private void When(OpenPracticeSessionMinimumLapTimeSet set)
+    {
+        _minimumLapTime = set.MinimumLapTime;
+    }
+    private void When(OpenPracticeSessionMinimumLapTimeReset reset)
+    {
+        _minimumLapTime = null;
+    }
+    private void When(OpenPracticeSessionMaximumLapTimeSet set)
+    {
+        _maximumLapTime = set.MaximumLapTime;
+    }
+    private void When(OpenPracticeSessionMaximumLapTimeReset reset)
+    {
+        _maximumLapTime = null;
+    }
+    private void When(OpenPracticeSessionPilotMinimumLapTimeSet set)
+    {
+        _pilotMinimumLapTimes[set.PilotId] = set.MinimumLapTime;
+    }
+    private void When(OpenPracticeSessionPilotMinimumLapTimeReset reset)
+    {
+        _pilotMinimumLapTimes.Remove(reset.PilotId);
+    }
+    private void When(OpenPracticeSessionPilotMaximumLapTimeSet set)
+    {
+        _pilotMaximumLapTimes[set.PilotId] = set.MaximumLapTime;
+    }
+    private void When(OpenPracticeSessionPilotMaximumLapTimeReset reset)
+    {
+        _pilotMaximumLapTimes.Remove(reset.PilotId);
+    }
+    public void ResetMinimumLapTime()
+    {
+        if(_minimumLapTime is null)
+        {
+            return;
+        }
+        Raise(new OpenPracticeSessionMinimumLapTimeReset(Id));
+    }
+    public void SetMinimumLapTime(TimeSpan minimumLapTime)
+    {
+        if(minimumLapTime <= TimeSpan.Zero)
+        {
+            throw new ValidationException("Minimum lap time must be greater than zero.");
+        }
+        if(minimumLapTime == _minimumLapTime)
+        {
+            return;
+        }
+        Raise(new OpenPracticeSessionMinimumLapTimeSet(Id, minimumLapTime));
+    }
+    public void ResetMaximumLapTime()
+    {
+        if (_maximumLapTime is null)
+        {
+            return;
+        }
+        Raise(new OpenPracticeSessionMaximumLapTimeReset(Id));
+    }
+    public void SetMaximumLapTime(TimeSpan maximumLapTime)
+    {
+        if (maximumLapTime <= TimeSpan.Zero)
+        {
+            throw new ValidationException("Maximum lap time must be greater than zero.");
+        }
+        if (maximumLapTime == _maximumLapTime)
+        {
+            return;
+        }
+        Raise(new OpenPracticeSessionMaximumLapTimeSet(Id, maximumLapTime));
+    }
+    public void ResetPilotMinimumLapTime(Guid pilotId)
+    {
+        if(!_pilotMinimumLapTimes.ContainsKey(pilotId))
+        {
+            return;
+        }
+        Raise(new OpenPracticeSessionPilotMinimumLapTimeReset(Id, pilotId));
+    }
+    public void SetPilotMinimumLapTime(Guid pilotId, TimeSpan minimumLapTime)
+    {
+        if (minimumLapTime <= TimeSpan.Zero)
+        {
+            throw new ValidationException("Minimum lap time must be greater than zero.");
+        }
+        if(_pilotMinimumLapTimes.TryGetValue(pilotId, out TimeSpan existingMinimumLapTime))
+        {
+            if(existingMinimumLapTime == minimumLapTime)
+            {
+                return;
+            }
+        }
+        Raise(new OpenPracticeSessionPilotMinimumLapTimeSet(Id, pilotId, minimumLapTime));
+    }
+    public void ResetPilotMaximumLapTime(Guid pilotId)
+    {
+        if (!_pilotMaximumLapTimes.ContainsKey(pilotId))
+        {
+            return;
+        }
+        Raise(new OpenPracticeSessionPilotMaximumLapTimeReset(Id, pilotId));
+    }
+    public void SetPilotMaximumLapTime(Guid pilotId, TimeSpan maximumLapTime)
+    {
+        if (maximumLapTime <= TimeSpan.Zero)
+        {
+            throw new ValidationException("Maximum lap time must be greater than zero.");
+        }
+        if (_pilotMaximumLapTimes.TryGetValue(pilotId, out TimeSpan existingMaximumLapTime))
+        {
+            if (existingMaximumLapTime == maximumLapTime)
+            {
+                return;
+            }
+        }
+        Raise(new OpenPracticeSessionPilotMaximumLapTimeSet(Id, pilotId, maximumLapTime));
+    }
     public void InsertPilotPackEndBeforeDetection(Guid detectionId)
     {
         _detections.TryGetValue(detectionId, out Detection? detection);
@@ -329,7 +452,7 @@ public class OpenPracticeSession : AggregateRoot<Guid>
         Raise(new OpenPracticePilotTimingChangeOccured(Id, _trackId, detection.PilotId));
         if (_pilotLastDetection.TryGetValue(detection.PilotId, out Detection? lastDetection))
         {
-            if (lastDetection.Id == detection.Id)
+            if (lastDetection.UtcTime < detection.UtcTime)
             {
                 Raise(new OpenPracticePilotLastDetectionRevised(Id, _trackId, detection.PilotId, detection.Id, detection.HardwareTime, detection.SoftwareTime, detection.UtcTime));
             }
@@ -388,20 +511,53 @@ public class OpenPracticeSession : AggregateRoot<Guid>
     }
     public OpenPracticeSession Clone(Guid newId, string newName)
     {
-        OpenPracticeSession clone = new(newId, _trackId, _trackDetectors, newName);
+        OpenPracticeSession clone = new(newId, _trackId, _trackDetectors, newName,_minimumLapTime,_maximumLapTime);
         
         Clone(clone);
         CloneLanes(clone);
+        CloneLapTimes(clone);
 
         return clone;
     }
     public OpenPracticeSession Clone(Guid newId, Guid newTrackId, string newName)
     {
-        OpenPracticeSession clone = new(newId, newTrackId, _trackDetectors, newName);
+        OpenPracticeSession clone = new(newId, newTrackId, _trackDetectors, newName,_minimumLapTime, _maximumLapTime);
         Clone(clone);
         CloneLanes(clone);
+        CloneLapTimes(clone);
 
         return clone;
+    }
+    private void CloneLanes(OpenPracticeSession clone)
+    {
+        foreach (KeyValuePair<byte, LaneInfo> laneInfo in _lanes)
+        {
+            if (laneInfo.Value.IsEnabled)
+            {
+                clone.EnableLane(laneInfo.Key);
+            }
+            else
+            {
+                clone.DisableLane(laneInfo.Key);
+            }
+            clone.TuneLaneVideoFrequency(laneInfo.Key, laneInfo.Value.Frequency.BandId, laneInfo.Value.Frequency.FrequencyInMHz);
+            //Its important to set the pilot lane last else you end up with double notifications for the pilot changing lanes (poor design init)
+            if (laneInfo.Value.PilotId.HasValue)
+            {
+                clone.SetLanePilot(laneInfo.Key, laneInfo.Value.PilotId.Value);
+            }
+        }
+    }
+    private void CloneLapTimes(OpenPracticeSession clone)
+    {
+        foreach(KeyValuePair<Guid, TimeSpan> pilotMinimumLapTime in _pilotMinimumLapTimes)
+        {
+            clone.SetPilotMinimumLapTime(pilotMinimumLapTime.Key, pilotMinimumLapTime.Value);
+        }
+        foreach (KeyValuePair<Guid, TimeSpan> pilotMaximumLapTime in _pilotMaximumLapTimes)
+        {
+            clone.SetPilotMaximumLapTime(pilotMaximumLapTime.Key, pilotMaximumLapTime.Value);
+        }
     }
     public void AssignHardwareDetection(Guid detectionId, Guid timerId, byte lane, ulong? hardwareTime, long softwareTime, DateTime utcTime)
     {
@@ -508,25 +664,5 @@ public class OpenPracticeSession : AggregateRoot<Guid>
             return endUtcTime - startUtcTime;
         }
         return CalculateDuration(endTimerId, endHardwareTime, endSoftwareTime, endUtcTime, startTimerId, startHardwareTime, startSoftwareTime, startUtcTime);
-    }
-    private void CloneLanes(OpenPracticeSession clone)
-    {
-        foreach (KeyValuePair<byte, LaneInfo> laneInfo in _lanes)
-        {
-            if (laneInfo.Value.IsEnabled)
-            {
-                clone.EnableLane(laneInfo.Key);
-            }
-            else
-            {
-                clone.DisableLane(laneInfo.Key);
-            }
-            clone.TuneLaneVideoFrequency(laneInfo.Key, laneInfo.Value.Frequency.BandId, laneInfo.Value.Frequency.FrequencyInMHz);
-            //Its important to set the pilot lane last else you end up with double notifications for the pilot changing lanes (poor design init)
-            if (laneInfo.Value.PilotId.HasValue)
-            {
-                clone.SetLanePilot(laneInfo.Key, laneInfo.Value.PilotId.Value);
-            }
-        }
     }
 }

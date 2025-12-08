@@ -7,9 +7,11 @@ public static class OpenPracticeCommandEndpoints
 {
     public static void MapOpenPracticeCommandHandlerEndpoints(this WebApplication app)
     {
-        app.MapPost("/api/openpractice/schedule", async (IOpenPracticeCommandHandler handler, [FromQuery] Guid id, [FromQuery] Guid trackId, [FromQuery] string name) =>
+        app.MapPost("/api/openpractice/schedule", async (IOpenPracticeCommandHandler handler, [FromQuery] Guid id, [FromQuery] Guid trackId, [FromQuery] string name, [FromQuery] double? minimumLapTimeInMs, [FromQuery] double? maximumLapTimeInMs) =>
         {
-            await handler.ScheduleSession(id, trackId, name).ConfigureAwait(false);
+            TimeSpan? minimumLapTime = minimumLapTimeInMs.HasValue ? TimeSpan.FromMilliseconds(minimumLapTimeInMs.Value) : null;
+            TimeSpan? maximumLapTime = maximumLapTimeInMs.HasValue ? TimeSpan.FromMilliseconds(maximumLapTimeInMs.Value) : null;
+            await handler.ScheduleSession(id, trackId, name, minimumLapTime, maximumLapTime).ConfigureAwait(false);
             return Results.NoContent();
         });
 

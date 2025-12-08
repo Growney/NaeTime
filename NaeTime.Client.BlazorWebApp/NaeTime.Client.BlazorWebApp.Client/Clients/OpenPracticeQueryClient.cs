@@ -30,11 +30,9 @@ public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
         return await GetFromJsonOrNullAsync<OpenPracticeSession>($"/api/openpractice/session/{id}").ConfigureAwait(false);
     }
 
-    public async Task<OpenPracticeSessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    public async Task<OpenPracticeSessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId)
     {
-        string min = Uri.EscapeDataString(minimumLapTime.ToString("c"));
-        string max = Uri.EscapeDataString(maximumLapTime.ToString("c"));
-        var url = $"/api/openpractice/session/{sessionId}/track/{trackId}/timing?minimumLapTime={min}&maximumLapTime={max}";
+        var url = $"/api/openpractice/session/{sessionId}/track/{trackId}/timing";
         var result = await GetFromJsonOrNullAsync<OpenPracticeSessionTimingInformation>(url).ConfigureAwait(false);
         if (result != null) return result;
 
@@ -47,11 +45,9 @@ public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
         );
     }
 
-    public async Task<OpenPracticeSessionPilotTimingInfo> GetTimingInformation(Guid sessionId, Guid trackId, Guid pilotId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    public async Task<OpenPracticeSessionPilotTimingInfo> GetTimingInformation(Guid sessionId, Guid trackId, Guid pilotId)
     {
-        string min = Uri.EscapeDataString(minimumLapTime.ToString("c"));
-        string max = Uri.EscapeDataString(maximumLapTime.ToString("c"));
-        var url = $"/api/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/timing?minimumLapTime={min}&maximumLapTime={max}";
+        var url = $"/api/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/timing";
         var result = await GetFromJsonOrNullAsync<OpenPracticeSessionPilotTimingInfo>(url).ConfigureAwait(false);
         if (result != null) return result;
 

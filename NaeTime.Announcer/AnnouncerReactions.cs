@@ -50,15 +50,7 @@ public class AnnouncerReactions : IAnnouncementStream
             return;
         }
 
-        Track? track = await _trackProjection.GetTrack(trackId);
-        if (track is null)
-        {
-            return;
-        }
-
-        OpenPracticeSessionTimingInformation? timingInfo = await _openPracticeProjection.GetTimingInformation(sessionId, trackId,
-            track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero,
-            track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue);
+        OpenPracticeSessionTimingInformation? timingInfo = await _openPracticeProjection.GetTimingInformation(sessionId, trackId);
 
         if (timingInfo is null)
         {

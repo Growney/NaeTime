@@ -14,16 +14,16 @@ public static class OpenPracticeQueryEndpoints
         });
 
         // GET /api/openpractice/session/{sessionId:guid}/track/{trackId:guid}/timing?minimumLapTime=00:00:01&maximumLapTime=00:01:00
-        app.MapGet("/api/openpractice/session/{sessionId:guid}/track/{trackId:guid}/timing", async (Guid sessionId, Guid trackId, TimeSpan minimumLapTime, TimeSpan maximumLapTime, IOpenPracticeQueryHandler handler) =>
+        app.MapGet("/api/openpractice/session/{sessionId:guid}/track/{trackId:guid}/timing", async (Guid sessionId, Guid trackId, IOpenPracticeQueryHandler handler) =>
         {
-            var info = await handler.GetTimingInformation(sessionId, trackId, minimumLapTime, maximumLapTime).ConfigureAwait(false);
+            var info = await handler.GetTimingInformation(sessionId, trackId).ConfigureAwait(false);
             return Results.Ok(info);
         });
 
         // GET /api/openpractice/session/{sessionId:guid}/track/{trackId:guid}/pilot/{pilotId:guid}/timing?minimumLapTime=00:00:01&maximumLapTime=00:01:00
-        app.MapGet("/api/openpractice/session/{sessionId:guid}/track/{trackId:guid}/pilot/{pilotId:guid}/timing", async (Guid sessionId, Guid trackId, Guid pilotId, TimeSpan minimumLapTime, TimeSpan maximumLapTime, IOpenPracticeQueryHandler handler) =>
+        app.MapGet("/api/openpractice/session/{sessionId:guid}/track/{trackId:guid}/pilot/{pilotId:guid}/timing", async (Guid sessionId, Guid trackId, Guid pilotId, IOpenPracticeQueryHandler handler) =>
         {
-            var info = await handler.GetTimingInformation(sessionId, trackId, pilotId, minimumLapTime, maximumLapTime).ConfigureAwait(false);
+            var info = await handler.GetTimingInformation(sessionId, trackId, pilotId).ConfigureAwait(false);
             return Results.Ok(info);
         });
 

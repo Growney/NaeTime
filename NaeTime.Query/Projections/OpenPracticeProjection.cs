@@ -25,6 +25,8 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         public IEnumerable<Guid> TrackDetectorIds { get; set; } = Enumerable.Empty<Guid>();
         public ConcurrentDictionary<Guid, bool> AttendingPilots { get; set; } = new();
         public ConcurrentBag<ListOpenPracticeSessionLane> Lanes { get; set; } = [];
+        public TimeSpan? MinimumLapTime { get; set; }
+        public TimeSpan? MaximumLapTime { get; set; }
 
         public override string ToString() => $"Session {Id}, Name: {Name}, TrackId: {TrackId}";
 
@@ -35,7 +37,7 @@ public class OpenPracticeProjection : IOpenPracticeProjection
     {
         if (_sessions.TryGetValue(sessionId, out var session))
         {
-            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, session.IsActive, session.AttendingPilots.Keys, session.TrackDetectorIds, [.. session.Lanes.OrderBy(x => x.Lane).Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
+            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, session.IsActive, session.MinimumLapTime, session.MaximumLapTime, session.AttendingPilots.Keys, session.TrackDetectorIds, [.. session.Lanes.OrderBy(x => x.Lane).Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
         }
         return null;
     }
@@ -60,7 +62,9 @@ public class OpenPracticeProjection : IOpenPracticeProjection
             Id = scheduled.SessionId,
             Name = scheduled.Name,
             TrackId = scheduled.TrackId,
-            TrackDetectorIds = scheduled.TrackDetectors
+            TrackDetectorIds = scheduled.TrackDetectors,
+            MinimumLapTime = scheduled.MinimumLapTime,
+            MaximumLapTime = scheduled.MaximumLapTime
         });
     }
     private void When(OpenPracticeSessionRenamed renamed)

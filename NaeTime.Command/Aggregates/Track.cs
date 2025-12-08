@@ -7,9 +7,6 @@ public class Track : AggregateRoot<Guid>
     private Dictionary<byte, Guid> _detectors = [];
     private Dictionary<Guid, byte> _detectorPositions = [];
 
-    private Dictionary<Guid, long> _pilotMaximumTimes = [];
-    private Dictionary<Guid, long> _pilotMinimumTimes = [];
-
     public Track()
     {
 
@@ -82,23 +79,6 @@ public class Track : AggregateRoot<Guid>
         {
             Raise(newEvent);
         }
-    }
-
-    public void SetMaximumLapTime(long maximumMilliseconds)
-    {
-        Raise(new TrackMaximumLapTimeConfigured(Id, maximumMilliseconds));
-    }
-    public void SetMinimumDetectionDelay(long minimumMilliseconds)
-    {
-        Raise(new TrackRedetectionDelayConfigured(Id, minimumMilliseconds));
-    }
-    public void ResetMaximumLapTime()
-    {
-        Raise(new TrackMaximumLapTimeReset(Id));
-    }
-    public void ResetMinimumDetectionDelay()
-    {
-        Raise(new TrackRedetectionDelayReset(Id));
     }
 }
 

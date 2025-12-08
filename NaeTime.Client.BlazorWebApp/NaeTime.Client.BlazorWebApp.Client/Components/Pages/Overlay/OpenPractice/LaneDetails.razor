@@ -57,10 +57,10 @@
     public NaeTime.Query.Abstractions.Models.OpenPracticeLane Details { get; set; } = null!;
     [Parameter]
     [EditorRequired]
-    public TimeSpan MaxTime { get; set; }
+    public TimeSpan? MaxTime { get; set; }
     [Parameter]
     [EditorRequired]
-    public TimeSpan MinTime { get; set; }
+    public TimeSpan? MinTime { get; set; }
 
     [Parameter]
     public IEnumerable<int> IncludedLapRecords { get; set; } = Enumerable.Empty<int>();
@@ -130,7 +130,7 @@
         {
             _pilot = await PilotQueryHandler.GetPilotById(Details.PilotId.Value);
 
-            _pilotTimingInfo = await OpenPracticeQueryHandler.GetTimingInformation(SessionId, TrackId, Details.PilotId.Value, MinTime, MaxTime);
+            _pilotTimingInfo = await OpenPracticeQueryHandler.GetTimingInformation(SessionId, TrackId, Details.PilotId.Value);
 
             _lastDetection = _pilotTimingInfo?.Detections.OrderByDescending(x => x.UtcTime).FirstOrDefault()?.UtcTime;
         }

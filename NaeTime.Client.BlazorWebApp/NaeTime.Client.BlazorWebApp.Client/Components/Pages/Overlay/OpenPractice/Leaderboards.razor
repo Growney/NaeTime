@@ -151,19 +151,8 @@ else
             return;
         }
 
-        NaeTime.Query.Abstractions.Models.Track? track = await TrackQueryHandler.GetTrack(openPracticeSession.TrackId);
-
-        if (track == null)
-        {
-            _errorMessage = "Track details could not be found.";
-            return;
-        }
-
-        TimeSpan minTime= track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero;
-        TimeSpan maxTime = track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue;
-
         _pilots = await PilotQueryHandler.GetAllPilots();
-        _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(openPracticeSession.Id,openPracticeSession.TrackId, minTime, maxTime);
+        _timingInfo = await OpenPracticeQueryHandler.GetTimingInformation(openPracticeSession.Id,openPracticeSession.TrackId);
     }
 
     protected override async Task OnInitializedAsync()

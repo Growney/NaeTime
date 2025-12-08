@@ -25,8 +25,6 @@ public static class TrackProjector
                 SupportedLanes = d.SupportedLanes
             }).ToList(),
             MaxLanes = track.MaxLanes,
-            RedetectionDelay = track.MinimumLapTimeMilliseconds,
-            MaximumLapTimeMilliseconds = track.MaximumLapTimeMilliseconds
         };
     }
 }

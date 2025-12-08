@@ -48,28 +48,4 @@ public class TrackCommandClient : ITrackCommandHandler
         }
         return PostNoContentAsync(sb.ToString());
     }
-
-    public Task SetMaximumLapTime(Guid trackId, long milliseconds)
-    {
-        var url = $"/api/tracks/set-max-lap?trackId={trackId}&milliseconds={milliseconds}";
-        return PostNoContentAsync(url);
-    }
-
-    public Task SetMinimumDetectionDelay(Guid trackId, long milliseconds)
-    {
-        var url = $"/api/tracks/set-min-detection-delay?trackId={trackId}&milliseconds={milliseconds}";
-        return PostNoContentAsync(url);
-    }
-
-    public Task ResetMaximumLapTime(Guid trackId)
-    {
-        var url = $"/api/tracks/reset-max-lap?trackId={trackId}";
-        return PostNoContentAsync(url);
-    }
-
-    public Task ResetMinimumDetectionDelay(Guid trackId)
-    {
-        var url = $"/api/tracks/reset-min-detection-delay?trackId={trackId}";
-        return PostNoContentAsync(url);
-    }
 }

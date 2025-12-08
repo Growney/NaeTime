@@ -42,32 +42,4 @@ public class TrackCommandHandler(IAggregateRepository repository, IHardwareQuery
         track.ReorderDetectors(detectors);
         await _repository.Save<Track, Guid>(track).ConfigureAwait(false);
     });
-
-    public Task SetMaximumLapTime(Guid trackId, long milliseconds) => ConcurrencyException.Retry(async () =>
-    {
-        Track? track = await _repository.Get<Track, Guid>(trackId).ConfigureAwait(false) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        track.SetMaximumLapTime(milliseconds);
-        await _repository.Save<Track, Guid>(track).ConfigureAwait(false);
-    });
-
-    public Task SetMinimumDetectionDelay(Guid trackId, long milliseconds) => ConcurrencyException.Retry(async () =>
-    {
-        Track? track = await _repository.Get<Track, Guid>(trackId).ConfigureAwait(false) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        track.SetMinimumDetectionDelay(milliseconds);
-        await _repository.Save<Track, Guid>(track).ConfigureAwait(false);
-    });
-
-    public Task ResetMaximumLapTime(Guid trackId) => ConcurrencyException.Retry(async () =>
-    {
-        Track? track = await _repository.Get<Track, Guid>(trackId).ConfigureAwait(false) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        track.ResetMaximumLapTime();
-        await _repository.Save<Track, Guid>(track).ConfigureAwait(false);
-    });
-
-    public Task ResetMinimumDetectionDelay(Guid trackId) => ConcurrencyException.Retry(async () =>
-    {
-        Track? track = await _repository.Get<Track, Guid>(trackId).ConfigureAwait(false) ?? throw new ArgumentException($"Track with ID {trackId} does not exist.", nameof(trackId));
-        track.ResetMinimumDetectionDelay();
-        await _repository.Save<Track, Guid>(track).ConfigureAwait(false);
-    });
 }

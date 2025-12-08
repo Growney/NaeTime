@@ -8,9 +8,6 @@
             <MudPaper Class="p-4">
                 <MudForm @bind-IsValid="_isValid">
                     <MudTextField @bind-Value="_track.Name" Label="Name" Required="true"></MudTextField>
-                    <MudTextField @bind-Value="_track.RedetectionDelay" Label="Redetection Delay (ms)" Required="true"></MudTextField>
-                    <MudTextField @bind-Value="_track.MaximumLapTimeMilliseconds" Label="Maximum Lap Time (ms)" Required="true"></MudTextField>
-
                     <MudSelect T="Guid" @bind-Value="_selectedDetector" Label="Add Detector">
                         @foreach (var detector in GetAvailableDetectors())
                         {
@@ -58,8 +55,6 @@
         _track = new NaeTime.Client.Models.Track()
         {
             Id = Guid.NewGuid(),
-            RedetectionDelay = 3000,
-            MaximumLapTimeMilliseconds = 50000,
         };
     }
     private IEnumerable<NaeTime.Query.Abstractions.Models.Detector> GetAvailableDetectors()
@@ -102,16 +97,6 @@
         }
 
         await TrackCommandHandler.DesignTrack(_track.Id, _track.Name, _track.Detectors.Select(x => x.Id).ToArray());
-
-        if(_track.RedetectionDelay != null)
-        {
-            await TrackCommandHandler.SetMinimumDetectionDelay(_track.Id, _track.RedetectionDelay.Value);
-
-        }
-        if(_track.MaximumLapTimeMilliseconds != null)
-        {
-            await TrackCommandHandler.SetMaximumLapTime(_track.Id, _track.MaximumLapTimeMilliseconds.Value);
-        }
         NavigationManager.NavigateTo($"/track/{_track.Id}");
     }
 }

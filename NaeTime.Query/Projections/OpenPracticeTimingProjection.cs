@@ -7,6 +7,11 @@ namespace NaeTime.Query.Projections;
 public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
 {
     private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, ConcurrentDictionary<Guid,OpenPracticeDetection>>>> _sessionTrackPilotDetections = new();
+    private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, OpenPracticeDetection>> _sessionPilotLastDetection = new();
+    private readonly ConcurrentDictionary<Guid, TimeSpan> _minimumLapTimes = new();
+    private readonly ConcurrentDictionary<Guid, TimeSpan> _maximumLapTimes = new();
+    private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, TimeSpan>> _sessionPilotMinimumLapTimes = new();
+    private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, TimeSpan>> _sessionPilotMaximumLap = new();
 
     private ConcurrentDictionary<Guid, ConcurrentDictionary<Guid,OpenPracticeDetection>> GetSessionDetections(Guid sessionId, Guid trackId)
     {
@@ -17,6 +22,18 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
     {
         ConcurrentDictionary<Guid, ConcurrentDictionary<Guid,OpenPracticeDetection>> trackRecords = GetSessionDetections(sessionId, trackId);
         return trackRecords.GetOrAdd(pilotId, _ => new());
+    }
+
+    private void When(OpenPracticePilotLastDetectionRevised revised)
+    {
+        ConcurrentDictionary<Guid, OpenPracticeDetection> sessionLastDetections = _sessionPilotLastDetection.GetOrAdd(revised.SessionId, _ => new());
+        ConcurrentDictionary<Guid, OpenPracticeDetection> detections = GetPilotDetections(revised.SessionId, revised.TrackId, revised.PilotId);
+        sessionLastDetections[revised.PilotId] = detections[revised.DetectionId];
+    }
+    private void When(OpenPracticePilotDowned downed)
+    {
+        ConcurrentDictionary<Guid, OpenPracticeDetection> sessionLastDetections = _sessionPilotLastDetection.GetOrAdd(downed.SessionId, _ => new());
+        sessionLastDetections.TryRemove(downed.PilotId, out _);
     }
 
     private void When(OpenPracticePilotDetectionTriggered triggered)
@@ -52,7 +69,6 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         }
         pilotDetections[validated.DetectionId] = pilotDetections[validated.DetectionId] with { IsValid = true };
     }
-
     private void When(OpenPracticePilotPackEndInsertedAfterDetection inserted)
     {
         ConcurrentDictionary<Guid, OpenPracticeDetection> pilotDetections = GetPilotDetections(inserted.SessionId, inserted.TrackId, inserted.PilotId);
@@ -88,6 +104,81 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
             pilotDetections[removed.DetectionId] = detection with { PackEndBefore = null };
         }
     }
+    private void When(OpenPracticeSessionScheduled scheduled)
+    {
+        if(scheduled.MinimumLapTime.HasValue)
+        {
+            _minimumLapTimes[scheduled.SessionId] = scheduled.MinimumLapTime.Value;
+        }
+        if(scheduled.MaximumLapTime.HasValue)
+        {
+            _maximumLapTimes[scheduled.SessionId] = scheduled.MaximumLapTime.Value;
+        }
+    }
+    private void When(OpenPracticeSessionMinimumLapTimeSet set)
+    {
+        _minimumLapTimes[set.SessionId] = set.MinimumLapTime;
+    }
+    private void When(OpenPracticeSessionMaximumLapTimeSet set)
+    {
+        _maximumLapTimes[set.SessionId] = set.MaximumLapTime;
+    }
+    private void When(OpenPracticeSessionMinimumLapTimeReset reset)
+    {
+        _minimumLapTimes.TryRemove(reset.SessionId, out _);
+    }
+    private void When(OpenPracticeSessionMaximumLapTimeReset reset)
+    {
+        _maximumLapTimes.TryRemove(reset.SessionId, out _);
+    }
+    private void When(OpenPracticeSessionPilotMinimumLapTimeReset pilotMinimumLapTimeReset)
+    {
+        ConcurrentDictionary<Guid, TimeSpan> pilotMinimumLapTimes = _sessionPilotMinimumLapTimes.GetOrAdd(pilotMinimumLapTimeReset.SessionId, _ => new());
+        pilotMinimumLapTimes.TryRemove(pilotMinimumLapTimeReset.PilotId, out _);
+    }
+    private void When(OpenPracticeSessionPilotMinimumLapTimeSet pilotMinimumLapTimeSet)
+    {
+        ConcurrentDictionary<Guid, TimeSpan> pilotMinimumLapTimes = _sessionPilotMinimumLapTimes.GetOrAdd(pilotMinimumLapTimeSet.SessionId, _ => new());
+        pilotMinimumLapTimes[pilotMinimumLapTimeSet.PilotId] = pilotMinimumLapTimeSet.MinimumLapTime;
+    }
+    private void When(OpenPracticeSessionPilotMaximumLapTimeReset pilotMaximumLapTimeReset)
+    {
+        ConcurrentDictionary<Guid, TimeSpan> pilotMaximumLapTimes = _sessionPilotMaximumLap.GetOrAdd(pilotMaximumLapTimeReset.SessionId, _ => new());
+        pilotMaximumLapTimes.TryRemove(pilotMaximumLapTimeReset.PilotId, out _);
+    }
+    private void When(OpenPracticeSessionPilotMaximumLapTimeSet pilotMaximumLapTimeSet)
+    {
+        ConcurrentDictionary<Guid, TimeSpan> pilotMaximumLapTimes = _sessionPilotMaximumLap.GetOrAdd(pilotMaximumLapTimeSet.SessionId, _ => new());
+        pilotMaximumLapTimes[pilotMaximumLapTimeSet.PilotId] = pilotMaximumLapTimeSet.MaximumLapTime;
+    }
+
+    private TimeSpan GetMinimumLapTime(Guid sessionId, Guid pilotId)
+    {
+        ConcurrentDictionary<Guid, TimeSpan> pilotMinimumLapTimes = _sessionPilotMinimumLapTimes.GetOrAdd(sessionId, _ => new());
+        if (pilotMinimumLapTimes.TryGetValue(pilotId, out TimeSpan pilotMinLapTime))
+        {
+            return pilotMinLapTime;
+        }
+        if (_minimumLapTimes.TryGetValue(sessionId, out TimeSpan sessionMinLapTime))
+        {
+            return sessionMinLapTime;
+        }
+        return TimeSpan.Zero;
+    }
+    private TimeSpan GetMaximumLapTime(Guid sessionId, Guid pilotId)
+    {
+        ConcurrentDictionary<Guid, TimeSpan> pilotMaximumLapTimes = _sessionPilotMaximumLap.GetOrAdd(sessionId, _ => new());
+        if (pilotMaximumLapTimes.TryGetValue(pilotId, out TimeSpan pilotMaxLapTime))
+        {
+            return pilotMaxLapTime;
+        }
+        if (_maximumLapTimes.TryGetValue(sessionId, out TimeSpan sessionMaxLapTime))
+        {
+            return sessionMaxLapTime;
+        }
+        return TimeSpan.FromMinutes(1); // Default maximum lap time
+    }
+
 
     private static TimeSpan CalculateDuration(Guid? startTimerId, ulong? startHardwareTime, long? startSoftwareTime, DateTime startUtcTime, Guid? endTimerId, ulong? endHardwareTime, long? endSoftwareTime, DateTime endUtcTime)
     {
@@ -108,12 +199,15 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         }
         return CalculateDuration(endTimerId, endHardwareTime, endSoftwareTime, endUtcTime, startTimerId, startHardwareTime, startSoftwareTime, startUtcTime);
     }
-    private static IEnumerable<OpenPracticeTimingMoment> GetTimingMoments(Guid sessionId, Guid trackId, Guid pilotId, IEnumerable<OpenPracticeDetection> pilotDetections, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    private IEnumerable<OpenPracticeTimingMoment> GetTimingMoments(Guid sessionId, Guid trackId, Guid pilotId, IEnumerable<OpenPracticeDetection> pilotDetections)
     {
         if (!pilotDetections.Any())
         {
             return Enumerable.Empty<OpenPracticeTimingMoment>();
         }
+
+        TimeSpan minimumLapTime = GetMinimumLapTime(sessionId, pilotId);
+        TimeSpan maximumLapTime = GetMaximumLapTime(sessionId, pilotId);
 
         IEnumerable<OpenPracticeDetection> orderedDetections = pilotDetections.OrderBy(d => d.UtcTime);
 
@@ -383,7 +477,7 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
         return sessionRecords.ToDictionary(kvp => kvp.Key, kvp => (IEnumerable<OpenPracticeLapRecord>)kvp.Value);
     }
 
-    public OpenPracticeSessionTimingInformation GetSessionTimingInfo(Guid sessionId, Guid trackId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    public OpenPracticeSessionTimingInformation GetSessionTimingInfo(Guid sessionId, Guid trackId)
     {
         ConcurrentDictionary<Guid, ConcurrentDictionary<Guid,OpenPracticeDetection>> trackPilotsDetections = GetSessionDetections(sessionId, trackId);
 
@@ -398,7 +492,7 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
 
             IDictionary<Guid,OpenPracticeDetection> pilotDetections = pilotEntry.Value;
             allDetections[pilotId] = pilotDetections;
-            IEnumerable<OpenPracticeTimingMoment> pilotMoments = GetTimingMoments(sessionId, trackId, pilotId, pilotDetections.Values, minimumLapTime, maximumLapTime);
+            IEnumerable<OpenPracticeTimingMoment> pilotMoments = GetTimingMoments(sessionId, trackId, pilotId, pilotDetections.Values);
             allMoments[pilotId] = pilotMoments;
             IEnumerable<IEnumerable<OpenPracticeLap>> pilotLapGroups = GetPilotSessionLapGroups(sessionId, trackId, pilotId, pilotDetections,pilotMoments);
             pilotLaps[pilotId] = pilotLapGroups;
@@ -409,10 +503,10 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
 
         return new OpenPracticeSessionTimingInformation(allMoments, allDetections, pilotLaps, allRecords, sessionRecords);
     }
-    public OpenPracticeSessionPilotTimingInfo GetSessionPilotTimingInfo(Guid sessionId, Guid trackId, Guid pilotId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    public OpenPracticeSessionPilotTimingInfo GetSessionPilotTimingInfo(Guid sessionId, Guid trackId, Guid pilotId)
     {
         IEnumerable<OpenPracticeDetection> detections = GetPilotDetections(sessionId, trackId, pilotId).Values;
-        IEnumerable<OpenPracticeTimingMoment> moments = GetTimingMoments(sessionId, trackId, pilotId, detections, minimumLapTime, maximumLapTime);
+        IEnumerable<OpenPracticeTimingMoment> moments = GetTimingMoments(sessionId, trackId, pilotId, detections);
         IDictionary<Guid,OpenPracticeDetection> pilotDetections = detections.ToDictionary(x=>x.Id);
         IEnumerable<IEnumerable<OpenPracticeLap>> pilotLaps = GetPilotSessionLapGroups(sessionId, trackId, pilotId, pilotDetections,moments);
         IDictionary<uint, OpenPracticeLapRecord> pilotRecords = GetPilotRecords(sessionId, trackId, pilotId, pilotLaps);
@@ -421,13 +515,19 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
     }
     public OpenPracticeDetection? GetLastPilotDetection(Guid sessionId, Guid trackId, Guid pilotId)
     {
-        IEnumerable<OpenPracticeDetection> detections = GetPilotDetections(sessionId, trackId, pilotId).Values;
-        OpenPracticeDetection? lastDetection = detections.OrderByDescending(d => d.UtcTime).FirstOrDefault();
-        return lastDetection;
+        if(!_sessionPilotLastDetection.TryGetValue(sessionId, out var pilotDetections))
+        {
+            return null;
+        }
+        if(!pilotDetections.TryGetValue(pilotId,out var detection))
+        {
+            return null;
+        }
+        return detection;
     }
-    public IEnumerable<OpenPracticeTimingMoment> GetPilotMoments(Guid sessionId, Guid trackId, Guid pilotId, TimeSpan minimumLapTime, TimeSpan maximumLapTime)
+    public IEnumerable<OpenPracticeTimingMoment> GetPilotMoments(Guid sessionId, Guid trackId, Guid pilotId)
     {
         IEnumerable<OpenPracticeDetection> detections = GetPilotDetections(sessionId, trackId, pilotId).Values;
-        return GetTimingMoments(sessionId, trackId, pilotId, detections, minimumLapTime, maximumLapTime);
+        return GetTimingMoments(sessionId, trackId, pilotId, detections);
     }
 }

@@ -19,9 +19,14 @@ public class OpenPracticeCommandClient : IOpenPracticeCommandHandler
         res.EnsureSuccessStatusCode();
     }
 
-    public Task ScheduleSession(Guid id, Guid trackId, string name)
+    public Task ScheduleSession(Guid id, Guid trackId, string name, TimeSpan? minimumLapTime, TimeSpan? maximumLapTime)
     {
         var url = $"/api/openpractice/schedule?id={id}&trackId={trackId}&name={Uri.EscapeDataString(name)}";
+        if(minimumLapTime.HasValue)
+            url += $"&minimumLapTimeInMs={minimumLapTime.Value.TotalMilliseconds.ToString(CultureInfo.InvariantCulture)}";
+        if(maximumLapTime.HasValue)
+            url += $"&maximumLapTimeInMs={maximumLapTime.Value.TotalMilliseconds.ToString(CultureInfo.InvariantCulture)}";
+
         return PostNoContentAsync(url);
     }
 

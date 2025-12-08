@@ -13,7 +13,7 @@
                     {
                         <div class="open-practice-lane-configuration-column">
                             <MudPaper Class=p-3>
-                                <NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.Marshal.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots MaxTime=_maximumLapTime MinTime=_minimumLapTime IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.Marshal.OpenPracticeLaneConfiguration>
+                                <NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.Marshal.OpenPracticeLaneConfiguration Session=_session LaneId=lane.Lane AllPilots=_pilots IsTuningEnabled=_isTuningEnabled></NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.Marshal.OpenPracticeLaneConfiguration>
                             </MudPaper>
                         </div>
                     }
@@ -55,9 +55,6 @@
     private Models.OpenPracticeSession? _session;
     private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> _pilots = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Pilot>();
 
-    private TimeSpan _minimumLapTime = TimeSpan.Zero;
-    private TimeSpan _maximumLapTime = TimeSpan.FromSeconds(30);
-
     private bool _isTuningEnabled = false;
     private bool _isActive = false;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
@@ -67,16 +64,6 @@
         _pilots = await PilotQueryHandler.GetAllPilots();
 
         _session = OpenPracticeSessionProjector.Project(await OpenPracticeQueryHandler.GetByIdAsync(Id));
-
-        if (_session != null)
-        {
-            NaeTime.Query.Abstractions.Models.Track? track = await TrackQueryHandler.GetTrack(_session.TrackId);
-            if(track != null)
-            {
-                _maximumLapTime = track.MaximumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value) : TimeSpan.MaxValue;
-                _minimumLapTime = track.MinimumLapTimeMilliseconds.HasValue ? TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value) : TimeSpan.Zero;
-            }
-        }
     }
     private string GetPilotName(Guid pilotId)
     {

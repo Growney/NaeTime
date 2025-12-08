@@ -8,9 +8,6 @@
             <MudPaper Class="p-4">
                 <MudForm>
                     <MudTextField T=string Value="_track.Name" ValueChanged=RenameTrack Label="Name" Required="true"></MudTextField>
-                    <MudNumericField T=long? Value=_track.RedetectionDelay ValueChanged=SetMinimumLapTime Label="Redetection Delay (ms)" Clearable=true></MudNumericField>
-                    <MudNumericField T=long? Value="_track.MaximumLapTimeMilliseconds" ValueChanged=SetMaximumLapTime Label="Maximum Lap Time (ms)" Required="true"></MudNumericField>
-
                     <MudSelect T="Guid" @bind-Value="_selectedDetector" Label="Add Detector">
                         @foreach (var detector in GetAvailableDetectors())
                         {
@@ -137,55 +134,5 @@
         }
         _track.Name = value;
         await TrackCommandHandler.RenameTrack(_track.Id, value);
-    }
-    private async Task SetMinimumLapTime(long? value)
-    {
-        if (_track == null)
-        {
-            return;
-        }
-        _track.RedetectionDelay = value;
-        if (value.HasValue)
-        {
-            await TrackCommandHandler.SetMinimumDetectionDelay(_track.Id, value.Value);
-        }
-        else
-        {
-            await TrackCommandHandler.ResetMinimumDetectionDelay(_track.Id);
-        }
-    }
-    private async Task SetMaximumLapTime(long? value)
-    {
-        if (_track == null)
-        {
-            return;
-        }
-        _track.MaximumLapTimeMilliseconds = value;
-        if (value.HasValue)
-        {
-            await TrackCommandHandler.SetMaximumLapTime(_track.Id, value.Value);
-        }
-        else
-        {
-            await TrackCommandHandler.ResetMaximumLapTime(_track.Id);
-        }
-    }
-    private async Task ResetMinimumLapTime()
-    {
-        if(_track == null)
-        {
-            return;
-        }
-        _track.RedetectionDelay = null;
-        await TrackCommandHandler.ResetMinimumDetectionDelay(_track.Id);
-    }
-    private async Task ResetMaximumLapTime()
-    {
-        if (_track == null)
-        {
-            return;
-        }
-        _track.MaximumLapTimeMilliseconds = null;
-        await TrackCommandHandler.ResetMaximumLapTime(_track.Id);
     }
 }

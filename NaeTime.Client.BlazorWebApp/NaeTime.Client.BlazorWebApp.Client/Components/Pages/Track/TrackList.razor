@@ -7,8 +7,6 @@
             <th>Name</th>
             <th>Detectors</th>
             <th>Lanes</th>
-            <th>Minimum Lap Time</th>
-            <th>Maximum Lap Time</th>
         </tr>
     </thead>
     <tbody>
@@ -18,22 +16,6 @@
                 <td>@track.Name</td>
                 <td><span class="badge badge-info">x @track.Detectors.Count()</span></td>
                 <td><span class="badge badge-info">x @track.MaxLanes</span></td>
-                @if(track.MinimumLapTimeMilliseconds.HasValue == false)
-                {
-                    <td>N/A</td>
-                }
-                else
-                {
-                    <td>@(TimeSpan.FromMilliseconds(track.MinimumLapTimeMilliseconds.Value))</td>
-                }
-                @if(track.MaximumLapTimeMilliseconds.HasValue == false)
-                {
-                    <td>N/A</td>
-                }
-                else
-                {
-                    <td>@(TimeSpan.FromMilliseconds(track.MaximumLapTimeMilliseconds.Value))</td>
-                }
             </tr>
         }
     </tbody>

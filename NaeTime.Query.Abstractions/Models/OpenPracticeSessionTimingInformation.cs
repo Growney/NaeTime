@@ -104,7 +104,7 @@ public record OpenPracticeSessionTimingInformation(
         {
             return TimeSpan.Zero;
         }
-        var lastLap = lapGroups.SelectMany(group => group.Select(lap => lap)).OrderBy(l => l.Duration).LastOrDefault();
+        var lastLap = lapGroups.SelectMany(group => group.Select(lap => lap)).OrderBy(l => l.EndDetection.UtcTime).LastOrDefault();
         if (lastLap == null)
         {
             return TimeSpan.Zero;
