@@ -153,7 +153,8 @@
         };
     }
     private async Task Refresh()
-    {
+    { 
+        Console.WriteLine("Refreshing timing moments {PilotId}"); 
         Query.Abstractions.Models.Track? track = await TrackQueryHandler.GetTrack(TrackId);
 
         if (track == null)

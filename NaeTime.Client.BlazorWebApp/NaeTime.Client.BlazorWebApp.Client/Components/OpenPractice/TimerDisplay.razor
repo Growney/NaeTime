@@ -37,12 +37,15 @@
         base.OnInitialized();
     }
 
+
+
     private async Task UpdateOnTimer()
     {
         using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(500));
+        DateTime? previousIteration = Start;
         while (!_cancellationTokenSource.Token.IsCancellationRequested)
         {
-
+            
             await InvokeAsync(StateHasChanged);
             await timer.WaitForNextTickAsync(_cancellationTokenSource.Token);
         }

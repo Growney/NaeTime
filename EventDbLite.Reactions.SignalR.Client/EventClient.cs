@@ -51,8 +51,9 @@ public class EventClient : IEventClient
 
         Connection.On<StreamEvent>("ReceiveEvent", async (streamEvent) =>
         {
+            Console.WriteLine($"Event received: {streamEvent.Data.Identifier}");
             IEnumerable<Task> eventTasks = _eventHandlers.Values.Select(handler => handler(streamEvent));
-            await Task.WhenAll(eventTasks);
+            _ = Task.WhenAll(eventTasks);
         });
     }
 

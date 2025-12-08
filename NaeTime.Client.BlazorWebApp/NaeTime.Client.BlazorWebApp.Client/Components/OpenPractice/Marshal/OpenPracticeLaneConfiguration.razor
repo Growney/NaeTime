@@ -85,7 +85,7 @@
     }
 </div>
 <div class="text-center" style="font-size: 2.5em; min-height:1.5em;">
-    <TimerDisplay Start="_pilotLastDetection" MaxTime=MaxTime MinTime=MinTime></TimerDisplay>
+    <OpenPracticePilotLastDetectionTimer SessionId="Session.Id" TrackId="Session.TrackId" PilotId="_lane.PilotId" MaxTime=MaxTime MinTime=MinTime></OpenPracticePilotLastDetectionTimer>
 </div>
 @foreach (Guid detectorId in _tuningTimers)
 {
@@ -119,26 +119,9 @@
     private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
     [Inject]
     private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
-    [Inject]
-    private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
-
-    private DateTime? _pilotLastDetection = null;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     private HashSet<Guid> _tuningTimers = new();
-
-    private async Task GetLastDetection()
-    {
-        if (_lane.PilotId.HasValue)
-        {
-            NaeTime.Query.Abstractions.Models.OpenPracticeDetection? lastDetection = await OpenPracticeQueryHandler.GetPilotLastDetection(Session.Id, Session.TrackId, _lane.PilotId.Value);
-            _pilotLastDetection = lastDetection?.UtcTime;
-        }
-        else
-        {
-            _pilotLastDetection = null;
-        }
-    }
 
     private void ToggleTuningTimer(Guid timerId)
     {
@@ -150,23 +133,6 @@
         {
             _tuningTimers.Add(timerId);
         }
-        StateHasChanged();
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await GetLastDetection();
-
-        _ = ReactionProviderFactory.On<NaeTime.Events.OpenPracticePilotTimingChangeOccured>(async x =>
-        {
-            if(x.PilotId != _lane.PilotId)
-            {
-                return;
-            }
-
-            await GetLastDetection();
-            StateHasChanged();
-        }, _cancellationTokenSource.Token);
     }
 
     private async Task TriggerDetection()
@@ -207,6 +173,9 @@
     }
     private async Task OnPilotSelectionChanged(Guid? pilotId)
     {
+        Console.WriteLine($"New PilotId: {pilotId}");
+        Console.WriteLine($"Setting lane: {pilotId}");
+        _lane.PilotId = pilotId;
         if (pilotId.HasValue)
         {
             await OpenPracticeCommandHandler.SetLanePilot(Session.Id, LaneId, pilotId.Value);
@@ -215,10 +184,6 @@
         {
             await OpenPracticeCommandHandler.ResetLanePilot(Session.Id, LaneId);
         }
-
-        _lane.PilotId = pilotId;
-
-        await GetLastDetection();
     }
     private string GetBandString(byte? bandId)
     {
@@ -264,7 +229,5 @@
 
         _lane.BandId = bandId;
         _lane.FrequencyInMHz = frequencyInMhz;
-
-        StateHasChanged();
     }
 }

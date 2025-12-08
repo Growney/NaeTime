@@ -104,6 +104,7 @@ public class SignalRReactionProvider<TEvent> : IAsyncEnumerable<ReactionEvent<TE
 
             if (reactionEvent != null)
             {
+                Console.WriteLine($"Triggering client event {reactionEvent.SubscriptionEvent.Event.Data.Identifier}");
                 yield return reactionEvent;
             }
         }

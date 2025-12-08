@@ -1,0 +1,93 @@
+﻿@using EventDbLite.Reactions.Abstractions
+@using NaeTime.Events
+
+@implements IDisposable
+<TimerDisplay Start="_start" MaxTime="MaxTime" MinTime="MinTime"></TimerDisplay>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public Guid SessionId { get; set; }
+
+
+    [Parameter]
+    [EditorRequired]
+    public Guid TrackId { get; set; }
+    [Parameter]
+    [EditorRequired]
+    public Guid? PilotId { get; set; }
+
+    [Parameter]
+    public TimeSpan? MaxTime { get; set; }
+    [Parameter]
+    public TimeSpan? MinTime { get; set; }
+
+
+    [Inject]
+    private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
+
+    private DateTime? _start;
+
+
+    [Inject]
+    private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
+
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+
+    // Remember last seen pilot to avoid duplicate work when parent re-renders
+    private Guid? _previousPilotId;
+
+    protected override void OnInitialized()
+    {
+        ReactionProviderFactory.On<OpenPracticePilotLastDetectionRevised>(async revision =>
+        {
+            Console.WriteLine("Revised event received");
+            if(revision.SessionId == SessionId &&
+               revision.TrackId == TrackId &&
+               revision.PilotId == PilotId)
+            {
+                _start = revision.UtcTime;
+            }
+            await InvokeAsync(()=>StateHasChanged());
+        },_cancellationTokenSource.Token);
+        ReactionProviderFactory.On<OpenPracticePilotDowned>(async downed =>
+        {
+            Console.WriteLine("Downed event received");
+            if (downed.SessionId == SessionId &&
+                downed.TrackId == TrackId &&
+                downed.PilotId == PilotId)
+            {
+                _start = null;
+            }
+            await InvokeAsync(() => StateHasChanged());
+        }, _cancellationTokenSource.Token);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Avoid duplicate fetches when the parent re-renders without an actual PilotId change
+        if (_previousPilotId == PilotId)
+        {
+            return;
+        }
+
+        _previousPilotId = PilotId;
+
+        Console.WriteLine($"PilotId: {PilotId}");
+        if (PilotId.HasValue)
+        {
+            NaeTime.Query.Abstractions.Models.OpenPracticeDetection? lastDetection = await OpenPracticeQueryHandler.GetPilotLastDetection(SessionId, TrackId, PilotId.Value);
+            _start = lastDetection?.UtcTime;
+        }
+        else
+        {
+            _start = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+    }
+
+}

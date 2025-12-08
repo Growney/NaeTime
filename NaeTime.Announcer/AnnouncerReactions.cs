@@ -37,6 +37,7 @@ public class AnnouncerReactions : IAnnouncementStream
             string? announcement = await _announcementQueue.WaitForDequeueAsync(cancellationToken);
             if (announcement != null)
             {
+                Console.WriteLine($"Announcement: {announcement}");
                 yield return announcement;
             }
         }

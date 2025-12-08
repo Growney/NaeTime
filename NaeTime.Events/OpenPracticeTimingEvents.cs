@@ -19,3 +19,6 @@ public record OpenPracticePilotPackEndInsertedAfterDetection(Guid DetectionId,Gu
 public record OpenPracticePilotPackEndInsertedBeforeDetection(Guid DetectionId,Guid PackEndId, Guid SessionId, Guid TrackId, Guid PilotId);
 public record OpenPracticePilotPackEndRemoved(Guid PackEndId,Guid DetectionId, Guid SessionId, Guid TrackId, Guid PilotId);
 public record OpenPracticePilotTimingChangeOccured(Guid SessionId, Guid TrackId, Guid PilotId);
+
+public record OpenPracticePilotLastDetectionRevised(Guid SessionId, Guid TrackId, Guid PilotId, Guid DetectionId, ulong? HardwareTime, long SoftwareTime, DateTime UtcTime);
+public record OpenPracticePilotDowned(Guid SessionId, Guid TrackId, Guid PilotId);

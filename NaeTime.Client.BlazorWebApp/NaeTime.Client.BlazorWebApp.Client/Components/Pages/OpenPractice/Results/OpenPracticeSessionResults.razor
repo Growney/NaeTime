@@ -41,7 +41,7 @@
                             }
                         }
                     </td>
-                    <td><NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.TimerDisplay MaxTime=_maximumLapTime MinTime=_minimumLapTime Start=GetLastDetectionIfApplicable(pilotId)></NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.TimerDisplay></td>
+                    <td><NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.OpenPracticePilotLastDetectionTimer SessionId="_session.Id" PilotId="pilotId" TrackId="_session.TrackId" MaxTime=_maximumLapTime MinTime=_minimumLapTime Start=GetLastDetectionIfApplicable(pilotId)></NaeTime.Client.BlazorWebApp.Client.Components.OpenPractice.OpenPracticePilotLastDetectionTimer></td>
                     <td>@_timingInformation.GetLapCount(pilotId)</td>
                     <td>@_timingInformation.GetLastLapDuration(pilotId).ToString("m\\:ss\\:fff")</td>
                     <td>

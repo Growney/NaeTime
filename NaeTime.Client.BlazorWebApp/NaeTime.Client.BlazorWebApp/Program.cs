@@ -29,7 +29,6 @@ builder.Services.AddNaeTimeEventReactions();
 builder.Services.AddImmersionRCHardware();
 
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
 WebApplication app = builder.Build();
@@ -57,7 +56,6 @@ app.MapStaticAssets();
 
 app.MapEventDbLiteService();
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(NaeTime.Client.BlazorWebApp.Client._Imports).Assembly);
 app.MapNaeTimeEndPoints();
