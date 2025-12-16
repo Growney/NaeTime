@@ -2,6 +2,7 @@
 using ImmersionRC.LapRF;
 using ImmersionRC.LapRF.Abstractions;
 using NaeTime.Command.Abstractions;
+using NaeTime.Events;
 using NaeTime.Hardware;
 using NaeTime.Hardware.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Abstractions;
@@ -16,7 +17,6 @@ internal class LapRFConnection : ILapRFConnection
     private readonly ISoftwareTimer _softwareTimer;
     private readonly IStreamEventWriter _writer;
     private readonly IImmersionRCLapRFCommandHandler _commandHandler;
-    private readonly IRssiChannel _rssiChannel;
     private readonly Guid _timerId;
 
     private readonly CancellationTokenSource _cancellationTokenSource;
@@ -25,19 +25,20 @@ internal class LapRFConnection : ILapRFConnection
     private readonly Task[] _runningTasks;
 
     private readonly string _detectionsStream;
+    private readonly string _rssiStream;
 
-    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol, IStreamEventWriter writer, IImmersionRCLapRFCommandHandler commandHandler, IRssiChannel rssiChannel)
+    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol, IStreamEventWriter writer, IImmersionRCLapRFCommandHandler commandHandler)
     {
         _timerId = timerId;
 
         _detectionsStream = $"ImmersionRC-LapRF-{_timerId}-Detections";
+        _rssiStream = $"ImmersionRC-LapRF-{_timerId}-Rssi";
 
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
         _communication = communication ?? throw new ArgumentNullException(nameof(communication));
         _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
         _writer = writer ?? throw new ArgumentNullException(nameof(writer));
         _commandHandler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
-        _rssiChannel = rssiChannel ?? throw new ArgumentNullException(nameof(rssiChannel));
 
         _cancellationTokenSource = new CancellationTokenSource();
 
@@ -115,7 +116,7 @@ internal class LapRFConnection : ILapRFConnection
 
                 ReceivedSignalStrengthIndicator status = nullableStatus.Value;
 
-                await _rssiChannel.WriteAsync(new RssiValue(_timerId, status.LaneId,status.Level,_softwareTimer.ElapsedMilliseconds,status.RealTimeClockTime)).ConfigureAwait(false);
+                await _writer.AppendToStream(_rssiStream, new RssiRecorded(_timerId, status.LaneId,status.Level,_softwareTimer.ElapsedMilliseconds,status.RealTimeClockTime));
 
             }
             catch

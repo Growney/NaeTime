@@ -1,4 +1,5 @@
-﻿@implements IAsyncDisposable
+﻿@using EventDbLite.Reactions.Abstractions
+@implements IAsyncDisposable
 
 <canvas id="@_chartId" style="width:100%; height: 200px"></canvas>
 
@@ -14,7 +15,7 @@
     private readonly CancellationTokenSource _source = new();
 
     [Inject]
-    private NaeTime.Hardware.Abstractions.IRssiChannel RssiChannel { get; set; } = null!;
+    private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = null!;
 
@@ -23,9 +24,22 @@
     protected override void OnInitialized()
     {
         _chartId = GetHashCode();
-        _ = ProcessStream();
 
-        base.OnInitialized();
+        ReactionProviderFactory.On<Events.RssiRecorded>(async rssi =>
+            {
+                if (_rssiSeries is null || _chart is null)
+                {
+                    return;
+                }
+                if (rssi.TimerId != TimerId || rssi.LaneId != LaneId)
+                {
+                    return;
+                }
+                if (_rssiSeries is not null)
+                {
+                    await JSRuntime.InvokeVoidAsync("addValueToLine", _rssiSeries, DateTime.Now, rssi.Rssi);
+                }
+            }, _source.Token);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -37,27 +51,6 @@
         }
 
         await base.OnAfterRenderAsync(firstRender);
-    }
-
-    private async Task ProcessStream()
-    {
-        await foreach (var rssi in RssiChannel.WithCancellation(_source.Token))
-        {
-            if(_rssiSeries is null || _chart is null)
-            {
-                continue;
-            }
-
-            if(rssi.TimerId != TimerId || rssi.LaneId != LaneId)
-            {
-                continue;
-            }
-
-            if (_rssiSeries is not null)
-            {
-                await JSRuntime.InvokeVoidAsync("addValueToLine", _rssiSeries, DateTime.Now, rssi.Rssi);
-            }
-        }
     }
 
     public async ValueTask DisposeAsync()
