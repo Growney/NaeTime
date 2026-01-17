@@ -103,6 +103,4 @@ class NodeConfiguration:
         return self._lane_configurations
     
 
-class Node:
-    def __init__(self):
         

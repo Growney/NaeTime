@@ -1,11 +1,12 @@
+import network
 import time
 import asyncio
-import commands
-from comms import RFM69NodeCommunication
+import commands as commands
 from devices.rssi import ADCReader
 from devices.rssi import PeakDetector
 from devices.rx5808 import Rx5808RegisterCommunication
 import machine
+import comms
 
 def frequency_to_delay_ms(frequency_hz):
     if frequency_hz <= 0:
@@ -49,7 +50,6 @@ async def command_loop():
                 print("Tune command received Lane: "+str(command.lane)+" Frequency: "+str(command.frequency_in_mhz))
                 if(command.lane < len(rx_modules) and command.lane >= 0 and rx_modules[command.lane].tune(command.frequency_in_mhz)):
                     print("Tune Successful")
-                    asyncio.create_task(sound_buzzer(((1,100),(0,100),(1,100))))
                     node_comms.send_ack_for_command(command)
                 else:
                     node_comms.send_error_for_command(command)
@@ -59,7 +59,6 @@ async def command_loop():
                 if(command.lane < len(peak_detectors) and command.lane >= 0):
                     peak_detectors[command.lane].entry_threshold = command.entry_threshold
                     print("Entry Threshold Set")
-                    asyncio.create_task(sound_buzzer(((1,100),(0,100),(1,100),(0,100),(1,100))))
                     node_comms.send_ack_for_command(command)
                 else:
                     node_comms.send_error_for_command(command)
@@ -68,7 +67,6 @@ async def command_loop():
                 if(command.lane < len(peak_detectors) and command.lane >= 0):
                     peak_detectors[command.lane].exit_threshold = command.exit_threshold
                     print("Exit Threshold Set")
-                    asyncio.create_task(sound_buzzer(((1,100),(0,100),(1,100),(0,100),(1,100))))
                     node_comms.send_ack_for_command(command)
                 else:
                     node_comms.send_error_for_command(command)
@@ -77,13 +75,11 @@ async def command_loop():
                 if(command.lane < len(lane_states) and command.lane >= 0):
                     lane_states[command.lane] = command.enabled == 1
                     print("Lane Enabled Set")
-                    asyncio.create_task(sound_buzzer(((1,100),(0,100),(1,100),(0,100),(1,100))))
                     node_comms.send_ack_for_command(command)
                 else:
                     node_comms.send_error_for_command(command)
             elif isinstance(command, commands.InitialiseNode):
                 print("Initialise Node Lane Count: "+str(command.lane_count)+" Enabled Lanes: "+str(command.enabled_lanes))
-                asyncio.create_task(sound_buzzer(((1,1000))))
                 for lane_index in range(len(command.lane_configurations)):
                     node_comms.send_status_for_command(command)
                     lane = command.lane_configurations[lane_index]
@@ -93,14 +89,11 @@ async def command_loop():
 
                     while not rx_modules[lane_index].tune(lane.frequency_in_mhz):
                         print("Tune Failed")
-                        asyncio.create_task(sound_buzzer(((1,200),(0,200),(1,200))))
                         await asyncio.sleep_ms(500)
                         node_comms.send_status_for_command(command)
                         
                     print("Tune Successful")                    
-                    asyncio.create_task(sound_buzzer(((1,100),(0,100),(1,100),(0,100),(1,100))))
                 node_comms.send_ack_for_command(command)
-                asyncio.create_task(sound_buzzer(((1,1000),(0,1000),(1,1000))))
 
             elif isinstance(command, commands.ConfigureNode):
                 print("Configure command received")
@@ -138,16 +131,6 @@ async def transmission_loop():
             await asyncio.sleep_ms(transmit_delay_ms)
         except Exception as e:
             print("transmit error: ",str(e))
-
-async def sound_buzzer(pattern):
-    global buzzer_pin
-    for step in pattern:
-
-        buzzer_pin.value(step[0])
-        await asyncio.sleep_ms(step[1])
-    
-    buzzer_pin.value(0)
-
 
 async def rssi_loop():
     print("starting rssi loop")
@@ -191,55 +174,65 @@ async def rssi_loop():
 
 async def init_device():
     print("Running startup")
-    await sound_buzzer([(1,500)]);
+
+    global radio
 
     rx_modules[0].tune(5658)
     rx_modules[0].tune(5695)
     rx_modules[0].tune(5732)
 
+    asyncio.create_task(radio.start_tcp_server())
     asyncio.create_task(transmission_loop())
     asyncio.create_task(rssi_loop())
 
-    await sound_buzzer([(1,200),(0,200),(1,200)]);
     await command_loop();
 
+lan=network.LAN(mdc=machine.Pin(31), mdio=machine.Pin(52),
+    phy_type=network.PHY_IP101, phy_addr=1, reset=machine.Pin(51),
+    ref_clk_mode=machine.Pin.IN, ref_clk=machine.Pin(50))
+lan.active(True)
 
+while(not lan.isconnected()):
+    time.sleep(1)
+    print("Waiting for LAN connection...")
+print("Lan Connected:",lan.ipconfig("addr4")[0])
 
-print("Initializing Devices")
-CS = 21
-RESET = 18
-DIO0 = 17
-SCK = 48
-MOSI = 38
-MISO = 47
-BUZZER = 14
-RADIO_FREQ_MHZ = 433.0
-
+radio = comms.TCPServerSocketRadio()
+node_comms = comms.NodeCommunication(radio)
 running = True
 node_id = 1
 transmit_delay_ms = 100 #10hz
 polling_delay_ms = 10 #100hz
 filter_cutoff_frequency = 50
 
-buzzer_pin = machine.Pin(BUZZER, machine.Pin.OUT)
-node_comms = RFM69NodeCommunication(CS, RESET, DIO0, SCK, MOSI, MISO, RADIO_FREQ_MHZ, "NaeTime")
+
+RECEIVER_SCLK_PIN = 15
+RECEIVER_MOSI_PIN = 3
+
+print("Initializing Devices")
 rssi_modules = [
-ADCReader(1, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(2, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(3, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(4, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(11, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(12, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(19, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(18, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(17, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(16, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(20, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(21, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(22, polling_delay_ms,filter_cutoff_frequency),
+ADCReader(23, polling_delay_ms,filter_cutoff_frequency),
 ]
 rx_modules = [
-    Rx5808RegisterCommunication(6,5,9),
-    Rx5808RegisterCommunication(6,5,8),
-    Rx5808RegisterCommunication(6,5,7),
-    Rx5808RegisterCommunication(6,5,10),
-    Rx5808RegisterCommunication(6,5,44),
-    Rx5808RegisterCommunication(6,5,43)
+    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,14),
+    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,6),
+    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,5),
+    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,4),
+    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,27),
+    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,32),
+    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,33),
+    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,26)
 ]
 peak_detectors = [
+    PeakDetector(40000,40000),
+    PeakDetector(40000,40000),
     PeakDetector(40000,40000),
     PeakDetector(40000,40000),
     PeakDetector(40000,40000),
@@ -261,5 +254,3 @@ for i in range(len(rx_modules)):
     lane_states.append(True)
 
 asyncio.run(init_device())
-
-

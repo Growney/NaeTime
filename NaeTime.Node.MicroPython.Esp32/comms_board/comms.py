@@ -1,7 +1,8 @@
-from machine import Pin, SPI
-from adafruit import RFM69
-import commands
+import commands as commands
 import struct
+from collections import deque 
+import uasyncio as asyncio
+import usocket as socket
 
 TUNE_LANE = 0x01
 CONFIGURE_NODE = 0x02
@@ -14,27 +15,84 @@ STATUS = 0xFD
 ERROR = 0xFE
 ACK = 0xFF
 
-class RF69NodeCommandHeader:
-    def __init__(self, command, crc, length, payload):
-        self._command = command
-        self._crc = crc
-        self._length = length
-        self._payload = payload
+class TCPServerSocketRadio:
+
+    def __init__(self, host='0.0.0.0', port=5005):
+        self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self._server_socket.bind((host, port))
+        self._server_socket.listen(1)
+        self._server_socket.setblocking(False)
+        
+        self.rx_received_event = asyncio.Event()
+        
+        self.rx_queue = deque([],100)
+        self.client_socket = None
+        print("TCP Server created on {}:{}".format(host, port))
+
+    async def start_tcp_server(self):
+        print("Starting TCP server...")
+        while True:
+            try:
+                client_socket, addr = self._server_socket.accept()
+                if self.client_socket is None:
+                    print("Client connected from:", addr)
+                    asyncio.create_task(self._handle_client(client_socket, addr))
+                else:
+                    print("Rejecting connection from {} - client already connected".format(addr))
+                    client_socket.close()
+            except OSError:
+                await asyncio.sleep_ms(100)
     
+    async def _handle_client(self, client_socket, client_addr):
+        print("Client handler started for:", client_addr)
+        client_socket.setblocking(False)
+        self.client_socket = client_socket
+        try:
+            while True:
+                try:
+                    data = client_socket.recv(1024)
+                    if data:
+                        self.rx_queue.append(data)
+                        self.rx_received_event.set()
+                    else:
+                        # Connection closed by client
+                        break
+                except OSError as e:
+                    # No data available (EAGAIN/EWOULDBLOCK)
+                    pass
+                await asyncio.sleep_ms(100)
+        finally:
+            print("Client disconnected:", client_addr)
+            self.client_socket = None
+            try:
+                client_socket.close()
+            except:
+                pass
+    
+    async def wait_for_rx(self):
+        if(len(self.rx_queue) == 0):
+            await self.rx_received_event.wait()
+            self.rx_received_event.clear()
 
-class RFM69NodeCommunication:
+        return self.rx_queue.popleft()
+        
+    def send(self, data):
+        if self.client_socket is not None:
+            try:
+                self.client_socket.send(data)
+            except OSError as e:
+                print("Failed to send to client:", e)
+                try:
+                    self.client_socket.close()
+                except:
+                    pass
+                self.client_socket = None
 
-    def __init__(self, chip_select_pin, reset_pin, dio0_pin, sck_pin, mosi_pin, miso_pin,frequency,sync_word):
-        self._chip_select_pin = Pin(chip_select_pin, Pin.OUT)
-        self._reset_pin = Pin(reset_pin, Pin.OUT)
-        self._dio0_pin = Pin(dio0_pin, Pin.IN)
-        self._spi = SPI(1, baudrate=1_000_000, polarity=0, phase=0, bits=8, firstbit= SPI.MSB, sck=Pin(sck_pin), mosi=Pin(mosi_pin), miso=Pin(miso_pin))
+class NodeCommunication:
 
-        self._radio = RFM69(self._spi, self._chip_select_pin, self._reset_pin, self._dio0_pin, frequency)
-        self._radio.sync_on = True
-        self._radio.sync_word = sync_word
-        self._radio.start()
-
+    def __init__(self, radio):
+        self._radio = radio
         self._crc = CRC16()
     
     async def wait_for_command(self):
@@ -118,8 +176,9 @@ class RFM69NodeCommunication:
         packet = struct.pack("<BHH", command_id, 0, len(payload))
         packet += payload
         crc = self._crc.calculate(packet)
-        packet = struct.pack("<BHH", command_id, crc, len(payload))
+        packet = struct.pack("<BBHH", 90, command_id, crc, len(payload))
         packet += payload
+        packet += struct.pack("<B", 91)
         self._radio.send(packet)
 
 class CRC16:
