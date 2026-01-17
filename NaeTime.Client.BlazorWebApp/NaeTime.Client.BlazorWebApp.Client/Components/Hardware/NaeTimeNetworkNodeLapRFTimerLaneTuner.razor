@@ -1,0 +1,54 @@
+﻿
+<NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart TimerId=TimerId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart>
+
+@if (_lane != null)
+{
+    <MudNumericField Label="Entry Threshold" T="ushort" Value="_lane.EntryThreshold.Requested ?? _lane.EntryThreshold.Confirmed ?? 800" ValueChanged="EntryThresholdChanged"></MudNumericField>
+    <MudNumericField Label="Exit Threshold" T="ushort" Value="_lane.ExitThreshold.Requested ?? _lane.ExitThreshold.Confirmed ?? 59" ValueChanged="ExitThresholdChanged"></MudNumericField>
+}
+
+@code {
+    [Parameter]
+    public Guid TimerId { get; set; }
+    [Parameter]
+    public byte LaneId { get; set; }
+
+    [Inject]
+    private NaeTime.Command.Abstractions.INaeTimeNodeCommandHandler NaeTimeNodeCommandHandler { get; set; } = null!;
+    [Inject]
+    private NaeTime.Query.Abstractions.IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+
+    private NaeTime.Query.Abstractions.Models.NaeTimeNodeLane? _lane;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        NaeTime.Query.Abstractions.Models.NaeTimeNodeLane? laneConfiguration = await HardwareQueryHandler.GetNaeTimeNodeLane(TimerId, LaneId);
+
+        _lane = laneConfiguration;
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task EntryThresholdChanged(ushort newThreshold)
+    {
+        if (_lane is null)
+        {
+            return;
+        }
+
+        await NaeTimeNodeCommandHandler.RequestLaneEntryThreshold(TimerId, LaneId, newThreshold);
+        _lane = _lane with { EntryThreshold = _lane.EntryThreshold with { Requested = newThreshold } };
+    }
+
+    private async Task ExitThresholdChanged(ushort newThreshold)
+    {
+        if (_lane is null)
+        {
+            return;
+        }
+        await NaeTimeNodeCommandHandler.RequestLaneExitThreshold(TimerId, LaneId, newThreshold);
+        _lane = _lane with { ExitThreshold = _lane.ExitThreshold with { Requested = newThreshold } };
+    }
+}

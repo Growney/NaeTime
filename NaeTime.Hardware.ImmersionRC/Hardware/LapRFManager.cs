@@ -33,7 +33,7 @@ internal class LapRFManager : BackgroundService
         {
             ILapRFConnection connection = device switch
             {
-                NaeTime.Query.Abstractions.Models.Ethernet8ChannelImmersionRCLapRF ethernetDevice => _connectionFactory.CreateEthernetConnection(ethernetDevice.Id, ethernetDevice.IPAddress, ethernetDevice.Port),
+                NaeTime.Query.Abstractions.Models.Ethernet8ChannelImmersionRCLapRF ethernetDevice => _connectionFactory.CreateEthernetConnection(ethernetDevice.Id, System.Net.IPAddress.Parse(ethernetDevice.IPAddress), ethernetDevice.Port),
                 _ => throw new NotSupportedException($"LapRF device type {device.GetType().FullName} is not supported.")
             };
 

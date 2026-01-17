@@ -1,11 +1,16 @@
-﻿using NaeTime.Hardware.Abstractions;
+﻿using EventDbLite.Abstractions;
+using NaeTime.Command.Abstractions;
+using NaeTime.Events;
+using NaeTime.Hardware.Abstractions;
 using NaeTime.Hardware.Node.Esp32.Abstractions;
 namespace NaeTime.Hardware.Node.Esp32;
-internal class NodeConnection
+internal class NodeConnection : INodeConnection
 {
     private readonly INodeCommunication _communication;
     private readonly INodeProtocol _protocol;
     private readonly ISoftwareTimer _softwareTimer;
+    private readonly IStreamEventWriter _writer;
+    private readonly INaeTimeNodeCommandHandler _commandHandler;
     private readonly Guid _timerId;
 
     private readonly CancellationTokenSource _cancellationTokenSource;
@@ -13,12 +18,21 @@ internal class NodeConnection
 
     private readonly Task[] _runningTasks;
 
-    public NodeConnection(Guid timerId, ISoftwareTimer softwareTimer, INodeCommunication communication, INodeProtocol protocol)
+    private readonly string _detectionsStream;
+    private readonly string _rssiStream;
+
+    public NodeConnection(Guid timerId, ISoftwareTimer softwareTimer, INodeCommunication communication, INodeProtocol protocol, IStreamEventWriter writer, INaeTimeNodeCommandHandler commandHandler)
     {
         _timerId = timerId;
+
+        _detectionsStream = $"NaeTime-Node-{_timerId}-Detections";
+        _rssiStream = $"NaeTime-Node-{_timerId}-Rssi";
+
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
         _communication = communication ?? throw new ArgumentNullException(nameof(communication));
         _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
+        _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+        _commandHandler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
 
         _cancellationTokenSource = new CancellationTokenSource();
 
@@ -35,10 +49,10 @@ internal class NodeConnection
             {
                 await _communication.ConnectAsync(token).ConfigureAwait(false);
                 IsConnected = true;
+                await _commandHandler.MarkAsConnected(_timerId).ConfigureAwait(false);
 
                 //We must start the run task before we dispatch the connection established as data may be requested when the connection is established
                 System.Runtime.CompilerServices.ConfiguredTaskAwaitable runTask = _protocol.RunAsync(token).ConfigureAwait(false);
-
 
                 await runTask;
             }
@@ -49,6 +63,7 @@ internal class NodeConnection
 
             if (IsConnected)
             {
+                await _commandHandler.MarkAsDisconnected(_timerId).ConfigureAwait(false);
                 IsConnected = false;
             }
 
@@ -71,7 +86,7 @@ internal class NodeConnection
 
                 ReceivedSignalStrengthIndicator status = rssi.Value;
 
-
+                await _writer.AppendToStream(_rssiStream, new RssiRecorded(_timerId, status.Lane, status.Level, _softwareTimer.ElapsedMilliseconds, status.RealTimeClockTime));
             }
             catch
             {
@@ -92,6 +107,8 @@ internal class NodeConnection
                     continue;
                 }
                 Pass passingRecord = nullablePassingRecord.Value;
+
+                await _writer.AppendToStream(_detectionsStream, new NaeTime.Events.HardwareDetectionOccured(Guid.NewGuid(), _timerId, passingRecord.Lane, passingRecord.Time, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
             }
             catch
             {

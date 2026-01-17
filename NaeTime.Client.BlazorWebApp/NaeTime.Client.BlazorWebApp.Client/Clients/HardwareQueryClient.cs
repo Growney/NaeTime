@@ -1,6 +1,6 @@
-﻿using System.Net.Http.Json;
-using NaeTime.Query.Abstractions;
+﻿using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
+using System.Net.Http.Json;
 
 namespace NaeTime.Client.BlazorWebApp.Client.Clients;
 
@@ -51,6 +51,10 @@ public class HardwareQueryClient : IHardwareQueryHandler
     {
         return await GetFromJsonOrNullAsync<ImmersionRCLapRFLane>($"/api/hardware/immersionrclaprflane/{timerId}/{laneId}").ConfigureAwait(false);
     }
+    public async Task<NetworkNaeTimeNode?> GetNetworkNaeTimeNode(Guid id)
+    {
+        return await GetFromJsonOrNullAsync<NetworkNaeTimeNode>($"/api/hardware/networknaetimenode/{id}").ConfigureAwait(false);
+    }
 
     public async Task<IEnumerable<ImmersionRCLapRF>> GetAllImmersionRCLapRFs()
     {
@@ -62,6 +66,29 @@ public class HardwareQueryClient : IHardwareQueryHandler
     {
         var result = await GetFromJsonOrNullAsync<IEnumerable<DesiredImmersionRCLapRFLane>>($"/api/hardware/immersionrclaprf/active/{timerId}").ConfigureAwait(false);
         return result ?? Enumerable.Empty<DesiredImmersionRCLapRFLane>();
+    }
+
+    public async Task<NaeTimeNodeLane?> GetNaeTimeNodeLane(Guid timerId, byte laneId)
+    {
+        return await GetFromJsonOrNullAsync<NaeTimeNodeLane>($"/api/hardware/naetimenode/{timerId}/lane/{laneId}").ConfigureAwait(false);
+    }
+
+    public async Task<IEnumerable<NaeTimeNode>> GetAllNaeTimeNodes()
+    {
+        var result = await GetFromJsonOrNullAsync<IEnumerable<NaeTimeNode>>("/api/hardware/naetimenode/all").ConfigureAwait(false);
+        return result ?? Enumerable.Empty<NaeTimeNode>();
+    }
+
+    public async Task<IEnumerable<NetworkNaeTimeNode>> GetAllNetworkNaeTimeNodes()
+    {
+        var result = await GetFromJsonOrNullAsync<IEnumerable<NetworkNaeTimeNode>>("/api/hardware/networknaetimenode/all").ConfigureAwait(false);
+        return result ?? Enumerable.Empty<NetworkNaeTimeNode>();
+    }
+
+    public async Task<IEnumerable<DesiredNaeTimeNodeLane>> GetActiveNaeTimeNodeLanesConfiguration(Guid timerId)
+    {
+        var result = await GetFromJsonOrNullAsync<IEnumerable<DesiredNaeTimeNodeLane>>($"/api/hardware/naetimenode/active/{timerId}").ConfigureAwait(false);
+        return result ?? Enumerable.Empty<DesiredNaeTimeNodeLane>();
     }
 
     public async Task<TimerDetails> GetDetails(Guid timerId)

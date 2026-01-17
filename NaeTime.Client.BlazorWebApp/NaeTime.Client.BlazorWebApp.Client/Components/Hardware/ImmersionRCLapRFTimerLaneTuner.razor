@@ -18,8 +18,9 @@
     [Inject]
     private NaeTime.Query.Abstractions.IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
 
-
     private NaeTime.Query.Abstractions.Models.ImmersionRCLapRFLane? _lane;
+
+
 
     protected override async Task OnInitializedAsync()
     {

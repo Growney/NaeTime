@@ -6,4 +6,5 @@ public enum DetectorType
 
     NaeTime = 0b0000_0001_0000_0000,
     NaeTimeSerial = 0b0000_0010_0000_0000 | NaeTime,
+    NaeTimeEthernet = 0b0000_0100_0000_0000 | NaeTime,
 }

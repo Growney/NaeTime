@@ -52,6 +52,38 @@ public static class HardwareQueryEndpoints
             return rf is null ? Results.NotFound() : Results.Ok(rf);
         });
 
+        app.MapGet("/api/hardware/networknaetimenode/{id:guid}", async (Guid id, IHardwareQueryHandler handler) =>
+        {
+            var node = await handler.GetNetworkNaeTimeNode(id).ConfigureAwait(false);
+            return node is null ? Results.NotFound() : Results.Ok(node);
+        });
+
+        // GET api/hardware/naetimenode/all
+        app.MapGet("/api/hardware/naetimenode/all", async (IHardwareQueryHandler handler) =>
+        {
+            var nodes = await handler.GetAllNaeTimeNodes().ConfigureAwait(false);
+            return Results.Ok(nodes);
+        });
+
+        // GET api/hardware/naetimenode/{timerId}/lane/{laneId}
+        app.MapGet("/api/hardware/naetimenode/{timerId:guid}/lane/{laneId:int}", async (Guid timerId, int laneId, IHardwareQueryHandler handler) =>
+        {
+            if (laneId < byte.MinValue || laneId > byte.MaxValue)
+            {
+                return Results.BadRequest($"laneId must be between {byte.MinValue} and {byte.MaxValue}.");
+            }
+
+            var lane = await handler.GetNaeTimeNodeLane(timerId, (byte)laneId).ConfigureAwait(false);
+            return lane is null ? Results.NotFound() : Results.Ok(lane);
+        });
+
+        // GET api/hardware/naetimenode/active/{timerId}
+        app.MapGet("/api/hardware/naetimenode/active/{timerId:guid}", async (Guid timerId, IHardwareQueryHandler handler) =>
+        {
+            var config = await handler.GetActiveNaeTimeNodeLanesConfiguration(timerId).ConfigureAwait(false);
+            return Results.Ok(config);
+        });
+
         // GET api/hardware/immersionrclaprflane/{timerId}/{laneId}
         app.MapGet("/api/hardware/immersionrclaprflane/{timerId:guid}/{laneId:int}", async (Guid timerId, int laneId, IHardwareQueryHandler handler) =>
         {

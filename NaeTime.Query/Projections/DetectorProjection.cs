@@ -9,20 +9,9 @@ public class DetectorProjection : IDetectorProjection
 {
     private readonly ConcurrentDictionary<Guid, Detector> _detectors = new();
 
-    private void When(NaeTimeNodeSerialEsp32NodeConfigured e)
+    private void When(NaeTimeNodeSerialEsp32NodeRegistered e)
     {
         _detectors[e.TimerId] = new Detector(e.TimerId, e.Name, DetectorType.NaeTimeSerial, e.Lanes);
-    }
-
-    private void When(NaeTimeNodeTimerConnected e)
-    {
-        if (_detectors.TryGetValue(e.TimerId, out var detector))
-            _detectors[e.TimerId] = detector with { };
-    }
-
-    private void When(NaeTimeNodeTimerDisconnected e)
-    {
-        // Optionally handle disconnection if needed
     }
 
     private void When(ImmersionRCLapRFNetworkDeviceRegistered e)
@@ -31,6 +20,17 @@ public class DetectorProjection : IDetectorProjection
     }
 
     private void When(ImmersionRCLapRFRenamed e)
+    {
+        if (_detectors.TryGetValue(e.TimerId, out var detector))
+            _detectors[e.TimerId] = detector with { Name = e.Name };
+    }
+
+    private void When(NaeTimeNodeNetworkDeviceRegistered e)
+    {
+        _detectors[e.TimerId] = new Detector(e.TimerId, e.Name, DetectorType.NaeTimeEthernet, e.Lanes);
+    }
+
+    private void When(NaeTimeNodeRenamed e)
     {
         if (_detectors.TryGetValue(e.TimerId, out var detector))
             _detectors[e.TimerId] = detector with { Name = e.Name };

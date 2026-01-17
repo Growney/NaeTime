@@ -1,0 +1,92 @@
+﻿@page "/hardware/naetimenode/network/{id:guid}"
+
+@if(_naeTimeNode != null)
+{
+
+    <MudGrid Justify=Justify.Center>
+        <MudItem xs=3>
+            <MudIconButton Icon=@Icons.Material.Filled.ArrowLeft Href="/hardware/list"></MudIconButton>
+            <MudPaper Class="p-4">
+                <MudForm @bind-IsValid="_isValid">
+                    <MudTextField T=string Value="_naeTimeNode.Name" ValueChanged=NameChanged Label="Name" Required="true"></MudTextField>
+                    <MudTextField T=string Value="_naeTimeNode.IPAddress" ValueChanged=IPAddressChanged Label="IP Address" Required="true"></MudTextField>
+                    <MudNumericField T=ushort Value="_naeTimeNode.Port" ValueChanged=PortChanged Label="Port" Required="true" Min="1" Max="65535"></MudNumericField>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [Inject]
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+    [Inject]
+    private INaeTimeNodeCommandHandler NaeTimeNodeCommandHandler { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private NaeTime.Client.Models.EthernetNaeTimeNode? _naeTimeNode;
+
+    private bool _isValid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _naeTimeNode = NaeTimeNodeProjector.Project(await HardwareQueryHandler.GetNetworkNaeTimeNode(Id));
+        if (_naeTimeNode == null)
+        {
+            NavigationManager.NavigateTo("/hardware/list");
+        }
+    }
+    private async Task NameChanged(string name)
+    {
+        if (_naeTimeNode == null)
+        {
+            return;
+        }
+        if(string.IsNullOrEmpty(name))
+        {
+            return;
+        }
+        await NaeTimeNodeCommandHandler.RenameDevice(_naeTimeNode.Id, name);
+        _naeTimeNode.Name = name;
+    }
+    private async Task IPAddressChanged(string? ipAddress)
+    {
+        if (_naeTimeNode == null)
+        {
+            return;
+        }
+
+        if(!System.Net.IPAddress.TryParse(ipAddress, out var address))
+        {
+            return;
+        }
+
+        await NaeTimeNodeCommandHandler.ReconfigureNetworkDevice(_naeTimeNode.Id, address, _naeTimeNode.Port);
+        _naeTimeNode.IPAddress = ipAddress;
+    }
+    private async Task PortChanged(ushort port)
+    {
+        if (_naeTimeNode == null)
+        {
+            return;
+        }
+
+        if (port < 1 || port > 65535)
+        {
+            return;
+        }
+
+        if (!System.Net.IPAddress.TryParse(_naeTimeNode.IPAddress, out var address))
+        {
+            return;
+        }
+
+        await NaeTimeNodeCommandHandler.ReconfigureNetworkDevice(_naeTimeNode.Id, address, port);
+        _naeTimeNode.Port = port;
+    }
+}

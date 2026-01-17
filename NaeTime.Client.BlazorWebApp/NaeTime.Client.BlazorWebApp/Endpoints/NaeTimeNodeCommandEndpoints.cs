@@ -9,13 +9,13 @@ public static class NaeTimeNodeCommandEndpoints
     {
         app.MapPost("/api/node/configure-serial-esp32", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] string name, [FromQuery] string port, [FromQuery] int lanes) =>
         {
-            await handler.ConfigureSerialEsp32Node(id, name, port, (byte)lanes).ConfigureAwait(false);
+            await handler.RegisterSerialEsp32Node(id, name, port, (byte)lanes).ConfigureAwait(false);
             return Results.NoContent();
         });
 
         app.MapPost("/api/node/reconfigure-serial", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] string port) =>
         {
-            await handler.ReconfigureSerialNode(id, port).ConfigureAwait(false);
+            await handler.ChangeSerialEsp32Configuration(id, port).ConfigureAwait(false);
             return Results.NoContent();
         });
 
@@ -27,25 +27,25 @@ public static class NaeTimeNodeCommandEndpoints
 
         app.MapPost("/api/node/request-enable-lane", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane) =>
         {
-            await handler.RequestEnableLane(id, (byte)lane).ConfigureAwait(false);
+            await handler.RequestLaneStatus(id, (byte)lane, true).ConfigureAwait(false);
             return Results.NoContent();
         });
 
         app.MapPost("/api/node/request-disable-lane", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane) =>
         {
-            await handler.RequestDisableLane(id, (byte)lane).ConfigureAwait(false);
+            await handler.RequestLaneStatus(id, (byte)lane, false).ConfigureAwait(false);
             return Results.NoContent();
         });
 
         app.MapPost("/api/node/confirm-enabled", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane) =>
         {
-            await handler.ConfirmLaneEnabled(id, (byte)lane).ConfigureAwait(false);
+            await handler.ConfirmLaneStatus(id, (byte)lane, true).ConfigureAwait(false);
             return Results.NoContent();
         });
 
         app.MapPost("/api/node/confirm-disabled", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane) =>
         {
-            await handler.ConfirmLaneDisabled(id, (byte)lane).ConfigureAwait(false);
+            await handler.ConfirmLaneStatus(id, (byte)lane, false).ConfigureAwait(false);
             return Results.NoContent();
         });
 
@@ -71,7 +71,7 @@ public static class NaeTimeNodeCommandEndpoints
 
         app.MapPost("/api/node/confirm-entry-threshold", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane, [FromQuery] int threshold) =>
         {
-            await handler.ConfirmLaneEntryThresholdConfigured(id, (byte)lane, (ushort)threshold).ConfigureAwait(false);
+            await handler.ConfirmLaneEntryThreshold(id, (byte)lane, (ushort)threshold).ConfigureAwait(false);
             return Results.NoContent();
         });
 
@@ -83,62 +83,21 @@ public static class NaeTimeNodeCommandEndpoints
 
         app.MapPost("/api/node/confirm-exit-threshold", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane, [FromQuery] int threshold) =>
         {
-            await handler.ConfirmLaneExitThresholdConfigured(id, (byte)lane, (ushort)threshold).ConfigureAwait(false);
+            await handler.ConfirmLaneExitThreshold(id, (byte)lane, (ushort)threshold).ConfigureAwait(false);
             return Results.NoContent();
         });
 
-        app.MapPost("/api/node/mark-lane-rf-setup-read", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane, [FromQuery] bool isEnabled, [FromQuery] int? bandId, [FromQuery] int frequencyInMHz, [FromQuery] int entryThreshold, [FromQuery] int exitThreshold) =>
+        app.MapPost("/api/node/register-network", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] string name, [FromQuery] string ipAddress, [FromQuery] ushort port, [FromQuery] int lanes) =>
         {
-            byte? band = bandId.HasValue ? (byte?)bandId.Value : null;
-            await handler.MarkLaneRFSetupRead(id, (byte)lane, isEnabled, band, frequencyInMHz, (ushort)entryThreshold, (ushort)exitThreshold).ConfigureAwait(false);
+            System.Net.IPAddress address = System.Net.IPAddress.Parse(ipAddress);
+            await handler.RegisterNetworkNode(id, name, address, port, (byte)lanes).ConfigureAwait(false);
             return Results.NoContent();
         });
 
-        app.MapPost("/api/node/request-lane-rf-setup-confirmation", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane) =>
+        app.MapPost("/api/node/reconfigure-network", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] string ipAddress, [FromQuery] ushort port) =>
         {
-            await handler.RequestLaneRFSetupConfirmation(id, (byte)lane).ConfigureAwait(false);
-            return Results.NoContent();
-        });
-
-        app.MapPost("/api/node/mark-lane-rf-setup-confirmed", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane) =>
-        {
-            await handler.MarkLaneRFSetupConfirmed(id, (byte)lane).ConfigureAwait(false);
-            return Results.NoContent();
-        });
-
-        app.MapPost("/api/node/mark-lane-rf-setup-mismatch", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane) =>
-        {
-            await handler.MarkLaneRFSetupMismatch(id, (byte)lane).ConfigureAwait(false);
-            return Results.NoContent();
-        });
-
-        app.MapPost("/api/node/enable-lane-rf-setup-sync", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane) =>
-        {
-            await handler.EnableLaneRFSetupSync(id, (byte)lane).ConfigureAwait(false);
-            return Results.NoContent();
-        });
-
-        app.MapPost("/api/node/disable-lane-rf-setup-sync", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane) =>
-        {
-            await handler.DisableLaneRFSetupSync(id, (byte)lane).ConfigureAwait(false);
-            return Results.NoContent();
-        });
-
-        app.MapPost("/api/node/request-timer-rf-setup-confirmation", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id) =>
-        {
-            await handler.RequestTimerRFSetupConfirmation(id).ConfigureAwait(false);
-            return Results.NoContent();
-        });
-
-        app.MapPost("/api/node/mark-timer-rf-setup-confirmed", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id) =>
-        {
-            await handler.MarkTimerRFSetupConfirmed(id).ConfigureAwait(false);
-            return Results.NoContent();
-        });
-
-        app.MapPost("/api/node/mark-timer-rf-setup-mismatch", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id) =>
-        {
-            await handler.MarkTimerRFSetupMismatch(id).ConfigureAwait(false);
+            System.Net.IPAddress address = System.Net.IPAddress.Parse(ipAddress);
+            await handler.ReconfigureNetworkDevice(id, address, port).ConfigureAwait(false);
             return Results.NoContent();
         });
 

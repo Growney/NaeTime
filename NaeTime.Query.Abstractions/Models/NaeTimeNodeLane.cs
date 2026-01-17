@@ -1,2 +1,2 @@
 ﻿namespace NaeTime.Query.Abstractions.Models;
-//public record NaeTimeNodeLane(byte LaneId, bool IsEnabled, ushort EntryThreshold, ushort ExitThreshold, byte? BandId, int FrequencyInMHz) : TuneableLane(BandId, FrequencyInMHz);
+public record NaeTimeNodeLane(byte LaneId, RequestableValue<bool?> IsEnabled, RequestableValue<ushort?> EntryThreshold, RequestableValue<ushort?> ExitThreshold, RequestableValue<byte?> BandId, RequestableValue<int?> FrequencyInMHz) : TuneableLane(BandId, FrequencyInMHz);

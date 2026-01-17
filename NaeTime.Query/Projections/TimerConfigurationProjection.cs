@@ -1,4 +1,5 @@
 ﻿using NaeTime.Events;
+using NaeTime.Query.Abstractions.Models;
 using NaeTime.Query.Abstractions.Projections;
 using System.Collections.Concurrent;
 
@@ -21,8 +22,16 @@ public class TimerConfigurationProjection : ITimerConfigurationProjection
         public ushort Gain { get; set; }
     }
 
+    private class NaeTimeNodeLaneInfo
+    {
+        public required byte LaneNumber { get; init; }
+        public ushort? EntryThreshold { get; set; }
+        public ushort? ExitThreshold { get; set; }
+    }
+
     private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<byte, SessionLaneConfiguration>> _sessionLaneConfigurations = new();
-    private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<byte, ImmersionRCLapRFLane>> _timerLaneConfigurations = new();
+    private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<byte, ImmersionRCLapRFLane>> _immersionRCTimerLaneConfigurations = new();
+    private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<byte, NaeTimeNodeLaneInfo>> _naeTimeNodeLaneConfigurations = new();
     private readonly ConcurrentDictionary<Guid, IEnumerable<Guid>> _sessionTimers = new();
 
     private Guid? _activeSession;
@@ -64,15 +73,43 @@ public class TimerConfigurationProjection : ITimerConfigurationProjection
     }
     private void When(ImmersionRCLapRFLaneThresholdConfigured configured)
     {
-        ConcurrentDictionary<byte, ImmersionRCLapRFLane> timerLanes = _timerLaneConfigurations.GetOrAdd(configured.TimerId, new ConcurrentDictionary<byte, ImmersionRCLapRFLane>());
+        ConcurrentDictionary<byte, ImmersionRCLapRFLane> timerLanes = _immersionRCTimerLaneConfigurations.GetOrAdd(configured.TimerId, new ConcurrentDictionary<byte, ImmersionRCLapRFLane>());
         ImmersionRCLapRFLane laneConfig = timerLanes.GetOrAdd(configured.Lane, new ImmersionRCLapRFLane { LaneNumber = configured.Lane });
         laneConfig.Threshold = configured.Threshold;
     }
     private void When(ImmersionRCLapRFLaneGainConfigured configured)
     {
-        ConcurrentDictionary<byte, ImmersionRCLapRFLane> timerLanes = _timerLaneConfigurations.GetOrAdd(configured.TimerId, new ConcurrentDictionary<byte, ImmersionRCLapRFLane>());
+        ConcurrentDictionary<byte, ImmersionRCLapRFLane> timerLanes = _immersionRCTimerLaneConfigurations.GetOrAdd(configured.TimerId, new ConcurrentDictionary<byte, ImmersionRCLapRFLane>());
         ImmersionRCLapRFLane laneConfig = timerLanes.GetOrAdd(configured.Lane, new ImmersionRCLapRFLane { LaneNumber = configured.Lane });
         laneConfig.Gain = configured.Gain;
+    }
+
+    private void When(NaeTimeNodeLaneEntryThresholdConfigured configured)
+    {
+        var timerLanes = _naeTimeNodeLaneConfigurations.GetOrAdd(configured.TimerId, new ConcurrentDictionary<byte, NaeTimeNodeLaneInfo>());
+        var lane = timerLanes.GetOrAdd(configured.Lane, new NaeTimeNodeLaneInfo { LaneNumber = configured.Lane });
+        lane.EntryThreshold = configured.Threshold;
+    }
+
+    private void When(NaeTimeNodeLaneExitThresholdConfigured configured)
+    {
+        var timerLanes = _naeTimeNodeLaneConfigurations.GetOrAdd(configured.TimerId, new ConcurrentDictionary<byte, NaeTimeNodeLaneInfo>());
+        var lane = timerLanes.GetOrAdd(configured.Lane, new NaeTimeNodeLaneInfo { LaneNumber = configured.Lane });
+        lane.ExitThreshold = configured.Threshold;
+    }
+
+    private void When(NaeTimeNodeLaneFrequencyTuned tuned)
+    {
+        var timerLanes = _naeTimeNodeLaneConfigurations.GetOrAdd(tuned.TimerId, new ConcurrentDictionary<byte, NaeTimeNodeLaneInfo>());
+        var lane = timerLanes.GetOrAdd(tuned.Lane, new NaeTimeNodeLaneInfo { LaneNumber = tuned.Lane });
+        // frequency and band are stored at session level for desired config; keep nothing here
+    }
+
+    private void When(NaeTimeNodeLaneEnabled enabled)
+    {
+        var timerLanes = _naeTimeNodeLaneConfigurations.GetOrAdd(enabled.TimerId, new ConcurrentDictionary<byte, NaeTimeNodeLaneInfo>());
+        var lane = timerLanes.GetOrAdd(enabled.Lane, new NaeTimeNodeLaneInfo { LaneNumber = enabled.Lane });
+        // Node-level enabled state isn't treated as desired; session controls desired IsEnabled. Keep thresholds only.
     }
 
     public IEnumerable<NaeTime.Query.Abstractions.Models.DesiredImmersionRCLapRFLane> GetActiveImmersionRCLapRFLanesConfiguration(Guid timerId)
@@ -85,7 +122,7 @@ public class TimerConfigurationProjection : ITimerConfigurationProjection
         ConcurrentDictionary<byte, SessionLaneConfiguration>? sessionLanes = null;
         ConcurrentDictionary<byte, ImmersionRCLapRFLane>? timerLanes = null;
 
-        if (!_sessionLaneConfigurations.TryGetValue(_activeSession.Value, out sessionLanes) && !_timerLaneConfigurations.TryGetValue(timerId, out timerLanes))
+        if (!_sessionLaneConfigurations.TryGetValue(_activeSession.Value, out sessionLanes) && !_immersionRCTimerLaneConfigurations.TryGetValue(timerId, out timerLanes))
         {
             return Enumerable.Empty<NaeTime.Query.Abstractions.Models.DesiredImmersionRCLapRFLane>();
         }
@@ -116,6 +153,56 @@ public class TimerConfigurationProjection : ITimerConfigurationProjection
                 sessionLaneConfig?.IsEnabled,
                 timerLaneConfig?.Gain,
                 timerLaneConfig?.Threshold,
+                sessionLaneConfig?.BandId,
+                sessionLaneConfig?.FrequencyInMHz
+            ));
+        }
+
+        return result;
+    }
+
+    public IEnumerable<DesiredNaeTimeNodeLane> GetActiveNaeTimeNodeLanesConfiguration(Guid timerId)
+    {
+        if (!_activeSession.HasValue)
+        {
+            return Enumerable.Empty<DesiredNaeTimeNodeLane>();
+        }
+
+        _sessionLaneConfigurations.TryGetValue(_activeSession.Value, out var sessionLanes);
+        _naeTimeNodeLaneConfigurations.TryGetValue(timerId, out var timerLanes);
+
+        sessionLanes ??= new ConcurrentDictionary<byte, SessionLaneConfiguration>();
+        timerLanes ??= new ConcurrentDictionary<byte, NaeTimeNodeLaneInfo>();
+
+        if (!_sessionTimers.TryGetValue(_activeSession.Value, out var timers) || !timers.Contains(timerId))
+        {
+            return Enumerable.Empty<DesiredNaeTimeNodeLane>();
+        }
+
+        if (!sessionLanes.Any() && !timerLanes.Any())
+        {
+            return Enumerable.Empty<DesiredNaeTimeNodeLane>();
+        }
+
+        byte maxLanes = 0;
+        if (sessionLanes.Any()) maxLanes = Math.Max(maxLanes, sessionLanes.Keys.Max());
+        if (timerLanes.Any()) maxLanes = Math.Max(maxLanes, timerLanes.Keys.Max());
+
+        var result = new List<DesiredNaeTimeNodeLane>();
+
+        for (byte laneId = 0; laneId <= maxLanes; laneId++)
+        {
+            sessionLanes.TryGetValue(laneId, out var sessionLaneConfig);
+            timerLanes.TryGetValue(laneId, out var timerLaneConfig);
+
+            if (sessionLaneConfig == null && timerLaneConfig == null)
+                continue;
+
+            result.Add(new DesiredNaeTimeNodeLane(
+                laneId,
+                sessionLaneConfig?.IsEnabled,
+                timerLaneConfig?.EntryThreshold,
+                timerLaneConfig?.ExitThreshold,
                 sessionLaneConfig?.BandId,
                 sessionLaneConfig?.FrequencyInMHz
             ));

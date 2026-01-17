@@ -22,7 +22,7 @@ public class ImmersionRCLapRFProjector
                 Gain = lane.Gain.Requested ?? 0,
                 Threshold = lane.Threshold.Requested ?? 0,
                 BandId = lane.BandId.Requested,
-                FrequencyInMHz = lane.FrequencyInMHz.Requested,
+                FrequencyInMHz = lane.FrequencyInMHz.Requested ?? 0,
             }).ToList(),
             IPAddress = source.IPAddress.ToString(),
             Port = source.Port

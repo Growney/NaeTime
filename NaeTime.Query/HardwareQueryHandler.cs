@@ -8,13 +8,15 @@ public class HardwareQueryHandler : IHardwareQueryHandler
 {
     private readonly IDetectorProjection _detectorProjection;
     private readonly IImmersionRCProjection _immersionRCProjection;
+    private readonly INaeTimeNodeProjection _naeTimeNodeProjection;
     private readonly ITimerConfigurationProjection _timerConfigurationProjection;
     private readonly ITimerDetailsProjection _timerDetailsProjection;
 
-    public HardwareQueryHandler(IDetectorProjection detectorProjection, IImmersionRCProjection immersionRCProjection, ITimerConfigurationProjection timerConfigurationProjection, ITimerDetailsProjection timerDetailsProjection)
+    public HardwareQueryHandler(IDetectorProjection detectorProjection, IImmersionRCProjection immersionRCProjection, INaeTimeNodeProjection naeTimeNodeProjection, ITimerConfigurationProjection timerConfigurationProjection, ITimerDetailsProjection timerDetailsProjection)
     {
         _detectorProjection = detectorProjection ?? throw new ArgumentNullException(nameof(detectorProjection));
         _immersionRCProjection = immersionRCProjection ?? throw new ArgumentNullException(nameof(immersionRCProjection));
+        _naeTimeNodeProjection = naeTimeNodeProjection ?? throw new ArgumentNullException(nameof(naeTimeNodeProjection));
         _timerConfigurationProjection = timerConfigurationProjection;
         _timerDetailsProjection = timerDetailsProjection;
     }
@@ -33,4 +35,12 @@ public class HardwareQueryHandler : IHardwareQueryHandler
 
     public Task<TimerDetails> GetDetails(Guid timerId) => Task.FromResult(_timerDetailsProjection.GetDetails(timerId));
     public Task<TimerLaneDetails> GetLaneDetails(Guid timerId, byte laneId) => Task.FromResult(_timerDetailsProjection.GetLaneDetails(timerId, laneId));
+
+    public Task<NetworkNaeTimeNode?> GetNetworkNaeTimeNode(Guid id) => Task.FromResult(_naeTimeNodeProjection.GetNetworkNaeTimeNode(id));
+
+    public Task<NaeTimeNodeLane?> GetNaeTimeNodeLane(Guid timerId, byte laneId) => Task.FromResult(_naeTimeNodeProjection.GetNaeTimeNodeLane(timerId, laneId));
+
+    public Task<IEnumerable<NaeTimeNode>> GetAllNaeTimeNodes() => Task.FromResult(_naeTimeNodeProjection.GetAllNaeTimeNodes());
+
+    public Task<IEnumerable<DesiredNaeTimeNodeLane>> GetActiveNaeTimeNodeLanesConfiguration(Guid timerId) => Task.FromResult(_timerConfigurationProjection.GetActiveNaeTimeNodeLanesConfiguration(timerId));
 }
