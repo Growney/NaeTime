@@ -13,5 +13,6 @@ public interface ILapRFConnection
     Task SetLaneStatus(byte Lane, bool isEnabled);
     Task SetLaneThreshold(byte lane, float threshold);
     Task SetupLane(LapRFLaneConfiguration configuration);
+    Task Start();
     Task Stop();
 }

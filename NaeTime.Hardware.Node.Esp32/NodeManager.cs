@@ -36,8 +36,8 @@ internal class NodeManager : BackgroundService
             };
 
             _connectionProvider.SetNodeConnection(device.Id, connection);
-
             _hardwareProcesses[device.Id] = connection;
+            await connection.Start();
         }
 
         await Task.WhenAll(
@@ -57,6 +57,7 @@ internal class NodeManager : BackgroundService
             INodeConnection connection = _connectionFactory.CreateTcpConnection(e.TimerId, ipAddress, e.Port);
             _connectionProvider.SetNodeConnection(e.TimerId, connection);
             _hardwareProcesses[e.TimerId] = connection;
+            await connection.Start();
         }
     }
 
@@ -72,6 +73,7 @@ internal class NodeManager : BackgroundService
             INodeConnection connection = _connectionFactory.CreateTcpConnection(e.TimerId, ipAddress, e.Port);
             _connectionProvider.SetNodeConnection(e.TimerId, connection);
             _hardwareProcesses[e.TimerId] = connection;
+            await connection.Start();
         }
     }
 }

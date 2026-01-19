@@ -10,6 +10,7 @@ public interface INodeConnection
     ValueTask<bool> SetLaneEntryThreshold(byte Lane, ushort threshold);
     ValueTask<bool> SetLaneExitThreshold(byte Lane, ushort threshold);
     ValueTask<bool> SetLaneRadioFrequency(byte Lane,byte? bandId, int frequencyInMhz);
+    Task Start();
     Task Stop();
 
     Task<IEnumerable<NaeTimeNodeLaneConfiguration>> GetAllLaneConfigurations();

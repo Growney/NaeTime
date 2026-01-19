@@ -40,6 +40,8 @@ internal class LapRFManager : BackgroundService
             _connectionProvider.SetLapRFConnection(device.Id, connection);
 
             _hardwareProcesses[device.Id] = connection;
+
+            await connection.Start();
         }
 
         await Task.WhenAll(
@@ -59,6 +61,7 @@ internal class LapRFManager : BackgroundService
             ILapRFConnection connection = _connectionFactory.CreateEthernetConnection(e.TimerId, ipAddress, e.Port);
             _connectionProvider.SetLapRFConnection(e.TimerId, connection);
             _hardwareProcesses[e.TimerId] = connection;
+            await connection.Start();
         }
     }
 
@@ -74,6 +77,7 @@ internal class LapRFManager : BackgroundService
             ILapRFConnection connection = _connectionFactory.CreateEthernetConnection(e.TimerId, ipAddress, e.Port);
             _connectionProvider.SetLapRFConnection(e.TimerId, connection);
             _hardwareProcesses[e.TimerId] = connection;
+            await connection.Start();
         }
     }
 }

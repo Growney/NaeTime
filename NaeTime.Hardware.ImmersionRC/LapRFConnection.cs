@@ -22,7 +22,7 @@ internal class LapRFConnection : ILapRFConnection
     private readonly CancellationTokenSource _cancellationTokenSource;
     public bool IsConnected { get; private set; }
 
-    private readonly Task[] _runningTasks;
+    private Task[] _runningTasks = [];
 
     private readonly string _detectionsStream;
     private readonly string _rssiStream;
@@ -41,12 +41,14 @@ internal class LapRFConnection : ILapRFConnection
         _commandHandler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
 
         _cancellationTokenSource = new CancellationTokenSource();
-
-        CancellationToken token = _cancellationTokenSource.Token;
-
-        _runningTasks = [MaintainConnectionAsync(token), WaitForDetectionsAsync(token), WaitForStatusAsync(token)];
     }
 
+    public Task Start()
+    {
+        CancellationToken token = _cancellationTokenSource.Token;
+        _runningTasks = [MaintainConnectionAsync(token), WaitForDetectionsAsync(token), WaitForStatusAsync(token)];
+        return Task.CompletedTask;
+    }
     private async Task MaintainConnectionAsync(CancellationToken token)
     {
         await _commandHandler.MarkAsDisconnected(_timerId);

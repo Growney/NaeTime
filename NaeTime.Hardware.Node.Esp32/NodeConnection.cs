@@ -19,7 +19,7 @@ internal class NodeConnection : INodeConnection
     private readonly CancellationTokenSource _cancellationTokenSource;
     public bool IsConnected { get; private set; }
 
-    private readonly Task[] _runningTasks;
+    private Task[] _runningTasks =[];
 
     private readonly string _detectionsStream;
     private readonly string _rssiStream;
@@ -39,11 +39,14 @@ internal class NodeConnection : INodeConnection
 
         _cancellationTokenSource = new CancellationTokenSource();
 
-        CancellationToken token = _cancellationTokenSource.Token;
-
-        _runningTasks = [MaintainConnectionAsync(token), WaitForRSSIAsync(token), WaitForPassAsync(token)];
     }
+    public Task Start()
+    {
 
+        CancellationToken token = _cancellationTokenSource.Token;
+        _runningTasks = [MaintainConnectionAsync(token), WaitForRSSIAsync(token), WaitForPassAsync(token)];
+        return Task.CompletedTask;
+    }
     private async Task MaintainConnectionAsync(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
