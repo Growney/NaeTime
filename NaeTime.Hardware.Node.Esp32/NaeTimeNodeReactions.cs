@@ -1,8 +1,9 @@
 ﻿using EventDbLite.Abstractions;
-using NaeTime.Hardware.Node.Esp32.Abstractions;
 using NaeTime.Command.Abstractions;
 using NaeTime.Events;
 using NaeTime.Hardware.Abstractions;
+using NaeTime.Hardware.Node.Esp32.Abstractions;
+using NaeTime.Query.Abstractions.Models;
 using System;
 using System.Threading.Tasks;
 
@@ -38,8 +39,34 @@ internal class NaeTimeNodeReactions
     private Task When(NaeTimeNodeLaneEntryThresholdRequested requested)
         => HandleEntryThresholdRequested(requested.TimerId, requested.Lane, requested.Threshold);
 
+    private Task When(NaeTimeNodeLaneEntryThresholdMismatch mismatch)
+        => HandleEntryThresholdRequested(mismatch.TimerId, mismatch.Lane, mismatch.DesiredThreshold);
+
     private Task When(NaeTimeNodeLaneExitThresholdRequested requested)
         => HandleExitThresholdRequested(requested.TimerId, requested.Lane, requested.Threshold);
+
+    private Task When(NaeTimeNodeLaneExitThresholdMismatch mismatch)
+        => HandleExitThresholdRequested(mismatch.TimerId, mismatch.Lane, mismatch.DesiredThreshold);
+
+    private async Task When(NaeTimeNodeConfigurationUnconfirmed unconfirmed)
+    {
+        INodeConnection? connection = _connectionProvider.GetNodeConnection(unconfirmed.TimerId);
+        if (connection == null)
+        {
+            return;
+        }
+        if (!connection.IsConnected)
+        {
+            return;
+        }
+
+        IEnumerable<NaeTimeNodeLaneConfiguration> timerConfigurations = await connection.GetAllLaneConfigurations();
+
+        foreach(NaeTimeNodeLaneConfiguration laneConfiguration in timerConfigurations)
+        {
+            await _commandHandler.ConfirmLaneSetup(unconfirmed.TimerId, laneConfiguration.Lane, laneConfiguration.IsEnabled, laneConfiguration.BandId, laneConfiguration.FrequencyInMhz, laneConfiguration.EntryThreshold, laneConfiguration.ExitThreshold);
+        }
+    }
 
     private async Task HandleTuneRequest(Guid timerId, byte lane, byte? bandId, int frequencyInMhz)
     {
@@ -56,10 +83,10 @@ internal class NaeTimeNodeReactions
             return;
         }
 
-        await connection.SetLaneRadioFrequency(lane, frequencyInMhz).ConfigureAwait(false);
-
-        // We don't have a read-back API for node connection; assume success and confirm
-        await _commandHandler.ConfirmLaneFrequencyTuned(timerId, lane, bandId, frequencyInMhz).ConfigureAwait(false);
+        if( await connection.SetLaneRadioFrequency(lane,bandId, frequencyInMhz).ConfigureAwait(false))
+        {
+            await _commandHandler.ConfirmLaneFrequencyTuned(timerId, lane, bandId, frequencyInMhz);
+        }
     }
 
     private async Task HandleStatusRequest(Guid timerId, byte lane, bool isEnabled)
@@ -77,10 +104,10 @@ internal class NaeTimeNodeReactions
             return;
         }
 
-        await connection.SetLaneEnabled(lane, isEnabled).ConfigureAwait(false);
-
-        // Assume success
-        await _commandHandler.ConfirmLaneStatus(timerId, lane, isEnabled).ConfigureAwait(false);
+        if(await connection.SetLaneEnabled(lane, isEnabled).ConfigureAwait(false))
+        {
+            await _commandHandler.ConfirmLaneStatus(timerId, lane, isEnabled).ConfigureAwait(false);
+        }
     }
 
     private async Task HandleEntryThresholdRequested(Guid timerId, byte lane, ushort threshold)
@@ -98,9 +125,11 @@ internal class NaeTimeNodeReactions
             return;
         }
 
-        await connection.SetLaneEntryThreshold(lane, threshold).ConfigureAwait(false);
+        if(await connection.SetLaneEntryThreshold(lane, threshold).ConfigureAwait(false))
+        {
+            await _commandHandler.ConfirmLaneEntryThreshold(timerId, lane, threshold).ConfigureAwait(false);
+        }
 
-        await _commandHandler.ConfirmLaneEntryThreshold(timerId, lane, threshold).ConfigureAwait(false);
     }
 
     private async Task HandleExitThresholdRequested(Guid timerId, byte lane, ushort threshold)
@@ -118,8 +147,9 @@ internal class NaeTimeNodeReactions
             return;
         }
 
-        await connection.SetLaneExitThreshold(lane, threshold).ConfigureAwait(false);
-
-        await _commandHandler.ConfirmLaneExitThreshold(timerId, lane, threshold).ConfigureAwait(false);
+        if(await connection.SetLaneExitThreshold(lane, threshold).ConfigureAwait(false))
+        {
+            await _commandHandler.ConfirmLaneExitThreshold(timerId, lane, threshold).ConfigureAwait(false);
+        }
     }
 }

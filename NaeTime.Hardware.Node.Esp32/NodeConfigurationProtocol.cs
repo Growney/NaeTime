@@ -3,149 +3,206 @@ using NaeTime.Hardware.Node.Esp32.Abstractions;
 using System.Collections.Concurrent;
 
 namespace NaeTime.Hardware.Node.Esp32;
+
 public class NodeConfigurationProtocol(INodeCommunication nodeCommunication) : INodeConfigurationProtocol
 {
-    private readonly INodeCommunication _nodeCommunication = nodeCommunication ?? throw new ArgumentNullException(nameof(nodeCommunication));
-    private ConcurrentDictionary<byte, ConcurrentDictionary<byte, TaskCompletionSource<bool>>> _laneAckWaiting = new();
+    private const int _timeoutInSeconds = 30;
 
-    private byte GetNodeLaneId(byte lane) => (byte)(lane - 1);
-    public async ValueTask SetLaneFrequency(byte lane, ushort frequencyInMHz, CancellationToken token = default)
+    private readonly INodeCommunication _nodeCommunication = nodeCommunication ?? throw new ArgumentNullException(nameof(nodeCommunication));
+    private ConcurrentDictionary<byte, ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<bool>>>> _commandLaneAckWaiting = new();
+    private ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<bool>>> _commandAckWaiting = new();
+    private ConcurrentDictionary<byte, ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<byte[]>>>> _commandLaneDataWaiting = new();
+    private ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<byte[]>>> _commandDataWaiting = new();
+
+    public ValueTask<bool> SetLaneFrequency(byte lane,byte? band, ushort frequencyInMHz, CancellationToken token = default)
     {
         using MemoryStream memoryStream = new();
         using BinaryWriter writer = new(memoryStream);
-
-        byte nodeLane = GetNodeLaneId(lane);
 
         writer.Write(NodeProtocol.START_OF_RECORD);
 
         writer.WriteRecordType(RecordType.TUNE_LANE);
-        writer.Write(nodeLane);
+        writer.Write(lane);
+        writer.Write(band ?? 0);
         writer.Write(frequencyInMHz);
 
         writer.Write(NodeProtocol.END_OF_RECORD);
         byte[] finalisedData = memoryStream.FinalisePacketData();
-        try
-        {
-            while (!await SendWithWaitForAck(RecordType.TUNE_LANE, nodeLane, finalisedData, token))
-            {
-                await Task.Delay(500);
-            }
-        }
-        catch (TaskCanceledException)
-        {
 
-        }
+        return SendWait<bool>(RecordType.TUNE_LANE, lane, finalisedData, token, _commandLaneAckWaiting);
     }
 
-    private async ValueTask SetNodeThreshold(RecordType commandId, byte lane, ushort threshold, CancellationToken token = default)
+    private ValueTask<bool> SetNodeThreshold(RecordType commandId, byte lane, ushort threshold, CancellationToken token = default)
     {
         using MemoryStream memoryStream = new();
         using BinaryWriter writer = new(memoryStream);
 
-        byte nodeLane = GetNodeLaneId(lane);
-
         writer.Write(NodeProtocol.START_OF_RECORD);
 
         writer.WriteRecordType(commandId);
-        writer.Write(nodeLane);
+        writer.Write(lane);
         writer.Write(threshold);
 
         writer.Write(NodeProtocol.END_OF_RECORD);
         byte[] finalisedData = memoryStream.FinalisePacketData();
 
-        try
-        {
-            while (!await SendWithWaitForAck(commandId, nodeLane, finalisedData, token))
-            {
-                await Task.Delay(1000);
-            }
-        }
-        catch (TaskCanceledException)
-        {
-
-        }
+        return SendWait<bool>(commandId, lane, finalisedData, token, _commandLaneAckWaiting);
     }
-    public ValueTask SetEntryThreshold(byte lane, ushort threshold, CancellationToken token = default)
+    public ValueTask<bool> SetEntryThreshold(byte lane, ushort threshold, CancellationToken token = default)
        => SetNodeThreshold(RecordType.CONFIGURE_LANE_ENTRY_THRESHOLD, lane, threshold, token);
-    public ValueTask SetExitThreshold(byte lane, ushort threshold, CancellationToken token = default)
+    public ValueTask<bool> SetExitThreshold(byte lane, ushort threshold, CancellationToken token = default)
         => SetNodeThreshold(RecordType.CONFIGURE_LANE_EXIT_THRESHOLD, lane, threshold, token);
 
-    public async ValueTask SetLaneEnabled(byte lane, bool isEnabled, CancellationToken token = default)
+    public ValueTask<bool> SetLaneEnabled(byte lane, bool isEnabled, CancellationToken token = default)
     {
         using MemoryStream memoryStream = new();
         using BinaryWriter writer = new(memoryStream);
 
-        byte nodeLane = GetNodeLaneId(lane);
-
         writer.Write(NodeProtocol.START_OF_RECORD);
 
         writer.WriteRecordType(RecordType.CONFIGURE_LANE_ENABLED);
-        writer.Write(nodeLane);
+        writer.Write(lane);
         writer.Write((byte)(isEnabled ? 1 : 0));
 
         writer.Write(NodeProtocol.END_OF_RECORD);
         byte[] finalisedData = memoryStream.FinalisePacketData();
 
-        try
+        return SendWait<bool>(RecordType.CONFIGURE_LANE_ENABLED, lane, finalisedData, token, _commandLaneAckWaiting);
+    }
+
+    public async ValueTask<IEnumerable<NaeTimeNodeLaneConfiguration>> GetLaneConfiguration(IEnumerable<byte> laneIds)
+    {
+        using MemoryStream memoryStream = new();
+        using BinaryWriter writer = new(memoryStream);
+
+        writer.Write(NodeProtocol.START_OF_RECORD);
+        writer.WriteRecordType(RecordType.REQUEST_LANE_CONFIGURATIONS);
+
+        byte lanes = 0;
+        for(int i = 0; i < 8; i++)
         {
-            while (!await SendWithWaitForAck(RecordType.CONFIGURE_LANE_ENABLED, nodeLane, finalisedData, token))
+            if (laneIds.Contains((byte)i))
             {
-                await Task.Delay(1000);
+                lanes |= (byte)(1 << i);
             }
         }
-        catch (TaskCanceledException)
-        {
+        writer.Write(lanes);
+        writer.Write(NodeProtocol.END_OF_RECORD);
+        byte[] finalisedData = memoryStream.FinalisePacketData();
 
+        byte[] responseData = await SendWait<byte[]>(RecordType.REQUEST_LANE_CONFIGURATIONS, finalisedData, CancellationToken.None, Array.Empty<byte>(), _commandDataWaiting);
+
+        List<NaeTimeNodeLaneConfiguration> configurations = new();
+
+        ReadOnlySpanReader<byte> responseReader = new(responseData);
+
+        byte enabledLanes = responseReader.ReadByte();
+
+        byte laneId = 0;
+        while (responseReader.HasData())
+        {
+            byte bandId = responseReader.ReadByte();
+            ushort frequencyInMHz = responseReader.ReadUInt16();
+            ushort entryThreshold = responseReader.ReadUInt16();
+            ushort exitThreshold = responseReader.ReadUInt16();
+            bool isEnabled = (enabledLanes & (1 << laneId)) != 0;
+            configurations.Add(new NaeTimeNodeLaneConfiguration(laneId, bandId, frequencyInMHz,isEnabled, entryThreshold, exitThreshold));
+            laneId++;
         }
+
+        return configurations;
     }
-    private async ValueTask<bool> SendWithWaitForAck(RecordType command, byte lane, byte[] finalisedData, CancellationToken token)
-        => await SendWithWaitForAck((byte)command, lane, finalisedData, token);
-    private async ValueTask<bool> SendWithWaitForAck(byte command, byte lane, byte[] finalisedData, CancellationToken token)
+
+    private async ValueTask<T> SendWait<T>(RecordType command, byte lane, byte[] finalisedData, CancellationToken token,ConcurrentDictionary<byte, ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>>> sources)
     {
-        ConcurrentDictionary<byte, TaskCompletionSource<bool>> laneAckWaiting = _laneAckWaiting.GetOrAdd(command, x => new ConcurrentDictionary<byte, TaskCompletionSource<bool>>());
+        ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>> commandWaiting = sources.GetOrAdd((byte)command, x => new ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>>());
 
-        TaskCompletionSource<bool> tuneAck = laneAckWaiting.AddOrUpdate(lane, x => new TaskCompletionSource<bool>(), (x, t) =>
-        {
-            t.TrySetCanceled();
-            return new TaskCompletionSource<bool>();
-        });
-        TimeOutToken(TimeSpan.FromSeconds(5), tuneAck);
+        ConcurrentQueue<TaskCompletionSource<T>> laneQueue = commandWaiting.GetOrAdd(lane, x => new ConcurrentQueue<TaskCompletionSource<T>>());
+
+        TaskCompletionSource<T> tuneAck = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        laneQueue.Enqueue(tuneAck);
+        TimeOutToken(TimeSpan.FromSeconds(_timeoutInSeconds), tuneAck);
         await _nodeCommunication.SendAsync(finalisedData, token);
-        bool result = await tuneAck.Task;
+        T result = await tuneAck.Task;
         return result;
+    }
+    private async ValueTask<T> SendWait<T>(RecordType command, byte[] finalisedData, CancellationToken token, T timeOut, ConcurrentDictionary<byte,ConcurrentQueue<TaskCompletionSource<T>>> sources)
+    {
+        ConcurrentQueue<TaskCompletionSource<T>> commandQueue = sources.GetOrAdd((byte)command, x => new ConcurrentQueue<TaskCompletionSource<T>>());
 
+        TaskCompletionSource<T> tuneAck = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        commandQueue.Enqueue(tuneAck);
+        TimeOutToken(TimeSpan.FromSeconds(_timeoutInSeconds), tuneAck);
+        await _nodeCommunication.SendAsync(finalisedData, token);
+        T result = await tuneAck.Task;
+        return result;
     }
 
-
-    private void TimeOutToken(TimeSpan timeOut, TaskCompletionSource<bool> taskCompletionSource) => Task.Delay(timeOut).ContinueWith(t => taskCompletionSource.TrySetResult(false));
+    private static void TimeOutToken<T>(TimeSpan timeOut, TaskCompletionSource<T> taskCompletionSource) => Task.Delay(timeOut).ContinueWith(t => taskCompletionSource.TrySetCanceled());
     public void HandleRecordData(ReadOnlySpanReader<byte> recordReader)
     {
 
     }
-    private void HandleResponse(ReadOnlySpanReader<byte> ackReader, bool setResult)
+
+    private static bool IsSingleLaneCommand(RecordType recordType)
     {
-        byte recordType = ackReader.ReadByte();
-
-        if (!_laneAckWaiting.TryGetValue(recordType, out ConcurrentDictionary<byte, TaskCompletionSource<bool>>? laneAcks))
-        {
-            return;
-        }
-
-        byte laneId = (RecordType)recordType switch
+        return recordType switch
         {
             RecordType.TUNE_LANE
             or RecordType.CONFIGURE_LANE_ENTRY_THRESHOLD
             or RecordType.CONFIGURE_LANE_EXIT_THRESHOLD
-            or RecordType.CONFIGURE_LANE_ENABLED => ackReader.ReadByte(),
-            _ => throw new NotImplementedException()
+            or RecordType.CONFIGURE_LANE_ENABLED => true,
+            _ => false
         };
+    }
 
-        if (laneAcks.TryRemove(laneId, out TaskCompletionSource<bool>? taskCompletionSource))
+    private static void HandleResponse<T>(byte commandId, ReadOnlySpanReader<byte> ackReader, T setResult, ConcurrentDictionary<byte, ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>>> laneWaiting, ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>> commandWaiting)
+    {
+        if (IsSingleLaneCommand((RecordType)commandId))
         {
-            taskCompletionSource.TrySetResult(setResult);
+
+            if (!laneWaiting.TryGetValue(commandId, out ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>>? laneAcks))
+            {
+                return;
+            }
+
+            byte laneId = ackReader.ReadByte();
+
+            if (laneAcks.TryGetValue(laneId, out ConcurrentQueue<TaskCompletionSource<T>>? taskCompletionQueue))
+            {
+                while (taskCompletionQueue.TryDequeue(out TaskCompletionSource<T>? dequeuedAck))
+                {
+                    dequeuedAck.TrySetResult(setResult);
+                    return;
+                }
+            }
+            return;
+        }
+        else if (commandWaiting.TryRemove(commandId, out ConcurrentQueue<TaskCompletionSource<T>>? taskCompletionQueue))
+        {
+            while (taskCompletionQueue.TryDequeue(out TaskCompletionSource<T>? dequeuedAck))
+            {
+                dequeuedAck.TrySetResult(setResult);
+                return;
+            }
+            return;
         }
     }
-    public void HandleResponseData(byte response, ReadOnlySpanReader<byte> recordReader) => HandleResponse(recordReader, response == (byte)RecordType.ACK);
-
+    public void HandleResponseData(byte response, byte commandId, ReadOnlySpanReader<byte> recordReader)
+    {
+        if (response == (byte)RecordType.ACK)
+        {
+            HandleResponse(commandId, recordReader, true, _commandLaneAckWaiting,_commandAckWaiting);
+        }
+        else if (response == (byte)RecordType.ERROR)
+        {
+            HandleResponse(commandId, recordReader, false, _commandLaneAckWaiting, _commandAckWaiting);
+        }
+        else if (response == (byte)RecordType.RESPONSE)
+        {
+            byte[] data = recordReader.ReadRemaining();
+            HandleResponse(commandId, recordReader, data, _commandLaneDataWaiting, _commandDataWaiting);
+        }
+    }
 
 }

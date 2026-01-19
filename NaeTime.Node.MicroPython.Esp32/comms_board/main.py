@@ -5,6 +5,7 @@ import commands as commands
 from devices.rssi import ADCReader
 from devices.rssi import PeakDetector
 from devices.rx5808 import Rx5808RegisterCommunication
+from node import LaneConfiguration
 import machine
 import comms
 
@@ -42,13 +43,17 @@ async def command_loop():
     global polling_delay_ms
     global node_comms
     global rx_modules
+    global lane_configurations
 
     while running:
         command = await node_comms.wait_for_command()
         try:
-            if isinstance(command, commands.TuneLane):
+            if command is None:
+                continue
+            elif isinstance(command, commands.TuneLane):
                 print("Tune command received Lane: "+str(command.lane)+" Frequency: "+str(command.frequency_in_mhz))
                 if(command.lane < len(rx_modules) and command.lane >= 0 and rx_modules[command.lane].tune(command.frequency_in_mhz)):
+                    lane_configurations[command.lane].frequency_in_mhz = command.frequency_in_mhz
                     print("Tune Successful")
                     node_comms.send_ack_for_command(command)
                 else:
@@ -58,6 +63,7 @@ async def command_loop():
                 print("Configure Entry Threshold Lane: "+str(command.lane)+" Threshold: "+str(command.entry_threshold))
                 if(command.lane < len(peak_detectors) and command.lane >= 0):
                     peak_detectors[command.lane].entry_threshold = command.entry_threshold
+                    lane_configurations[command.lane].entry_threshold = command.entry_threshold
                     print("Entry Threshold Set")
                     node_comms.send_ack_for_command(command)
                 else:
@@ -66,34 +72,33 @@ async def command_loop():
                 print("Configure Exit Threshold Lane: "+str(command.lane)+" Threshold: "+str(command.exit_threshold))
                 if(command.lane < len(peak_detectors) and command.lane >= 0):
                     peak_detectors[command.lane].exit_threshold = command.exit_threshold
+                    lane_configurations[command.lane].exit_threshold = command.exit_threshold
                     print("Exit Threshold Set")
                     node_comms.send_ack_for_command(command)
                 else:
                     node_comms.send_error_for_command(command)
             elif isinstance(command, commands.ConfigureLaneEnabled):
                 print("Configure Lane Enabled Lane: "+str(command.lane)+" Enabled: "+str(command.enabled))
-                if(command.lane < len(lane_states) and command.lane >= 0):
-                    lane_states[command.lane] = command.enabled == 1
+                if(command.lane < len(lane_configurations) and command.lane >= 0):
+                    lane_configurations[command.lane].is_enabled = command.enabled == 1
                     print("Lane Enabled Set")
                     node_comms.send_ack_for_command(command)
                 else:
                     node_comms.send_error_for_command(command)
-            elif isinstance(command, commands.InitialiseNode):
-                print("Initialise Node Lane Count: "+str(command.lane_count)+" Enabled Lanes: "+str(command.enabled_lanes))
-                for lane_index in range(len(command.lane_configurations)):
-                    node_comms.send_status_for_command(command)
-                    lane = command.lane_configurations[lane_index]
-                    print("Initialise Lane "+ str(lane_index) +" Frequency: " +str(lane.frequency_in_mhz) + " Entry: "+str(lane.entry_threshold)+" Exit: "+str(lane.exit_threshold))  
-                    peak_detectors[lane_index].entry_threshold = lane.entry_threshold     
-                    peak_detectors[lane_index].exit_threshold = lane.exit_threshold
+            elif isinstance(command, commands.RequestLaneConfigurations):
+                print("Lane Configuration Request Received for lanes", str(command.lanes))
+                response_configs = []
+                for lane_index in range(len(lane_configurations)):
+                    response_configs.append(commands.LaneConfiguration(lane_configurations[lane_index].bandId,
+                                                                      lane_configurations[lane_index].frequency_in_mhz, 
+                                                                      lane_configurations[lane_index].entry_threshold, 
+                                                                      lane_configurations[lane_index].exit_threshold))
+                enabled_lanes = 0
+                for lane_index in range(len(lane_configurations)):
+                    if(lane_configurations[lane_index].is_enabled):
+                        enabled_lanes |= 1 << lane_index
 
-                    while not rx_modules[lane_index].tune(lane.frequency_in_mhz):
-                        print("Tune Failed")
-                        await asyncio.sleep_ms(500)
-                        node_comms.send_status_for_command(command)
-                        
-                    print("Tune Successful")                    
-                node_comms.send_ack_for_command(command)
+                node_comms.send_response_for_command(command)
 
             elif isinstance(command, commands.ConfigureNode):
                 print("Configure command received")
@@ -111,7 +116,7 @@ async def transmission_loop():
     global transmit_delay_ms
     global lane_timings
     global node_comms
-    global lane_states
+    global lane_configurations
 
     while running:
         lane_pointer = 0
@@ -119,7 +124,7 @@ async def transmission_loop():
             lane_timing_commands = []
             enabled_lanes = 0
             while(lane_pointer < len(lane_timings)):
-                if(lane_states[lane_pointer]):
+                if(lane_configurations[lane_pointer].is_enabled):
                     last_pass = lane_timings[lane_pointer][1] + ((lane_timings[lane_pointer][2] - lane_timings[lane_pointer][1]) // 2)
                     command = commands.LaneTimings(lane_timings[lane_pointer][0],last_pass,lane_timings[lane_pointer][4])
                     lane_timing_commands.append(command)
@@ -177,9 +182,12 @@ async def init_device():
 
     global radio
 
-    rx_modules[0].tune(5658)
-    rx_modules[0].tune(5695)
-    rx_modules[0].tune(5732)
+    print("Tuning Modules")
+
+    for i in range(len(rx_modules)):
+        frequency = lane_configurations[i].frequency_in_mhz
+        success = rx_modules[i].tune(frequency)
+        print("Module: ", str(i), "Tuned To: ", frequency, "MHz Success: ", success)
 
     asyncio.create_task(radio.start_tcp_server())
     asyncio.create_task(transmission_loop())
@@ -210,15 +218,27 @@ RECEIVER_SCLK_PIN = 15
 RECEIVER_MOSI_PIN = 3
 
 print("Initializing Devices")
+
+lane_configurations = [
+    LaneConfiguration(True,4,5658,18000,18000),
+    LaneConfiguration(True,4,5695,18000,18000),
+    LaneConfiguration(True,4,5732,18000,18000),
+    LaneConfiguration(True,4,5769,18000,18000),
+    LaneConfiguration(True,4,5806,18000,18000),
+    LaneConfiguration(True,4,5843,18000,18000),
+    LaneConfiguration(True,4,5880,18000,18000),
+    LaneConfiguration(True,4,5917,18000,18000),
+]
+
 rssi_modules = [
-ADCReader(19, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(18, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(17, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(16, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(20, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(21, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(22, polling_delay_ms,filter_cutoff_frequency),
-ADCReader(23, polling_delay_ms,filter_cutoff_frequency),
+    ADCReader(19, polling_delay_ms,filter_cutoff_frequency),
+    ADCReader(18, polling_delay_ms,filter_cutoff_frequency),
+    ADCReader(17, polling_delay_ms,filter_cutoff_frequency),
+    ADCReader(16, polling_delay_ms,filter_cutoff_frequency),
+    ADCReader(20, polling_delay_ms,filter_cutoff_frequency),
+    ADCReader(21, polling_delay_ms,filter_cutoff_frequency),
+    ADCReader(22, polling_delay_ms,filter_cutoff_frequency),
+    ADCReader(23, polling_delay_ms,filter_cutoff_frequency),
 ]
 rx_modules = [
     Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,14),
@@ -231,14 +251,14 @@ rx_modules = [
     Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,26)
 ]
 peak_detectors = [
-    PeakDetector(40000,40000),
-    PeakDetector(40000,40000),
-    PeakDetector(40000,40000),
-    PeakDetector(40000,40000),
-    PeakDetector(40000,40000),
-    PeakDetector(40000,40000),
-    PeakDetector(40000,40000),
-    PeakDetector(40000,40000)
+    PeakDetector(lane_configurations[0].entry_threshold, lane_configurations[0].exit_threshold),
+    PeakDetector(lane_configurations[1].entry_threshold, lane_configurations[1].exit_threshold),
+    PeakDetector(lane_configurations[2].entry_threshold, lane_configurations[2].exit_threshold),
+    PeakDetector(lane_configurations[3].entry_threshold, lane_configurations[3].exit_threshold),
+    PeakDetector(lane_configurations[4].entry_threshold, lane_configurations[4].exit_threshold),
+    PeakDetector(lane_configurations[5].entry_threshold, lane_configurations[5].exit_threshold),
+    PeakDetector(lane_configurations[6].entry_threshold, lane_configurations[6].exit_threshold),
+    PeakDetector(lane_configurations[7].entry_threshold, lane_configurations[7].exit_threshold)
 ]
 
 
@@ -248,9 +268,5 @@ print("Devices Initialized")
 lane_timings = []
 for i in range(len(rx_modules)):
     lane_timings.append((0,0,0,0,0))
-
-lane_states = []
-for i in range(len(rx_modules)):
-    lane_states.append(True)
 
 asyncio.run(init_device())

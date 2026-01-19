@@ -114,4 +114,20 @@ public class NaeTimeNodeCommandClient : INaeTimeNodeCommandHandler
         var url = $"/api/node/mark-disconnected?id={id}";
         return PostNoContentAsync(url);
     }
+
+    public Task SetupLaneForSession(Guid id, byte lane, bool isEnabled, byte? bandId, int frequencyInMHz)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"/api/node/setup-lane-for-session?id={id}&lane={lane}&isEnabled={isEnabled.ToString(CultureInfo.InvariantCulture)}&frequencyInMHz={frequencyInMHz}");
+        if (bandId.HasValue) sb.Append($"&bandId={bandId.Value}");
+        return PostNoContentAsync(sb.ToString());
+    }
+
+    public Task ConfirmLaneSetup(Guid timerId, byte laneId, bool isEnabled, byte? bandId, int frequencyInMHz, ushort entryThreshold, ushort exitThreshold)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"/api/node/confirm-lane-setup?timerId={timerId}&laneId={laneId}&isEnabled={isEnabled.ToString(CultureInfo.InvariantCulture)}&frequencyInMHz={frequencyInMHz}&entryThreshold={entryThreshold}&exitThreshold={exitThreshold}");
+        if (bandId.HasValue) sb.Append($"&bandId={bandId.Value}");
+        return PostNoContentAsync(sb.ToString());
+    }
 }

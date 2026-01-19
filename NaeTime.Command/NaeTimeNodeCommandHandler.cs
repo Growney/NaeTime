@@ -2,6 +2,8 @@
 using EventDbLite.Exceptions;
 using NaeTime.Command.Abstractions;
 using NaeTime.Command.Aggregates;
+using System.Numerics;
+using System.Xml.Linq;
 
 namespace NaeTime.Command;
 public class NaeTimeNodeCommandHandler(IAggregateRepository repository) : INaeTimeNodeCommandHandler
@@ -25,7 +27,14 @@ public class NaeTimeNodeCommandHandler(IAggregateRepository repository) : INaeTi
     public Task RegisterNetworkNode(Guid id, string name, System.Net.IPAddress address, ushort port, byte lanes) => ConcurrencyException.Retry(async () =>
     {
         NaeTimeNode aggregate = _repository.CreateNew<NaeTimeNode>(() => new NaeTimeNode(id, name,address, port, lanes));
+
         await _repository.Save<NaeTimeNode, Guid>(aggregate).ConfigureAwait(false);
+
+        for (byte i = 0; i < lanes; i++)
+        {
+            NaeTimeNodeLane laneAggregate = _repository.CreateNew<NaeTimeNodeLane>(() => new NaeTimeNodeLane(id, i));
+            await _repository.Save<NaeTimeNodeLane, NaeTimeNodeLane.NaeTimeNodeLaneId>(laneAggregate).ConfigureAwait(false);
+        }
     });
 
     public Task ReconfigureNetworkDevice(Guid id, System.Net.IPAddress address, ushort port) => ConcurrencyException.Retry(async () =>
@@ -110,5 +119,23 @@ public class NaeTimeNodeCommandHandler(IAggregateRepository repository) : INaeTi
         NaeTimeNode aggregate = await _repository.Get<NaeTimeNode, Guid>(id).ConfigureAwait(false) ?? throw new ArgumentException("Aggregate not found", nameof(id));
         aggregate.RenameDevice(name);
         await _repository.Save<NaeTimeNode, Guid>(aggregate).ConfigureAwait(false);
+    });
+
+    public Task SetupLaneForSession(Guid id, byte lane, bool isEnabled, byte? bandId, int frequencyInMHz) => ConcurrencyException.Retry(async () =>
+    {
+        NaeTimeNodeLane laneAggregate = await _repository.Get<NaeTimeNodeLane, NaeTimeNodeLane.NaeTimeNodeLaneId>(new NaeTimeNodeLane.NaeTimeNodeLaneId(id, lane)).ConfigureAwait(false) ?? throw new ArgumentException("Aggregate not found", nameof(id));
+        laneAggregate.RequestLaneStatus(isEnabled);
+        laneAggregate.RequestLaneFrequency(bandId, frequencyInMHz);
+        await _repository.Save<NaeTimeNodeLane, NaeTimeNodeLane.NaeTimeNodeLaneId>(laneAggregate).ConfigureAwait(false);
+    });
+
+    public Task ConfirmLaneSetup(Guid timerId, byte laneId, bool isEnabled, byte? bandId, int frequencyInMHz, ushort entryThreshold, ushort exitThreshold) => ConcurrencyException.Retry(async () =>
+    {
+        NaeTimeNodeLane laneAggregate = await _repository.Get<NaeTimeNodeLane, NaeTimeNodeLane.NaeTimeNodeLaneId>(new NaeTimeNodeLane.NaeTimeNodeLaneId(timerId, laneId)).ConfigureAwait(false) ?? throw new ArgumentException("Aggregate not found", nameof(laneId));
+        laneAggregate.ConfirmLaneStatus(isEnabled);
+        laneAggregate.ConfirmLaneFrequencyTuned(bandId, frequencyInMHz);
+        laneAggregate.ConfirmLaneEntryThresholdConfigured(entryThreshold);
+        laneAggregate.ConfirmLaneExitThresholdConfigured(exitThreshold);
+        await _repository.Save<NaeTimeNodeLane, NaeTimeNodeLane.NaeTimeNodeLaneId>(laneAggregate).ConfigureAwait(false);
     });
 }

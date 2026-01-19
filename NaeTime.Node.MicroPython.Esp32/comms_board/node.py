@@ -6,23 +6,52 @@ from devices.rssi import PeakDetector
 from devices.rx5808 import Rx5808RegisterCommunication
 
 class LaneConfiguration:
-    def __init__(self,is_enabled,frequency_in_mhz,entry_threshold,exit_threshold):
+    def __init__(self,is_enabled,bandId,frequency_in_mhz,entry_threshold,exit_threshold):
         self._is_enabled = is_enabled
+        self._bandId = bandId
         self._frequency_in_mhz = frequency_in_mhz
         self._entry_threshold = entry_threshold
         self._exit_threshold = exit_threshold
     
     @property
+    def is_enabled(self):
+        return self._is_enabled
+    
+    @is_enabled.setter
+    def is_enabled(self, value):
+        self._is_enabled = value
+
+    @property
+    def bandId(self):
+        return self._bandId
+    
+    @bandId.setter
+    def bandId(self, value):
+        self._bandId = value
+
+    @property
     def frequency_in_mhz(self):
         return self._frequency_in_mhz
+    
+    @frequency_in_mhz.setter
+    def frequency_in_mhz(self, value):
+        self._frequency_in_mhz = value
     
     @property
     def entry_threshold(self):
         return self._entry_threshold
     
+    @entry_threshold.setter
+    def entry_threshold(self, value):
+        self._entry_threshold = value
+    
     @property
     def exit_threshold(self):
         return self._exit_threshold
+    
+    @exit_threshold.setter
+    def exit_threshold(self, value):
+        self._exit_threshold = value
 
 class NodeLane:
     def __init__(self, rx_module, adc_reader, frequency_in_mhz, is_enabled, entry_threshold, exit_threshold):

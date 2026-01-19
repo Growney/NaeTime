@@ -76,9 +76,9 @@ public class NodeProtocol(INodeCommunication communication, INodeTimingProtocol 
     {
         if (_receivedStack.TryPeek(out byte previousByte))
         {
+            _receivedStack.Push(END_OF_RECORD);
             if (previousByte != ESCAPE)
             {
-                _receivedStack.Push(END_OF_RECORD);
                 ReadOnlySpan<byte> packetData = BuildRecord();
                 HandleRecord(packetData);
             }
@@ -135,14 +135,16 @@ public class NodeProtocol(INodeCommunication communication, INodeTimingProtocol 
         {
             case RecordType.ACK:
             case RecordType.ERROR:
-                RecordType responseCommand = (RecordType)recordReader.PeakByte();
+            case RecordType.RESPONSE:
+                RecordType responseCommand = (RecordType)recordReader.ReadByte();
                 switch (responseCommand)
                 {
                     case RecordType.TUNE_LANE:
                     case RecordType.CONFIGURE_LANE_ENTRY_THRESHOLD:
                     case RecordType.CONFIGURE_LANE_EXIT_THRESHOLD:
                     case RecordType.CONFIGURE_LANE_ENABLED:
-                        ConfigurationProtocol.HandleResponseData((byte)recordHeader.RecordType, recordReader);
+                    case RecordType.REQUEST_LANE_CONFIGURATIONS:
+                        ConfigurationProtocol.HandleResponseData((byte)recordHeader.RecordType,(byte)responseCommand, recordReader);
                         break;
                     default:
                         break;

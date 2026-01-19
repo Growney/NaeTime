@@ -3,9 +3,12 @@ using NaeTime.Command.Abstractions;
 using NaeTime.Events;
 using NaeTime.Hardware.Abstractions;
 using NaeTime.Hardware.Node.Esp32.Abstractions;
+
 namespace NaeTime.Hardware.Node.Esp32;
 internal class NodeConnection : INodeConnection
 {
+    private static readonly byte[] allLanes = [0, 1, 2, 3, 4, 5, 6, 7];
+
     private readonly INodeCommunication _communication;
     private readonly INodeProtocol _protocol;
     private readonly ISoftwareTimer _softwareTimer;
@@ -115,43 +118,43 @@ internal class NodeConnection : INodeConnection
             }
         }
     }
-    public async Task SetLaneRadioFrequency(byte Lane, int frequencyInMhz)
+    public ValueTask<bool> SetLaneRadioFrequency(byte Lane,byte? bandId, int frequencyInMhz)
     {
         if (!IsConnected)
         {
-            return;
+            return ValueTask.FromResult(false);
         }
 
-        await _protocol.ConfigurationProtocol.SetLaneFrequency(Lane, (ushort)frequencyInMhz).ConfigureAwait(false);
+        return _protocol.ConfigurationProtocol.SetLaneFrequency(Lane, bandId,(ushort)frequencyInMhz);
     }
 
-    public async Task SetLaneEntryThreshold(byte Lane, ushort threshold)
+    public ValueTask<bool> SetLaneEntryThreshold(byte Lane, ushort threshold)
     {
         if (!IsConnected)
         {
-            return;
+            return ValueTask.FromResult(false);
         }
 
-        await _protocol.ConfigurationProtocol.SetEntryThreshold(Lane, threshold).ConfigureAwait(false);
+        return _protocol.ConfigurationProtocol.SetEntryThreshold(Lane, threshold);
     }
 
-    public async Task SetLaneExitThreshold(byte Lane, ushort threshold)
+    public ValueTask<bool> SetLaneExitThreshold(byte Lane, ushort threshold)
     {
         if (!IsConnected)
         {
-            return;
+            return ValueTask.FromResult(false);
         }
 
-        await _protocol.ConfigurationProtocol.SetExitThreshold(Lane, threshold).ConfigureAwait(false);
+        return _protocol.ConfigurationProtocol.SetExitThreshold(Lane, threshold);
     }
 
-    public async Task SetLaneEnabled(byte Lane, bool isEnabled)
+    public ValueTask<bool> SetLaneEnabled(byte Lane, bool isEnabled)
     {
         if (!IsConnected)
         {
-            return;
+            return ValueTask.FromResult(false);
         }
-        await _protocol.ConfigurationProtocol.SetLaneEnabled(Lane, isEnabled).ConfigureAwait(false);
+        return _protocol.ConfigurationProtocol.SetLaneEnabled(Lane, isEnabled);
     }
 
     public Task Stop()
@@ -160,4 +163,27 @@ internal class NodeConnection : INodeConnection
 
         return Task.WhenAll(_runningTasks);
     }
+
+    public async Task<IEnumerable<NaeTimeNodeLaneConfiguration>> GetAllLaneConfigurations()
+    {
+        if(!IsConnected)
+        {
+            return Enumerable.Empty<NaeTimeNodeLaneConfiguration>();
+        }
+
+        return await _protocol.ConfigurationProtocol.GetLaneConfiguration(allLanes).ConfigureAwait(false);
+
+    }
+
+    public async Task<IEnumerable<NaeTimeNodeLaneConfiguration>> GetLaneConfigurations(IEnumerable<byte> lanes)
+    {
+        if (!IsConnected)
+        {
+            return Enumerable.Empty<NaeTimeNodeLaneConfiguration>();
+        }
+
+        return await _protocol.ConfigurationProtocol.GetLaneConfiguration(lanes).ConfigureAwait(false);
+    }
+
+    public Task<IEnumerable<NaeTimeNodeLaneConfiguration>> GetLaneConfigurations(params byte[] lanes) => GetLaneConfigurations((IEnumerable<byte>)lanes);
 }

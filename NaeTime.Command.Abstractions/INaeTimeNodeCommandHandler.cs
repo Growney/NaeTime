@@ -11,6 +11,8 @@ public interface INaeTimeNodeCommandHandler
 
     public Task RenameDevice(Guid id, string name);
 
+    public Task SetupLaneForSession(Guid id, byte lane, bool isEnabled, byte? bandId, int frequencyInMHz);
+
     public Task RequestLaneStatus(Guid id, byte lane, bool isEnabled);
     public Task ConfirmLaneStatus(Guid id, byte lane, bool isEnabled);
 
@@ -25,4 +27,5 @@ public interface INaeTimeNodeCommandHandler
 
     public Task MarkAsConnected(Guid id);
     public Task MarkAsDisconnected(Guid id);
+    public Task ConfirmLaneSetup(Guid timerId, byte laneId, bool isEnabled, byte? bandId, int frequencyInMHz, ushort entryThreshold, ushort exitThreshold);
 }

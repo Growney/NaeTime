@@ -112,5 +112,12 @@ public static class NaeTimeNodeCommandEndpoints
             await handler.MarkAsDisconnected(id).ConfigureAwait(false);
             return Results.NoContent();
         });
+
+        app.MapPost("/api/node/setup-lane", async (INaeTimeNodeCommandHandler handler, [FromQuery] Guid id, [FromQuery] int lane, [FromQuery] bool isEnabled, [FromQuery] int? bandId, [FromQuery] int frequencyInMHz) =>
+        {
+            byte? band = bandId.HasValue ? (byte?)bandId.Value : null;
+            await handler.SetupLaneForSession(id, (byte)lane, isEnabled, band, frequencyInMHz).ConfigureAwait(false);
+            return Results.NoContent();
+        });
     }
 }

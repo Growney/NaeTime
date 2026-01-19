@@ -1,12 +1,17 @@
 class TuneLane:
-    def __init__(self,lane,frequency_in_mhz):
+    def __init__(self,lane,bandId,frequency_in_mhz):
         self._lane = lane
+        self._bandId = bandId
         self._frequency_in_mhz = frequency_in_mhz
     
     @property
     def lane(self):
         return self._lane
     
+    @property
+    def bandId(self):
+        return self._bandId
+
     @property
     def frequency_in_mhz(self):
         return self._frequency_in_mhz
@@ -110,11 +115,16 @@ class LaneTimings:
         return self._last_pass
 
 class LaneConfiguration:
-    def __init__(self,frequency_in_mhz,entry_threshold,exit_threshold):
+    def __init__(self,bandId,frequency_in_mhz,entry_threshold,exit_threshold):
+        self._bandId = bandId   
         self._frequency_in_mhz = frequency_in_mhz
         self._entry_threshold = entry_threshold
         self._exit_threshold = exit_threshold
     
+    @property
+    def bandId(self):
+        return self._bandId
+
     @property
     def frequency_in_mhz(self):
         return self._frequency_in_mhz
@@ -126,24 +136,26 @@ class LaneConfiguration:
     @property
     def exit_threshold(self):
         return self._exit_threshold
+
+class RequestLaneConfigurations:
+    def __init__(self, lanes):
+        self._lanes = lanes
     
-class InitialiseNode:
-    def __init__(self, enabled_lanes, lane_count, lane_configurations):
+    @property
+    def lanes(self):
+        return self._lanes
+    
+class LaneConfigurationsResponse():
+    def __init__(self,enabled_lanes, lane_configurations):
         self._enabled_lanes = enabled_lanes
-        self._lane_count = lane_count
         self._lane_configurations = lane_configurations
     
     @property
     def enabled_lanes(self):
         return self._enabled_lanes
-    
-    @property
-    def lane_count(self):
-        return self._lane_count
-    
+
     @property
     def lane_configurations(self):
         return self._lane_configurations
-    
 
     

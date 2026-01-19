@@ -10,7 +10,9 @@ NODE_TIMINGS = 0x03
 CONFIGURE_LANE_ENTRY_THRESHOLD = 0x04
 CONFIGURE_LANE_EXIT_THRESHOLD = 0x05
 CONFIGURE_LANE_ENABLED = 0x06
-INITIALISE_NODE = 0x07
+REQUEST_LANE_CONFIGURATIONS = 0x07
+
+RESPONSE = 0xFC
 STATUS = 0xFD
 ERROR = 0xFE
 ACK = 0xFF
@@ -24,10 +26,10 @@ class TCPServerSocketRadio:
         self._server_socket.listen(1)
         self._server_socket.setblocking(False)
         
-        self.rx_received_event = asyncio.Event()
+        self._rx_received_event = asyncio.Event()
         
-        self.rx_queue = deque([],100)
-        self.client_socket = None
+        self._rx_queue = deque([],100)
+        self._client_socket = None
         print("TCP Server created on {}:{}".format(host, port))
 
     async def start_tcp_server(self):
@@ -35,7 +37,7 @@ class TCPServerSocketRadio:
         while True:
             try:
                 client_socket, addr = self._server_socket.accept()
-                if self.client_socket is None:
+                if self._client_socket is None:
                     print("Client connected from:", addr)
                     asyncio.create_task(self._handle_client(client_socket, addr))
                 else:
@@ -47,14 +49,14 @@ class TCPServerSocketRadio:
     async def _handle_client(self, client_socket, client_addr):
         print("Client handler started for:", client_addr)
         client_socket.setblocking(False)
-        self.client_socket = client_socket
+        self._client_socket = client_socket
         try:
             while True:
                 try:
                     data = client_socket.recv(1024)
                     if data:
-                        self.rx_queue.append(data)
-                        self.rx_received_event.set()
+                        self._rx_queue.append(data)
+                        self._rx_received_event.set()
                     else:
                         # Connection closed by client
                         break
@@ -64,44 +66,115 @@ class TCPServerSocketRadio:
                 await asyncio.sleep_ms(100)
         finally:
             print("Client disconnected:", client_addr)
-            self.client_socket = None
+            self._client_socket = None
             try:
                 client_socket.close()
             except:
                 pass
     
     async def wait_for_rx(self):
-        if(len(self.rx_queue) == 0):
-            await self.rx_received_event.wait()
-            self.rx_received_event.clear()
+        if(len(self._rx_queue) == 0):
+            await self._rx_received_event.wait()
+            self._rx_received_event.clear()
 
-        return self.rx_queue.popleft()
+        return self._rx_queue.popleft()
         
     def send(self, data):
-        if self.client_socket is not None:
+        if self._client_socket is not None:
             try:
-                self.client_socket.send(data)
+                self._client_socket.send(data)
             except OSError as e:
                 print("Failed to send to client:", e)
                 try:
-                    self.client_socket.close()
+                    self._client_socket.close()
                 except:
                     pass
-                self.client_socket = None
+                self._client_socket = None
 
 class NodeCommunication:
+
+    PACKET_START = 0x5A
+    PACKET_END = 0x5B
+    ESCAPE_BYTE = 0x5C
+    ESCAPE_ADDER = 0x40
 
     def __init__(self, radio):
         self._radio = radio
         self._crc = CRC16()
+        self._rx_buffer = []
     
     async def wait_for_command(self):
         try:
-            packet = await self._radio.wait_for_rx()
+            rxData = await self._radio.wait_for_rx()
+            for byte in rxData:
+                command = self._process_byte(byte)
+                if command is not None:
+                    return command
+            
+        except Exception as e:
+            print("Process Packets Error: ", e)
+    
+    def _process_byte(self, byte):
+        if(byte == self.PACKET_START):
+            return self._handle_start_of_record()
+        elif(byte == self.PACKET_END):
+            return self._handle_end_of_record()
+        else:
+            self._rx_buffer.append(byte)
+    
+    def _handle_start_of_record(self):
+        if(len(self._rx_buffer) > 0):
+            previous_byte = self._rx_buffer[-1]
+            if(previous_byte != self.ESCAPE_BYTE):
+                self._rx_buffer = []
+        
+        self._rx_buffer.append(self.PACKET_START)
+    
+    def _handle_end_of_record(self):
+        if(len(self._rx_buffer) > 0):
+            previous_byte = self._rx_buffer[-1]
+            self._rx_buffer.append(self.PACKET_END)
+
+            if(previous_byte != self.ESCAPE_BYTE):
+                packet = self._build_unescaped_packet_from_buffer()
+                return self._process_packet(packet)
+        
+
+    def _build_unescaped_packet_from_buffer(self):
+        unescaped_packet = bytearray()
+        
+        while(len(self._rx_buffer) > 0):
+            byte = self._rx_buffer.pop(0)
+            if byte == self.ESCAPE_BYTE:
+                if len(self._rx_buffer) > 0:
+                    next_byte = self._rx_buffer.pop(0)
+                    unescaped_packet.append(next_byte - self.ESCAPE_ADDER)
+            elif byte != self.PACKET_START and byte != self.PACKET_END:
+                unescaped_packet.append(byte)
+        
+        return unescaped_packet
+
+    def _check_payload_crc(self,command_id, received_crc,length, payload):
+        try:
+            crc_data = struct.pack("<BHH", command_id, 0, length) + payload
+            calculated_crc = self._crc.calculate(crc_data)
+            return received_crc == calculated_crc
+        except Exception as e:
+            print("CRC Check Error: ", e)
+            return False
+
+    def _process_packet(self, packet):
+        try:
+            print("Processing Packet:", packet)
             command_id, crc, length, payload = struct.unpack("<BHH" + str(len(packet) - struct.calcsize("<BHH")) + "s", packet)
+
+            if not self._check_payload_crc(command_id, crc, length, payload):
+                print("CRC Mismatch")
+                return None
+            print("Packet CRC Valid")
             if command_id == TUNE_LANE:
-                lane, frequency = struct.unpack("<BH", payload)
-                return commands.TuneLane(lane, frequency)
+                lane, bandId, frequency = struct.unpack("<BBH", payload)
+                return commands.TuneLane(lane, bandId, frequency)
             elif command_id == CONFIGURE_NODE:
                 node_id, transmit_frequency, polling_frequency = struct.unpack("<cii", payload)
                 return commands.ConfigureNode(node_id, transmit_frequency, polling_frequency)
@@ -114,17 +187,9 @@ class NodeCommunication:
             elif command_id == CONFIGURE_LANE_ENABLED:
                 lane, enabled = struct.unpack("<BB", payload)
                 return commands.ConfigureLaneEnabled(lane, enabled)
-            elif command_id == INITIALISE_NODE:
-                node_template = "<BB"
-                node_info_size = struct.calcsize(node_template)
-                enabled_lanes, lane_count = struct.unpack(node_template, payload)
-                lane_infos = []
-                for i in range(lane_count):
-                    lane_template = "<HHH"
-                    lane_info_size = struct.calcsize(lane_template)
-                    frequency_in_mhz, entry_threshold, exit_threshold = struct.unpack(lane_template, payload[node_info_size + i*lane_info_size:])
-                    lane_infos.append(commands.LaneConfiguration(frequency_in_mhz, entry_threshold, exit_threshold))
-                return commands.InitialiseNode(enabled_lanes, lane_count, lane_infos)
+            elif command_id == REQUEST_LANE_CONFIGURATIONS:
+                lanes = struct.unpack("<B",)
+                return commands.RequestLaneConfigurations(lanes)
         except Exception as e:
             print("Process Packets Error: ", e)
 
@@ -136,11 +201,13 @@ class NodeCommunication:
 
     def send_status_for_command(self, command):
         self._send_response(STATUS, command)
+    def send_response_for_command(self, command):
+        self._send_response(RESPONSE, command)
         
     def _send_response(self, response, command):
         if(isinstance(command, commands.TuneLane)):
             print("Sending tune response:", response)
-            data = struct.pack("<BBH",TUNE_LANE, command.lane, command.frequency_in_mhz)
+            data = struct.pack("<BBBH",TUNE_LANE, command.lane, command.bandId, command.frequency_in_mhz)
         elif(isinstance(command, commands.ConfigureLaneEntryThreshold)):
             print("Sending entry threshold response:", response)
             data = struct.pack("<BBH",CONFIGURE_LANE_ENTRY_THRESHOLD, command.lane, command.entry_threshold)
@@ -150,9 +217,11 @@ class NodeCommunication:
         elif(isinstance(command, commands.ConfigureLaneEnabled)):
             print("Sending lane enabled response:", response)
             data = struct.pack("<BBB",CONFIGURE_LANE_ENABLED, command.lane, command.enabled)
-        elif(isinstance(command, commands.InitialiseNode)):
-            print("Send initialise node response:", response)
-            data = struct.pack("<B",INITIALISE_NODE)
+        elif(isinstance(command, commands.LaneConfigurationsResponse)):
+            print("Send lane configuration response:", response)
+            data = struct.pack("<BB", REQUEST_LANE_CONFIGURATIONS, response.enabled_lanes)
+            for lane_config in command.lane_configurations:
+                data += struct.pack("<BHHH", lane_config.bandId,lane_config.frequency_in_mhz, lane_config.entry_threshold, lane_config.exit_threshold)
         else:
             raise ValueError("Command response Not Supported")
            
@@ -172,14 +241,31 @@ class NodeCommunication:
         
         self._send_packet(command_id, payload)
 
-    def _send_packet(self, command_id, payload):  
+    def _create_packet_payload(self, command_id, payload):
         packet = struct.pack("<BHH", command_id, 0, len(payload))
         packet += payload
         crc = self._crc.calculate(packet)
-        packet = struct.pack("<BBHH", 90, command_id, crc, len(payload))
+        packet = struct.pack("<BHH", command_id, crc, len(payload))
         packet += payload
-        packet += struct.pack("<B", 91)
-        self._radio.send(packet)
+        return packet
+    
+    def _escape_packet(self, packet):
+        payload = struct.pack("<B", self.PACKET_START)
+        for byte in packet:
+            if byte == self.PACKET_START or byte == self.PACKET_END or byte == self.ESCAPE_BYTE or byte == 0x03:
+                payload += struct.pack("<BB", self.ESCAPE_BYTE, byte + self.ESCAPE_ADDER)
+            else:
+                payload += struct.pack("<B", byte)
+
+        payload += struct.pack("<B", self.PACKET_END)
+        return payload
+    
+    def _send_packet(self, command_id, payload):
+
+        payload = self._create_packet_payload(command_id, payload)
+        payload = self._escape_packet(payload)
+
+        self._radio.send(payload)
 
 class CRC16:
     def __init__(self, polynomial=0x8005, initial_value=0xFFFF):
