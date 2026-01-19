@@ -49,12 +49,10 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     }
     public void MarkAsConnected()
     {
-        if (!_isConnected)
-        {
-            Raise(new ImmersionRCLapRFTimerConnected(Id));
-            Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id, _lanes));
-            Raise(new TimerConnected(Id));
-        }
+        Raise(new ImmersionRCLapRFTimerConnected(Id));
+        Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id, _lanes));
+        Raise(new TimerConnected(Id));
+        
     }
     private void When(ImmersionRCLapRFTimerConnected connected)
     {
@@ -62,12 +60,10 @@ public class ImmersionRCLapRF : AggregateRoot<Guid>
     }
     public void MarkAsDisconnected()
     {
-        if (_isConnected)
-        {
-            Raise(new ImmersionRCLapRFTimerDisconnected(Id));
-            Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id, _lanes));
-            Raise(new TimerDisconnected(Id));
-        }
+        Raise(new ImmersionRCLapRFTimerDisconnected(Id));
+        Raise(new ImmersionRCLapRFConfigurationUnconfirmed(Id, _lanes));
+        Raise(new TimerDisconnected(Id));
+        
     }
     private void When(ImmersionRCLapRFTimerDisconnected disconnected)
     {
