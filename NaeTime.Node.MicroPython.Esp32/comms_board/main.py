@@ -49,6 +49,7 @@ async def command_loop():
         command = await node_comms.wait_for_command()
         try:
             if command is None:
+                print("No command received")
                 continue
             elif isinstance(command, commands.TuneLane):
                 print("Tune command received Lane: "+str(command.lane)+" Frequency: "+str(command.frequency_in_mhz))
@@ -86,7 +87,7 @@ async def command_loop():
                 else:
                     node_comms.send_error_for_command(command)
             elif isinstance(command, commands.RequestLaneConfigurations):
-                print("Lane Configuration Request Received for lanes", str(command.lanes))
+                print("Lane Configuration Request Received for lanes")
                 response_configs = []
                 for lane_index in range(len(lane_configurations)):
                     response_configs.append(commands.LaneConfiguration(lane_configurations[lane_index].bandId,
@@ -98,7 +99,8 @@ async def command_loop():
                     if(lane_configurations[lane_index].is_enabled):
                         enabled_lanes |= 1 << lane_index
 
-                node_comms.send_response_for_command(command)
+                response_command = commands.LaneConfigurationsResponse(enabled_lanes, response_configs)
+                node_comms.send_response_for_command(response_command)
 
             elif isinstance(command, commands.ConfigureNode):
                 print("Configure command received")

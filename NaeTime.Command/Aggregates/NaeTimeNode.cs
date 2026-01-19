@@ -56,22 +56,18 @@ public class NaeTimeNode : AggregateRoot<Guid>
 
     public void MarkAsConnected()
     {
-        if (!_isConnected)
-        {
-            Raise(new NaeTimeNodeTimerConnected(Id));
-            Raise(new NaeTimeNodeConfigurationUnconfirmed(Id, _lanes));
-            Raise(new TimerConnected(Id));
-        }
+        Raise(new NaeTimeNodeTimerConnected(Id));
+        Raise(new NaeTimeNodeConfigurationUnconfirmed(Id, _lanes));
+        Raise(new TimerConnected(Id));
+        
     }
 
     public void MarkAsDisconnected()
     {
-        if (_isConnected)
-        {
-            Raise(new NaeTimeNodeTimerDisconnected(Id));
-            Raise(new NaeTimeNodeConfigurationUnconfirmed(Id, _lanes));
-            Raise(new TimerDisconnected(Id));
-        }
+        Raise(new NaeTimeNodeTimerDisconnected(Id));
+        Raise(new NaeTimeNodeConfigurationUnconfirmed(Id, _lanes));
+        Raise(new TimerDisconnected(Id));
+        
     }
 
     private void When(NaeTimeNodeTimerConnected e)

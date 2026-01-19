@@ -173,22 +173,28 @@ class NodeCommunication:
                 return None
             print("Packet CRC Valid")
             if command_id == TUNE_LANE:
+                print("Building TUNE_LANE Command")
                 lane, bandId, frequency = struct.unpack("<BBH", payload)
                 return commands.TuneLane(lane, bandId, frequency)
             elif command_id == CONFIGURE_NODE:
+                print("Building CONFIGURE_NODE Command")
                 node_id, transmit_frequency, polling_frequency = struct.unpack("<cii", payload)
                 return commands.ConfigureNode(node_id, transmit_frequency, polling_frequency)
             elif command_id == CONFIGURE_LANE_ENTRY_THRESHOLD:
+                print("Building CONFIGURE_LANE_ENTRY_THRESHOLD Command")
                 lane, entry_threshold = struct.unpack("<BH", payload)
                 return commands.ConfigureLaneEntryThreshold(lane, entry_threshold)
             elif command_id == CONFIGURE_LANE_EXIT_THRESHOLD:
+                print("Building CONFIGURE_LANE_EXIT_THRESHOLD Command")
                 lane, exit_threshold = struct.unpack("<BH", payload)
                 return commands.ConfigureLaneExitThreshold(lane, exit_threshold)
             elif command_id == CONFIGURE_LANE_ENABLED:
+                print("Building CONFIGURE_LANE_ENABLED Command")
                 lane, enabled = struct.unpack("<BB", payload)
                 return commands.ConfigureLaneEnabled(lane, enabled)
             elif command_id == REQUEST_LANE_CONFIGURATIONS:
-                lanes = struct.unpack("<B",)
+                print("Building REQUEST_LANE_CONFIGURATIONS Command")
+                lanes = struct.unpack("<B",payload)
                 return commands.RequestLaneConfigurations(lanes)
         except Exception as e:
             print("Process Packets Error: ", e)
@@ -205,6 +211,7 @@ class NodeCommunication:
         self._send_response(RESPONSE, command)
         
     def _send_response(self, response, command):
+        print("Preparing to send response:", response, "for command:", command)
         if(isinstance(command, commands.TuneLane)):
             print("Sending tune response:", response)
             data = struct.pack("<BBBH",TUNE_LANE, command.lane, command.bandId, command.frequency_in_mhz)
@@ -219,7 +226,7 @@ class NodeCommunication:
             data = struct.pack("<BBB",CONFIGURE_LANE_ENABLED, command.lane, command.enabled)
         elif(isinstance(command, commands.LaneConfigurationsResponse)):
             print("Send lane configuration response:", response)
-            data = struct.pack("<BB", REQUEST_LANE_CONFIGURATIONS, response.enabled_lanes)
+            data = struct.pack("<BB", REQUEST_LANE_CONFIGURATIONS, command.enabled_lanes)
             for lane_config in command.lane_configurations:
                 data += struct.pack("<BHHH", lane_config.bandId,lane_config.frequency_in_mhz, lane_config.entry_threshold, lane_config.exit_threshold)
         else:
