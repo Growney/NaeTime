@@ -1,2 +1,0 @@
-﻿namespace NaeTime.OpenPractice.Messages.Events;
-public record ConsecutiveLapLeaderboardRecordReduced(Guid SessionId, int Position, uint LapCap, Guid PilotId, uint TotalLaps, long TotalMilliseconds, DateTime LastLapCompletionUtc, IEnumerable<Guid> IncludedLaps);

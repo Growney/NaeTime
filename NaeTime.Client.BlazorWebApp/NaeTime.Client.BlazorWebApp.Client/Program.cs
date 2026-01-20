@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
 using MudBlazor.Services;
+using NaeTime.Client.BlazorWebApp.Client.Services;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -28,6 +29,12 @@ builder.Services.AddEventDbSignalRReactions(sp =>
 {
     NavigationManager navigationManager = sp.GetRequiredService<NavigationManager>();
     return navigationManager.BaseUri.TrimEnd('/');
+});
+builder.Services.AddSingleton<RssiService>(x=>
+{
+    NavigationManager navigationManager = x.GetRequiredService<NavigationManager>();
+    string baseAddress = navigationManager.BaseUri.TrimEnd('/');
+    return new RssiService(baseAddress);
 });
 
 await builder.Build().RunAsync();

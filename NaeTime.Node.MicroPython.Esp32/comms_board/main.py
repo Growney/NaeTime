@@ -200,6 +200,7 @@ async def init_device():
 lan=network.LAN(mdc=machine.Pin(31), mdio=machine.Pin(52),
     phy_type=network.PHY_IP101, phy_addr=1, reset=machine.Pin(51),
     ref_clk_mode=machine.Pin.IN, ref_clk=machine.Pin(50))
+lan.ifconfig(('192.168.1.3', '255.255.255.0', '192.168.1.1', '8.8.8.8'))
 lan.active(True)
 
 while(not lan.isconnected()):

@@ -14,6 +14,7 @@ internal class NodeConnection : INodeConnection
     private readonly ISoftwareTimer _softwareTimer;
     private readonly IStreamEventWriter _writer;
     private readonly INaeTimeNodeCommandHandler _commandHandler;
+    private readonly IRssiChannel _rssiChannel;
     private readonly Guid _timerId;
 
     private readonly CancellationTokenSource _cancellationTokenSource;
@@ -24,7 +25,7 @@ internal class NodeConnection : INodeConnection
     private readonly string _detectionsStream;
     private readonly string _rssiStream;
 
-    public NodeConnection(Guid timerId, ISoftwareTimer softwareTimer, INodeCommunication communication, INodeProtocol protocol, IStreamEventWriter writer, INaeTimeNodeCommandHandler commandHandler)
+    public NodeConnection(Guid timerId, ISoftwareTimer softwareTimer, INodeCommunication communication, INodeProtocol protocol, IStreamEventWriter writer, INaeTimeNodeCommandHandler commandHandler, IRssiChannel rssiChannel)
     {
         _timerId = timerId;
 
@@ -38,7 +39,7 @@ internal class NodeConnection : INodeConnection
         _commandHandler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
 
         _cancellationTokenSource = new CancellationTokenSource();
-
+        _rssiChannel = rssiChannel;
     }
     public Task Start()
     {
@@ -92,7 +93,7 @@ internal class NodeConnection : INodeConnection
 
                 ReceivedSignalStrengthIndicator status = rssi.Value;
 
-                await _writer.AppendToStream(_rssiStream, new RssiRecorded(_timerId, status.Lane, status.Level, _softwareTimer.ElapsedMilliseconds, status.RealTimeClockTime));
+                _rssiChannel.AppendRssi(_timerId, status.Lane, status.Level, _softwareTimer.ElapsedMilliseconds, status.RealTimeClockTime);
             }
             catch
             {
