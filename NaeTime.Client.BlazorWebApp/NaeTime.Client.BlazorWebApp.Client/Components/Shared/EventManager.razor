@@ -1,13 +1,39 @@
 ﻿@implements IAsyncDisposable
 
+@inject IJSRuntime JS
+
 @code {
     [Inject]
     public EventDbLite.Reactions.SignalR.Client.IEventClient EventClient { get; set; } = null!;
+    private string _lockId = Guid.NewGuid().ToString("N").Trim();
+    private IJSObjectReference? _module;
 
     protected override async Task OnInitializedAsync()
     {
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/eventManagerLock.js").ConfigureAwait(false);
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("acquireEventManagerLock", _lockId).ConfigureAwait(false);
+        }
+
         await EventClient.StartAsync();
     }
 
-    public ValueTask DisposeAsync() => EventClient.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        if (_module != null)
+        {
+            try
+            {
+                await _module.InvokeVoidAsync("releaseEventManagerLock", _lockId).ConfigureAwait(false);
+                await _module.DisposeAsync().ConfigureAwait(false);
+            }
+            catch
+            {
+                // ignore JS dispose errors
+            }
+        }
+
+        await EventClient.DisposeAsync();
+    }
 }

@@ -3,6 +3,7 @@ using MudBlazor.Services;
 using NaeTime.Client.BlazorWebApp.Components;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
+using NaeTime.Client.BlazorWebApp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,8 @@ builder.Services.AddNaeTimeCommand();
 builder.Services.AddHardwareCore();
 builder.Services.AddNaeTimeEventReactions();
 builder.Services.AddImmersionRCHardware();
+
+builder.Services.AddHostedService<ServerSpeech>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
