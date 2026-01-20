@@ -24,6 +24,7 @@ public static class DetectorProjector
             {
                 Query.Abstractions.Models.DetectorType.EthernetLapRF8Channel => Models.DetectorType.EthernetLapRF8Channel,
                 Query.Abstractions.Models.DetectorType.NaeTimeSerial => Models.DetectorType.NaeTimeSerial,
+                Query.Abstractions.Models.DetectorType.NaeTimeEthernet => Models.DetectorType.NaeTimeEthernet,
                 _ => throw new NotSupportedException($"Detector type {source.Type} is not supported.")
             }
         };

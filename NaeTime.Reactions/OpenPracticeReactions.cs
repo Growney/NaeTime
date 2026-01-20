@@ -1,19 +1,22 @@
 ﻿using NaeTime.Command.Abstractions;
 using NaeTime.Events;
 using NaeTime.Query.Abstractions;
+using System.Text;
 
 namespace NaeTime.Reactions;
 internal class OpenPracticeReactions
 {
     private readonly IImmersionRCLapRFCommandHandler _immersionRCLapRFCommandHandler;
+    private readonly INaeTimeNodeCommandHandler _naeTimeNodeCommandHandler;
     private readonly IHardwareQueryHandler _hardwareQueryHandler;
     private readonly IOpenPracticeQueryHandler _openPracticeQueryHandler;
     private readonly ITrackQueryHandler _trackQueryHandler;
     private readonly ISessionQueryHandler _sessionQueryHandler;
 
-    public OpenPracticeReactions(IImmersionRCLapRFCommandHandler immersionRCLapRFCommandHandler, IHardwareQueryHandler hardwareQueryHandler, IOpenPracticeQueryHandler openPracticeQueryHandler, ITrackQueryHandler trackQueryHandler, ISessionQueryHandler sessionQueryHandler)
+    public OpenPracticeReactions(IImmersionRCLapRFCommandHandler immersionRCLapRFCommandHandler,INaeTimeNodeCommandHandler naeTimeNodeCommandHandler,  IHardwareQueryHandler hardwareQueryHandler, IOpenPracticeQueryHandler openPracticeQueryHandler, ITrackQueryHandler trackQueryHandler, ISessionQueryHandler sessionQueryHandler)
     {
         _immersionRCLapRFCommandHandler = immersionRCLapRFCommandHandler;
+        _naeTimeNodeCommandHandler = naeTimeNodeCommandHandler;
         _hardwareQueryHandler = hardwareQueryHandler;
         _openPracticeQueryHandler = openPracticeQueryHandler;
         _trackQueryHandler = trackQueryHandler;
@@ -45,6 +48,13 @@ internal class OpenPracticeReactions
                     await _immersionRCLapRFCommandHandler.SetupLaneForSession(detector.Id, lane.Lane, lane.IsEnabled, lane.BandId, lane.FrequencyInMHz);
                 }
             }
+            if(detector.Type.HasFlag(NaeTime.Query.Abstractions.Models.DetectorType.NaeTime))
+            {
+                foreach (NaeTime.Query.Abstractions.Models.OpenPracticeLane lane in session.Lanes)
+                {
+                    await _naeTimeNodeCommandHandler.SetupLaneForSession(detector.Id, lane.Lane, lane.IsEnabled, lane.BandId, lane.FrequencyInMHz);
+                }
+            }
         }
     }
 
@@ -62,6 +72,10 @@ internal class OpenPracticeReactions
             if (detector.Type.HasFlag(Query.Abstractions.Models.DetectorType.ImmersionRC))
             {
                 await _immersionRCLapRFCommandHandler.RequestLaneFrequency(detector.Id, tuned.Lane, tuned.BandId, tuned.FrequencyInMHz);
+            }
+            else if(detector.Type.HasFlag(Query.Abstractions.Models.DetectorType.NaeTime))
+            {
+                await _naeTimeNodeCommandHandler.RequestLaneFrequency(detector.Id, tuned.Lane, tuned.BandId, tuned.FrequencyInMHz);
             }
         }
     }
@@ -82,6 +96,10 @@ internal class OpenPracticeReactions
             {
                 await _immersionRCLapRFCommandHandler.RequestLaneStatus(detector.Id, enabled.Lane, true);
             }
+            else if (detector.Type.HasFlag(Query.Abstractions.Models.DetectorType.NaeTime))
+            {
+                await _naeTimeNodeCommandHandler.RequestLaneStatus(detector.Id, enabled.Lane, true); ;
+            }
         }
     }
     private async Task When(OpenPracticeSessionLaneDisabled disabled)
@@ -98,6 +116,10 @@ internal class OpenPracticeReactions
             if (detector.Type.HasFlag(Query.Abstractions.Models.DetectorType.ImmersionRC))
             {
                 await _immersionRCLapRFCommandHandler.RequestLaneStatus(detector.Id, disabled.Lane, false);
+            }
+            else if (detector.Type.HasFlag(Query.Abstractions.Models.DetectorType.NaeTime))
+            {
+                await _naeTimeNodeCommandHandler.RequestLaneStatus(detector.Id, disabled.Lane, false);
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿@page "/hardware/ethernetimmersionrclaprf/create"
+﻿@page "/hardware/immersionrclaprf/ethernet8/create"
 @using System.Net
 
 @if(_immersionRCLapRF != null)
@@ -62,6 +62,6 @@
 
         await ImmersionRCLapRFCommandHandler.RegisterNetworkLapRF8Channel(_immersionRCLapRF.Id, _immersionRCLapRF.Name, parsedAddress, _immersionRCLapRF.Port);
 
-        NavigationManager.NavigateTo($"/hardware/ethernetimmersionrclaprf/{_immersionRCLapRF.Id}");
+        NavigationManager.NavigateTo($"/hardware/immersionrclaprf/ethernet8/{_immersionRCLapRF.Id}");
     }
 }

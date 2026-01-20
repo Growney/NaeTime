@@ -26,7 +26,6 @@ public class NodeTimingProtocol : INodeTimingProtocol
                 continue;
             }
 
-            byte translatedLane = (byte)(lane + 1);
             ushort rssi = recordReader.ReadUInt16();
             ulong lastPass = recordReader.ReadUInt32();
             ushort passCount = recordReader.ReadUInt16();
@@ -35,16 +34,16 @@ public class NodeTimingProtocol : INodeTimingProtocol
 
             if (lastRecordPassCount != null && passCount != 0 && passCount != lastRecordPassCount)
             {
-                _passQueue.Enqueue(new Pass(translatedLane, lastPass));
+                _passQueue.Enqueue(new Pass(lane, lastPass));
             }
 
             _lanePassStats.AddOrUpdate(lane, passCount, (x, t) => passCount);
 
-            _receivedSignalStrengthIndicators.Enqueue(new ReceivedSignalStrengthIndicator(translatedLane, rssi, currentTime));
+            _receivedSignalStrengthIndicators.Enqueue(new ReceivedSignalStrengthIndicator(lane, rssi, currentTime));
         }
     }
 
-    public void HandleResponseData(byte response, ReadOnlySpanReader<byte> recordReader)
+    public void HandleResponseData(byte responseCode, byte commandId, ReadOnlySpanReader<byte> recordReader)
     {
 
     }

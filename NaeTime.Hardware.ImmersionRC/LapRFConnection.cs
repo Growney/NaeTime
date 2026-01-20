@@ -17,17 +17,18 @@ internal class LapRFConnection : ILapRFConnection
     private readonly ISoftwareTimer _softwareTimer;
     private readonly IStreamEventWriter _writer;
     private readonly IImmersionRCLapRFCommandHandler _commandHandler;
+    private readonly IRssiChannel _rssiChannel;
     private readonly Guid _timerId;
 
     private readonly CancellationTokenSource _cancellationTokenSource;
     public bool IsConnected { get; private set; }
 
-    private readonly Task[] _runningTasks;
+    private Task[] _runningTasks = [];
 
     private readonly string _detectionsStream;
     private readonly string _rssiStream;
 
-    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol, IStreamEventWriter writer, IImmersionRCLapRFCommandHandler commandHandler)
+    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol, IStreamEventWriter writer, IImmersionRCLapRFCommandHandler commandHandler, IRssiChannel rssiChannel)
     {
         _timerId = timerId;
 
@@ -41,12 +42,15 @@ internal class LapRFConnection : ILapRFConnection
         _commandHandler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
 
         _cancellationTokenSource = new CancellationTokenSource();
-
-        CancellationToken token = _cancellationTokenSource.Token;
-
-        _runningTasks = [MaintainConnectionAsync(token), WaitForDetectionsAsync(token), WaitForStatusAsync(token)];
+        _rssiChannel = rssiChannel;
     }
 
+    public Task Start()
+    {
+        CancellationToken token = _cancellationTokenSource.Token;
+        _runningTasks = [MaintainConnectionAsync(token), WaitForDetectionsAsync(token), WaitForStatusAsync(token)];
+        return Task.CompletedTask;
+    }
     private async Task MaintainConnectionAsync(CancellationToken token)
     {
         await _commandHandler.MarkAsDisconnected(_timerId);
@@ -60,7 +64,6 @@ internal class LapRFConnection : ILapRFConnection
 
                 //We must start the run task before we dispatch the connection established as data may be requested when the connection is established
                 System.Runtime.CompilerServices.ConfiguredTaskAwaitable runTask = _protocol.RunAsync(token).ConfigureAwait(false);
-
 
                 await runTask;
             }
@@ -114,9 +117,9 @@ internal class LapRFConnection : ILapRFConnection
                     continue;
                 }
 
-                ReceivedSignalStrengthIndicator status = nullableStatus.Value;
+                ReceivedSignalStrengthIndicator status = nullableStatus.Value;        
 
-                await _writer.AppendToStream(_rssiStream, new RssiRecorded(_timerId, status.LaneId,status.Level,_softwareTimer.ElapsedMilliseconds,status.RealTimeClockTime));
+                _rssiChannel.AppendRssi(_timerId, status.LaneId, status.Level, _softwareTimer.ElapsedMilliseconds, status.RealTimeClockTime);
 
             }
             catch

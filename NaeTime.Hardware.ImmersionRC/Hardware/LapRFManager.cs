@@ -33,13 +33,15 @@ internal class LapRFManager : BackgroundService
         {
             ILapRFConnection connection = device switch
             {
-                NaeTime.Query.Abstractions.Models.Ethernet8ChannelImmersionRCLapRF ethernetDevice => _connectionFactory.CreateEthernetConnection(ethernetDevice.Id, ethernetDevice.IPAddress, ethernetDevice.Port),
+                NaeTime.Query.Abstractions.Models.Ethernet8ChannelImmersionRCLapRF ethernetDevice => _connectionFactory.CreateEthernetConnection(ethernetDevice.Id, System.Net.IPAddress.Parse(ethernetDevice.IPAddress), ethernetDevice.Port),
                 _ => throw new NotSupportedException($"LapRF device type {device.GetType().FullName} is not supported.")
             };
 
             _connectionProvider.SetLapRFConnection(device.Id, connection);
 
             _hardwareProcesses[device.Id] = connection;
+
+            await connection.Start();
         }
 
         await Task.WhenAll(
@@ -59,6 +61,7 @@ internal class LapRFManager : BackgroundService
             ILapRFConnection connection = _connectionFactory.CreateEthernetConnection(e.TimerId, ipAddress, e.Port);
             _connectionProvider.SetLapRFConnection(e.TimerId, connection);
             _hardwareProcesses[e.TimerId] = connection;
+            await connection.Start();
         }
     }
 
@@ -74,6 +77,7 @@ internal class LapRFManager : BackgroundService
             ILapRFConnection connection = _connectionFactory.CreateEthernetConnection(e.TimerId, ipAddress, e.Port);
             _connectionProvider.SetLapRFConnection(e.TimerId, connection);
             _hardwareProcesses[e.TimerId] = connection;
+            await connection.Start();
         }
     }
 }

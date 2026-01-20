@@ -20,6 +20,7 @@ public static class TrackProjector
                 {
                     NaeTime.Query.Abstractions.Models.DetectorType.EthernetLapRF8Channel => Models.DetectorType.EthernetLapRF8Channel,
                     NaeTime.Query.Abstractions.Models.DetectorType.NaeTimeSerial => Models.DetectorType.NaeTimeSerial,
+                    NaeTime.Query.Abstractions.Models.DetectorType.NaeTimeEthernet => Models.DetectorType.NaeTimeEthernet,
                     _ => throw new NotImplementedException()
                 },
                 SupportedLanes = d.SupportedLanes

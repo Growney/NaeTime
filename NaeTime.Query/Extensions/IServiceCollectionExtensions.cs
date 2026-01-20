@@ -23,6 +23,7 @@ public static class IServiceCollectionExtensions
         services.AddSingletonLiveProjection<IOpenPracticeTimingProjection, OpenPracticeTimingProjection>();
         services.AddSingletonLiveProjection<ITimerConfigurationProjection, TimerConfigurationProjection>();
         services.AddSingletonLiveProjection<ITimerDetailsProjection, TimerDetailsProjection>();
+        services.AddSingletonLiveProjection<INaeTimeNodeProjection, NaeTimeNodeProjection>();
 
         return services;
     }

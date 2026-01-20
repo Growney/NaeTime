@@ -12,9 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EventDbLite\EventDbLite.csproj" />
     <ProjectReference Include="..\NaeTime.Bytes\NaeTime.Bytes.csproj" />
     <ProjectReference Include="..\NaeTime.Collections\NaeTime.Collections.csproj" />
+    <ProjectReference Include="..\NaeTime.Command.Abstractions\NaeTime.Command.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
+    <ProjectReference Include="..\NaeTime.Query.Abstractions\NaeTime.Query.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

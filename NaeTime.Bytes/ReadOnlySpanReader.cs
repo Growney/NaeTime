@@ -29,4 +29,10 @@ public ref struct ReadOnlySpanReader<T>
     {
         return _position < _data.Length;
     }
+    public T[] ReadRemaining()
+    {
+        ReadOnlySpan<T> span = _data.Slice(_position);
+        _position = _data.Length;
+        return span.ToArray();
+    }
 }

@@ -1,6 +1,7 @@
 ﻿@page "/hardware/list"
 
 <MudButton Variant=Variant.Filled Href=/hardware/ethernetimmersionrclaprf/create>Create Ethernet LapRF</MudButton>
+<MudButton Variant=Variant.Filled Href=/hardware/naetimenode/network/create>Create Ethernet NaeTime Node</MudButton>
 <MudSimpleTable>
     <thead>
         <tr>
@@ -40,10 +41,13 @@
         switch(type)
         {
             case NaeTime.Query.Abstractions.Models.DetectorType.EthernetLapRF8Channel:
-                NavigationManager.NavigateTo($"/hardware/ethernetimmersionrclaprf/{id}");
+                NavigationManager.NavigateTo($"/hardware/immersionrclaprf/ethernet8/{id}");
                 break;
             case NaeTime.Query.Abstractions.Models.DetectorType.NaeTimeSerial:
                 NavigationManager.NavigateTo($"/hardware/naetimeserial/{id}");
+                break;
+            case NaeTime.Query.Abstractions.Models.DetectorType.NaeTimeEthernet:
+                NavigationManager.NavigateTo($"/hardware/naetimenode/network/{id}");
                 break;
             default:
                 throw new NotSupportedException($"Detector type {type} is not supported.");

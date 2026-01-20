@@ -1,4 +1,6 @@
 ﻿@using EventDbLite.Reactions.Abstractions
+@using NaeTime.Client.BlazorWebApp.Client.Services
+@using NaeTime.Query.Abstractions.Models
 @implements IAsyncDisposable
 
 <canvas id="@_chartId" style="width:100%; height: 200px"></canvas>
@@ -15,31 +17,35 @@
     private readonly CancellationTokenSource _source = new();
 
     [Inject]
-    private IReactionProviderFactory ReactionProviderFactory { get; set; } = null!;
+    private RssiService RssiService { get; set; } = null!;
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = null!;
 
     private int _chartId;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         _chartId = GetHashCode();
 
-        ReactionProviderFactory.On<Events.RssiRecorded>(async rssi =>
-            {
-                if (_rssiSeries is null || _chart is null)
-                {
-                    return;
-                }
-                if (rssi.TimerId != TimerId || rssi.LaneId != LaneId)
-                {
-                    return;
-                }
-                if (_rssiSeries is not null)
-                {
-                    await JSRuntime.InvokeVoidAsync("addValueToLine", _rssiSeries, DateTime.Now, rssi.Rssi);
-                }
-            }, _source.Token);
+        RssiService.OnRssiReceived += OnRssiReceived;
+
+        await RssiService.StartAsync();
+    }
+
+    private void OnRssiReceived(RssiValue rssi)
+    {
+        if (_rssiSeries is null || _chart is null)
+        {
+            return;
+        }
+        if (rssi.TimerId != TimerId || rssi.Lane != LaneId)
+        {
+            return;
+        }
+        if (_rssiSeries is not null)
+        {
+            InvokeAsync(() => JSRuntime.InvokeVoidAsync("addValueToLine", _rssiSeries, DateTime.Now, rssi.Rssi));
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -66,5 +72,7 @@
         {
             await _chart.DisposeAsync();
         }
+
+        RssiService.OnRssiReceived -= OnRssiReceived;
     }
 }

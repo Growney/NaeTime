@@ -1,0 +1,54 @@
+﻿
+<NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart TimerId=TimerId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart>
+
+@if(_lane != null)
+{
+    <MudNumericField Label="Threshold" T="float" Value="_lane.Threshold.Requested ?? _lane.Threshold.Confirmed ?? 800" ValueChanged="ThresholdChanged"></MudNumericField>
+    <MudNumericField Label="Gain" T="ushort" Value="_lane.Gain.Requested ?? _lane.Gain.Confirmed ?? 59" ValueChanged="GainChanged"></MudNumericField>
+}
+
+@code {
+    [Parameter]
+    public Guid TimerId { get; set; }
+    [Parameter]
+    public byte LaneId { get; set; }
+
+    [Inject]
+    private NaeTime.Command.Abstractions.IImmersionRCLapRFCommandHandler ImmersionRCLapRFCommandHandler { get; set; } = null!;
+    [Inject]
+    private NaeTime.Query.Abstractions.IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+
+    private NaeTime.Query.Abstractions.Models.ImmersionRCLapRFLane? _lane;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        NaeTime.Query.Abstractions.Models.ImmersionRCLapRFLane? laneConfiguration = await HardwareQueryHandler.GetImmersionRCLapRFLane(TimerId, LaneId);
+
+        _lane = laneConfiguration;
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task ThresholdChanged(float newThreshold)
+    {
+        if(_lane is null)
+        {
+            return;
+        }
+
+        await ImmersionRCLapRFCommandHandler.RequestLaneThreshold(TimerId, LaneId, newThreshold);
+        _lane = _lane with { Threshold = _lane.Threshold with { Requested = newThreshold } };
+    }
+
+    private async Task GainChanged(ushort newGain)
+    {
+        if (_lane is null)
+        {
+            return;
+        }
+        await ImmersionRCLapRFCommandHandler.RequestLaneGain(TimerId, LaneId, newGain);
+        _lane = _lane with { Gain = _lane.Gain with { Requested = newGain } };
+    }
+}

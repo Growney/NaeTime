@@ -89,7 +89,18 @@
 </div>
 @foreach (Guid detectorId in _tuningTimers)
 {
-    <NaeTime.Client.BlazorWebApp.Client.Components.Hardware.TimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.TimerLaneTuner>
+    NaeTime.Query.Abstractions.Models.Detector detector = _detectors[detectorId];
+
+    if(detector.Type.HasFlag(NaeTime.Query.Abstractions.Models.DetectorType.ImmersionRC))
+    {
+        <NaeTime.Client.BlazorWebApp.Client.Components.Hardware.ImmersionRCLapRFTimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.ImmersionRCLapRFTimerLaneTuner>
+        continue;
+    }
+    else if(detector.Type.HasFlag(NaeTime.Query.Abstractions.Models.DetectorType.NaeTime))
+    {
+        <NaeTime.Client.BlazorWebApp.Client.Components.Hardware.NaeTimeNetworkNodeLapRFTimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.NaeTimeNetworkNodeLapRFTimerLaneTuner>
+        continue;
+    }
 }
 <div class="w-100 pb-2">
     <MudIconButton Icon=@Icons.Material.Filled.Timer Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"></MudIconButton>                
@@ -116,8 +127,22 @@
     [Inject]
     private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
+    [Inject]
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+
+    private Dictionary<Guid, NaeTime.Query.Abstractions.Models.Detector> _detectors = new();
 
     private HashSet<Guid> _tuningTimers = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var storedDetectors = await HardwareQueryHandler.GetAllDetectors();
+
+        _detectors = storedDetectors.ToDictionary(x => x.Id, x => x);
+
+        await base.OnInitializedAsync();
+    }
 
     private void ToggleTuningTimer(Guid timerId)
     {

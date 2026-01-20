@@ -1,0 +1,67 @@
+﻿@page "/hardware/naetimenode/network/create"
+@using System.Net
+
+@if (_naeTimeNode != null)
+{
+    <MudGrid Justify=Justify.Center>
+        <MudItem xs=3>
+            <MudIconButton Icon=@Icons.Material.Filled.ArrowLeft Href="/hardware/list"></MudIconButton>
+            <MudPaper Class="p-4">
+                <MudForm @bind-IsValid="_isValid">
+                    <MudTextField @bind-Value="_naeTimeNode.Name" Label="Name" Required="true"></MudTextField>
+                    <MudTextField @bind-Value="_naeTimeNode.IPAddress" Label="IP Address" Required="true"></MudTextField>
+                    <MudNumericField T=ushort @bind-Value="_naeTimeNode.Port" Label="Port" Required="true" Min="1" Max="65535"></MudNumericField>
+                    <MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Primary" OnClick="Create">Create</MudButton>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Inject]
+    private INaeTimeNodeCommandHandler NaeTimeNodeCommandHandler { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private NaeTime.Client.Models.EthernetNaeTimeNode? _naeTimeNode;
+
+    private bool _isValid = false;
+
+    protected override void OnInitialized()
+    {
+        _naeTimeNode = new NaeTime.Client.Models.EthernetNaeTimeNode()
+            {
+                Id = Guid.NewGuid(),
+                Port = 5005,
+                IPAddress = "192.168.1.2"
+            };
+    }
+
+    private async Task Create()
+    {
+        if (_naeTimeNode == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(_naeTimeNode.Name))
+        {
+            return;
+        }
+
+        if (!IPAddress.TryParse(_naeTimeNode.IPAddress, out IPAddress? parsedAddress))
+        {
+            return;
+        }
+        if (_naeTimeNode.Port < 1 || _naeTimeNode.Port > 65535)
+        {
+            return;
+        }
+
+        await NaeTimeNodeCommandHandler.RegisterNetworkNode(_naeTimeNode.Id, _naeTimeNode.Name, parsedAddress, _naeTimeNode.Port,8);
+
+        NavigationManager.NavigateTo($"/hardware/naetimenode/network/{_naeTimeNode.Id}");
+    }
+}

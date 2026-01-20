@@ -39,14 +39,14 @@ public class ImmersionRCProjection : IImmersionRCProjection
             lanes[i] = new ImmersionRCLapRFLane(i, new(false, false, false), new(null, null, false), new(null, null, false), new(null, null, false), new(0, 0, false));
         }
 
-        Ethernet8ChannelImmersionRCLapRF timer = new(register.TimerId, register.Name, false, lanes, IPAddress.Parse(register.IPAddress), register.Port);
+        Ethernet8ChannelImmersionRCLapRF timer = new(register.TimerId, register.Name, false, lanes, register.IPAddress, register.Port);
         _timers[register.TimerId] = timer;
     }
     private void When(ImmersionRCLapRFNetworkConfigurationChanged configured)
     {
         if (_timers.TryGetValue(configured.TimerId, out var timer) && timer is Ethernet8ChannelImmersionRCLapRF ethTimer)
         {
-            _timers[configured.TimerId] = ethTimer with { IPAddress = IPAddress.Parse(configured.IPAddress), Port = configured.Port };
+            _timers[configured.TimerId] = ethTimer with { IPAddress = configured.IPAddress, Port = configured.Port };
         }
     }
     private void When(ImmersionRCLapRFRenamed rename)

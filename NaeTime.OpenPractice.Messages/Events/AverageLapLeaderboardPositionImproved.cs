@@ -1,2 +1,0 @@
-﻿namespace NaeTime.OpenPractice.Messages.Events;
-public record AverageLapLeaderboardPositionImproved(Guid SessionId, int NewPosition, int? OldPosition, Guid PilotId, double AverageMilliseconds, DateTime FirstLapCompletionUtc);

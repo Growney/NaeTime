@@ -1,6 +1,9 @@
 using MudBlazor;
 using MudBlazor.Services;
 using NaeTime.Client.BlazorWebApp.Components;
+using NaeTime.Client.BlazorWebApp.Hubs;
+using NaeTime.Client.BlazorWebApp.Services;
+using NaeTime.Hardware.Abstractions;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using NaeTime.Client.BlazorWebApp;
@@ -28,6 +31,9 @@ builder.Services.AddNaeTimeCommand();
 builder.Services.AddHardwareCore();
 builder.Services.AddNaeTimeEventReactions();
 builder.Services.AddImmersionRCHardware();
+builder.Services.AddEsp32NodeTimers();
+
+builder.Services.AddSingleton<IRssiConsumer, RssiDistributionService>();
 
 builder.Services.AddHostedService<ServerSpeech>();
 
@@ -56,6 +62,7 @@ app.Use(async (context, next) =>
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapHub<RssiHub>("/rssiHub");
 
 app.MapEventDbLiteService();
 app.MapRazorComponents<App>()
