@@ -54,7 +54,9 @@ class Rx5808RegisterCommunication:
     
         
     def init(self):
-        self._write_to_register(POWER_DOWN_CONTROL,0b11010000110111110011)
+        print("initializing rx5808 on select pin ", self._select_pin)
+        #self._write_to_register(POWER_DOWN_CONTROL,0b11111101110111111111)
+        #self._write_to_register(POWER_DOWN_CONTROL,0b00000000000000000000)
     
     def set_frequency(self,frequency_in_MHz):
         register_value = Rx5808RegisterCommunication.calculate_frequency_register_value(frequency_in_MHz)

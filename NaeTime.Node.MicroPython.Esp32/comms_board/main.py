@@ -145,6 +145,7 @@ async def rssi_loop():
     global transmit_delay_ms
     global lane_timings
     global rssi_modules
+    global lane_configurations
 
     lane_last_rssi_read = []
     for i in range(len(rssi_modules)):
@@ -154,6 +155,11 @@ async def rssi_loop():
         try:
             lane_pointer = 0
             while(lane_pointer < len(lane_timings)):
+
+                if(not lane_configurations[lane_pointer].is_enabled):
+                    lane_pointer += 1
+                    continue
+
                 current_time = time.ticks_ms()
                 current_rssi = rssi_modules[lane_pointer].read_value()
                 lane_last_rssi_read[lane_pointer] = current_time
@@ -187,9 +193,15 @@ async def init_device():
     print("Tuning Modules")
 
     for i in range(len(rx_modules)):
+        rx_modules[i].init()
+    
+    print("modules initialized")
+    await asyncio.sleep_ms(1000)
+
+    for i in range(len(rx_modules)):
         frequency = lane_configurations[i].frequency_in_mhz
         success = rx_modules[i].tune(frequency)
-        print("Module: ", str(i), "Tuned To: ", frequency, "MHz Success: ", success)
+        print("Lane "+str(i)+" tuned to "+str(frequency)+" MHz"+" Success: "+str(success))
 
     asyncio.create_task(radio.start_tcp_server())
     asyncio.create_task(transmission_loop())
@@ -200,8 +212,9 @@ async def init_device():
 lan=network.LAN(mdc=machine.Pin(31), mdio=machine.Pin(52),
     phy_type=network.PHY_IP101, phy_addr=1, reset=machine.Pin(51),
     ref_clk_mode=machine.Pin.IN, ref_clk=machine.Pin(50))
-lan.ifconfig(('192.168.1.3', '255.255.255.0', '192.168.1.1', '8.8.8.8'))
 lan.active(True)
+lan.ipconfig(dhcp4=True)
+#lan.ifconfig(('192.168.1.3', '255.255.255.0', '192.168.1.1', '8.8.8.8'))
 
 while(not lan.isconnected()):
     time.sleep(1)
@@ -214,7 +227,7 @@ running = True
 node_id = 1
 transmit_delay_ms = 100 #10hz
 polling_delay_ms = 10 #100hz
-filter_cutoff_frequency = 50
+filter_cutoff_frequency = 200
 
 
 RECEIVER_SCLK_PIN = 15
@@ -223,14 +236,14 @@ RECEIVER_MOSI_PIN = 3
 print("Initializing Devices")
 
 lane_configurations = [
-    LaneConfiguration(True,4,5658,18000,18000),
-    LaneConfiguration(True,4,5695,18000,18000),
-    LaneConfiguration(True,4,5732,18000,18000),
-    LaneConfiguration(True,4,5769,18000,18000),
-    LaneConfiguration(True,4,5806,18000,18000),
-    LaneConfiguration(True,4,5843,18000,18000),
-    LaneConfiguration(True,4,5880,18000,18000),
-    LaneConfiguration(True,4,5917,18000,18000),
+    LaneConfiguration(False,4,5658,20000,20000),
+    LaneConfiguration(False,4,5695,20000,20000),
+    LaneConfiguration(False,4,5732,20000,20000),
+    LaneConfiguration(False,4,5769,20000,20000),
+    LaneConfiguration(False,4,5806,20000,20000),
+    LaneConfiguration(False,4,5843,20000,20000),
+    LaneConfiguration(False,4,5880,20000,20000),
+    LaneConfiguration(False,4,5917,20000,20000),
 ]
 
 rssi_modules = [
@@ -248,10 +261,10 @@ rx_modules = [
     Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,6),
     Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,5),
     Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,4),
+    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,26),
     Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,27),
     Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,32),
-    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,33),
-    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,26)
+    Rx5808RegisterCommunication(RECEIVER_SCLK_PIN,RECEIVER_MOSI_PIN,33)
 ]
 peak_detectors = [
     PeakDetector(lane_configurations[0].entry_threshold, lane_configurations[0].exit_threshold),
