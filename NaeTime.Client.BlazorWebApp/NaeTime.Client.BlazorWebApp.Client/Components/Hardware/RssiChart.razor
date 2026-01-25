@@ -14,6 +14,8 @@
     private IJSObjectReference? _chart;
     private IJSObjectReference? _rssiSeries;
 
+    private Dictionary<string, IJSObjectReference> _lineSeries = new();
+
     private readonly CancellationTokenSource _source = new();
 
     [Inject]
@@ -57,6 +59,17 @@
         }
 
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public async Task AddLineValue(string lineKey, DateTime when, float value)
+    {
+        if (!_lineSeries.TryGetValue(lineKey, out var line))
+        {
+            line = await JSRuntime.InvokeAsync<IJSObjectReference>("addLine", _chart, lineKey);
+            _lineSeries[lineKey] = line;
+        }
+
+        await JSRuntime.InvokeVoidAsync("addValueToLine", line, when, value);
     }
 
     public async ValueTask DisposeAsync()

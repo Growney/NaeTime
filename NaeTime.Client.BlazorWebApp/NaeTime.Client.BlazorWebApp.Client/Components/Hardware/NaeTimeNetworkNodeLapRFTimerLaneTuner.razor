@@ -1,5 +1,7 @@
-﻿
-<NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart TimerId=TimerId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart>
+﻿@using NaeTime.Client.BlazorWebApp.Client.Services
+@using NaeTime.Query.Abstractions.Models
+
+<NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart @ref=_rssiChart TimerId=TimerId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart>
 
 @if (_lane != null)
 {
@@ -17,20 +19,44 @@
     private NaeTime.Command.Abstractions.INaeTimeNodeCommandHandler NaeTimeNodeCommandHandler { get; set; } = null!;
     [Inject]
     private NaeTime.Query.Abstractions.IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+    [Inject]
+    private RssiService RssiService { get; set; } = null!;
 
     private NaeTime.Query.Abstractions.Models.NaeTimeNodeLane? _lane;
-
+    private RssiChart? _rssiChart;
 
 
     protected override async Task OnInitializedAsync()
     {
         NaeTime.Query.Abstractions.Models.NaeTimeNodeLane? laneConfiguration = await HardwareQueryHandler.GetNaeTimeNodeLane(TimerId, LaneId);
 
+        RssiService.OnRssiReceived += OnRssiReceived;
+
         _lane = laneConfiguration;
 
         await base.OnInitializedAsync();
     }
+    private async void OnRssiReceived(RssiValue rssi)
+    {
+        try
+        {
 
+            if (_rssiChart is null)
+            {
+                return;
+            }
+            if (rssi.TimerId != TimerId || rssi.Lane != LaneId)
+            {
+                return;
+            }
+
+            await _rssiChart.AddLineValue("rssi", DateTime.Now, rssi.Rssi);
+        }
+        catch
+        {
+            // Ignore JS errors
+        }
+    }
     private async Task EntryThresholdChanged(ushort newThreshold)
     {
         if (_lane is null)
