@@ -108,12 +108,11 @@ internal class NodeConnection : INodeConnection
         {
             try
             {
-                Pass? nullablePassingRecord = await _protocol.TimingProtocol.WaitForNextPassAsync(token).ConfigureAwait(false);
-                if (nullablePassingRecord == null)
+                Pass? passingRecord = await _protocol.TimingProtocol.WaitForNextPassAsync(token).ConfigureAwait(false);
+                if (passingRecord is null)
                 {
                     continue;
                 }
-                Pass passingRecord = nullablePassingRecord.Value;
 
                 await _writer.AppendToStream(_detectionsStream, new NaeTime.Events.HardwareDetectionOccured(Guid.NewGuid(), _timerId, passingRecord.Lane, passingRecord.Time, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
             }

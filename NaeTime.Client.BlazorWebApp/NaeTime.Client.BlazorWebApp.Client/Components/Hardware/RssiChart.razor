@@ -6,17 +6,26 @@
 <canvas id="@_chartId" style="width:100%; height: 200px"></canvas>
 
 @code {
+
+    public record HorizontalLine(string Key, int InitialValue, float Thickness, string Colour);
+    public record Series(string Key);
+
     [Parameter]
-    public Guid TimerId { get; set; }
+    [EditorRequired]
+    public string ChartType { get; set; }
     [Parameter]
-    public byte LaneId { get; set; }
+    public IEnumerable<Series> ChartSeries { get; set; } = Array.Empty<Series>();
+    [Parameter]
+    public IEnumerable<RssiChart.HorizontalLine> HorizontalLines { get; set; } = Array.Empty<RssiChart.HorizontalLine>();
+    [Parameter]
+    public int MaxValue { get; set; } = int.MaxValue;
+    [Parameter]
+    public int MinValue { get; set; } = 0;
 
     private IJSObjectReference? _chart;
-    private IJSObjectReference? _rssiSeries;
 
-    private Dictionary<string, IJSObjectReference> _lineSeries = new();
-
-    private readonly CancellationTokenSource _source = new();
+    private readonly Dictionary<string, IJSObjectReference> _horizontalLines = new();
+    private readonly Dictionary<string, IJSObjectReference> _series = new();
 
     [Inject]
     private RssiService RssiService { get; set; } = null!;
@@ -25,67 +34,74 @@
 
     private int _chartId;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         _chartId = GetHashCode();
-
-        RssiService.OnRssiReceived += OnRssiReceived;
-
-        await RssiService.StartAsync();
-    }
-
-    private void OnRssiReceived(RssiValue rssi)
-    {
-        if (_rssiSeries is null || _chart is null)
-        {
-            return;
-        }
-        if (rssi.TimerId != TimerId || rssi.Lane != LaneId)
-        {
-            return;
-        }
-        if (_rssiSeries is not null)
-        {
-            InvokeAsync(() => JSRuntime.InvokeVoidAsync("addValueToLine", _rssiSeries, DateTime.Now, rssi.Rssi));
-        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if(_chart == null)
         {
-            _chart = await JSRuntime.InvokeAsync<IJSObjectReference>("createRssiSmootheChart", "rssi", _chartId, 0, 3800);
-            _rssiSeries = await JSRuntime.InvokeAsync<IJSObjectReference>("addRssiLine", _chart);
+            _chart = await JSRuntime.InvokeAsync<IJSObjectReference>("createRssiSmootheChart", ChartType, _chartId, MinValue, MaxValue);
         }
+
+        foreach(Series series in ChartSeries)
+        {
+            if(_series.ContainsKey(series.Key))
+            {
+                continue;
+            }
+            var jsSeries = await JSRuntime.InvokeAsync<IJSObjectReference>("addRssiLine", _chart);
+            _series[series.Key] = jsSeries;
+        }
+
+        foreach (HorizontalLine line in HorizontalLines)
+        {
+            if (_horizontalLines.ContainsKey(line.Key))
+            {
+                continue;
+            }
+            var jsLine = await JSRuntime.InvokeAsync<IJSObjectReference>("addHorizontalLine", _chart, line.InitialValue,line.Colour,line.Thickness);
+            _horizontalLines[line.Key] = jsLine;
+        }
+        
 
         await base.OnAfterRenderAsync(firstRender);
     }
 
-    public async Task AddLineValue(string lineKey, DateTime when, float value)
+    public async Task AddSeriesValue(string lineKey, DateTime when, float value)
     {
-        if (!_lineSeries.TryGetValue(lineKey, out var line))
+        if (!_series.TryGetValue(lineKey, out var line))
         {
-            line = await JSRuntime.InvokeAsync<IJSObjectReference>("addLine", _chart, lineKey);
-            _lineSeries[lineKey] = line;
+            return;
         }
 
         await JSRuntime.InvokeVoidAsync("addValueToLine", line, when, value);
     }
+    public async Task UpdateHorizontalLineValue(string lineKey, int newValue)
+    {
+        if (!_horizontalLines.TryGetValue(lineKey, out var line))
+        {
+            return;
+        }
+        await JSRuntime.InvokeVoidAsync("setLineValue", line, newValue);
+    }
 
     public async ValueTask DisposeAsync()
     {
-        _source.Cancel();
-        _source.Dispose();
-
-        if(_rssiSeries is not null)
+        foreach(var _horizontalLine in _horizontalLines.Values)
+        {
+            await _horizontalLine.DisposeAsync();
+        }
+        foreach(var _rssiSeries in _series.Values)
         {
             await _rssiSeries.DisposeAsync();
         }
-        if (_chart is not null)
+
+        if (_chart != null)
         {
             await _chart.DisposeAsync();
         }
-
-        RssiService.OnRssiReceived -= OnRssiReceived;
     }
 }

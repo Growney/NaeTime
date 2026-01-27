@@ -10,12 +10,8 @@ class ADCReader:
         self.filter = filters.LowPassFilter(cutoff_frequency, sample_rate)
     
     def read_value(self):
-        raw_value_byte = self.adc.read()
         raw_value = self.adc.read_u16()
-        filtered = self.filter.get_value(raw_value_byte)
-        voltage = self.adc.read_uv()
-        print("ADC Pin:", self.pin, " Raw16:", raw_value," Raw8:", raw_value_byte, " Filtered:", filtered, " Voltage (uV):", voltage)
-
+        filtered = self.filter.get_value(raw_value)
         return filtered
 
 

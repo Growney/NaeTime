@@ -139,7 +139,7 @@ public class NodeConfigurationProtocol(INodeCommunication nodeCommunication) : I
     }
 
     private static void TimeOutToken<T>(TimeSpan timeOut, TaskCompletionSource<T> taskCompletionSource) => Task.Delay(timeOut).ContinueWith(t => taskCompletionSource.TrySetCanceled());
-    public void HandleRecordData(ReadOnlySpanReader<byte> recordReader)
+    public void HandleRecordData(RecordType commandId, ReadOnlySpanReader<byte> recordReader)
     {
 
     }
@@ -156,12 +156,12 @@ public class NodeConfigurationProtocol(INodeCommunication nodeCommunication) : I
         };
     }
 
-    private static void HandleResponse<T>(byte commandId, ReadOnlySpanReader<byte> ackReader, T setResult, ConcurrentDictionary<byte, ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>>> laneWaiting, ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>> commandWaiting)
+    private static void HandleResponse<T>(RecordType commandId, ReadOnlySpanReader<byte> ackReader, T setResult, ConcurrentDictionary<byte, ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>>> laneWaiting, ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>> commandWaiting)
     {
-        if (IsSingleLaneCommand((RecordType)commandId))
+        if (IsSingleLaneCommand(commandId))
         {
 
-            if (!laneWaiting.TryGetValue(commandId, out ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>>? laneAcks))
+            if (!laneWaiting.TryGetValue((byte)commandId, out ConcurrentDictionary<byte, ConcurrentQueue<TaskCompletionSource<T>>>? laneAcks))
             {
                 return;
             }
@@ -178,7 +178,7 @@ public class NodeConfigurationProtocol(INodeCommunication nodeCommunication) : I
             }
             return;
         }
-        else if (commandWaiting.TryRemove(commandId, out ConcurrentQueue<TaskCompletionSource<T>>? taskCompletionQueue))
+        else if (commandWaiting.TryRemove((byte)commandId, out ConcurrentQueue<TaskCompletionSource<T>>? taskCompletionQueue))
         {
             while (taskCompletionQueue.TryDequeue(out TaskCompletionSource<T>? dequeuedAck))
             {
@@ -188,17 +188,17 @@ public class NodeConfigurationProtocol(INodeCommunication nodeCommunication) : I
             return;
         }
     }
-    public void HandleResponseData(byte response, byte commandId, ReadOnlySpanReader<byte> recordReader)
+    public void HandleResponseData(RecordType response, RecordType commandId, ReadOnlySpanReader<byte> recordReader)
     {
-        if (response == (byte)RecordType.ACK)
+        if (response == RecordType.ACK)
         {
-            HandleResponse(commandId, recordReader, true, _commandLaneAckWaiting,_commandAckWaiting);
+            HandleResponse(commandId, recordReader, true, _commandLaneAckWaiting, _commandAckWaiting);
         }
-        else if (response == (byte)RecordType.ERROR)
+        else if (response == RecordType.ERROR)
         {
             HandleResponse(commandId, recordReader, false, _commandLaneAckWaiting, _commandAckWaiting);
         }
-        else if (response == (byte)RecordType.RESPONSE)
+        else if (response == RecordType.RESPONSE)
         {
             byte[] data = recordReader.ReadRemaining();
             HandleResponse(commandId, recordReader, data, _commandLaneDataWaiting, _commandDataWaiting);

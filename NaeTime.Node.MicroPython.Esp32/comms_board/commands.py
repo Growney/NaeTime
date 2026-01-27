@@ -73,12 +73,12 @@ class ConfigureNode:
     def polling_frequency_hz(self):
         return self._polling_frequency_hz
 
-class NodeTimings:
-    def __init__(self, current_time, lane_count, enabled_lanes, lane_timings):
+class NodeStatus:
+    def __init__(self, current_time, lane_count, enabled_lanes, lane_statuses):
         self._current_time = current_time
         self._lane_count = lane_count
         self._enabled_lanes = enabled_lanes
-        self._lane_timings = lane_timings
+        self._lane_statuses = lane_statuses
 
     @property
     def current_time(self):
@@ -93,26 +93,26 @@ class NodeTimings:
         return self._enabled_lanes
     
     @property
-    def lane_timings(self):
-        return self._lane_timings
+    def lane_statuses(self):
+        return self._lane_statuses
 
-class LaneTimings:
-    def __init__(self,rssi, last_pass, pass_count):
+class LaneRssi:
+    def __init__(self,lane,rssi_read_time,rssi):
+        self._lane = lane
+        self._rssi_read_time = rssi_read_time
         self._rssi = rssi
-        self._last_pass = last_pass
-        self._pass_count = pass_count
     
+    @property
+    def lane(self):
+        return self._lane
+    
+    @property
+    def rssi_read_time(self):
+        return self._rssi_read_time
+
     @property
     def rssi(self):
         return self._rssi
-   
-    @property
-    def pass_count(self):
-        return self._pass_count
-    
-    @property
-    def last_pass(self):
-        return self._last_pass
 
 class LaneConfiguration:
     def __init__(self,bandId,frequency_in_mhz,entry_threshold,exit_threshold):
@@ -158,4 +158,26 @@ class LaneConfigurationsResponse():
     def lane_configurations(self):
         return self._lane_configurations
 
+class LanePassEvent:
+    def __init__(self,lane,pass_count,start_time,end_time):
+        self._lane = lane
+        self._pass_count = pass_count
+        self._start_time = start_time
+        self._end_time = end_time
+    
+    @property
+    def lane(self):
+        return self._lane
+    
+    @property
+    def pass_count(self):
+        return self._pass_count
+    
+    @property
+    def start_time(self):
+        return self._start_time
+    
+    @property
+    def end_time(self):
+        return self._end_time
     

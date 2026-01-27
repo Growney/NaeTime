@@ -6,11 +6,12 @@ import usocket as socket
 
 TUNE_LANE = 0x01
 CONFIGURE_NODE = 0x02
-NODE_TIMINGS = 0x03
+NODE_STATUS = 0x03
 CONFIGURE_LANE_ENTRY_THRESHOLD = 0x04
 CONFIGURE_LANE_EXIT_THRESHOLD = 0x05
 CONFIGURE_LANE_ENABLED = 0x06
 REQUEST_LANE_CONFIGURATIONS = 0x07
+LANE_PASS_EVENT = 0x08
 
 RESPONSE = 0xFC
 STATUS = 0xFD
@@ -235,13 +236,15 @@ class NodeCommunication:
         self._send_packet(response, data)
 
     def send_command(self, command):
-        if isinstance(command, commands.NodeTimings):
-            command_id = NODE_TIMINGS
+        if isinstance(command, commands.NodeStatus):
+            command_id = NODE_STATUS
+            payload = struct.pack("<QBB", command.current_time, command.lane_count, command.enabled_lanes)
+            for lane_timing in command.lane_statuses:
+                payload += struct.pack("<BQH",lane_timing.lane, lane_timing.rssi_read_time, lane_timing.rssi)
 
-            payload = struct.pack("<LBB", command.current_time, command.lane_count, command.enabled_lanes)
-
-            for lane_timing in command.lane_timings:
-                payload += struct.pack("<HLH", lane_timing.rssi, lane_timing.last_pass, lane_timing.pass_count)
+        elif isinstance(command, commands.LanePassEvent):
+            command_id = LANE_PASS_EVENT
+            payload = struct.pack("<BHQQ", command.lane, command.pass_count, command.start_time, command.end_time)
 
         else:
             raise ValueError("Unknown command type")

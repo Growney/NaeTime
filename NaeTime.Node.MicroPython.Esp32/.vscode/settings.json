@@ -3,5 +3,8 @@
     "python.analysis.typeCheckingMode": "basic",
 	"python.analysis.diagnosticSeverityOverrides": {
         "reportMissingModuleSource": "none"
-    }
+    },
+    "cSpell.words": [
+        "Rssi"
+    ]
 } 

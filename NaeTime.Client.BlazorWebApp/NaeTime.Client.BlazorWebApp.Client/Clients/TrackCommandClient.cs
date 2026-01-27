@@ -22,11 +22,9 @@ public class TrackCommandClient : ITrackCommandHandler
     {
         var sb = new System.Text.StringBuilder();
         sb.Append($"/api/tracks/design?id={id}&name={Uri.EscapeDataString(name)}");
-        if (detectors != null && detectors.Length > 0)
+        foreach (Guid detector in detectors)
         {
-            // join as comma separated list
-            var ids = string.Join(',', detectors.Select(g => g.ToString()));
-            sb.Append($"&detectors={Uri.EscapeDataString(ids)}");
+            sb.Append($"&detectors={Uri.EscapeDataString(detector.ToString())}");
         }
         return PostNoContentAsync(sb.ToString());
     }
@@ -41,10 +39,9 @@ public class TrackCommandClient : ITrackCommandHandler
     {
         var sb = new System.Text.StringBuilder();
         sb.Append($"/api/tracks/reorder-detectors?trackId={trackId}");
-        if (detectors != null && detectors.Length > 0)
+        foreach(Guid detector in detectors)
         {
-            var ids = string.Join(',', detectors.Select(g => g.ToString()));
-            sb.Append($"&detectors={Uri.EscapeDataString(ids)}");
+            sb.Append($"&detectors={Uri.EscapeDataString(detector.ToString())}");
         }
         return PostNoContentAsync(sb.ToString());
     }

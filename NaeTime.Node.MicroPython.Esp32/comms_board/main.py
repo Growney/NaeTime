@@ -8,32 +8,92 @@ from devices.rx5808 import Rx5808RegisterCommunication
 from node import LaneConfiguration
 import machine
 import comms
+from collections import deque # type: ignore
+
+class LaneTiming:
+    def __init__(self,rssi_read_time,rssi, last_pass_start,last_pass_end, pass_state, pass_count):
+        self._rssi_read_time = rssi_read_time
+        self._rssi = rssi
+        self._last_pass_start = last_pass_start
+        self._last_pass_end = last_pass_end
+        self._pass_state = pass_state
+        self._pass_count = pass_count
+    
+    @property
+    def rssi_read_time(self):
+        return self._rssi_read_time
+    
+    @rssi_read_time.setter
+    def rssi_read_time(self, value):
+        self._rssi_read_time = value
+
+    @property
+    def rssi(self):
+        return self._rssi
+
+    @rssi.setter
+    def rssi(self, value):
+        self._rssi = value
+
+    @property
+    def last_pass_start(self):
+        return self._last_pass_start
+
+    @last_pass_start.setter
+    def last_pass_start(self, value):
+        self._last_pass_start = value
+
+    @property
+    def last_pass_end(self):
+        return self._last_pass_end
+    
+    @last_pass_end.setter
+    def last_pass_end(self, value):
+        self._last_pass_end = value
+    
+    @property
+    def pass_state(self):
+        return self._pass_state
+
+    @pass_state.setter
+    def pass_state(self, value):
+        self._pass_state = value
+
+    @property
+    def pass_count(self):
+        return self._pass_count
+    
+    @pass_count.setter
+    def pass_count(self, value):
+        self._pass_count = value
+    
+class Pass:
+    def __init__(self, lane,pass_count, start_time, end_time):
+        self._lane = lane
+        self._pass_count = pass_count
+        self._start_time = start_time
+        self._end_time = end_time
+    
+    @property
+    def lane(self):
+        return self._lane
+    
+    @property
+    def pass_count(self):
+        return self._pass_count
+    
+    @property
+    def start_time(self):
+        return self._start_time
+    
+    @property
+    def end_time(self):
+        return self._end_time
 
 def frequency_to_delay_ms(frequency_hz):
     if frequency_hz <= 0:
         raise ValueError("Frequency must be greater than 0")
     return 1000 / frequency_hz
-
-def calculate_delay_ms(last_trigger, delay_ms, current_time):
-    if last_trigger == 0:
-        return 0
-    
-    if(current_time - last_trigger >= delay_ms):
-        return 0
-
-    todelay = delay_ms - (current_time - last_trigger)
-    return todelay
-
-def calculate_minimum_delay(last_times, delay_ms):
-    time_pointer = 0
-    min_delay = delay_ms
-    while(time_pointer < len(lane_timings)):
-        current_time = time.ticks_ms()
-        delay = calculate_delay_ms(last_times[time_pointer], delay_ms, current_time)
-        if delay < min_delay:
-            min_delay = delay
-        time_pointer += 1
-    return min_delay
 
 async def command_loop():
     print("starting command loop")
@@ -119,7 +179,10 @@ async def transmission_loop():
     global lane_timings
     global node_comms
     global lane_configurations
+    global pass_queue
 
+    total_time_us = 0
+    previous_time_us = time.ticks_us()
     while running:
         lane_pointer = 0
         try:
@@ -127,15 +190,28 @@ async def transmission_loop():
             enabled_lanes = 0
             while(lane_pointer < len(lane_timings)):
                 if(lane_configurations[lane_pointer].is_enabled):
-                    last_pass = lane_timings[lane_pointer][1] + ((lane_timings[lane_pointer][2] - lane_timings[lane_pointer][1]) // 2)
-                    command = commands.LaneTimings(lane_timings[lane_pointer][0],last_pass,lane_timings[lane_pointer][4])
+                    current_timing = lane_timings[lane_pointer]
+                    command = commands.LaneRssi(lane_pointer, current_timing.rssi_read_time, current_timing.rssi)
                     lane_timing_commands.append(command)
                     enabled_lanes |= 1 << lane_pointer
                 lane_pointer += 1
             
-            command = commands.NodeTimings(time.ticks_ms(), len(lane_timings), enabled_lanes, lane_timing_commands)
+            current_time_us = time.ticks_us()
+            total_time_us += time.ticks_diff(current_time_us, previous_time_us)
+            previous_time_us = current_time_us
+
+            command = commands.NodeStatus(total_time_us, len(lane_timings), enabled_lanes, lane_timing_commands)
             node_comms.send_command(command)
+
+            while(len(pass_queue) > 0):
+                pass_event = pass_queue.popleft()
+                print("Sending Pass Event Lane: "+str(pass_event.lane)+" Pass Count: "+str(pass_event.pass_count)+" Start Time: "+str(pass_event.start_time)+" End Time: "+str(pass_event.end_time))
+                pass_command = commands.LanePassEvent(pass_event.lane, pass_event.pass_count, pass_event.start_time, pass_event.end_time)
+                node_comms.send_command(pass_command)
+                
+                   
             await asyncio.sleep_ms(transmit_delay_ms)
+
         except Exception as e:
             print("transmit error: ",str(e))
 
@@ -146,42 +222,45 @@ async def rssi_loop():
     global lane_timings
     global rssi_modules
     global lane_configurations
+    global pass_queue
 
-    lane_last_rssi_read = []
-    for i in range(len(rssi_modules)):
-        lane_last_rssi_read.append(0)
-
+    total_time_us = 0
+    previous_time_us = time.ticks_us()
     while running:
         try:
             lane_pointer = 0
+            loop_start = time.ticks_ms()
             while(lane_pointer < len(lane_timings)):
 
                 if(not lane_configurations[lane_pointer].is_enabled):
                     lane_pointer += 1
                     continue
 
-                current_time = time.ticks_ms()
-                current_rssi = rssi_modules[lane_pointer].read_value()
-                lane_last_rssi_read[lane_pointer] = current_time
+                current_time_us = time.ticks_us()
+                total_time_us += time.ticks_diff(current_time_us, previous_time_us)
+                previous_time_us = current_time_us
 
-                last_pass_start = lane_timings[lane_pointer][1]
-                last_pass_end = lane_timings[lane_pointer][2]
-                pass_count = lane_timings[lane_pointer][4]
-                
-                pass_state = peak_detectors[lane_pointer].add_reading(current_rssi,current_time)
+                current_rssi = rssi_modules[lane_pointer].read_value()
+
+                current_timing = lane_timings[lane_pointer]
+                current_timing.rssi_read_time = total_time_us
+                current_timing.rssi = current_rssi
+                pass_state = peak_detectors[lane_pointer].add_reading(current_rssi,total_time_us)
                 if(pass_state == 1):
-                    last_pass_start = current_time
-                    print("Lane "+ str(lane_pointer) +"Pass Start")
+                    current_timing.last_pass_start = total_time_us
                 elif(pass_state == 3):
-                    print("Lane "+ str(lane_pointer) +"Pass End")
-                    last_pass_end = current_time
-                    pass_count += 1
-                
-                lane_timings[lane_pointer] = (current_rssi, last_pass_start, last_pass_end, pass_state, pass_count)
+                    current_timing.last_pass_end = total_time_us
+                    current_timing.pass_count += 1
+                    pass_queue.append(Pass(lane_pointer,current_timing.pass_count,current_timing.last_pass_start,current_timing.last_pass_end))
+                        
                 lane_pointer += 1
+            loop_end = time.ticks_ms()
+            elapsed = time.ticks_diff(loop_end, loop_start)
             
-            min_delay = calculate_minimum_delay(lane_last_rssi_read, polling_delay_ms)
-            await asyncio.sleep_ms(min_delay)
+            calculated_delay = polling_delay_ms - elapsed
+            if(calculated_delay > 0):
+                await asyncio.sleep_ms(calculated_delay)
+                
         except Exception as e:
             print("rssi error: ",str(e))
 
@@ -213,8 +292,8 @@ lan=network.LAN(mdc=machine.Pin(31), mdio=machine.Pin(52),
     phy_type=network.PHY_IP101, phy_addr=1, reset=machine.Pin(51),
     ref_clk_mode=machine.Pin.IN, ref_clk=machine.Pin(50))
 lan.active(True)
-lan.ipconfig(dhcp4=True)
-#lan.ifconfig(('192.168.1.3', '255.255.255.0', '192.168.1.1', '8.8.8.8'))
+lan.ipconfig(dhcp4=False)
+lan.ifconfig(('192.168.1.4', '255.255.255.0', '192.168.1.1', '8.8.8.8'))
 
 while(not lan.isconnected()):
     time.sleep(1)
@@ -230,20 +309,22 @@ polling_delay_ms = 10 #100hz
 filter_cutoff_frequency = 200
 
 
+pass_queue = deque([],500)
+
 RECEIVER_SCLK_PIN = 15
 RECEIVER_MOSI_PIN = 3
 
 print("Initializing Devices")
 
 lane_configurations = [
-    LaneConfiguration(False,4,5658,20000,20000),
-    LaneConfiguration(False,4,5695,20000,20000),
-    LaneConfiguration(False,4,5732,20000,20000),
-    LaneConfiguration(False,4,5769,20000,20000),
-    LaneConfiguration(False,4,5806,20000,20000),
-    LaneConfiguration(False,4,5843,20000,20000),
-    LaneConfiguration(False,4,5880,20000,20000),
-    LaneConfiguration(False,4,5917,20000,20000),
+    LaneConfiguration(False,4,5658,60000,60000),
+    LaneConfiguration(False,4,5695,60000,60000),
+    LaneConfiguration(False,4,5732,60000,60000),
+    LaneConfiguration(False,4,5769,60000,60000),
+    LaneConfiguration(False,4,5806,60000,60000),
+    LaneConfiguration(False,4,5843,60000,60000),
+    LaneConfiguration(False,4,5880,60000,60000),
+    LaneConfiguration(False,4,5917,60000,60000),
 ]
 
 rssi_modules = [
@@ -283,6 +364,6 @@ print("Devices Initialized")
 #rssi, last_pass_start,last_pass_end,pass_state, pass count
 lane_timings = []
 for i in range(len(rx_modules)):
-    lane_timings.append((0,0,0,0,0))
+    lane_timings.append(LaneTiming(0,0,0,0,0,0))
 
 asyncio.run(init_device())

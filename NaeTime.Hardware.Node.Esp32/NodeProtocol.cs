@@ -144,14 +144,15 @@ public class NodeProtocol(INodeCommunication communication, INodeTimingProtocol 
                     case RecordType.CONFIGURE_LANE_EXIT_THRESHOLD:
                     case RecordType.CONFIGURE_LANE_ENABLED:
                     case RecordType.REQUEST_LANE_CONFIGURATIONS:
-                        ConfigurationProtocol.HandleResponseData((byte)recordHeader.RecordType,(byte)responseCommand, recordReader);
+                        ConfigurationProtocol.HandleResponseData(recordHeader.RecordType,responseCommand, recordReader);
                         break;
                     default:
                         break;
                 }
                 break;
-            case RecordType.NODE_TIMINGS:
-                TimingProtocol.HandleRecordData(recordReader);
+            case RecordType.NODE_STATUS:
+            case RecordType.LANE_PASS_EVENT:
+                TimingProtocol.HandleRecordData(recordHeader.RecordType,recordReader);
                 break;
             default:
                 break;

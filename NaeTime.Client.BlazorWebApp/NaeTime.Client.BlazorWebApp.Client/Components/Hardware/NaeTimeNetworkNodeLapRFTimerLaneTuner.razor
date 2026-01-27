@@ -1,7 +1,7 @@
 ﻿@using NaeTime.Client.BlazorWebApp.Client.Services
 @using NaeTime.Query.Abstractions.Models
 
-<NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart @ref=_rssiChart TimerId=TimerId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart>
+<NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart @ref=_rssiChart ChartType="node-rssi" ChartSeries=_chartSeries HorizontalLines=_horizontalLines MaxValue=ushort.MaxValue></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart>
 
 @if (_lane != null)
 {
@@ -25,14 +25,30 @@
     private NaeTime.Query.Abstractions.Models.NaeTimeNodeLane? _lane;
     private RssiChart? _rssiChart;
 
+    private readonly List<RssiChart.HorizontalLine> _horizontalLines = new();
+
+    private readonly List<RssiChart.Series> _chartSeries = new()
+    {
+        new RssiChart.Series("rssi"),
+    };
 
     protected override async Task OnInitializedAsync()
     {
         NaeTime.Query.Abstractions.Models.NaeTimeNodeLane? laneConfiguration = await HardwareQueryHandler.GetNaeTimeNodeLane(TimerId, LaneId);
 
+        _horizontalLines.Add(new RssiChart.HorizontalLine("entry-threshold", laneConfiguration?.EntryThreshold.Confirmed ?? laneConfiguration?.EntryThreshold.Requested ?? 18000, 2f, "#198754"));
+        _horizontalLines.Add(new RssiChart.HorizontalLine("exit-threshold", laneConfiguration?.ExitThreshold.Confirmed ?? laneConfiguration?.ExitThreshold.Requested ?? 18000, 2f, "#dc3545"));
+
+        foreach(var line in _horizontalLines)
+        {
+            Console.WriteLine($"Added horizontal line: {line.Key} at {line.InitialValue}");
+        }
+
         RssiService.OnRssiReceived += OnRssiReceived;
 
         _lane = laneConfiguration;
+
+        await RssiService.StartAsync();
 
         await base.OnInitializedAsync();
     }
@@ -50,7 +66,7 @@
                 return;
             }
 
-            await _rssiChart.AddLineValue("rssi", DateTime.Now, rssi.Rssi);
+            await _rssiChart.AddSeriesValue("rssi", DateTime.Now, rssi.Rssi);
         }
         catch
         {
@@ -66,6 +82,8 @@
 
         await NaeTimeNodeCommandHandler.RequestLaneEntryThreshold(TimerId, LaneId, newThreshold);
         _lane = _lane with { EntryThreshold = _lane.EntryThreshold with { Requested = newThreshold } };
+
+        _rssiChart?.UpdateHorizontalLineValue("entry-threshold", newThreshold);
     }
 
     private async Task ExitThresholdChanged(ushort newThreshold)
@@ -76,5 +94,7 @@
         }
         await NaeTimeNodeCommandHandler.RequestLaneExitThreshold(TimerId, LaneId, newThreshold);
         _lane = _lane with { ExitThreshold = _lane.ExitThreshold with { Requested = newThreshold } };
+
+        _rssiChart?.UpdateHorizontalLineValue("exit-threshold", newThreshold);
     }
 }

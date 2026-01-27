@@ -1,5 +1,7 @@
-﻿
-<NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart TimerId=TimerId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart>
+﻿@using NaeTime.Client.BlazorWebApp.Client.Services
+@using NaeTime.Query.Abstractions.Models
+
+<NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart @ref=_rssiChart ChartType="lapRF-rssi" HorizontalLines=_horizontalLines></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.RssiChart>
 
 @if(_lane != null)
 {
@@ -17,20 +19,54 @@
     private NaeTime.Command.Abstractions.IImmersionRCLapRFCommandHandler ImmersionRCLapRFCommandHandler { get; set; } = null!;
     [Inject]
     private NaeTime.Query.Abstractions.IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+    [Inject]
+    private RssiService RssiService { get; set; } = null!;
 
     private NaeTime.Query.Abstractions.Models.ImmersionRCLapRFLane? _lane;
 
+    private RssiChart? _rssiChart;
 
+    private readonly List<RssiChart.HorizontalLine> _horizontalLines = new();
+
+    private readonly List<RssiChart.Series> _chartSeries = new()
+    {
+        new RssiChart.Series("rssi"),
+    };
 
     protected override async Task OnInitializedAsync()
     {
         NaeTime.Query.Abstractions.Models.ImmersionRCLapRFLane? laneConfiguration = await HardwareQueryHandler.GetImmersionRCLapRFLane(TimerId, LaneId);
+
+        _horizontalLines.Add(new RssiChart.HorizontalLine("threshold",(int) (laneConfiguration?.Threshold.Confirmed ?? laneConfiguration?.Threshold.Requested ?? 800f), 2f, "#198754"));
+
+        RssiService.OnRssiReceived += OnRssiReceived;
 
         _lane = laneConfiguration;
 
         await base.OnInitializedAsync();
     }
 
+    private async void OnRssiReceived(RssiValue rssi)
+    {
+        try
+        {
+
+            if (_rssiChart is null)
+            {
+                return;
+            }
+            if (rssi.TimerId != TimerId || rssi.Lane != LaneId)
+            {
+                return;
+            }
+
+            await _rssiChart.AddSeriesValue("rssi", DateTime.Now, rssi.Rssi);
+        }
+        catch
+        {
+            // Ignore JS errors
+        }
+    }
     private async Task ThresholdChanged(float newThreshold)
     {
         if(_lane is null)
@@ -40,6 +76,8 @@
 
         await ImmersionRCLapRFCommandHandler.RequestLaneThreshold(TimerId, LaneId, newThreshold);
         _lane = _lane with { Threshold = _lane.Threshold with { Requested = newThreshold } };
+
+        _rssiChart?.UpdateHorizontalLineValue("threshold", (int)newThreshold);
     }
 
     private async Task GainChanged(ushort newGain)

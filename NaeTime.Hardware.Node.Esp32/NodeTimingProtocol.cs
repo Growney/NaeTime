@@ -9,13 +9,36 @@ public class NodeTimingProtocol : INodeTimingProtocol
     private readonly AwaitableQueue<ReceivedSignalStrengthIndicator?> _receivedSignalStrengthIndicators = new(5000);
     private readonly AwaitableQueue<Pass> _passQueue = new(5000);
 
-    private readonly ConcurrentDictionary<byte, ushort?> _lanePassStats = new();
-
     public Task<ReceivedSignalStrengthIndicator?> WaitForNextReceivedSignalStrengthIndicatorAsync(CancellationToken cancellationToken) => _receivedSignalStrengthIndicators.WaitForDequeueAsync(cancellationToken);
     public Task<Pass> WaitForNextPassAsync(CancellationToken cancellationToken) => _passQueue.WaitForDequeueAsync(cancellationToken);
-    public void HandleRecordData(ReadOnlySpanReader<byte> recordReader)
+    public void HandleRecordData(RecordType commandId,ReadOnlySpanReader<byte> recordReader)
     {
-        ulong currentTime = recordReader.ReadUInt32();
+        switch(commandId)
+        {
+            case RecordType.LANE_PASS_EVENT:
+                HandlePassEvent(recordReader);
+                break;
+            case RecordType.NODE_STATUS:
+                HandleStatus(recordReader);
+                break;
+        }
+    }
+
+    private void HandlePassEvent(ReadOnlySpanReader<byte> recordReader)
+    {
+        byte lane = recordReader.ReadByte();
+        ushort passCount = recordReader.ReadUInt16();
+        ulong passStart = recordReader.ReadUInt64();
+        ulong passEnd = recordReader.ReadUInt64();
+
+        ulong passMiddle = passStart + ((passEnd - passStart) / 2);
+
+        _passQueue.Enqueue(new Pass(lane, passMiddle));
+    }
+
+    private void HandleStatus(ReadOnlySpanReader<byte> recordReader)
+    {
+        ulong currentTime = recordReader.ReadUInt64();
         byte laneCount = recordReader.ReadByte();
         byte enabledLanes = recordReader.ReadByte();
 
@@ -25,25 +48,15 @@ public class NodeTimingProtocol : INodeTimingProtocol
             {
                 continue;
             }
-
+            byte currentLane = recordReader.ReadByte();
+            ulong rssiReadTime = recordReader.ReadUInt64();
             ushort rssi = recordReader.ReadUInt16();
-            ulong lastPass = recordReader.ReadUInt32();
-            ushort passCount = recordReader.ReadUInt16();
 
-            ushort? lastRecordPassCount = _lanePassStats.GetOrAdd(lane, (ushort?)null);
-
-            if (lastRecordPassCount != null && passCount != 0 && passCount != lastRecordPassCount)
-            {
-                _passQueue.Enqueue(new Pass(lane, lastPass));
-            }
-
-            _lanePassStats.AddOrUpdate(lane, passCount, (x, t) => passCount);
-
-            _receivedSignalStrengthIndicators.Enqueue(new ReceivedSignalStrengthIndicator(lane, rssi, currentTime));
+            _receivedSignalStrengthIndicators.Enqueue(new ReceivedSignalStrengthIndicator(currentLane, rssi, rssiReadTime));
         }
     }
 
-    public void HandleResponseData(byte responseCode, byte commandId, ReadOnlySpanReader<byte> recordReader)
+    public void HandleResponseData(RecordType responseCode, RecordType commandId, ReadOnlySpanReader<byte> recordReader)
     {
 
     }

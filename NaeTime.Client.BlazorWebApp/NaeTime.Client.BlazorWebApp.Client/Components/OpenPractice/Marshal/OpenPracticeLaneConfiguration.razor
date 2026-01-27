@@ -90,17 +90,17 @@
 @foreach (Guid detectorId in _tuningTimers)
 {
     NaeTime.Query.Abstractions.Models.Detector detector = _detectors[detectorId];
-
-    if(detector.Type.HasFlag(NaeTime.Query.Abstractions.Models.DetectorType.ImmersionRC))
-    {
-        <NaeTime.Client.BlazorWebApp.Client.Components.Hardware.ImmersionRCLapRFTimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.ImmersionRCLapRFTimerLaneTuner>
-        continue;
-    }
-    else if(detector.Type.HasFlag(NaeTime.Query.Abstractions.Models.DetectorType.NaeTime))
-    {
-        <NaeTime.Client.BlazorWebApp.Client.Components.Hardware.NaeTimeNetworkNodeLapRFTimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.NaeTimeNetworkNodeLapRFTimerLaneTuner>
-        continue;
-    }
+    <MudPaper class="p-2 mb-2">
+        <div>@detector.Name</div>
+        @if (detector.Type.HasFlag(NaeTime.Query.Abstractions.Models.DetectorType.ImmersionRC))
+        {
+            <NaeTime.Client.BlazorWebApp.Client.Components.Hardware.ImmersionRCLapRFTimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.ImmersionRCLapRFTimerLaneTuner>
+        }
+        else if (detector.Type.HasFlag(NaeTime.Query.Abstractions.Models.DetectorType.NaeTime))
+        {
+            <NaeTime.Client.BlazorWebApp.Client.Components.Hardware.NaeTimeNetworkNodeLapRFTimerLaneTuner TimerId=detectorId LaneId=LaneId></NaeTime.Client.BlazorWebApp.Client.Components.Hardware.NaeTimeNetworkNodeLapRFTimerLaneTuner>
+        }
+    </MudPaper>
 }
 <div class="w-100 pb-2">
     <MudIconButton Icon=@Icons.Material.Filled.Timer Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"></MudIconButton>                
