@@ -7,12 +7,12 @@ from dpad import DPad
 
 # --- SPI and Pin Setup ---
 spi = SPI(1, baudrate=20000000, polarity=0, phase=0,
-          sck=Pin(18), mosi=Pin(23))
+          sck=Pin(19), mosi=Pin(21))
 
 # Control pins
-cs_pin = 27
-rst_pin = 25
-dc_pin = 26
+cs_pin = 4
+rst_pin = 15
+dc_pin = 2
 
 # Initialize display
 tft = ST7735.TFT(spi, dc_pin, rst_pin, cs_pin)
@@ -24,7 +24,7 @@ tft.fill(ST7735.TFT.BLACK)
 
 # Initialize D-pad with pin assignments
 # up=19, down=16, left=18, right=17
-dpad = DPad(up_pin=19, down_pin=33, left_pin=21, right_pin=32)
+dpad = DPad(up_pin=25, down_pin=26, left_pin=27, right_pin=14)
 
 print("D-Pad button state monitor started!")
 
@@ -77,7 +77,6 @@ def update_held_time(y_pos, held_ms):
 # Main loop to read and display button states
 def update_dpad_states(tft, dpad, previous_states, button_positions):
     states = dpad.read()
-    
     # First iteration: draw title and all buttons
     if previous_states is None:
         tft.text((10, 5), "D-Pad Status", ST7735.TFT.WHITE, font5x8.font5x8)
@@ -110,61 +109,17 @@ def update_dpad_states(tft, dpad, previous_states, button_positions):
                 previous_states[button_name]["held_ms"] = current["held_ms"]
     return previous_states
 
-uart = UART(1, baudrate=57600 , tx=Pin(13), rx=Pin(12))
+red = Pin(22, Pin.OUT)
+green = Pin(32, Pin.OUT)
+blue = Pin(33, Pin.OUT)
 
-# Track previous LAN status to detect changes
-previous_lan_status = None
-
-def draw_lan_status(connected, ip_address):
-    """Draw LAN connection status on the screen."""
-    # Clear the LAN status area
-    tft.fillrect((5, 5), (150, 30), ST7735.TFT.BLACK)
-    
-    # Draw title
-    tft.text((5, 5), "LAN Status", ST7735.TFT.WHITE, font5x8.font5x8)
-    
-    # Draw connection status
-    connect_text = f"Connect: {str(connected)}"
-    connect_color = ST7735.TFT.GREEN if connected else ST7735.TFT.RED
-    tft.text((5, 15), connect_text, connect_color, font5x8.font5x8)
-    
-    # Draw IP address
-    ip_text = f"IP: {ip_address}"
-    tft.text((5, 25), ip_text, ST7735.TFT.CYAN, font5x8.font5x8)
-
-# Draw initial status
-draw_lan_status(False, "0.0.0.0")
+red.value(1)
+green.value(3)
+blue.value(3)
 
 while True:
-    # Read all button states
-    #previous_states = update_dpad_states(tft, dpad, previous_states, button_positions)
-    
-    if uart.any():       # Check if data is available
-        data = uart.readline()   # Read up to newline
-        if data:
-            try:
-                decoded = data.decode().strip()
-                print("Received:", decoded)
-                
-                # Parse comma-delimited data: connected,ip_address
-                parts = decoded.split(',')
-                if len(parts) >= 2:
-                    # Parse connection status (true/false or 1/0)
-                    connected_str = parts[0].strip().lower()
-                    connected = connected_str in ['true', '1', 'yes']
-                    
-                    # Parse IP address
-                    ip_address = parts[1].strip()
-                    
-                    # Create current status tuple
-                    current_lan_status = (connected, ip_address)
-                    
-                    # Only update display if status changed
-                    if current_lan_status != previous_lan_status:
-                        draw_lan_status(connected, ip_address)
-                        previous_lan_status = current_lan_status
-            except Exception as e:
-                print("Error parsing UART data:", e)
+    # Update and draw each button's state on the screen
+    previous_states = update_dpad_states(tft, dpad, previous_states, button_positions)
     
     # Small delay
     time.sleep(0.05)
