@@ -28,5 +28,4 @@ public class ReactionProviderFactory : IReactionProviderFactory
         ILogger<ReactionProvider<TEvent>> logger = _loggerProvider.CreateLogger<ReactionProvider<TEvent>>();    
         return new ReactionProvider<TEvent>(_eventStore, _eventSerializer, requirements, _repository, initialPosition,logger, streamName);
     }
-
 }

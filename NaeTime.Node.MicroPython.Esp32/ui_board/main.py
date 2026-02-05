@@ -4,6 +4,7 @@ import time
 import ST7735  # Your driver file
 import font5x8  # Optional font module if you have one
 from dpad import DPad
+from menu import Menu
 
 # --- SPI and Pin Setup ---
 spi = SPI(1, baudrate=20000000, polarity=0, phase=0,
@@ -117,11 +118,199 @@ red.value(1)
 green.value(3)
 blue.value(3)
 
-while True:
-    # Update and draw each button's state on the screen
-    previous_states = update_dpad_states(tft, dpad, previous_states, button_positions)
+# --- Menu System Setup ---
+
+# Menu callbacks
+def show_dpad_status():
+    """Show D-pad button state monitor."""
+    global previous_states
+    tft.fill(ST7735.TFT.BLACK)
+    previous_states = None
     
-    # Small delay
+    # Double tap detection for left button
+    tap_count = 0
+    first_tap_time = 0
+    double_tap_window = 800  # ms window for double tap
+    waiting_for_release = False
+    
+    # Run D-pad monitor until left button is double-tapped to go back
+    while True:
+        previous_states = update_dpad_states(tft, dpad, previous_states, button_positions)
+        
+        # Check for left button double tap to exit back to menu
+        state = dpad.read()
+        left_state = state["left"]["state"]
+        
+        if left_state == "button_down":
+            if not waiting_for_release:
+                current_time = time.ticks_ms()
+                if tap_count == 0:
+                    # First tap
+                    tap_count = 1
+                    first_tap_time = current_time
+                    waiting_for_release = True
+                elif tap_count == 1 and time.ticks_diff(current_time, first_tap_time) < double_tap_window:
+                    # Second tap within window - double tap detected!
+                    menu.show()
+                    break
+                else:
+                    # Too slow, reset
+                    tap_count = 1
+                    first_tap_time = current_time
+                    waiting_for_release = True
+        
+        elif left_state == "unpressed":
+            # Button released
+            if waiting_for_release:
+                waiting_for_release = False
+            # Reset if window expired
+            if tap_count > 0 and time.ticks_diff(time.ticks_ms(), first_tap_time) >= double_tap_window:
+                tap_count = 0
+        
+        time.sleep(0.05)
+
+def start_race():
+    """Start race sequence."""
+    tft.fill(ST7735.TFT.BLACK)
+    tft.text((10, 50), "Starting Race...", ST7735.TFT.GREEN, font5x8.font5x8)
+    time.sleep(1)
+    tft.text((10, 65), "3...", ST7735.TFT.YELLOW, font5x8.font5x8)
+    time.sleep(1)
+    tft.text((10, 80), "2...", ST7735.TFT.YELLOW, font5x8.font5x8)
+    time.sleep(1)
+    tft.text((10, 95), "1...", ST7735.TFT.YELLOW, font5x8.font5x8)
+    time.sleep(1)
+    tft.text((10, 110), "GO!", ST7735.TFT.RED, font5x8.font5x8)
+    time.sleep(2)
+    menu.show()
+
+def view_results():
+    """View race results."""
+    tft.fill(ST7735.TFT.BLACK)
+    tft.text((10, 30), "Race Results", ST7735.TFT.CYAN, font5x8.font5x8)
+    tft.text((10, 50), "1st: 12.34s", ST7735.TFT.WHITE, font5x8.font5x8)
+    tft.text((10, 65), "2nd: 12.89s", ST7735.TFT.WHITE, font5x8.font5x8)
+    tft.text((10, 80), "3rd: 13.12s", ST7735.TFT.WHITE, font5x8.font5x8)
+    tft.text((10, 105), "Press RIGHT to return", ST7735.TFT.GRAY, font5x8.font5x8)
+    
+    # Wait for button press
+    while True:
+        state = dpad.read()
+        if state["right"]["state"] == "button_down" or state["left"]["state"] == "button_down":
+            break
+        time.sleep(0.05)
+    menu.show()
+
+def calibrate():
+    """Calibration routine."""
+    tft.fill(ST7735.TFT.BLACK)
+    tft.text((10, 50), "Calibrating...", ST7735.TFT.YELLOW, font5x8.font5x8)
+    time.sleep(2)
+    tft.text((10, 70), "Complete!", ST7735.TFT.GREEN, font5x8.font5x8)
+    time.sleep(1)
+    menu.show()
+
+def network_info():
+    """Display network information."""
+    tft.fill(ST7735.TFT.BLACK)
+    tft.text((10, 30), "Network Info", ST7735.TFT.CYAN, font5x8.font5x8)
+    tft.text((10, 50), "Status: Connected", ST7735.TFT.GREEN, font5x8.font5x8)
+    tft.text((10, 65), "Nodes: 4", ST7735.TFT.WHITE, font5x8.font5x8)
+    tft.text((10, 80), "Signal: Good", ST7735.TFT.WHITE, font5x8.font5x8)
+    tft.text((10, 105), "Press RIGHT to return", ST7735.TFT.GRAY, font5x8.font5x8)
+    
+    # Wait for button press
+    while True:
+        state = dpad.read()
+        if state["right"]["state"] == "button_down" or state["left"]["state"] == "button_down":
+            break
+        time.sleep(0.05)
+    menu.show()
+
+def about():
+    """Show about information."""
+    tft.fill(ST7735.TFT.BLACK)
+    tft.text((10, 30), "NaeTime UI", ST7735.TFT.WHITE, font5x8.font5x8)
+    tft.text((10, 45), "Version 1.0", ST7735.TFT.CYAN, font5x8.font5x8)
+    tft.text((10, 60), "ESP32 MicroPython", ST7735.TFT.GREEN, font5x8.font5x8)
+    tft.text((10, 90), "Press LEFT to return", ST7735.TFT.GRAY, font5x8.font5x8)
+    
+    # Wait for button press
+    while True:
+        state = dpad.read()
+        if state["right"]["state"] == "button_down" or state["left"]["state"] == "button_down":
+            break
+        time.sleep(0.05)
+    menu.show()
+
+def set_led(color_name, value):
+    """Set LED value."""
+    if color_name == "red":
+        red.value(value)
+    elif color_name == "green":
+        green.value(value)
+    elif color_name == "blue":
+        blue.value(value)
+    
+    tft.fill(ST7735.TFT.BLACK)
+    state = "ON" if value else "OFF"
+    tft.text((10, 50), f"{color_name.upper()} LED {state}", ST7735.TFT.WHITE, font5x8.font5x8)
+    time.sleep(1)
+
+# Create Settings submenu
+settings_menu = Menu(tft, dpad, title="Settings")
+
+led_sub_menu = Menu(tft, dpad, title="LED Control", parent_menu=settings_menu)
+led_sub_menu.add_item("Red ON", lambda: set_led("red", 1))
+led_sub_menu.add_item("Red OFF", lambda: set_led("red", 0))
+led_sub_menu.add_item("Green ON", lambda: set_led("green", 1))
+
+# Create LED Control submenu
+led_menu = Menu(tft, dpad, title="LED Control", parent_menu=settings_menu)
+led_menu.add_item("Red ON", lambda: set_led("red", 1))
+led_menu.add_item("Red OFF", lambda: set_led("red", 0))
+led_menu.add_item("Green ON", lambda: set_led("green", 1))
+led_menu.add_item("Green OFF", lambda: set_led("green", 0))
+led_menu.add_item("Blue ON", lambda: set_led("blue", 1))
+led_menu.add_submenu("More",led_sub_menu)
+led_menu.add_back_item()
+
+# Add items to settings menu
+settings_menu.add_submenu("LED Control", led_menu)
+settings_menu.add_item("Display Brightness", lambda: show_temp_msg("Brightness: 100%"))
+settings_menu.add_item("Sound Volume", lambda: show_temp_msg("Volume: 80%"))
+settings_menu.add_back_item()
+
+
+
+def show_temp_msg(msg):
+    """Show temporary message and return to settings."""
+    tft.fill(ST7735.TFT.BLACK)
+    tft.text((10, 50), msg, ST7735.TFT.WHITE, font5x8.font5x8)
+    time.sleep(1)
+    settings_menu.show()
+
+# Create and configure main menu
+menu = Menu(tft, dpad, title="NaeTime Menu")
+menu.add_item("Start Race", start_race)
+menu.add_item("View Results", view_results)
+menu.add_submenu("Settings", settings_menu)
+menu.add_item("Calibrate", calibrate)
+menu.add_item("Network Info", network_info)
+menu.add_item("DPad Status", show_dpad_status)
+menu.add_item("About", about)
+
+# Show the menu
+menu.show()
+
+print("NaeTime Menu System Started!")
+
+pin = Pin(23, Pin.OUT)
+pin.value(1)
+
+# Main loop
+while True:
+    menu.update()
     time.sleep(0.05)
 
 

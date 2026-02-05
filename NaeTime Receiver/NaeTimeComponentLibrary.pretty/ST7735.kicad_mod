@@ -1,4 +1,4 @@
-(footprint "ST7735 Pin Header"
+(footprint "ST7735"
 	(version 20241229)
 	(generator "pcbnew")
 	(generator_version "9.0")
@@ -15,7 +15,7 @@
 			)
 		)
 	)
-	(property "Value" "ST7735 Pin Header"
+	(property "Value" "ST7735"
 		(at -9.16 1.06 0)
 		(unlocked yes)
 		(layer "F.Fab")
@@ -54,28 +54,6 @@
 		)
 	)
 	(attr smd)
-	(fp_rect
-		(start 0 -16.4)
-		(end 54 17.6)
-		(stroke
-			(width 0.1)
-			(type solid)
-		)
-		(fill no)
-		(layer "F.SilkS")
-		(uuid "8b9883fc-5b34-4906-aacb-10db5e3c230b")
-	)
-	(fp_rect
-		(start 0 -16.4)
-		(end 54 17.6)
-		(stroke
-			(width 0.05)
-			(type solid)
-		)
-		(fill no)
-		(layer "F.CrtYd")
-		(uuid "dfc33ab1-70dc-4a30-b21b-770479249f8a")
-	)
 	(fp_text user "SDA"
 		(at 3 2.6 0)
 		(unlocked yes)
@@ -191,34 +169,6 @@
 				(thickness 0.15)
 			)
 		)
-	)
-	(pad "" np_thru_hole circle
-		(at 2 -14.4)
-		(size 3.2 3.2)
-		(drill 3.2)
-		(layers "*.Cu" "*.Mask")
-		(uuid "a5a91940-e72c-4a0c-8b82-80f5c08bc486")
-	)
-	(pad "" np_thru_hole circle
-		(at 2 15.6)
-		(size 3.2 3.2)
-		(drill 3.2)
-		(layers "*.Cu" "*.Mask")
-		(uuid "ea56c630-e47f-4fe2-b35f-b0c7b82323c4")
-	)
-	(pad "" np_thru_hole circle
-		(at 52 -14.4)
-		(size 3.2 3.2)
-		(drill 3.2)
-		(layers "*.Cu" "*.Mask")
-		(uuid "a20d2c74-5000-4409-accf-cd8d67eda63b")
-	)
-	(pad "" np_thru_hole circle
-		(at 52 15.6)
-		(size 3.2 3.2)
-		(drill 3.2)
-		(layers "*.Cu" "*.Mask")
-		(uuid "a93a8efe-1b5a-43f5-8da2-447376b2959f")
 	)
 	(pad "1" thru_hole circle
 		(at 1 9.6)

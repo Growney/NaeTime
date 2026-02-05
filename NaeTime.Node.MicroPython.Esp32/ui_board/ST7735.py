@@ -98,6 +98,7 @@ class TFT(object) :
   PURPLE = TFTColor(0xFF, 0x00, 0xFF)
   WHITE = TFTColor(0xFF, 0xFF, 0xFF)
   GRAY = TFTColor(0x80, 0x80, 0x80)
+  ORANGE = TFTColor(0xFF, 0x48, 0x00)
 
   @staticmethod
   def color( aR, aG, aB ) :
@@ -161,11 +162,11 @@ class TFT(object) :
       self._pushcolor(aColor)
 
 #   @micropython.native
-  def text( self, aPos, aString, aColor, aFont, aSize = 1, nowrap = False ) :
+  def text( self, aPos, aString, aColor, aFont, aSize = 1, nowrap = False, bgColor = None ) :
     '''Draw a text at the given position.  If the string reaches the end of the
        display it is wrapped to aPos[0] on the next line.  aSize may be an integer
        which will size the font uniformly on w,h or a or any type that may be
-       indexed with [0] or [1].'''
+       indexed with [0] or [1]. bgColor optionally sets the background color.'''
 
     if aFont == None:
       return
@@ -179,7 +180,7 @@ class TFT(object) :
     px, py = aPos
     width = wh[0] * aFont["Width"] + 1
     for c in aString:
-      self.char((px, py), c, aColor, aFont, wh)
+      self.char((px, py), c, aColor, aFont, wh, bgColor)
       px += width
       #We check > rather than >= to let the right (blank) edge of the
       # character print off the right of the screen.
@@ -191,10 +192,11 @@ class TFT(object) :
           px = aPos[0]
 
 #   @micropython.native
-  def char( self, aPos, aChar, aColor, aFont, aSizes ) :
+  def char( self, aPos, aChar, aColor, aFont, aSizes, bgColor = None ) :
     '''Draw a character at the given position using the given font and color.
        aSizes is a tuple with x, y as integer scales indicating the
-       # of pixels to draw for each pixel in the character.'''
+       # of pixels to draw for each pixel in the character.
+       bgColor optionally sets the background color.'''
 
     if aFont == None:
       return
@@ -215,10 +217,13 @@ class TFT(object) :
         for q in range(fontw) :
           c = charA[q]
           for r in range(fonth) :
+            pos = 2 * (r * fontw + q)
             if c & 0x01 :
-              pos = 2 * (r * fontw + q)
               buf[pos] = aColor >> 8
               buf[pos + 1] = aColor & 0xff
+            elif bgColor is not None :
+              buf[pos] = bgColor >> 8
+              buf[pos + 1] = bgColor & 0xff
             c >>= 1
         self.image(aPos[0], aPos[1], aPos[0] + fontw - 1, aPos[1] + fonth - 1, buf)
       else:
@@ -227,6 +232,8 @@ class TFT(object) :
           for r in range(fonth) :
             if c & 0x01 :
               self.fillrect((px, py), aSizes, aColor)
+            elif bgColor is not None :
+              self.fillrect((px, py), aSizes, bgColor)
             py += aSizes[1]
             c >>= 1
           px += aSizes[0]
