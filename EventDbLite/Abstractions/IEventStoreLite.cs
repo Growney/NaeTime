@@ -10,8 +10,6 @@ public interface IEventStoreLite
     Task AppendToStreamAsync(string streamName, IEnumerable<EventData> data, StreamPosition expectedState);
     Task AppendToStreamAsync(string streamName, EventData data, StreamPosition expectedState);
 
-
-
     IStreamSubscription SubscribeToStream(string streamName, StreamPosition from);
     IStreamSubscription SubscribeToAllStreams(StreamPosition from);
 }
