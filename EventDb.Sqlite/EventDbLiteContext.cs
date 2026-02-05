@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace EventDbLite;
+namespace EventDb.Sqlite;
 
 internal class EventDbLiteContext(DbContextOptions<EventDbLiteContext> options) : DbContext(options)
 {

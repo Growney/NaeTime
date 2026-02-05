@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EventDbLite.Abstractions;
+namespace EventDb.Sqlite.Abstractions;
 public interface ISqliteConnectionFactory
 {
     public SqliteConnection CreateConnection(SqliteOpenMode mode);

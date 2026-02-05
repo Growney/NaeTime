@@ -1,4 +1,4 @@
-﻿namespace EventDbLite.DbModels;
+﻿namespace EventDb.Sqlite.DbModels;
 
 internal class PersistedEvent
 {

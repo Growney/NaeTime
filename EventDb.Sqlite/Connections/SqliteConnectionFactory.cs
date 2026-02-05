@@ -1,4 +1,4 @@
-﻿using EventDbLite.Abstractions;
+﻿using EventDb.Sqlite.Abstractions;
 using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EventDbLite.Connections;
+namespace EventDb.Sqlite.Connections;
 public class SqliteConnectionFactory : ISqliteConnectionFactory
 {
     private const string _datasource = "eventdblite.db";

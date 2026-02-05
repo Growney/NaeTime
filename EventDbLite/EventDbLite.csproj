@@ -15,18 +15,11 @@
 	    </AssemblyAttribute>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\EventDbLite.Handlers\EventDbLite.Handlers.csproj" />
       <ProjectReference Include="..\EventDbLite.Reactions.Abstractions\EventDbLite.Reactions.Abstractions.csproj" />
       <ProjectReference Include="..\EventDbLite.Serialization\EventDbLite.Serialization.csproj" />
-      <ProjectReference Include="..\NaeTime.SQLite\NaeTime.SQLite.csproj" />
     </ItemGroup>
 </Project>

@@ -24,7 +24,7 @@ builder.Services.AddMudServices(config =>
 });
 builder.Services.AddSpeechSynthesis();
 // Add services to the container.
-builder.Services.AddEventDbLite();
+builder.Services.AddSQLiteEventDbLite();
 builder.Services.AddEventDbLiteSignalRServer();
 builder.Services.AddNaeTimeQueries();
 builder.Services.AddNaeTimeCommand();

@@ -1,12 +1,12 @@
-﻿using EventDbLite.Abstractions;
-using EventDbLite.DbModels;
+﻿using EventDb.Sqlite.Abstractions;
+using EventDbLite.Abstractions;
 using EventDbLite.Exceptions;
 using EventDbLite.Streams;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
-namespace EventDbLite.Connections;
+namespace EventDb.Sqlite.Connections;
 
 internal class EventStreamConnection(ISqliteConnectionFactory connectionFactory) : IEventStreamConnection
 {

@@ -1,8 +1,7 @@
-﻿using EventDbLite;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace NaeTime.Persistence.EntityFramework;
+namespace EventDb.Sqlite;
 internal class ContextFactory : IDesignTimeDbContextFactory<EventDbLiteContext>
 {
     public EventDbLiteContext CreateDbContext(string[] args)
