@@ -504,7 +504,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "./",
-      "plot": "D:/Personal/Graeme/OneDrive/Documents/PCB/NaeTime Receiver/fab",
+      "plot": "fab",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "NaeTime Receiver.step",

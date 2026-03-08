@@ -1,10 +1,16 @@
 # main.py
-from machine import Pin, SPI, UART
+from machine import Pin, SPI, UART, PWM
+import led
 import time
 import ST7735  # Your driver file
 import font5x8  # Optional font module if you have one
 from dpad import DPad
 from menu import Menu
+from machine import PWM
+from uart_comms import UARTCommsClient
+from frequencies import (BANDS, BAND_NAMES, CUSTOM_BAND_ID,
+                         find_band_channel, get_channel_display_values,
+                         get_band_id, get_channel_freq)
 
 # --- SPI and Pin Setup ---
 spi = SPI(1, baudrate=20000000, polarity=0, phase=0,
@@ -25,293 +31,330 @@ tft.fill(ST7735.TFT.BLACK)
 
 # Initialize D-pad with pin assignments
 # up=19, down=16, left=18, right=17
-dpad = DPad(up_pin=25, down_pin=26, left_pin=27, right_pin=14)
+dpad = DPad(up_pin=25, down_pin=27, left_pin=14, right_pin=26)
 
-print("D-Pad button state monitor started!")
+leds = led.RGBLed(red_pin=22, green_pin=32, blue_pin=33)
 
-# Track previous states to detect changes per button
-previous_states = None
+buzzer = Pin(13, Pin.OUT)
 
-# Y position for each button
-button_positions = {
-    "up": 20,
-    "down": 45,
-    "left": 70,
-    "right": 95
-}
+backlight = PWM(Pin(23), freq=1000, duty_u16=65535)
 
-def draw_button_state(button_name, y_pos, state, held_ms):
-    """Draw a single button's state at the specified y position."""
-    # Clear the button's area (2 lines high for state + held time)
-    tft.fillrect((5, y_pos), (150, 20), ST7735.TFT.BLACK)
-    
-    # Choose color based on state
-    if state == "button_down":
-        color = ST7735.TFT.GREEN
-    elif state == "pressed":
-        color = ST7735.TFT.YELLOW
-    elif state == "button_up":
-        color = ST7735.TFT.CYAN
-    else:  # unpressed
-        color = ST7735.TFT.WHITE
-    
-    # Display button name and state
-    label = f"{button_name.upper():5}: {state:12}"
-    tft.text((5, y_pos), label, color, font5x8.font5x8)
-    
-    # Display held time if button is pressed
-    if held_ms > 0:
-        time_label = f"{held_ms}ms"
-        tft.text((5, y_pos + 10), time_label, ST7735.TFT.RED, font5x8.font5x8)
+uartTx = Pin(17)
+uartRx = Pin(16, Pin.IN, Pin.PULL_DOWN)
 
-def update_held_time(y_pos, held_ms):
-    """Update only the held time display without redrawing the label."""
-    # Clear just the time area
-    tft.fillrect((5, y_pos + 10), (150, 10), ST7735.TFT.BLACK)
-    
-    # Display updated held time
-    if held_ms > 0:
-        time_label = f"{held_ms}ms"
-        tft.text((5, y_pos + 10), time_label, ST7735.TFT.RED, font5x8.font5x8)
-
-
-# Main loop to read and display button states
-def update_dpad_states(tft, dpad, previous_states, button_positions):
-    states = dpad.read()
-    # First iteration: draw title and all buttons
-    if previous_states is None:
-        tft.text((10, 5), "D-Pad Status", ST7735.TFT.WHITE, font5x8.font5x8)
-        for button_name in ["up", "down", "left", "right"]:
-            y_pos = button_positions[button_name]
-            current = states[button_name]
-            draw_button_state(button_name, y_pos, current["state"], current["held_ms"])
-        previous_states = {name: data.copy() for name, data in states.items()}
-    else:
-        # Subsequent iterations: only redraw changed buttons
-        for button_name in ["up", "down", "left", "right"]:
-            current = states[button_name]
-            previous = previous_states[button_name]
-            
-            # Check if this specific button's state changed
-            if current["state"] != previous["state"]:
-                # Redraw only this button's area
-                y_pos = button_positions[button_name]
-                draw_button_state(button_name, y_pos, current["state"], current["held_ms"])
-                
-                # Update previous state for this button
-                previous_states[button_name] = current.copy()
-            
-            # If button is in pressed state and held time changed, update only the time
-            elif current["state"] == "pressed" and current["held_ms"] != previous["held_ms"]:
-                y_pos = button_positions[button_name]
-                update_held_time(y_pos, current["held_ms"])
-                
-                # Update previous held time for this button
-                previous_states[button_name]["held_ms"] = current["held_ms"]
-    return previous_states
-
-red = Pin(22, Pin.OUT)
-green = Pin(32, Pin.OUT)
-blue = Pin(33, Pin.OUT)
-
-red.value(1)
-green.value(3)
-blue.value(3)
-
-# --- Menu System Setup ---
-
-# Menu callbacks
-def show_dpad_status():
-    """Show D-pad button state monitor."""
-    global previous_states
-    tft.fill(ST7735.TFT.BLACK)
-    previous_states = None
-    
-    # Double tap detection for left button
-    tap_count = 0
-    first_tap_time = 0
-    double_tap_window = 800  # ms window for double tap
-    waiting_for_release = False
-    
-    # Run D-pad monitor until left button is double-tapped to go back
-    while True:
-        previous_states = update_dpad_states(tft, dpad, previous_states, button_positions)
-        
-        # Check for left button double tap to exit back to menu
-        state = dpad.read()
-        left_state = state["left"]["state"]
-        
-        if left_state == "button_down":
-            if not waiting_for_release:
-                current_time = time.ticks_ms()
-                if tap_count == 0:
-                    # First tap
-                    tap_count = 1
-                    first_tap_time = current_time
-                    waiting_for_release = True
-                elif tap_count == 1 and time.ticks_diff(current_time, first_tap_time) < double_tap_window:
-                    # Second tap within window - double tap detected!
-                    menu.show()
-                    break
-                else:
-                    # Too slow, reset
-                    tap_count = 1
-                    first_tap_time = current_time
-                    waiting_for_release = True
-        
-        elif left_state == "unpressed":
-            # Button released
-            if waiting_for_release:
-                waiting_for_release = False
-            # Reset if window expired
-            if tap_count > 0 and time.ticks_diff(time.ticks_ms(), first_tap_time) >= double_tap_window:
-                tap_count = 0
-        
-        time.sleep(0.05)
-
-def start_race():
-    """Start race sequence."""
-    tft.fill(ST7735.TFT.BLACK)
-    tft.text((10, 50), "Starting Race...", ST7735.TFT.GREEN, font5x8.font5x8)
-    time.sleep(1)
-    tft.text((10, 65), "3...", ST7735.TFT.YELLOW, font5x8.font5x8)
-    time.sleep(1)
-    tft.text((10, 80), "2...", ST7735.TFT.YELLOW, font5x8.font5x8)
-    time.sleep(1)
-    tft.text((10, 95), "1...", ST7735.TFT.YELLOW, font5x8.font5x8)
-    time.sleep(1)
-    tft.text((10, 110), "GO!", ST7735.TFT.RED, font5x8.font5x8)
-    time.sleep(2)
-    menu.show()
-
-def view_results():
-    """View race results."""
-    tft.fill(ST7735.TFT.BLACK)
-    tft.text((10, 30), "Race Results", ST7735.TFT.CYAN, font5x8.font5x8)
-    tft.text((10, 50), "1st: 12.34s", ST7735.TFT.WHITE, font5x8.font5x8)
-    tft.text((10, 65), "2nd: 12.89s", ST7735.TFT.WHITE, font5x8.font5x8)
-    tft.text((10, 80), "3rd: 13.12s", ST7735.TFT.WHITE, font5x8.font5x8)
-    tft.text((10, 105), "Press RIGHT to return", ST7735.TFT.GRAY, font5x8.font5x8)
-    
-    # Wait for button press
-    while True:
-        state = dpad.read()
-        if state["right"]["state"] == "button_down" or state["left"]["state"] == "button_down":
-            break
-        time.sleep(0.05)
-    menu.show()
-
-def calibrate():
-    """Calibration routine."""
-    tft.fill(ST7735.TFT.BLACK)
-    tft.text((10, 50), "Calibrating...", ST7735.TFT.YELLOW, font5x8.font5x8)
-    time.sleep(2)
-    tft.text((10, 70), "Complete!", ST7735.TFT.GREEN, font5x8.font5x8)
-    time.sleep(1)
-    menu.show()
-
-def network_info():
-    """Display network information."""
-    tft.fill(ST7735.TFT.BLACK)
-    tft.text((10, 30), "Network Info", ST7735.TFT.CYAN, font5x8.font5x8)
-    tft.text((10, 50), "Status: Connected", ST7735.TFT.GREEN, font5x8.font5x8)
-    tft.text((10, 65), "Nodes: 4", ST7735.TFT.WHITE, font5x8.font5x8)
-    tft.text((10, 80), "Signal: Good", ST7735.TFT.WHITE, font5x8.font5x8)
-    tft.text((10, 105), "Press RIGHT to return", ST7735.TFT.GRAY, font5x8.font5x8)
-    
-    # Wait for button press
-    while True:
-        state = dpad.read()
-        if state["right"]["state"] == "button_down" or state["left"]["state"] == "button_down":
-            break
-        time.sleep(0.05)
-    menu.show()
-
-def about():
-    """Show about information."""
-    tft.fill(ST7735.TFT.BLACK)
-    tft.text((10, 30), "NaeTime UI", ST7735.TFT.WHITE, font5x8.font5x8)
-    tft.text((10, 45), "Version 1.0", ST7735.TFT.CYAN, font5x8.font5x8)
-    tft.text((10, 60), "ESP32 MicroPython", ST7735.TFT.GREEN, font5x8.font5x8)
-    tft.text((10, 90), "Press LEFT to return", ST7735.TFT.GRAY, font5x8.font5x8)
-    
-    # Wait for button press
-    while True:
-        state = dpad.read()
-        if state["right"]["state"] == "button_down" or state["left"]["state"] == "button_down":
-            break
-        time.sleep(0.05)
-    menu.show()
-
-def set_led(color_name, value):
-    """Set LED value."""
-    if color_name == "red":
-        red.value(value)
-    elif color_name == "green":
-        green.value(value)
-    elif color_name == "blue":
-        blue.value(value)
-    
-    tft.fill(ST7735.TFT.BLACK)
-    state = "ON" if value else "OFF"
-    tft.text((10, 50), f"{color_name.upper()} LED {state}", ST7735.TFT.WHITE, font5x8.font5x8)
-    time.sleep(1)
+comms_uart = UART(2, baudrate=115200, tx=uartTx, rx=uartRx, timeout=0)
+uart_client = UARTCommsClient(comms_uart)
 
 # Create Settings submenu
-settings_menu = Menu(tft, dpad, title="Settings")
+network_menu = Menu(tft, dpad, title="Network Settings")
 
-led_sub_menu = Menu(tft, dpad, title="LED Control", parent_menu=settings_menu)
-led_sub_menu.add_item("Red ON", lambda: set_led("red", 1))
-led_sub_menu.add_item("Red OFF", lambda: set_led("red", 0))
-led_sub_menu.add_item("Green ON", lambda: set_led("green", 1))
+# Non-interactive status line at the top of the network menu.
+# Updated with a live query each time the user enters the menu.
+network_status_item = network_menu.add_item("Net: Unknown")
+network_status_item.disabled = True
 
-# Create LED Control submenu
-led_menu = Menu(tft, dpad, title="LED Control", parent_menu=settings_menu)
-led_menu.add_item("Red ON", lambda: set_led("red", 1))
-led_menu.add_item("Red OFF", lambda: set_led("red", 0))
-led_menu.add_item("Green ON", lambda: set_led("green", 1))
-led_menu.add_item("Green OFF", lambda: set_led("green", 0))
-led_menu.add_item("Blue ON", lambda: set_led("blue", 1))
-led_menu.add_submenu("More",led_sub_menu)
-led_menu.add_back_item()
+def on_dhcp_toggle(value):
+    print(f"DHCP {'enabled' if value else 'disabled'}")
+    # Grey out the static address fields when DHCP is active
+    network_menu.set_item_disabled(ip_item, value)
+    network_menu.set_item_disabled(subnet_item, value)
+    network_menu.set_item_disabled(gateway_item, value)
 
-# Add items to settings menu
-settings_menu.add_submenu("LED Control", led_menu)
-settings_menu.add_item("Display Brightness", lambda: show_temp_msg("Brightness: 100%"))
-settings_menu.add_item("Sound Volume", lambda: show_temp_msg("Volume: 80%"))
-settings_menu.add_back_item()
+def on_ip_change(value):
+    print(f"IP address set to {value}")
+
+def on_subnet_change(value):
+    print(f"Subnet mask set to {value}")
+
+def on_gateway_change(value):
+    print(f"Gateway set to {value}")
+
+# --- Populate network menu ---
+dhcp_item = network_menu.add_toggle_item("DHCP",
+                                          on_change=on_dhcp_toggle,
+                                          initial=False)
+ip_item = network_menu.add_ip_address_item("IP Address",
+                                            ip="0.0.0.0",
+                                            on_change=on_ip_change)
+subnet_item = network_menu.add_ip_address_item("Subnet",
+                                                ip="0.0.0.0",
+                                                on_change=on_subnet_change)
+gateway_item = network_menu.add_ip_address_item("Gateway",
+                                                 ip="0.0.0.0",
+                                                 on_change=on_gateway_change)
+
+def apply_network_config():
+    """Read current menu values and send a ConfigureNetwork command to the comms board."""
+    dhcp    = dhcp_item.value_index == 1
+    ip      = ip_item.get_value()
+    subnet  = subnet_item.get_value()
+    gateway = gateway_item.get_value()
+    print(f"Applying network config: dhcp={dhcp} ip={ip} subnet={subnet} gateway={gateway}")
+    result = uart_client.configure_network(dhcp, ip, subnet, gateway, timeout_ms=5000)
+    if result is True:
+        network_status_item.label = "Applied OK"
+    elif result is False:
+        network_status_item.label = "Apply Failed"
+    else:
+        network_status_item.label = "Apply Timeout"
+
+network_menu.add_item("Apply", callback=apply_network_config)
+network_menu.add_back_item()
+
+# Start with static fields disabled until we know the DHCP state
+ip_item.disabled = True
+subnet_item.disabled = True
+gateway_item.disabled = True
+
+# --- Radio menu ---
+radio_menu = Menu(tft, dpad, title="Radio Config")
+
+# Status line updated each time the menu is opened.
+radio_status_item = radio_menu.add_item("Status: Unknown")
+radio_status_item.disabled = True
+
+# Cached lane configurations retrieved from the comms board.
+_lane_configs = []
+
+def _refresh_channel_list(band_list_idx):
+    """Replace the channel item's values list for the given band."""
+    radio_channel_item.values = get_channel_display_values(band_list_idx)
+    radio_channel_item.value_index = 0
 
 
+def _load_lane_into_editor(lane_idx):
+    """Populate band / channel / custom-freq items from the cached lane config."""
+    if lane_idx < len(_lane_configs):
+        cfg = _lane_configs[lane_idx]
+        band_id  = cfg['band_id']
+        freq_mhz = cfg['frequency_mhz']
+    else:
+        band_id  = 0
+        freq_mhz = 5800
 
-def show_temp_msg(msg):
-    """Show temporary message and return to settings."""
-    tft.fill(ST7735.TFT.BLACK)
-    tft.text((10, 50), msg, ST7735.TFT.WHITE, font5x8.font5x8)
-    time.sleep(1)
-    settings_menu.show()
+    bi, ci = find_band_channel(band_id, freq_mhz)
+    if bi is not None:
+        # Known band and channel — select them by name.
+        radio_band_item.value_index = bi
+        _refresh_channel_list(bi)
+        radio_channel_item.value_index = ci
+        radio_menu.set_item_disabled(radio_channel_item, False)
+        radio_menu.set_item_disabled(radio_custom_freq_item, True)
+    else:
+        # Unknown / custom frequency — fall back to the Custom entry.
+        radio_band_item.value_index = len(BANDS)  # "Custom" sentinel
+        radio_menu.set_item_disabled(radio_channel_item, True)
+        radio_menu.set_item_disabled(radio_custom_freq_item, False)
+        radio_custom_freq_item._value = freq_mhz
+
+def on_radio_lane_change(value):
+    """Called (live) when the user changes the lane selector."""
+    _load_lane_into_editor(int(value))
+    if radio_menu.visible:
+        radio_menu._draw_full_menu()
+
+radio_lane_item = radio_menu.add_numeric_item(
+    "Lane", value=0, increment=1, min_value=0, max_value=7,
+    on_change=on_radio_lane_change, live_update=True)
+
+
+def on_radio_band_change(value):
+    """Called (live) when the user cycles through bands."""
+    if value == "Custom":
+        radio_menu.set_item_disabled(radio_channel_item, True)
+        radio_menu.set_item_disabled(radio_custom_freq_item, False)
+    else:
+        bi = BAND_NAMES.index(value)
+        _refresh_channel_list(bi)
+        radio_menu.set_item_disabled(radio_channel_item, False)
+        radio_menu.set_item_disabled(radio_custom_freq_item, True)
+    if radio_menu.visible:
+        radio_menu._draw_full_menu()
+
+
+def on_radio_channel_change(value):
+    """Called (live) when the user cycles through channels."""
+    is_custom = (value == "Custom")
+    radio_menu.set_item_disabled(radio_custom_freq_item, not is_custom)
+    if radio_menu.visible:
+        radio_menu._draw_full_menu()
+
+
+radio_band_item = radio_menu.add_value_item(
+    "Band", values=BAND_NAMES,
+    on_change=on_radio_band_change, live_update=True)
+
+radio_channel_item = radio_menu.add_value_item(
+    "Channel", values=get_channel_display_values(0),
+    on_change=on_radio_channel_change, live_update=True)
+
+radio_custom_freq_item = radio_menu.add_numeric_item(
+    "Custom MHz", value=5800, increment=1, min_value=5000, max_value=6000,
+    fmt="{} MHz")
+radio_custom_freq_item.disabled = True
+
+def apply_radio_config():
+    """Read current menu values and send a TuneLane command to the comms board."""
+    lane      = radio_lane_item.get_value()
+    band_name = radio_band_item.get_value()
+
+    if band_name == "Custom":
+        # Fully custom: use CUSTOM_BAND_ID and the manually entered frequency.
+        band_id  = CUSTOM_BAND_ID
+        freq_mhz = radio_custom_freq_item.get_value()
+    else:
+        bi       = BAND_NAMES.index(band_name)
+        band_id  = get_band_id(bi)
+        chan_val = radio_channel_item.get_value()
+        if chan_val == "Custom":
+            # Known band, custom channel frequency.
+            freq_mhz = radio_custom_freq_item.get_value()
+        else:
+            ci       = radio_channel_item.value_index
+            freq_mhz = get_channel_freq(bi, ci)
+
+    print(f"Applying radio config: lane={lane} band_id={band_id} freq={freq_mhz}")
+    result = uart_client.tune_lane(lane, band_id, freq_mhz, timeout_ms=5000)
+    if result is True:
+        radio_status_item.label = "Applied OK"
+    elif result is False:
+        radio_status_item.label = "Apply Failed"
+    else:
+        radio_status_item.label = "Apply Timeout"
+    if radio_menu.visible:
+        radio_menu._draw_item(0, False)  # refresh status row
+
+radio_menu.add_item("Apply", callback=apply_radio_config)
+radio_menu.add_back_item()
+
+def open_radio_menu():
+    """Query the comms board for lane configurations, populate the menu, then open it."""
+    global _lane_configs
+    result = uart_client.query_lane_configurations(lane_mask=0xFF, timeout_ms=5000)
+    print(f"Queried lane configurations: {result}")
+    if result is not None:
+        _lane_configs = result['lanes']
+        radio_status_item.label = "Lanes OK ({})".format(len(_lane_configs))
+        # Initialise display with lane 0 values.
+        radio_lane_item._value = 0
+        _load_lane_into_editor(0)
+    else:
+        _lane_configs = []
+        radio_status_item.label = "Status: Error"
+        radio_lane_item._value = 0
+        radio_band_item.value_index = 0
+        _refresh_channel_list(0)
+        radio_custom_freq_item._value = 5800
+    menu.open_submenu(radio_menu)
+
+# --- Tests menu ---
+tests_menu = Menu(tft, dpad, title="Tests")
+
+test_buzzer_on = False
+test_led_on = False
+test_led_hue = 0
+
+def on_test_buzzer_toggle(value):
+    global test_buzzer_on
+    test_buzzer_on = value
+    buzzer.value(1 if value else 0)
+
+def on_test_led_toggle(value):
+    global test_led_on
+    test_led_on = value
+    if not value:
+        leds.off()
+    elif value:
+        r, g, b = wheel(test_led_hue)
+        leds.set_colour(r, g, b)
+
+def on_test_led_hue_change(value):
+    global test_led_hue
+    test_led_hue = value
+    r, g, b = wheel(test_led_hue)
+    leds.set_colour(r, g, b)
+
+tests_menu.add_toggle_item("Buzzer",
+                            on_change=on_test_buzzer_toggle,
+                            initial=False,
+                            live_update=True)
+tests_menu.add_separator()
+tests_menu.add_toggle_item("LED",
+                            on_change=on_test_led_toggle,
+                            initial=False)
+tests_menu.add_numeric_item("LED Hue",
+                             value=0,
+                             increment=1,
+                             min_value=0,
+                             max_value=255,
+                             on_change=on_test_led_hue_change,
+                             fmt="{}",
+                             live_update=True)
+tests_menu.add_back_item()
 
 # Create and configure main menu
 menu = Menu(tft, dpad, title="NaeTime Menu")
-menu.add_item("Start Race", start_race)
-menu.add_item("View Results", view_results)
-menu.add_submenu("Settings", settings_menu)
-menu.add_item("Calibrate", calibrate)
-menu.add_item("Network Info", network_info)
-menu.add_item("DPad Status", show_dpad_status)
-menu.add_item("About", about)
+
+def open_network_menu():
+    """Query the comms board for full network status, populate all menu items,
+    then open the Network Settings submenu."""
+    result = uart_client.query_network_status(timeout_ms=5000)
+    print(f"Queried network status: {result}")
+    if result is not None:
+        connected = result['connected']
+        dhcp      = result['dhcp']
+        ip        = result['ip']
+        subnet    = result['subnet']
+        gateway   = result['gateway']
+
+        network_status_item.label = "Net: Connected" if connected else "Net: Disconnected"
+
+        # Update DHCP toggle (value_index 0 = Off/False, 1 = On/True)
+        dhcp_item.value_index = 1 if dhcp else 0
+
+        # Update IP address fields directly from the comms board values
+        ip_item._segments      = [int(x) for x in ip.split('.')]
+        subnet_item._segments  = [int(x) for x in subnet.split('.')]
+        gateway_item._segments = [int(x) for x in gateway.split('.')]
+
+        # Enable or grey out static fields based on DHCP state
+        network_menu.set_item_disabled(ip_item, dhcp)
+        network_menu.set_item_disabled(subnet_item, dhcp)
+        network_menu.set_item_disabled(gateway_item, dhcp)
+    else:
+        network_status_item.label = "Net: Unknown"
+
+    menu.open_submenu(network_menu)
+
+menu.add_item("Network", callback=open_network_menu)
+menu.add_item("Radio", callback=open_radio_menu)
+menu.add_submenu("Tests", tests_menu)
 
 # Show the menu
 menu.show()
 
 print("NaeTime Menu System Started!")
 
-pin = Pin(23, Pin.OUT)
-pin.value(1)
+def wheel(pos):
+    """Map a 0-255 position to an RGB rainbow colour."""
+    pos = pos & 255
+    if pos < 85:
+        return (255 - pos * 3, pos * 3, 0)
+    elif pos < 170:
+        pos -= 85
+        return (0, 255 - pos * 3, pos * 3)
+    else:
+        pos -= 170
+        return (pos * 3, 0, 255 - pos * 3)
+
+buzzer.value(1)
+time.sleep(0.1)
+buzzer.value(0)
 
 # Main loop
+hue = 0
 while True:
     menu.update()
-    time.sleep(0.05)
 
 
 # async def sound_buzzer(pattern):

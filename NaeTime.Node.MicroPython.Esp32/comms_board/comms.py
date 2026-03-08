@@ -18,6 +18,11 @@ STATUS = 0xFD
 ERROR = 0xFE
 ACK = 0xFF
 
+# UI-board <-> comms-board UART protocol
+QUERY_NETWORK_STATUS = 0x20
+NETWORK_STATUS_RESPONSE = 0x21
+CONFIGURE_NETWORK = 0x22
+
 class TCPServerSocketRadio:
 
     def __init__(self, host='0.0.0.0', port=5005):
@@ -91,6 +96,50 @@ class TCPServerSocketRadio:
                 except:
                     pass
                 self._client_socket = None
+
+class UARTRadio:
+    """Async UART transport.  Reads bytes from the hardware UART and queues
+    them so that NodeCommunication can consume them with wait_for_rx().
+    Start the background reader task by calling start() inside an asyncio loop.
+    """
+
+    def __init__(self, uart):
+        self._uart = uart
+        self._rx_received_event = asyncio.Event()
+        self._rx_queue = deque([], 100)
+
+    async def start(self):
+        """Background coroutine – run as an asyncio task."""
+        while True:
+            waiting = self._uart.any()
+            if waiting > 0:
+                # Read exactly the bytes already in the buffer.
+                # read() with no argument blocks until the UART's timeout
+                # (often 1 s) which would stall the entire event loop.
+                data = self._uart.read(waiting)
+                if data:
+                    self._rx_queue.append(data)
+                    self._rx_received_event.set()
+            await asyncio.sleep_ms(5)
+
+    async def wait_for_rx(self):
+        if len(self._rx_queue) == 0:
+            await self._rx_received_event.wait()
+            self._rx_received_event.clear()
+        rx = self._rx_queue.popleft()
+        print("UARTRadio received data:", [hex(b) for b in rx])
+        return rx
+
+    def send(self, data):
+        print("UARTRadio sending data:", [hex(b) for b in data])
+        self._uart.write(data)
+        # Ensure all bytes are physically transmitted before yielding
+        # back to the asyncio event loop.
+        try:
+            self._uart.flush()
+        except AttributeError:
+            pass  # flush() not available on this port
+
 
 class NodeCommunication:
 
@@ -197,6 +246,16 @@ class NodeCommunication:
                 print("Building REQUEST_LANE_CONFIGURATIONS Command")
                 lanes = struct.unpack("<B",payload)
                 return commands.RequestLaneConfigurations(lanes)
+            elif command_id == QUERY_NETWORK_STATUS:
+                print("Building QUERY_NETWORK_STATUS Command")
+                return commands.QueryNetworkStatus()
+            elif command_id == CONFIGURE_NETWORK:
+                print("Building CONFIGURE_NETWORK Command")
+                dhcp, ip_b, subnet_b, gateway_b = struct.unpack("<B4s4s4s", payload)
+                ip = '.'.join(str(b) for b in ip_b)
+                subnet = '.'.join(str(b) for b in subnet_b)
+                gateway = '.'.join(str(b) for b in gateway_b)
+                return commands.ConfigureNetwork(dhcp != 0, ip, subnet, gateway)
         except Exception as e:
             print("Process Packets Error: ", e)
 
@@ -230,6 +289,23 @@ class NodeCommunication:
             data = struct.pack("<BB", REQUEST_LANE_CONFIGURATIONS, command.enabled_lanes)
             for lane_config in command.lane_configurations:
                 data += struct.pack("<BHHH", lane_config.bandId,lane_config.frequency_in_mhz, lane_config.entry_threshold, lane_config.exit_threshold)
+        elif(isinstance(command, commands.NetworkStatusResponse)):
+            print("Sending network status response:", response)
+            ip_bytes = bytes(int(x) for x in command.ip.split('.'))
+            subnet_bytes = bytes(int(x) for x in command.subnet.split('.'))
+            gateway_bytes = bytes(int(x) for x in command.gateway.split('.'))
+            data = struct.pack("<BBB4s4s4s", QUERY_NETWORK_STATUS,
+                               1 if command.connected else 0,
+                               1 if command.dhcp else 0,
+                               ip_bytes, subnet_bytes, gateway_bytes)
+        elif(isinstance(command, commands.ConfigureNetwork)):
+            print("Sending configure network response:", response)
+            ip_bytes = bytes(int(x) for x in command.ip.split('.'))
+            subnet_bytes = bytes(int(x) for x in command.subnet.split('.'))
+            gateway_bytes = bytes(int(x) for x in command.gateway.split('.'))
+            data = struct.pack("<BB4s4s4s", CONFIGURE_NETWORK,
+                               1 if command.dhcp else 0,
+                               ip_bytes, subnet_bytes, gateway_bytes)
         else:
             raise ValueError("Command response Not Supported")
            
@@ -245,6 +321,16 @@ class NodeCommunication:
         elif isinstance(command, commands.LanePassEvent):
             command_id = LANE_PASS_EVENT
             payload = struct.pack("<BHQQ", command.lane, command.pass_count, command.start_time, command.end_time)
+
+        elif isinstance(command, commands.NetworkStatusResponse):
+            command_id = NETWORK_STATUS_RESPONSE
+            ip_bytes = bytes(int(x) for x in command.ip.split('.'))
+            subnet_bytes = bytes(int(x) for x in command.subnet.split('.'))
+            gateway_bytes = bytes(int(x) for x in command.gateway.split('.'))
+            payload = struct.pack("<BB4s4s4s",
+                                  1 if command.connected else 0,
+                                  1 if command.dhcp else 0,
+                                  ip_bytes, subnet_bytes, gateway_bytes)
 
         else:
             raise ValueError("Unknown command type")
@@ -274,8 +360,8 @@ class NodeCommunication:
 
         payload = self._create_packet_payload(command_id, payload)
         payload = self._escape_packet(payload)
-
         self._radio.send(payload)
+
 
 class CRC16:
     def __init__(self, polynomial=0x8005, initial_value=0xFFFF):

@@ -1,4 +1,4 @@
-26781405042443042
+26783215085144355
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -72918,6 +72918,13 @@ LED
 0
 4
 4
+NaeTimeComponentLibrary
+Novacore_Carrier
+
+
+0
+6
+6
 NaeTimeComponentLibrary
 Power Pads
 

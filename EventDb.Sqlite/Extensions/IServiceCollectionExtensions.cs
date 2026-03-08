@@ -22,6 +22,8 @@ public static class IServiceCollectionExtensions
 
     public static IServiceCollection AddSQLiteEventDbLite(this IServiceCollection services)
     {
+
+        services.AddHostedService<SQLiteDatabaseManager<EventDbLiteContext>>();
         services.AddDbContext<EventDbLiteContext>(options =>
         {
             SqliteConnectionStringBuilder builder = new()
@@ -40,7 +42,6 @@ public static class IServiceCollectionExtensions
         services.AddEventDbLite();
         services.AddTransient<ISqliteConnectionFactory, SqliteConnectionFactory>();
 
-        services.AddHostedService<SQLiteDatabaseManager<EventDbLiteContext>>();
         services.AddSingleton<IEventStreamConnection, EventStreamConnection>();
         return services;
     }

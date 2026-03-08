@@ -180,4 +180,69 @@ class LanePassEvent:
     @property
     def end_time(self):
         return self._end_time
-    
+
+# ---------------------------------------------------------------------------
+# UI-board ↔ comms-board UART protocol commands
+# ---------------------------------------------------------------------------
+
+class QueryNetworkStatus:
+    """Sent by the UI board to request full network status from the comms board.
+    Payload is empty."""
+    pass
+
+class NetworkStatusResponse:
+    """Sent by the comms board in reply to QueryNetworkStatus.
+    Carries connection status, DHCP flag, IP, subnet, and gateway (IPv4 only)."""
+    def __init__(self, connected, dhcp, ip, subnet, gateway):
+        self._connected = connected
+        self._dhcp = dhcp
+        self._ip = ip
+        self._subnet = subnet
+        self._gateway = gateway
+
+    @property
+    def connected(self):
+        return self._connected
+
+    @property
+    def dhcp(self):
+        return self._dhcp
+
+    @property
+    def ip(self):
+        return self._ip
+
+    @property
+    def subnet(self):
+        return self._subnet
+
+    @property
+    def gateway(self):
+        return self._gateway
+
+class ConfigureNetwork:
+    """Sent by the UI board to apply a new IPv4 network configuration.
+    dhcp=True: enable DHCP (ip/subnet/gateway are ignored by the comms board).
+    dhcp=False: static config with the provided ip, subnet and gateway strings."""
+    def __init__(self, dhcp, ip, subnet, gateway):
+        self._dhcp = dhcp
+        self._ip = ip
+        self._subnet = subnet
+        self._gateway = gateway
+
+    @property
+    def dhcp(self):
+        return self._dhcp
+
+    @property
+    def ip(self):
+        return self._ip
+
+    @property
+    def subnet(self):
+        return self._subnet
+
+    @property
+    def gateway(self):
+        return self._gateway
+
