@@ -137,4 +137,28 @@ public class OpenPracticeCommandClient : IOpenPracticeCommandHandler
         var url = $"/api/openpractice/remove-pack-end?sessionId={sessionId}&packEndId={packEndId}";
         return PostNoContentAsync(url);
     }
+
+    public Task SetMinimumLapTime(Guid sessionId, TimeSpan minimumLapTime)
+    {
+        var url = $"/api/openpractice/set-minimum-lap-time?sessionId={sessionId}&minimumLapTimeInMs={minimumLapTime.TotalMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        return PostNoContentAsync(url);
+    }
+
+    public Task ResetMinimumLapTime(Guid sessionId)
+    {
+        var url = $"/api/openpractice/reset-minimum-lap-time?sessionId={sessionId}";
+        return PostNoContentAsync(url);
+    }
+
+    public Task SetMaximumLapTime(Guid sessionId, TimeSpan maximumLapTime)
+    {
+        var url = $"/api/openpractice/set-maximum-lap-time?sessionId={sessionId}&maximumLapTimeInMs={maximumLapTime.TotalMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        return PostNoContentAsync(url);
+    }
+
+    public Task ResetMaximumLapTime(Guid sessionId)
+    {
+        var url = $"/api/openpractice/reset-maximum-lap-time?sessionId={sessionId}";
+        return PostNoContentAsync(url);
+    }
 }

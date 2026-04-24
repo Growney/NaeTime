@@ -12,6 +12,7 @@
                     <MudTextField @bind-Value="_pilot.Callsign" Label="Callsign" Required="true"></MudTextField>
                     <MudTextField @bind-Value="_pilot.BindingPhrase" Label="Binding Phrase"></MudTextField>
                     <MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Primary" OnClick="Create">Create</MudButton>
+                    <MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Secondary" OnClick="CreateAndContinue">Create &amp; Continue</MudButton>
                 </MudForm>
             </MudPaper>
         </MudItem>
@@ -46,5 +47,20 @@
         await PilotCommandHandler.CreatePilot(_pilot.Id, _pilot.Firstname, _pilot.Lastname, _pilot.Callsign, string.Empty);
 
         NavigationManager.NavigateTo($"/pilot/{_pilot.Id}");
+    }
+
+    private async Task CreateAndContinue()
+    {
+        if (_pilot == null)
+        {
+            return;
+        }
+        await PilotCommandHandler.CreatePilot(_pilot.Id, _pilot.Firstname, _pilot.Lastname, _pilot.Callsign, string.Empty);
+
+        _pilot = new NaeTime.Client.Models.Pilot()
+        {
+            Id = Guid.NewGuid(),
+        };
+        _isValid = false;
     }
 }

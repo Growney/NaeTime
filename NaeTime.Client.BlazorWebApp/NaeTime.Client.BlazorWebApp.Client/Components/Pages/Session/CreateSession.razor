@@ -88,7 +88,7 @@
             case Models.SessionType.OpenPractice:
                 await OpenPracticeCommandHandler.ScheduleSession(_session.Id, _session.TrackId, _session.Name, minimumLapTime, maximumLapTime);
                 await SessionsCommandHandler.ActivateOpenPracticeSession(_session.Id);
-                NavigationManager.NavigateTo($"/open-practice/{_session.Id}");
+                NavigationManager.NavigateTo($"/open-practice/{_session.Id}/marshal");
                 break;
         }
     }

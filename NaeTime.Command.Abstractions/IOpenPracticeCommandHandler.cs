@@ -20,5 +20,9 @@ public interface IOpenPracticeCommandHandler
     public Task InsertPilotPackEndBeforeDetection(Guid sessionId, Guid detectionId);
     public Task InsertPilotPackEndAfterDetection(Guid sessionId, Guid detectionId);
     public Task RemovePilotPackEnd(Guid sessionId, Guid packEndId);
+    public Task SetMinimumLapTime(Guid sessionId, TimeSpan minimumLapTime);
+    public Task ResetMinimumLapTime(Guid sessionId);
+    public Task SetMaximumLapTime(Guid sessionId, TimeSpan maximumLapTime);
+    public Task ResetMaximumLapTime(Guid sessionId);
 
 }

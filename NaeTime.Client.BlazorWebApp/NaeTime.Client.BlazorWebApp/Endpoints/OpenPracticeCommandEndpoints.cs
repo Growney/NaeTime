@@ -128,5 +128,29 @@ public static class OpenPracticeCommandEndpoints
             await handler.RemovePilotPackEnd(sessionId, packEndId).ConfigureAwait(false);
             return Results.NoContent();
         });
+
+        app.MapPost("/api/openpractice/set-minimum-lap-time", async (IOpenPracticeCommandHandler handler, [FromQuery] Guid sessionId, [FromQuery] double minimumLapTimeInMs) =>
+        {
+            await handler.SetMinimumLapTime(sessionId, TimeSpan.FromMilliseconds(minimumLapTimeInMs)).ConfigureAwait(false);
+            return Results.NoContent();
+        });
+
+        app.MapPost("/api/openpractice/reset-minimum-lap-time", async (IOpenPracticeCommandHandler handler, [FromQuery] Guid sessionId) =>
+        {
+            await handler.ResetMinimumLapTime(sessionId).ConfigureAwait(false);
+            return Results.NoContent();
+        });
+
+        app.MapPost("/api/openpractice/set-maximum-lap-time", async (IOpenPracticeCommandHandler handler, [FromQuery] Guid sessionId, [FromQuery] double maximumLapTimeInMs) =>
+        {
+            await handler.SetMaximumLapTime(sessionId, TimeSpan.FromMilliseconds(maximumLapTimeInMs)).ConfigureAwait(false);
+            return Results.NoContent();
+        });
+
+        app.MapPost("/api/openpractice/reset-maximum-lap-time", async (IOpenPracticeCommandHandler handler, [FromQuery] Guid sessionId) =>
+        {
+            await handler.ResetMaximumLapTime(sessionId).ConfigureAwait(false);
+            return Results.NoContent();
+        });
     }
 }

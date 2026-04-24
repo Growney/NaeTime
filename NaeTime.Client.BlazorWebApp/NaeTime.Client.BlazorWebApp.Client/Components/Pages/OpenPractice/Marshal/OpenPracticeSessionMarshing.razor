@@ -6,6 +6,27 @@
 @if (_session != null)
 {
     <div class="open-practice-container">
+        <div class="open-practice-session-configuration">
+            <MudPaper Class="px-3 py-2">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                    <MudText Typo="Typo.body2" Class="text-nowrap">Lap Times</MudText>
+                    <MudTextField @bind-Value="_minimumLapTimeMs"
+                                  Label="Min (ms)"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Style="max-width:130px"
+                                  @onblur="SaveMinimumLapTime"></MudTextField>
+                    <MudIconButton Icon="@Icons.Material.Filled.Clear" Size="Size.Small" Title="Reset minimum" OnClick="ResetMinimumLapTime"></MudIconButton>
+                    <MudTextField @bind-Value="_maximumLapTimeMs"
+                                  Label="Max (ms)"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Style="max-width:130px"
+                                  @onblur="SaveMaximumLapTime"></MudTextField>
+                    <MudIconButton Icon="@Icons.Material.Filled.Clear" Size="Size.Small" Title="Reset maximum" OnClick="ResetMaximumLapTime"></MudIconButton>
+                </MudStack>
+            </MudPaper>
+        </div>
         @if (_session.IsActive)
         {
             <div class="open-practice-lane-configuration">
@@ -18,7 +39,7 @@
                         </div>
                     }
             </div>
-            
+
         }
         <div class="open-practice-timelines timeline-container">
             @foreach (Guid pilotId in _session.AttendingPilots)
@@ -33,9 +54,9 @@
                 </div>
             }
         </div>
-        
+
     </div>
-    
+
  }
 
 
@@ -51,12 +72,16 @@
     private ITrackQueryHandler TrackQueryHandler { get; set; } = null!;
     [Inject]
     private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
+    [Inject]
+    private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
 
     private Models.OpenPracticeSession? _session;
     private IEnumerable<NaeTime.Query.Abstractions.Models.Pilot> _pilots = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Pilot>();
 
     private bool _isTuningEnabled = false;
     private bool _isActive = false;
+    private long? _minimumLapTimeMs;
+    private long? _maximumLapTimeMs;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
     protected override async Task OnInitializedAsync()
@@ -64,6 +89,56 @@
         _pilots = await PilotQueryHandler.GetAllPilots();
 
         _session = OpenPracticeSessionProjector.Project(await OpenPracticeQueryHandler.GetByIdAsync(Id));
+        _minimumLapTimeMs = _session?.MinimumLapTime.HasValue == true ? (long?)_session.MinimumLapTime.Value.TotalMilliseconds : null;
+        _maximumLapTimeMs = _session?.MaximumLapTime.HasValue == true ? (long?)_session.MaximumLapTime.Value.TotalMilliseconds : null;
+    }
+
+    private async Task SaveMinimumLapTime()
+    {
+        if (_minimumLapTimeMs.HasValue && _minimumLapTimeMs.Value > 0)
+        {
+            await OpenPracticeCommandHandler.SetMinimumLapTime(Id, TimeSpan.FromMilliseconds(_minimumLapTimeMs.Value));
+            if (_session != null)
+            {
+                _session.MinimumLapTime = TimeSpan.FromMilliseconds(_minimumLapTimeMs.Value);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task ResetMinimumLapTime()
+    {
+        await OpenPracticeCommandHandler.ResetMinimumLapTime(Id);
+        _minimumLapTimeMs = null;
+        if (_session != null)
+        {
+            _session.MinimumLapTime = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveMaximumLapTime()
+    {
+        if (_maximumLapTimeMs.HasValue && _maximumLapTimeMs.Value > 0)
+        {
+            await OpenPracticeCommandHandler.SetMaximumLapTime(Id, TimeSpan.FromMilliseconds(_maximumLapTimeMs.Value));
+            if (_session != null)
+            {
+                _session.MaximumLapTime = TimeSpan.FromMilliseconds(_maximumLapTimeMs.Value);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task ResetMaximumLapTime()
+    {
+        await OpenPracticeCommandHandler.ResetMaximumLapTime(Id);
+        _maximumLapTimeMs = null;
+        if (_session != null)
+        {
+            _session.MaximumLapTime = null;
+            StateHasChanged();
+        }
     }
     private string GetPilotName(Guid pilotId)
     {

@@ -50,6 +50,8 @@ public class AnnouncerReactions : IAnnouncementStream
             return;
         }
 
+        await Task.Delay(500);
+
         OpenPracticeSessionTimingInformation? timingInfo = await _openPracticeProjection.GetTimingInformation(sessionId, trackId);
 
         if (timingInfo is null)
