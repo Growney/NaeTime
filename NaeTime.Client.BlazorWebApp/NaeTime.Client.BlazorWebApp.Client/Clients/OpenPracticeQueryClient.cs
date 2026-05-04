@@ -63,4 +63,14 @@ public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
     {
         return await GetFromJsonOrNullAsync<OpenPracticeDetection>($"/api/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/lastdetection").ConfigureAwait(false);
     }
+
+    private record PilotLapTimeOverridesDto(double? MinimumLapTimeMs, double? MaximumLapTimeMs);
+
+    public async Task<(TimeSpan? MinimumLapTime, TimeSpan? MaximumLapTime)> GetPilotLapTimeOverrides(Guid sessionId, Guid pilotId)
+    {
+        var dto = await GetFromJsonOrNullAsync<PilotLapTimeOverridesDto>($"/api/openpractice/session/{sessionId}/pilot/{pilotId}/lap-time-overrides").ConfigureAwait(false);
+        if (dto == null) return (null, null);
+        return (dto.MinimumLapTimeMs.HasValue ? TimeSpan.FromMilliseconds(dto.MinimumLapTimeMs.Value) : null,
+                dto.MaximumLapTimeMs.HasValue ? TimeSpan.FromMilliseconds(dto.MaximumLapTimeMs.Value) : null);
+    }
 }

@@ -1,6 +1,22 @@
 ﻿@using EventDbLite.Abstractions
 @using EventDbLite.Reactions.Abstractions
 @implements IDisposable
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+    <MudNumericField T="long?" @bind-Value="_pilotMinimumLapTimeMs"
+                     Label="Min (ms)"
+                     Variant="Variant.Outlined"
+                     Margin="Margin.Dense"
+                     Style="max-width:110px"
+                     @onblur="SavePilotMinimumLapTime" />
+    <MudIconButton Icon="@Icons.Material.Filled.Clear" Size="Size.Small" Title="Reset pilot minimum" OnClick="ResetPilotMinimumLapTime" />
+    <MudNumericField T="long?" @bind-Value="_pilotMaximumLapTimeMs"
+                     Label="Max (ms)"
+                     Variant="Variant.Outlined"
+                     Margin="Margin.Dense"
+                     Style="max-width:110px"
+                     @onblur="SavePilotMaximumLapTime" />
+    <MudIconButton Icon="@Icons.Material.Filled.Clear" Size="Size.Small" Title="Reset pilot maximum" OnClick="ResetPilotMaximumLapTime" />
+</MudStack>
 @if(_timingInfo != null)
 {
     @if(_fastestLap != null)
@@ -83,9 +99,15 @@
 
     private Query.Abstractions.Models.OpenPracticeSessionPilotTimingInfo? _timingInfo;
     private Query.Abstractions.Models.OpenPracticeLapRecord? _fastestLap => _timingInfo?.LapRecords.FirstOrDefault(x => x.Key == 1).Value;
+
+    private long? _pilotMinimumLapTimeMs;
+    private long? _pilotMaximumLapTimeMs;
     protected override async Task OnParametersSetAsync()
     {
         await Refresh();
+        var (min, max) = await OpenPracticeQueryHandler.GetPilotLapTimeOverrides(SessionId, PilotId);
+        _pilotMinimumLapTimeMs = min.HasValue ? (long?)min.Value.TotalMilliseconds : null;
+        _pilotMaximumLapTimeMs = max.HasValue ? (long?)max.Value.TotalMilliseconds : null;
         await base.OnParametersSetAsync();
     }
 
@@ -167,6 +189,40 @@
     private async Task InvalidateBeforeDetection(Guid detectionId)
     {
         await OpenPracticeCommandHandler.InvalidatePilotDetectionsBeforeDetection(SessionId, detectionId);
+    }
+
+    private async Task SavePilotMinimumLapTime()
+    {
+        if (_pilotMinimumLapTimeMs.HasValue && _pilotMinimumLapTimeMs.Value > 0)
+        {
+            await OpenPracticeCommandHandler.SetPilotMinimumLapTime(SessionId, PilotId, TimeSpan.FromMilliseconds(_pilotMinimumLapTimeMs.Value));
+        }
+    }
+
+    private async Task ResetPilotMinimumLapTime()
+    {
+        await OpenPracticeCommandHandler.ResetPilotMinimumLapTime(SessionId, PilotId);
+        _pilotMinimumLapTimeMs = null;
+        await Refresh();
+        StateHasChanged();
+    }
+
+    private async Task SavePilotMaximumLapTime()
+    {
+        if (_pilotMaximumLapTimeMs.HasValue && _pilotMaximumLapTimeMs.Value > 0)
+        {
+            await OpenPracticeCommandHandler.SetPilotMaximumLapTime(SessionId, PilotId, TimeSpan.FromMilliseconds(_pilotMaximumLapTimeMs.Value));
+            await Refresh();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ResetPilotMaximumLapTime()
+    {
+        await OpenPracticeCommandHandler.ResetPilotMaximumLapTime(SessionId, PilotId);
+        _pilotMaximumLapTimeMs = null;
+        await Refresh();
+        StateHasChanged();
     }
 
     public void Dispose()

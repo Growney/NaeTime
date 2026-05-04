@@ -32,6 +32,8 @@ public class OpenPracticeProjection : IOpenPracticeProjection
 
     }
     private readonly ConcurrentDictionary<Guid, ListOpenPracticeSession> _sessions = new();
+    private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, TimeSpan>> _sessionPilotMinimumLapTimes = new();
+    private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, TimeSpan>> _sessionPilotMaximumLapTimes = new();
 
     public OpenPracticeSession? GetSession(Guid sessionId)
     {
@@ -154,5 +156,35 @@ public class OpenPracticeProjection : IOpenPracticeProjection
             }
             lane.IsEnabled = false;
         }
+    }
+    private void When(OpenPracticeSessionPilotMinimumLapTimeSet set)
+    {
+        ConcurrentDictionary<Guid, TimeSpan> pilotTimes = _sessionPilotMinimumLapTimes.GetOrAdd(set.SessionId, _ => new());
+        pilotTimes[set.PilotId] = set.MinimumLapTime;
+    }
+    private void When(OpenPracticeSessionPilotMinimumLapTimeReset reset)
+    {
+        ConcurrentDictionary<Guid, TimeSpan> pilotTimes = _sessionPilotMinimumLapTimes.GetOrAdd(reset.SessionId, _ => new());
+        pilotTimes.TryRemove(reset.PilotId, out _);
+    }
+    private void When(OpenPracticeSessionPilotMaximumLapTimeSet set)
+    {
+        ConcurrentDictionary<Guid, TimeSpan> pilotTimes = _sessionPilotMaximumLapTimes.GetOrAdd(set.SessionId, _ => new());
+        pilotTimes[set.PilotId] = set.MaximumLapTime;
+    }
+    private void When(OpenPracticeSessionPilotMaximumLapTimeReset reset)
+    {
+        ConcurrentDictionary<Guid, TimeSpan> pilotTimes = _sessionPilotMaximumLapTimes.GetOrAdd(reset.SessionId, _ => new());
+        pilotTimes.TryRemove(reset.PilotId, out _);
+    }
+    public (TimeSpan? MinimumLapTime, TimeSpan? MaximumLapTime) GetPilotLapTimeOverrides(Guid sessionId, Guid pilotId)
+    {
+        TimeSpan? min = null;
+        TimeSpan? max = null;
+        if (_sessionPilotMinimumLapTimes.TryGetValue(sessionId, out var minTimes) && minTimes.TryGetValue(pilotId, out var minTime))
+            min = minTime;
+        if (_sessionPilotMaximumLapTimes.TryGetValue(sessionId, out var maxTimes) && maxTimes.TryGetValue(pilotId, out var maxTime))
+            max = maxTime;
+        return (min, max);
     }
 }

@@ -24,5 +24,9 @@ public interface IOpenPracticeCommandHandler
     public Task ResetMinimumLapTime(Guid sessionId);
     public Task SetMaximumLapTime(Guid sessionId, TimeSpan maximumLapTime);
     public Task ResetMaximumLapTime(Guid sessionId);
+    public Task SetPilotMinimumLapTime(Guid sessionId, Guid pilotId, TimeSpan minimumLapTime);
+    public Task ResetPilotMinimumLapTime(Guid sessionId, Guid pilotId);
+    public Task SetPilotMaximumLapTime(Guid sessionId, Guid pilotId, TimeSpan maximumLapTime);
+    public Task ResetPilotMaximumLapTime(Guid sessionId, Guid pilotId);
 
 }

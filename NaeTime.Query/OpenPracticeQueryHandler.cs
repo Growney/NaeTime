@@ -19,4 +19,5 @@ public class OpenPracticeQueryHandler : IOpenPracticeQueryHandler
     public Task<OpenPracticeSessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId) => Task.FromResult(_openPracticeTimingProjection.GetSessionTimingInfo(sessionId, trackId));
     public Task<OpenPracticeSessionPilotTimingInfo> GetTimingInformation(Guid sessionId, Guid trackId,Guid pilotId) => Task.FromResult(_openPracticeTimingProjection.GetSessionPilotTimingInfo(sessionId, trackId, pilotId));
     public Task<OpenPracticeDetection?> GetPilotLastDetection(Guid sessionId, Guid trackId, Guid pilotId) => Task.FromResult(_openPracticeTimingProjection.GetLastPilotDetection(sessionId, trackId, pilotId));
+    public Task<(TimeSpan? MinimumLapTime, TimeSpan? MaximumLapTime)> GetPilotLapTimeOverrides(Guid sessionId, Guid pilotId) => Task.FromResult(_openPracticeProjection.GetPilotLapTimeOverrides(sessionId, pilotId));
 }

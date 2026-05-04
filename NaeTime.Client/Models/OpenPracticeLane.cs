@@ -12,4 +12,6 @@ public class OpenPracticeLane
     public bool IsEnabled { get; set; }
     public byte? BandId { get; set; }
     public int FrequencyInMHz { get; set; }
+    public TimeSpan? PilotMinimumLapTime { get; set; }
+    public TimeSpan? PilotMaximumLapTime { get; set; }
 }

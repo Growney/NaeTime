@@ -176,4 +176,32 @@ public class OpenPracticeCommandHandler : IOpenPracticeCommandHandler
         session.ResetMaximumLapTime();
         await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
     });
+
+    public Task SetPilotMinimumLapTime(Guid sessionId, Guid pilotId, TimeSpan minimumLapTime) => ConcurrencyException.Retry(async () =>
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.SetPilotMinimumLapTime(pilotId, minimumLapTime);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    });
+
+    public Task ResetPilotMinimumLapTime(Guid sessionId, Guid pilotId) => ConcurrencyException.Retry(async () =>
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.ResetPilotMinimumLapTime(pilotId);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    });
+
+    public Task SetPilotMaximumLapTime(Guid sessionId, Guid pilotId, TimeSpan maximumLapTime) => ConcurrencyException.Retry(async () =>
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.SetPilotMaximumLapTime(pilotId, maximumLapTime);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    });
+
+    public Task ResetPilotMaximumLapTime(Guid sessionId, Guid pilotId) => ConcurrencyException.Retry(async () =>
+    {
+        OpenPracticeSession? session = await _repository.Get<OpenPracticeSession, Guid>(sessionId).ConfigureAwait(false) ?? throw new ArgumentException($"Session with ID {sessionId} does not exist.", nameof(sessionId));
+        session.ResetPilotMaximumLapTime(pilotId);
+        await _repository.Save<OpenPracticeSession, Guid>(session).ConfigureAwait(false);
+    });
 }

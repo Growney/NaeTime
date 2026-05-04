@@ -33,5 +33,12 @@ public static class OpenPracticeQueryEndpoints
             var detection = await handler.GetPilotLastDetection(sessionId, trackId, pilotId).ConfigureAwait(false);
             return detection is null ? Results.NotFound() : Results.Ok(detection);
         });
+
+        // GET /api/openpractice/session/{sessionId:guid}/pilot/{pilotId:guid}/lap-time-overrides
+        app.MapGet("/api/openpractice/session/{sessionId:guid}/pilot/{pilotId:guid}/lap-time-overrides", async (Guid sessionId, Guid pilotId, IOpenPracticeQueryHandler handler) =>
+        {
+            var (min, max) = await handler.GetPilotLapTimeOverrides(sessionId, pilotId).ConfigureAwait(false);
+            return Results.Ok(new { MinimumLapTimeMs = min?.TotalMilliseconds, MaximumLapTimeMs = max?.TotalMilliseconds });
+        });
     }
 }

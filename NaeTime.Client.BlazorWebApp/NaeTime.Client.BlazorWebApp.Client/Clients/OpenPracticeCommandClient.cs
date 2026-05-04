@@ -161,4 +161,28 @@ public class OpenPracticeCommandClient : IOpenPracticeCommandHandler
         var url = $"/api/openpractice/reset-maximum-lap-time?sessionId={sessionId}";
         return PostNoContentAsync(url);
     }
+
+    public Task SetPilotMinimumLapTime(Guid sessionId, Guid pilotId, TimeSpan minimumLapTime)
+    {
+        var url = $"/api/openpractice/set-pilot-minimum-lap-time?sessionId={sessionId}&pilotId={pilotId}&minimumLapTimeInMs={minimumLapTime.TotalMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        return PostNoContentAsync(url);
+    }
+
+    public Task ResetPilotMinimumLapTime(Guid sessionId, Guid pilotId)
+    {
+        var url = $"/api/openpractice/reset-pilot-minimum-lap-time?sessionId={sessionId}&pilotId={pilotId}";
+        return PostNoContentAsync(url);
+    }
+
+    public Task SetPilotMaximumLapTime(Guid sessionId, Guid pilotId, TimeSpan maximumLapTime)
+    {
+        var url = $"/api/openpractice/set-pilot-maximum-lap-time?sessionId={sessionId}&pilotId={pilotId}&maximumLapTimeInMs={maximumLapTime.TotalMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        return PostNoContentAsync(url);
+    }
+
+    public Task ResetPilotMaximumLapTime(Guid sessionId, Guid pilotId)
+    {
+        var url = $"/api/openpractice/reset-pilot-maximum-lap-time?sessionId={sessionId}&pilotId={pilotId}";
+        return PostNoContentAsync(url);
+    }
 }

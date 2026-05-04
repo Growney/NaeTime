@@ -152,5 +152,29 @@ public static class OpenPracticeCommandEndpoints
             await handler.ResetMaximumLapTime(sessionId).ConfigureAwait(false);
             return Results.NoContent();
         });
+
+        app.MapPost("/api/openpractice/set-pilot-minimum-lap-time", async (IOpenPracticeCommandHandler handler, [FromQuery] Guid sessionId, [FromQuery] Guid pilotId, [FromQuery] double minimumLapTimeInMs) =>
+        {
+            await handler.SetPilotMinimumLapTime(sessionId, pilotId, TimeSpan.FromMilliseconds(minimumLapTimeInMs)).ConfigureAwait(false);
+            return Results.NoContent();
+        });
+
+        app.MapPost("/api/openpractice/reset-pilot-minimum-lap-time", async (IOpenPracticeCommandHandler handler, [FromQuery] Guid sessionId, [FromQuery] Guid pilotId) =>
+        {
+            await handler.ResetPilotMinimumLapTime(sessionId, pilotId).ConfigureAwait(false);
+            return Results.NoContent();
+        });
+
+        app.MapPost("/api/openpractice/set-pilot-maximum-lap-time", async (IOpenPracticeCommandHandler handler, [FromQuery] Guid sessionId, [FromQuery] Guid pilotId, [FromQuery] double maximumLapTimeInMs) =>
+        {
+            await handler.SetPilotMaximumLapTime(sessionId, pilotId, TimeSpan.FromMilliseconds(maximumLapTimeInMs)).ConfigureAwait(false);
+            return Results.NoContent();
+        });
+
+        app.MapPost("/api/openpractice/reset-pilot-maximum-lap-time", async (IOpenPracticeCommandHandler handler, [FromQuery] Guid sessionId, [FromQuery] Guid pilotId) =>
+        {
+            await handler.ResetPilotMaximumLapTime(sessionId, pilotId).ConfigureAwait(false);
+            return Results.NoContent();
+        });
     }
 }

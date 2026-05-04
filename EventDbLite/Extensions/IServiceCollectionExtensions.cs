@@ -60,6 +60,20 @@ public static class IServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddProjectionService<TService,TImplementation>(this IServiceCollection services, string? streamName = null, ServiceLifetime lifeTime = ServiceLifetime.Transient)
+        where TService : class
+        where TImplementation : class, TService
+    {
+        services.AddScoped<TService, TImplementation>();
+        services.Add(new ServiceDescriptor(typeof(TService), (serviceProvider) =>
+        {
+            IProjectionProvider provider = serviceProvider.GetRequiredService<IProjectionProvider>();
+
+            return provider.Load<TService>(streamName);
+        }, lifeTime));
+        return services;
+    }
+
     private static IServiceCollection AddLiveProjection(this IServiceCollection services, Type projectionType, string? streamName = null)
     {
         services.AddSingleton(new LiveProjectionRequirement(streamName, projectionType));
