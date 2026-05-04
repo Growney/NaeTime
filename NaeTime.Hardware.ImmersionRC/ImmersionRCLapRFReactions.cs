@@ -1,4 +1,5 @@
 ﻿using EventDbLite.Abstractions;
+using EventDbLite.Streams;
 using NaeTime.Command.Abstractions;
 using NaeTime.Events;
 using NaeTime.Hardware.ImmersionRC.Abstractions;

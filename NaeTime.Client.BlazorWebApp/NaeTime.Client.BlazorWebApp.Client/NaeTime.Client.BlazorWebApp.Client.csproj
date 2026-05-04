@@ -15,7 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\EventDbLite.Reactions.SignalR.Client\EventDbLite.Reactions.SignalR.Client.csproj" />
+    <ProjectReference Include="..\..\EventDbLite\EventDbLite.Reactions.Abstractions\EventDbLite.Reactions.Abstractions.csproj" />
+    <ProjectReference Include="..\..\EventDbLite\EventDbLite.Reactions.SignalR.Client\EventDbLite.Reactions.SignalR.Client.csproj" />
+    <ProjectReference Include="..\..\EventDbLite\EventDbLite\EventDbLite.csproj" />
     <ProjectReference Include="..\..\NaeTime.Announcer\NaeTime.Announcer.csproj" />
     <ProjectReference Include="..\..\NaeTime.Client\NaeTime.Client.csproj" />
     <ProjectReference Include="..\..\NaeTime.Command.Abstractions\NaeTime.Command.Abstractions.csproj" />

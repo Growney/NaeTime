@@ -1,5 +1,4 @@
-﻿using EventDbLite.Reactions.SignalR.Server;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using NaeTime.Client.BlazorWebApp.Hubs;
 using NaeTime.Hardware;
 using NaeTime.Hardware.Abstractions;

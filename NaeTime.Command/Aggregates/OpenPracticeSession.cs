@@ -1,5 +1,4 @@
 ﻿using EventDbLite.Aggregates;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using NaeTime.Events;
 using NaeTime.Query.Abstractions.Models;
 using System.ComponentModel.DataAnnotations;

@@ -1,0 +1,3 @@
+[submodule "EventDbLite"]
+	path = EventDbLite
+	url = https://github.com/Growney/EventDbLite.git

@@ -33,7 +33,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Hardware.Node.Esp32
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Bytes", "NaeTime.Bytes\NaeTime.Bytes.csproj", "{C12CB28C-8A77-4798-89A3-003548FD85D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite", "EventDbLite\EventDbLite.csproj", "{5B3EF442-4B80-440B-85C5-D0E18AE19649}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite", "EventDbLite\EventDbLite\EventDbLite.csproj", "{5B3EF442-4B80-440B-85C5-D0E18AE19649}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Events", "NaeTime.Events\NaeTime.Events.csproj", "{660727FC-F200-4112-B433-B001FB76BD22}"
 EndProject
@@ -55,17 +55,21 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Client", "NaeTime.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaeTime.Reactions", "NaeTime.Reactions\NaeTime.Reactions.csproj", "{D3BCEF2B-C63E-4F92-A7ED-2C20F7A2C20C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Reactions.Abstractions", "EventDbLite.Reactions.Abstractions\EventDbLite.Reactions.Abstractions.csproj", "{9F4B37F9-65D2-44F0-9B5D-C75B266792AA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Reactions.Abstractions", "EventDbLite\EventDbLite.Reactions.Abstractions\EventDbLite.Reactions.Abstractions.csproj", "{9F4B37F9-65D2-44F0-9B5D-C75B266792AA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Reactions.SignalR.Client", "EventDbLite.Reactions.SignalR.Client\EventDbLite.Reactions.SignalR.Client.csproj", "{397469C5-9D00-46D2-A56E-05DC8464DB34}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Reactions.SignalR.Client", "EventDbLite\EventDbLite.Reactions.SignalR.Client\EventDbLite.Reactions.SignalR.Client.csproj", "{397469C5-9D00-46D2-A56E-05DC8464DB34}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Abstractions", "EventDbLite.Abstractions\EventDbLite.Abstractions.csproj", "{9930FD76-1AD9-4256-B8F5-BB48182472EE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Abstractions", "EventDbLite\EventDbLite.Abstractions\EventDbLite.Abstractions.csproj", "{9930FD76-1AD9-4256-B8F5-BB48182472EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Serialization", "EventDbLite.Serialization\EventDbLite.Serialization.csproj", "{27C722BA-1B36-43D8-96AF-0E3D6252B56B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Serialization", "EventDbLite\EventDbLite.Serialization\EventDbLite.Serialization.csproj", "{27C722BA-1B36-43D8-96AF-0E3D6252B56B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Reactions.SignalR.Server", "EventDbLite.Reactions.SignalR.Server\EventDbLite.Reactions.SignalR.Server.csproj", "{4E8067E1-5B9F-4724-AA2B-D893328B1034}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Reactions.SignalR.Server", "EventDbLite\EventDbLite.Reactions.SignalR.Server\EventDbLite.Reactions.SignalR.Server.csproj", "{4E8067E1-5B9F-4724-AA2B-D893328B1034}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Handlers", "EventDbLite.Handlers\EventDbLite.Handlers.csproj", "{F4D99F42-C658-4079-846E-53CE827F41B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Handlers", "EventDbLite\EventDbLite.Handlers\EventDbLite.Handlers.csproj", "{F4D99F42-C658-4079-846E-53CE827F41B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDbLite.Collections", "EventDbLite\EventDbLite.Collections\EventDbLite.Collections.csproj", "{335F6969-72DB-D783-359E-FC2619EBDE51}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventDb.Sqlite", "EventDbLite\EventDb.Sqlite\EventDb.Sqlite.csproj", "{4B29CF2B-48E1-A2B9-610B-334354ECA1E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -177,6 +181,14 @@ Global
 		{F4D99F42-C658-4079-846E-53CE827F41B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4D99F42-C658-4079-846E-53CE827F41B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4D99F42-C658-4079-846E-53CE827F41B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{335F6969-72DB-D783-359E-FC2619EBDE51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{335F6969-72DB-D783-359E-FC2619EBDE51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{335F6969-72DB-D783-359E-FC2619EBDE51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{335F6969-72DB-D783-359E-FC2619EBDE51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B29CF2B-48E1-A2B9-610B-334354ECA1E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B29CF2B-48E1-A2B9-610B-334354ECA1E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B29CF2B-48E1-A2B9-610B-334354ECA1E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B29CF2B-48E1-A2B9-610B-334354ECA1E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -212,6 +224,8 @@ Global
 		{27C722BA-1B36-43D8-96AF-0E3D6252B56B} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
 		{4E8067E1-5B9F-4724-AA2B-D893328B1034} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
 		{F4D99F42-C658-4079-846E-53CE827F41B2} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
+		{335F6969-72DB-D783-359E-FC2619EBDE51} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
+		{4B29CF2B-48E1-A2B9-610B-334354ECA1E7} = {A3F53932-628F-41A7-A71D-51E8DC37C536}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {82CDEC6F-9E00-4506-834F-C4B29556E773}
