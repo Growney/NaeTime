@@ -26,14 +26,12 @@ internal class LapRFConnection : ILapRFConnection
     private Task[] _runningTasks = [];
 
     private readonly string _detectionsStream;
-    private readonly string _rssiStream;
 
     public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol, IStreamEventWriter writer, IImmersionRCLapRFCommandHandler commandHandler, IRssiChannel rssiChannel)
     {
         _timerId = timerId;
 
         _detectionsStream = $"ImmersionRC-LapRF-{_timerId}-Detections";
-        _rssiStream = $"ImmersionRC-LapRF-{_timerId}-Rssi";
 
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
         _communication = communication ?? throw new ArgumentNullException(nameof(communication));

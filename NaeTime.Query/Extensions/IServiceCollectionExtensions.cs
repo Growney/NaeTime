@@ -1,4 +1,5 @@
-﻿using NaeTime.Query;
+﻿using Microsoft.Extensions.DependencyInjection.Extensions;
+using NaeTime.Query;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Projections;
 using NaeTime.Query.Projections;
@@ -20,7 +21,7 @@ public static class IServiceCollectionExtensions
         services.AddSingletonLiveProjection<IPilotProjection, PilotProjection>();
         services.AddSingletonLiveProjection<ITrackProjection, TrackProjection>();
         services.AddSingletonLiveProjection<ISessionProjection, SessionProjection>();
-        services.AddSingletonLiveProjection<IOpenPracticeTimingProjection, OpenPracticeTimingProjection>();
+        services.TryAddTransient<IOpenPracticeTimingProjection, OpenPracticeTimingProjection>();
         services.AddSingletonLiveProjection<ITimerConfigurationProjection, TimerConfigurationProjection>();
         services.AddSingletonLiveProjection<ITimerDetailsProjection, TimerDetailsProjection>();
         services.AddSingletonLiveProjection<INaeTimeNodeProjection, NaeTimeNodeProjection>();

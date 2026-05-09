@@ -6,6 +6,38 @@ using System.Collections.Concurrent;
 namespace NaeTime.Query.Projections;
 public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
 {
+    private class DetectionSnapshot
+    {
+        public Guid Id { get; set; }
+        public Guid SessionId { get; set; }
+        public Guid PilotId { get; set; }
+        public Guid? TimerId { get; set; }
+        public bool IsValid { get; set; }
+        public byte TrackTimerOrdinal { get; set; }
+        public byte TrackTimerTotal { get; set; }
+        public byte Lane { get; set; }
+        public ulong? HardwareTime { get; set; }
+        public long SoftwareTime { get; set; }
+        public DateTime UtcTime { get; set; }
+        public Guid? PackEndBefore { get; set; }
+        public Guid? PackEndAfter { get; set; }
+    }
+
+    private class ProjectionSnapshot
+    {
+        // sessionId -> trackId -> pilotId -> detectionId -> detection
+        public Dictionary<Guid, Dictionary<Guid, Dictionary<Guid, Dictionary<Guid, DetectionSnapshot>>>> SessionTrackPilotDetections { get; set; } = new();
+        // sessionId -> pilotId -> last detection
+        public Dictionary<Guid, Dictionary<Guid, DetectionSnapshot>> SessionPilotLastDetection { get; set; } = new();
+        public Dictionary<Guid, TimeSpan> MinimumLapTimes { get; set; } = new();
+        public Dictionary<Guid, TimeSpan> MaximumLapTimes { get; set; } = new();
+        // sessionId -> pilotId -> minimum lap time
+        public Dictionary<Guid, Dictionary<Guid, TimeSpan>> SessionPilotMinimumLapTimes { get; set; } = new();
+        // sessionId -> pilotId -> maximum lap time
+        public Dictionary<Guid, Dictionary<Guid, TimeSpan>> SessionPilotMaximumLapTimes { get; set; } = new();
+    }
+
+
     private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, ConcurrentDictionary<Guid,OpenPracticeDetection>>>> _sessionTrackPilotDetections = new();
     private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<Guid, OpenPracticeDetection>> _sessionPilotLastDetection = new();
     private readonly ConcurrentDictionary<Guid, TimeSpan> _minimumLapTimes = new();
@@ -529,5 +561,134 @@ public class OpenPracticeTimingProjection : IOpenPracticeTimingProjection
     {
         IEnumerable<OpenPracticeDetection> detections = GetPilotDetections(sessionId, trackId, pilotId).Values;
         return GetTimingMoments(sessionId, trackId, pilotId, detections);
+    }
+
+    private static DetectionSnapshot ToSnapshot(OpenPracticeDetection detection) =>
+        new()
+        {
+            Id = detection.Id,
+            SessionId = detection.SessionId,
+            PilotId = detection.PilotId,
+            TimerId = detection.TimerId,
+            IsValid = detection.IsValid,
+            TrackTimerOrdinal = detection.TrackTimerOrdinal,
+            TrackTimerTotal = detection.TrackTimerTotal,
+            Lane = detection.Lane,
+            HardwareTime = detection.HardwareTime,
+            SoftwareTime = detection.SoftwareTime,
+            UtcTime = detection.UtcTime,
+            PackEndBefore = detection.PackEndBefore,
+            PackEndAfter = detection.PackEndAfter,
+        };
+
+    private static OpenPracticeDetection FromSnapshot(DetectionSnapshot snapshot) =>
+        new(snapshot.Id, snapshot.SessionId, snapshot.PilotId, snapshot.TimerId, snapshot.IsValid,
+            snapshot.TrackTimerOrdinal, snapshot.TrackTimerTotal, snapshot.Lane,
+            snapshot.HardwareTime, snapshot.SoftwareTime, snapshot.UtcTime,
+            snapshot.PackEndBefore, snapshot.PackEndAfter);
+
+    private ProjectionSnapshot Snapshot()
+    {
+        var snapshot = new ProjectionSnapshot
+        {
+            MinimumLapTimes = new Dictionary<Guid, TimeSpan>(_minimumLapTimes),
+            MaximumLapTimes = new Dictionary<Guid, TimeSpan>(_maximumLapTimes),
+        };
+
+        foreach (var (sessionId, trackMap) in _sessionTrackPilotDetections)
+        {
+            var trackDict = new Dictionary<Guid, Dictionary<Guid, Dictionary<Guid, DetectionSnapshot>>>();
+            foreach (var (trackId, pilotMap) in trackMap)
+            {
+                var pilotDict = new Dictionary<Guid, Dictionary<Guid, DetectionSnapshot>>();
+                foreach (var (pilotId, detectionMap) in pilotMap)
+                {
+                    pilotDict[pilotId] = detectionMap.ToDictionary(kvp => kvp.Key, kvp => ToSnapshot(kvp.Value));
+                }
+                trackDict[trackId] = pilotDict;
+            }
+            snapshot.SessionTrackPilotDetections[sessionId] = trackDict;
+        }
+
+        foreach (var (sessionId, pilotMap) in _sessionPilotLastDetection)
+        {
+            snapshot.SessionPilotLastDetection[sessionId] = pilotMap.ToDictionary(kvp => kvp.Key, kvp => ToSnapshot(kvp.Value));
+        }
+
+        foreach (var (sessionId, pilotMap) in _sessionPilotMinimumLapTimes)
+        {
+            snapshot.SessionPilotMinimumLapTimes[sessionId] = new Dictionary<Guid, TimeSpan>(pilotMap);
+        }
+
+        foreach (var (sessionId, pilotMap) in _sessionPilotMaximumLap)
+        {
+            snapshot.SessionPilotMaximumLapTimes[sessionId] = new Dictionary<Guid, TimeSpan>(pilotMap);
+        }
+
+        return snapshot;
+    }
+
+    private void Restore(ProjectionSnapshot snapshot)
+    {
+        _sessionTrackPilotDetections.Clear();
+        _sessionPilotLastDetection.Clear();
+        _minimumLapTimes.Clear();
+        _maximumLapTimes.Clear();
+        _sessionPilotMinimumLapTimes.Clear();
+        _sessionPilotMaximumLap.Clear();
+
+        foreach (var (sessionId, trackDict) in snapshot.SessionTrackPilotDetections)
+        {
+            var trackMap = _sessionTrackPilotDetections.GetOrAdd(sessionId, _ => new());
+            foreach (var (trackId, pilotDict) in trackDict)
+            {
+                var pilotMap = trackMap.GetOrAdd(trackId, _ => new());
+                foreach (var (pilotId, detectionDict) in pilotDict)
+                {
+                    var detectionMap = pilotMap.GetOrAdd(pilotId, _ => new());
+                    foreach (var (detectionId, detectionSnapshot) in detectionDict)
+                    {
+                        detectionMap[detectionId] = FromSnapshot(detectionSnapshot);
+                    }
+                }
+            }
+        }
+
+        foreach (var (sessionId, pilotDict) in snapshot.SessionPilotLastDetection)
+        {
+            var pilotMap = _sessionPilotLastDetection.GetOrAdd(sessionId, _ => new());
+            foreach (var (pilotId, detectionSnapshot) in pilotDict)
+            {
+                pilotMap[pilotId] = FromSnapshot(detectionSnapshot);
+            }
+        }
+
+        foreach (var (sessionId, lapTime) in snapshot.MinimumLapTimes)
+        {
+            _minimumLapTimes[sessionId] = lapTime;
+        }
+
+        foreach (var (sessionId, lapTime) in snapshot.MaximumLapTimes)
+        {
+            _maximumLapTimes[sessionId] = lapTime;
+        }
+
+        foreach (var (sessionId, pilotDict) in snapshot.SessionPilotMinimumLapTimes)
+        {
+            var pilotMap = _sessionPilotMinimumLapTimes.GetOrAdd(sessionId, _ => new());
+            foreach (var (pilotId, lapTime) in pilotDict)
+            {
+                pilotMap[pilotId] = lapTime;
+            }
+        }
+
+        foreach (var (sessionId, pilotDict) in snapshot.SessionPilotMaximumLapTimes)
+        {
+            var pilotMap = _sessionPilotMaximumLap.GetOrAdd(sessionId, _ => new());
+            foreach (var (pilotId, lapTime) in pilotDict)
+            {
+                pilotMap[pilotId] = lapTime;
+            }
+        }
     }
 }

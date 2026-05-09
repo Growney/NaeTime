@@ -6,6 +6,37 @@ using System.Collections.Concurrent;
 namespace NaeTime.Query.Projections;
 public class OpenPracticeProjection : IOpenPracticeProjection
 {
+    private class LaneSnapshot
+    {
+        public byte Lane { get; set; }
+        public Guid? PilotId { get; set; }
+        public bool IsEnabled { get; set; }
+        public byte? BandId { get; set; }
+        public int FrequencyInMHz { get; set; }
+    }
+
+    private class SessionSnapshot
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public Guid TrackId { get; set; }
+        public bool IsActive { get; set; }
+        public List<Guid> TrackDetectorIds { get; set; } = [];
+        public Dictionary<Guid, bool> AttendingPilots { get; set; } = new();
+        public List<LaneSnapshot> Lanes { get; set; } = [];
+        public TimeSpan? MinimumLapTime { get; set; }
+        public TimeSpan? MaximumLapTime { get; set; }
+    }
+
+    private class ProjectionSnapshot
+    {
+        public Dictionary<Guid, SessionSnapshot> Sessions { get; set; } = new();
+        // sessionId -> pilotId -> minimum lap time
+        public Dictionary<Guid, Dictionary<Guid, TimeSpan>> SessionPilotMinimumLapTimes { get; set; } = new();
+        // sessionId -> pilotId -> maximum lap time
+        public Dictionary<Guid, Dictionary<Guid, TimeSpan>> SessionPilotMaximumLapTimes { get; set; } = new();
+    }
+
     private class ListOpenPracticeSessionLane
     {
         public byte Lane { get; set; }
@@ -186,5 +217,98 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         if (_sessionPilotMaximumLapTimes.TryGetValue(sessionId, out var maxTimes) && maxTimes.TryGetValue(pilotId, out var maxTime))
             max = maxTime;
         return (min, max);
+    }
+
+    private ProjectionSnapshot Snapshot()
+    {
+        var snapshot = new ProjectionSnapshot();
+
+        foreach (var (sessionId, session) in _sessions)
+        {
+            snapshot.Sessions[sessionId] = new SessionSnapshot
+            {
+                Id = session.Id,
+                Name = session.Name,
+                TrackId = session.TrackId,
+                IsActive = session.IsActive,
+                TrackDetectorIds = [.. session.TrackDetectorIds],
+                AttendingPilots = new Dictionary<Guid, bool>(session.AttendingPilots),
+                Lanes = [.. session.Lanes.Select(l => new LaneSnapshot
+                {
+                    Lane = l.Lane,
+                    PilotId = l.PilotId,
+                    IsEnabled = l.IsEnabled,
+                    BandId = l.BandId,
+                    FrequencyInMHz = l.FrequencyInMHz,
+                })],
+                MinimumLapTime = session.MinimumLapTime,
+                MaximumLapTime = session.MaximumLapTime,
+            };
+        }
+
+        foreach (var (sessionId, pilotMap) in _sessionPilotMinimumLapTimes)
+        {
+            snapshot.SessionPilotMinimumLapTimes[sessionId] = new Dictionary<Guid, TimeSpan>(pilotMap);
+        }
+
+        foreach (var (sessionId, pilotMap) in _sessionPilotMaximumLapTimes)
+        {
+            snapshot.SessionPilotMaximumLapTimes[sessionId] = new Dictionary<Guid, TimeSpan>(pilotMap);
+        }
+
+        return snapshot;
+    }
+
+    private void Restore(ProjectionSnapshot snapshot)
+    {
+        _sessions.Clear();
+        _sessionPilotMinimumLapTimes.Clear();
+        _sessionPilotMaximumLapTimes.Clear();
+
+        foreach (var (sessionId, sessionSnapshot) in snapshot.Sessions)
+        {
+            var session = new ListOpenPracticeSession
+            {
+                Id = sessionSnapshot.Id,
+                Name = sessionSnapshot.Name,
+                TrackId = sessionSnapshot.TrackId,
+                IsActive = sessionSnapshot.IsActive,
+                TrackDetectorIds = sessionSnapshot.TrackDetectorIds,
+                AttendingPilots = new ConcurrentDictionary<Guid, bool>(sessionSnapshot.AttendingPilots),
+                Lanes = [],
+                MinimumLapTime = sessionSnapshot.MinimumLapTime,
+                MaximumLapTime = sessionSnapshot.MaximumLapTime,
+            };
+            foreach (var laneSnapshot in sessionSnapshot.Lanes)
+            {
+                session.Lanes.Add(new ListOpenPracticeSessionLane
+                {
+                    Lane = laneSnapshot.Lane,
+                    PilotId = laneSnapshot.PilotId,
+                    IsEnabled = laneSnapshot.IsEnabled,
+                    BandId = laneSnapshot.BandId,
+                    FrequencyInMHz = laneSnapshot.FrequencyInMHz,
+                });
+            }
+            _sessions[sessionId] = session;
+        }
+
+        foreach (var (sessionId, pilotMap) in snapshot.SessionPilotMinimumLapTimes)
+        {
+            var concurrentMap = _sessionPilotMinimumLapTimes.GetOrAdd(sessionId, _ => new());
+            foreach (var (pilotId, lapTime) in pilotMap)
+            {
+                concurrentMap[pilotId] = lapTime;
+            }
+        }
+
+        foreach (var (sessionId, pilotMap) in snapshot.SessionPilotMaximumLapTimes)
+        {
+            var concurrentMap = _sessionPilotMaximumLapTimes.GetOrAdd(sessionId, _ => new());
+            foreach (var (pilotId, lapTime) in pilotMap)
+            {
+                concurrentMap[pilotId] = lapTime;
+            }
+        }
     }
 }

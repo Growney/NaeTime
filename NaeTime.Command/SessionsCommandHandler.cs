@@ -21,7 +21,7 @@ public class SessionsCommandHandler : ISessionsCommandHandler
 
     private Task ThrowIfSessionDoesNotExist(Guid id, Query.Abstractions.Models.SessionType type) => ConcurrencyException.Retry(async () =>
     {
-        ISessionQueryHandler queryHandler = await _projectionProvider.Load<ISessionQueryHandler>().ConfigureAwait(false);
+        ISessionQueryHandler queryHandler = await _projectionProvider.LoadAsync<ISessionQueryHandler>().ConfigureAwait(false);
         Session? session = await queryHandler.GetSession(id);
         if (session == null || session.Type != type)
         {
