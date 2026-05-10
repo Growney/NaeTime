@@ -1,3 +1,4 @@
+using EventDbLite.Abstractions;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
 using NaeTime.Query.Abstractions.Projections;
@@ -6,14 +7,19 @@ namespace NaeTime.Query;
 
 public class PilotQueryHandler : IPilotQueryHandler
 {
-    private readonly IPilotProjection _pilotProjection;
+    private readonly IProjectionProvider _projectionProvider;
 
-    public PilotQueryHandler(IPilotProjection pilotProjection)
+    public PilotQueryHandler(IProjectionProvider projectionProvider)
     {
-        _pilotProjection = pilotProjection;
+        _projectionProvider = projectionProvider;
     }
 
-    public Task<IEnumerable<Pilot>> GetAllPilots() => Task.FromResult(_pilotProjection.GetAllPilots());
+    public Task<IEnumerable<Pilot>> GetAllPilots() =>
+        _projectionProvider.ClonePullReadPushAsync<IEnumerable<Pilot>, IPilotProjection>(x => x.GetAllPilots());
 
-    public Task<Pilot?> GetPilotById(Guid id) => Task.FromResult(_pilotProjection.GetPilotById(id));
+    public Task<Pilot?> GetPilotById(Guid id) =>
+        _projectionProvider.ClonePullReadPushAsync<Pilot?, IPilotProjection>(x => x.GetPilotById(id));
+
+    public Task<byte[]?> GetPilotBindingPhrase(Guid id) =>
+        _projectionProvider.ClonePullReadPushAsync<byte[]?, IPilotProjection>(x => x.GetPilotBindingPhrase(id));
 }

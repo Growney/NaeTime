@@ -25,6 +25,8 @@ public static class IServiceCollectionExtensions
         services.AddSingletonLiveProjection<ITimerConfigurationProjection, TimerConfigurationProjection>();
         services.AddSingletonLiveProjection<ITimerDetailsProjection, TimerDetailsProjection>();
         services.AddSingletonLiveProjection<INaeTimeNodeProjection, NaeTimeNodeProjection>();
+        services.AddSingletonLiveProjection<IInterfaceProjection, InterfaceProjection>();
+        services.AddSingletonLiveProjection<IELRSBackpackProjection, ELRSBackpackProjection>();
 
         return services;
     }

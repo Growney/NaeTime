@@ -1,0 +1,59 @@
+@page "/hardware/elrsbackpackinterface/create"
+
+@if(_backpack != null)
+{
+    <MudGrid Justify=Justify.Center>
+        <MudItem xs=3>
+            <MudIconButton Icon=@Icons.Material.Filled.ArrowLeft Href="/hardware/list"></MudIconButton>
+            <MudPaper Class="p-4">
+                <MudForm @bind-IsValid="_isValid">
+                    <MudTextField @bind-Value="_backpack.Name" Label="Name" Required="true"></MudTextField>
+                    <MudTextField @bind-Value="_backpack.ComPort" Label="COM Port" Required="true"></MudTextField>
+                    <MudButton Disabled=@(!_isValid) Variant="Variant.Filled" Color="Color.Primary" OnClick="Create">Create</MudButton>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Inject]
+    private IELRSBackpackInterfaceCommandHandler ELRSBackpackInterfaceCommandHandler { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private NaeTime.Client.Models.SerialELRSBackpackInterface? _backpack;
+
+    private bool _isValid = false;
+
+    protected override void OnInitialized()
+    {
+        _backpack = new NaeTime.Client.Models.SerialELRSBackpackInterface()
+            {
+                Id = Guid.NewGuid(),
+            };
+    }
+
+    private async Task Create()
+    {
+        if(_backpack == null)
+        {
+            return;
+        }
+
+        if(string.IsNullOrEmpty(_backpack.Name))
+        {
+            return;
+        }
+
+        if(string.IsNullOrEmpty(_backpack.ComPort))
+        {
+            return;
+        }
+
+        await ELRSBackpackInterfaceCommandHandler.Add(_backpack.Id, _backpack.Name, _backpack.ComPort);
+
+        NavigationManager.NavigateTo($"/hardware/elrsbackpackinterface/{_backpack.Id}");
+    }
+}

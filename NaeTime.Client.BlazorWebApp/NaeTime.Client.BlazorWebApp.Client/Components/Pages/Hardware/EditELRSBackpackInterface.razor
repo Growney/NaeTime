@@ -1,0 +1,71 @@
+@page "/hardware/elrsbackpackinterface/{id:guid}"
+@using NaeTime.Client
+
+@if(_backpack != null)
+{
+    <MudGrid Justify=Justify.Center>
+        <MudItem xs=3>
+            <MudIconButton Icon=@Icons.Material.Filled.ArrowLeft Href="/hardware/list"></MudIconButton>
+            <MudPaper Class="p-4">
+                <MudForm @bind-IsValid="_isValid">
+                    <MudTextField T=string Value="_backpack.Name" ValueChanged=NameChanged Label="Name" Required="true"></MudTextField>
+                    <MudTextField T=string Value="_backpack.ComPort" ValueChanged=ComPortChanged Label="COM Port" Required="true"></MudTextField>
+                </MudForm>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [Inject]
+    private IHardwareQueryHandler HardwareQueryHandler { get; set; } = null!;
+    [Inject]
+    private IELRSBackpackInterfaceCommandHandler ELRSBackpackInterfaceCommandHandler { get; set; } = null!;
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = null!;
+
+    private NaeTime.Client.Models.SerialELRSBackpackInterface? _backpack;
+
+    private bool _isValid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _backpack = ELRSBackpackInterfaceProjector.Project(await HardwareQueryHandler.GetSerialELRSBackpackInterface(Id));
+        if (_backpack == null)
+        {
+            NavigationManager.NavigateTo("/hardware/list");
+        }
+    }
+    private async Task NameChanged(string name)
+    {
+        if (_backpack == null)
+        {
+            return;
+        }
+        if(string.IsNullOrEmpty(name))
+        {
+            return;
+        }
+        await ELRSBackpackInterfaceCommandHandler.Rename(_backpack.Id, name);
+        _backpack.Name = name;
+    }
+    private async Task ComPortChanged(string? comPort)
+    {
+        if (_backpack == null)
+        {
+            return;
+        }
+
+        if(string.IsNullOrEmpty(comPort))
+        {
+            return;
+        }
+
+        await ELRSBackpackInterfaceCommandHandler.ReconfigureComPort(_backpack.Id, comPort);
+        _backpack.ComPort = comPort;
+    }
+}

@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\NaeTime.Announcer\NaeTime.Announcer.csproj" />
     <ProjectReference Include="..\..\NaeTime.Client\NaeTime.Client.csproj" />
     <ProjectReference Include="..\..\NaeTime.Command\NaeTime.Command.csproj" />
+    <ProjectReference Include="..\..\NaeTime.Hardware.ELRS\NaeTime.Hardware.ELRS.csproj" />
     <ProjectReference Include="..\..\NaeTime.Hardware.ImmersionRC\NaeTime.Hardware.ImmersionRC.csproj" />
     <ProjectReference Include="..\..\NaeTime.Hardware.Node.Esp32\NaeTime.Hardware.Node.Esp32.csproj" />
     <ProjectReference Include="..\..\NaeTime.Hardware\NaeTime.Hardware.csproj" />

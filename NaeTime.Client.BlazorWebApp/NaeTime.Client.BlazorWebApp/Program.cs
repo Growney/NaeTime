@@ -31,6 +31,7 @@ builder.Services.AddNaeTimeCommand();
 builder.Services.AddHardwareCore();
 builder.Services.AddNaeTimeEventReactions();
 builder.Services.AddImmersionRCHardware();
+builder.Services.AddBackpack();
 builder.Services.AddEsp32NodeTimers();
 
 builder.Services.AddSingleton<IRssiConsumer, RssiDistributionService>();

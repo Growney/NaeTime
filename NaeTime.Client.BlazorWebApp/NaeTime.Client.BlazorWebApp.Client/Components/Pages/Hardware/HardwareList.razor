@@ -1,5 +1,6 @@
 ﻿@page "/hardware/list"
 
+<MudText Typo="Typo.h5">Detectors</MudText>
 <MudButton Variant=Variant.Filled Href=/hardware/immersionrclaprf/ethernet8/create>Create Ethernet LapRF</MudButton>
 <MudButton Variant=Variant.Filled Href=/hardware/naetimenode/network/create>Create Ethernet NaeTime Node</MudButton>
 <MudSimpleTable>
@@ -22,6 +23,26 @@
     </tbody>
 </MudSimpleTable>
 
+<MudText Typo="Typo.h5" Class="mt-4">Interfaces</MudText>
+<MudButton Variant=Variant.Filled Href=/hardware/elrsbackpackinterface/create>Create ELRS Backpack Interface</MudButton>
+<MudSimpleTable>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (NaeTime.Query.Abstractions.Models.Interface iface in _interfaces)
+        {
+            <tr @onclick="() => EditInterface(iface.Id, iface.Type)">
+                <td>@iface.Name</td>
+                <td>@iface.Type</td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>
+
 
 @code {
     [Inject]
@@ -30,10 +51,12 @@
     private NavigationManager NavigationManager { get; set; } = null!;
 
     private IEnumerable<NaeTime.Query.Abstractions.Models.Detector> _detectors = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Detector>();
+    private IEnumerable<NaeTime.Query.Abstractions.Models.Interface> _interfaces = Enumerable.Empty<NaeTime.Query.Abstractions.Models.Interface>();
 
     protected override async Task OnInitializedAsync()
     {
         _detectors = await HardwareQueryHandler.GetAllDetectors();
+        _interfaces = await HardwareQueryHandler.GetAllInterfaces();
     }
 
     private void EditDetector(Guid id, NaeTime.Query.Abstractions.Models.DetectorType type)
@@ -51,6 +74,18 @@
                 break;
             default:
                 throw new NotSupportedException($"Detector type {type} is not supported.");
+        };
+    }
+
+    private void EditInterface(Guid id, NaeTime.Query.Abstractions.Models.InterfaceType type)
+    {
+        switch(type)
+        {
+            case NaeTime.Query.Abstractions.Models.InterfaceType.ELRSBackpack:
+                NavigationManager.NavigateTo($"/hardware/elrsbackpackinterface/{id}");
+                break;
+            default:
+                throw new NotSupportedException($"Interface type {type} is not supported.");
         };
     }
 }

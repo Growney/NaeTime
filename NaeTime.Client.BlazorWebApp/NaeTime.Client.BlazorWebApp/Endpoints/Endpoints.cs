@@ -18,6 +18,7 @@ public static class Endpoints
         application.MapSessionQueryHandlerEndpoints();
         application.MapTrackCommandHandlerEndpoints();
         application.MapTrackQueryHandlerEndpoints();
+        application.MapELRSBackpackInterfaceCommandHandlerEndpoints();
 
         return application;
     }

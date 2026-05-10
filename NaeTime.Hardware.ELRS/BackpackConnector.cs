@@ -1,8 +1,9 @@
 ﻿using ELRS.Backpack;
+using NaeTime.Hardware.ELRS.Abstractions;
 
 namespace NaeTime.Hardware.ELRS;
 
-public class BackpackConnector
+public class BackpackConnector : IBackpackConnector
 {
     private readonly IBackpackConnection _connection;
     private readonly Guid _connectorId;
@@ -54,12 +55,12 @@ public class BackpackConnector
         return _finishingTask;
     }
 
-    public async Task SendLap(byte[] uid, TimeSpan lap)
+    public async Task SetOSDElement(byte[] uid, string text, byte row, byte column, TimeSpan duration)
     {
         if (!IsConnected)
         {
             throw new InvalidOperationException("Not connected");
         }
-        _ = _connection.SetOSDElement(uid, $"Lap:{Math.Round(lap.TotalSeconds, 2)}", OSDPresentation.None, 0, 20, TimeSpan.FromSeconds(5));
+        _ = _connection.SetOSDElement(uid, text, OSDPresentation.None, row, column, duration);
     }
 }

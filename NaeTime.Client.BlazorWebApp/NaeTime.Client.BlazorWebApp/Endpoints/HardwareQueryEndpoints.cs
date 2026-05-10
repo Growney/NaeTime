@@ -128,5 +128,58 @@ public static class HardwareQueryEndpoints
             var laneDetails = await handler.GetLaneDetails(timerId, (byte)laneId).ConfigureAwait(false);
             return laneDetails is null ? Results.NotFound() : Results.Ok(laneDetails);
         });
+
+        // GET api/hardware/interface/{id}
+        app.MapGet("/api/hardware/interface/{id:guid}", async (Guid id, IHardwareQueryHandler handler) =>
+        {
+            var iface = await handler.GetInterface(id).ConfigureAwait(false);
+            return iface is null ? Results.NotFound() : Results.Ok(iface);
+        });
+
+        // GET api/hardware/interfaces
+        app.MapGet("/api/hardware/interfaces", async (IHardwareQueryHandler handler) =>
+        {
+            var interfaces = await handler.GetAllInterfaces().ConfigureAwait(false);
+            return Results.Ok(interfaces);
+        });
+
+        // GET api/hardware/interfaces/ids?ids=guid1,guid2,...
+        app.MapGet("/api/hardware/interfaces/ids", async (HttpRequest req, IHardwareQueryHandler handler) =>
+        {
+            if (!req.Query.TryGetValue("ids", out var idsValues) || string.IsNullOrWhiteSpace(idsValues))
+            {
+                return Results.BadRequest("Query parameter 'ids' is required (comma separated GUIDs).");
+            }
+
+            Guid[] ids;
+            try
+            {
+                ids = idsValues.ToString()
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => Guid.Parse(s.Trim()))
+                    .ToArray();
+            }
+            catch (FormatException)
+            {
+                return Results.BadRequest("One or more ids are not valid GUIDs.");
+            }
+
+            var result = await handler.GetInterfaces(ids).ConfigureAwait(false);
+            return Results.Ok(result);
+        });
+
+        // GET api/hardware/elrsbackpackinterface/{id}
+        app.MapGet("/api/hardware/elrsbackpackinterface/{id:guid}", async (Guid id, IHardwareQueryHandler handler) =>
+        {
+            var backpack = await handler.GetSerialELRSBackpackInterface(id).ConfigureAwait(false);
+            return backpack is null ? Results.NotFound() : Results.Ok(backpack);
+        });
+
+        // GET api/hardware/elrsbackpackinterface/all
+        app.MapGet("/api/hardware/elrsbackpackinterface/all", async (IHardwareQueryHandler handler) =>
+        {
+            var backpacks = await handler.GetAllSerialELRSBackpackInterfaces().ConfigureAwait(false);
+            return Results.Ok(backpacks);
+        });
     }
 }

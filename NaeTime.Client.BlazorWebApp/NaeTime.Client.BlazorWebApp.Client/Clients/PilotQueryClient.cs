@@ -33,4 +33,9 @@ public class PilotQueryClient : IPilotQueryHandler
     {
         return await GetFromJsonOrNullAsync<Pilot>($"/api/pilot/{id}").ConfigureAwait(false);
     }
+
+    public async Task<byte[]?> GetPilotBindingPhrase(Guid id)
+    {
+        return await GetFromJsonOrNullAsync<byte[]>($"/api/pilot/{id}/bindingphrase").ConfigureAwait(false);
+    }
 }

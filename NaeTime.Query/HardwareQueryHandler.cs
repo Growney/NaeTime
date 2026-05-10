@@ -11,14 +11,18 @@ public class HardwareQueryHandler : IHardwareQueryHandler
     private readonly INaeTimeNodeProjection _naeTimeNodeProjection;
     private readonly ITimerConfigurationProjection _timerConfigurationProjection;
     private readonly ITimerDetailsProjection _timerDetailsProjection;
+    private readonly IInterfaceProjection _interfaceProjection;
+    private readonly IELRSBackpackProjection _elrsBackpackProjection;
 
-    public HardwareQueryHandler(IDetectorProjection detectorProjection, IImmersionRCProjection immersionRCProjection, INaeTimeNodeProjection naeTimeNodeProjection, ITimerConfigurationProjection timerConfigurationProjection, ITimerDetailsProjection timerDetailsProjection)
+    public HardwareQueryHandler(IDetectorProjection detectorProjection, IImmersionRCProjection immersionRCProjection, INaeTimeNodeProjection naeTimeNodeProjection, ITimerConfigurationProjection timerConfigurationProjection, ITimerDetailsProjection timerDetailsProjection, IInterfaceProjection interfaceProjection, IELRSBackpackProjection elrsBackpackProjection)
     {
         _detectorProjection = detectorProjection ?? throw new ArgumentNullException(nameof(detectorProjection));
         _immersionRCProjection = immersionRCProjection ?? throw new ArgumentNullException(nameof(immersionRCProjection));
         _naeTimeNodeProjection = naeTimeNodeProjection ?? throw new ArgumentNullException(nameof(naeTimeNodeProjection));
         _timerConfigurationProjection = timerConfigurationProjection;
         _timerDetailsProjection = timerDetailsProjection;
+        _interfaceProjection = interfaceProjection ?? throw new ArgumentNullException(nameof(interfaceProjection));
+        _elrsBackpackProjection = elrsBackpackProjection ?? throw new ArgumentNullException(nameof(elrsBackpackProjection));
     }
 
     public Task<Detector?> GetDetector(Guid id) => Task.FromResult(_detectorProjection.GetDetector(id));
@@ -43,4 +47,14 @@ public class HardwareQueryHandler : IHardwareQueryHandler
     public Task<IEnumerable<NaeTimeNode>> GetAllNaeTimeNodes() => Task.FromResult(_naeTimeNodeProjection.GetAllNaeTimeNodes());
 
     public Task<IEnumerable<DesiredNaeTimeNodeLane>> GetActiveNaeTimeNodeLanesConfiguration(Guid timerId) => Task.FromResult(_timerConfigurationProjection.GetActiveNaeTimeNodeLanesConfiguration(timerId));
+
+    public Task<Interface?> GetInterface(Guid id) => Task.FromResult(_interfaceProjection.GetInterface(id));
+
+    public Task<IEnumerable<Interface>> GetAllInterfaces() => Task.FromResult(_interfaceProjection.GetInterfaces());
+
+    public Task<IEnumerable<Interface>> GetInterfaces(IEnumerable<Guid> ids) => Task.FromResult(_interfaceProjection.GetInterfaces(ids));
+
+    public Task<SerialELRSBackpackInterface?> GetSerialELRSBackpackInterface(Guid id) => Task.FromResult(_elrsBackpackProjection.GetSerialELRSBackpackInterface(id));
+
+    public Task<IEnumerable<SerialELRSBackpackInterface>> GetAllSerialELRSBackpackInterfaces() => Task.FromResult(_elrsBackpackProjection.GetAllSerialELRSBackpackInterfaces());
 }

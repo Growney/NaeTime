@@ -20,5 +20,12 @@ public static class PilotQueryHandlerEndpoints
  var pilot = await handler.GetPilotById(id).ConfigureAwait(false);
  return pilot is null ? Results.NotFound() : Results.Ok(pilot);
  });
+
+ // GET /api/pilot/{id}/bindingphrase
+ app.MapGet("/api/pilot/{id:guid}/bindingphrase", async (Guid id, IPilotQueryHandler handler) =>
+ {
+ var phrase = await handler.GetPilotBindingPhrase(id).ConfigureAwait(false);
+ return phrase is null ? Results.NotFound() : Results.Ok(phrase);
+ });
  }
 }

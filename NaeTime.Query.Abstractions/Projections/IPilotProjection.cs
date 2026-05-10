@@ -5,4 +5,5 @@ public interface IPilotProjection
 {
     IEnumerable<Pilot> GetAllPilots();
     Pilot? GetPilotById(Guid pilotId);
+    byte[]? GetPilotBindingPhrase(Guid pilotId);
 }

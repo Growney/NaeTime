@@ -110,4 +110,34 @@ public class HardwareQueryClient : IHardwareQueryHandler
         res.EnsureSuccessStatusCode();
         return await res.Content.ReadFromJsonAsync<TimerLaneDetails>().ConfigureAwait(false)!;
     }
+
+    public async Task<Interface?> GetInterface(Guid id)
+    {
+        return await GetFromJsonOrNullAsync<Interface>($"/api/hardware/interface/{id}").ConfigureAwait(false);
+    }
+
+    public async Task<IEnumerable<Interface>> GetAllInterfaces()
+    {
+        var result = await GetFromJsonOrNullAsync<IEnumerable<Interface>>("/api/hardware/interfaces").ConfigureAwait(false);
+        return result ?? Enumerable.Empty<Interface>();
+    }
+
+    public async Task<IEnumerable<Interface>> GetInterfaces(IEnumerable<Guid> ids)
+    {
+        if (ids == null) return Enumerable.Empty<Interface>();
+        var idsParam = string.Join(',', ids.Select(g => g.ToString()));
+        var result = await GetFromJsonOrNullAsync<IEnumerable<Interface>>($"/api/hardware/interfaces/ids?ids={Uri.EscapeDataString(idsParam)}").ConfigureAwait(false);
+        return result ?? Enumerable.Empty<Interface>();
+    }
+
+    public async Task<SerialELRSBackpackInterface?> GetSerialELRSBackpackInterface(Guid id)
+    {
+        return await GetFromJsonOrNullAsync<SerialELRSBackpackInterface>($"/api/hardware/elrsbackpackinterface/{id}").ConfigureAwait(false);
+    }
+
+    public async Task<IEnumerable<SerialELRSBackpackInterface>> GetAllSerialELRSBackpackInterfaces()
+    {
+        var result = await GetFromJsonOrNullAsync<IEnumerable<SerialELRSBackpackInterface>>("/api/hardware/elrsbackpackinterface/all").ConfigureAwait(false);
+        return result ?? Enumerable.Empty<SerialELRSBackpackInterface>();
+    }
 }

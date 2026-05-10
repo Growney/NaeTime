@@ -5,5 +5,5 @@ public interface IPilotQueryHandler
 {
     public Task<IEnumerable<Pilot>> GetAllPilots();
     public Task<Pilot?> GetPilotById(Guid id);
-
+    public Task<byte[]?> GetPilotBindingPhrase(Guid id);
 }

@@ -1,111 +1,77 @@
 ﻿using ELRS.Backpack;
+using EventDbLite.Reactions.Abstractions;
 using Microsoft.Extensions.Hosting;
-using NaeTime.OpenPractice.Messages.Events;
-using NaeTime.PubSub.Abstractions;
+using NaeTime.Hardware.ELRS.Abstractions;
+using NaeTime.Query.Abstractions;
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace NaeTime.Hardware.ELRS;
 
-public class BackpackManager : IHostedService
+internal class BackpackManager : BackgroundService
 {
-    private readonly IRemoteProcedureCallClient _rpcClient;
     private readonly IBackpackConnectionFactory _connectionFactory;
-    private readonly IEventRegistrarScope _eventRegistrarScope;
+    private readonly IHardwareQueryHandler _queryHandler;
+    private readonly IBackpackConnectorProvider _connectorProvider;
+    private readonly IReactionProviderFactory _reactionProviderFactory;
 
-    private readonly ConcurrentDictionary<Guid, BackpackConnector> _backpackConnectors = new();
-    private readonly List<Guid> _backpackIds = new();
-    private int _currentIndex = 0;
+    private readonly ConcurrentDictionary<Guid, IBackpackConnector> _backpackConnectors = new();
 
-    public BackpackManager(IRemoteProcedureCallClient rpcClient, IBackpackConnectionFactory connectionFactory, IEventRegistrarScope eventRegistrarScope)
+    public BackpackManager(IBackpackConnectionFactory connectionFactory, IHardwareQueryHandler queryHandler, IBackpackConnectorProvider connectorProvider, IReactionProviderFactory reactionProviderFactory)
     {
-        _rpcClient = rpcClient ?? throw new ArgumentNullException(nameof(rpcClient));
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-        _eventRegistrarScope = eventRegistrarScope ?? throw new ArgumentNullException(nameof(eventRegistrarScope));
-
-        _eventRegistrarScope.RegisterHub(this);
+        _queryHandler = queryHandler ?? throw new ArgumentNullException(nameof(queryHandler));
+        _connectorProvider = connectorProvider ?? throw new ArgumentNullException(nameof(connectorProvider));
+        _reactionProviderFactory = reactionProviderFactory ?? throw new ArgumentNullException(nameof(reactionProviderFactory));
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        IEnumerable<NaeTime.Hardware.Messages.Models.SerialELRSBackpack>? response = await _rpcClient.InvokeAsync<IEnumerable<NaeTime.Hardware.Messages.Models.SerialELRSBackpack>>("GetAllELRSBackpacks");
+        IEnumerable<Query.Abstractions.Models.SerialELRSBackpackInterface> backpacks = await _queryHandler.GetAllSerialELRSBackpackInterfaces();
 
-        if (response == null)
+        foreach (Query.Abstractions.Models.SerialELRSBackpackInterface backpack in backpacks)
         {
-            return;
-        }
-
-        foreach (NaeTime.Hardware.Messages.Models.SerialELRSBackpack backpack in response)
-        {
-            IBackpackConnection connection = _connectionFactory.Create(backpack.Port);
+            IBackpackConnection connection = _connectionFactory.Create(backpack.ComPort);
             BackpackConnector connector = new(backpack.Id, connection);
-            _backpackConnectors.TryAdd(backpack.Id, connector);
-            _backpackIds.Add(backpack.Id);
+
+            _connectorProvider.SetBackpackConnector(backpack.Id, connector);
+            _backpackConnectors[backpack.Id] = connector;
         }
+
+        await Task.WhenAll(
+            _reactionProviderFactory.On<Events.ELRSBackpackInterfaceAdded>(HandleBackpackAdded, stoppingToken),
+            _reactionProviderFactory.On<Events.ELRSBackpackInterfaceComPortReconfigured>(HandleComPortReconfigured, stoppingToken));
     }
 
-    private BackpackConnector? GetNextConnector()
+    private Task HandleBackpackAdded(Events.ELRSBackpackInterfaceAdded e)
     {
-        if (_backpackConnectors.Count == 0)
+        if (_backpackConnectors.TryGetValue(e.Id, out IBackpackConnector? existingConnector))
         {
-            return null;
+            existingConnector.Stop();
+            _backpackConnectors.TryRemove(e.Id, out _);
         }
 
-        BackpackConnector connector = _backpackConnectors[_backpackIds[_currentIndex]];
-        _currentIndex = (_currentIndex + 1) % _backpackIds.Count;
-        return connector;
+        IBackpackConnection connection = _connectionFactory.Create(e.ComPort);
+        BackpackConnector connector = new(e.Id, connection);
+
+        _connectorProvider.SetBackpackConnector(e.Id, connector);
+        _backpackConnectors[e.Id] = connector;
+
+        return Task.CompletedTask;
     }
 
-    public async Task When(OpenPracticeLapCompleted newLap)
+    private Task HandleComPortReconfigured(Events.ELRSBackpackInterfaceComPortReconfigured e)
     {
-        NaeTime.Management.Messages.Models.Pilot? pilot = await _rpcClient.InvokeAsync<NaeTime.Management.Messages.Models.Pilot>("GetPilot", newLap.PilotId);
-
-        if (pilot == null || string.IsNullOrWhiteSpace(pilot.BindingPhrase))
+        if (_backpackConnectors.TryGetValue(e.Id, out IBackpackConnector? existingConnector))
         {
-            return;
+            existingConnector.Stop();
+            _backpackConnectors.TryRemove(e.Id, out _);
         }
 
-        BackpackConnector? backpackConnector = GetNextConnector();
+        IBackpackConnection connection = _connectionFactory.Create(e.ComPort);
+        BackpackConnector connector = new(e.Id, connection);
 
-        if (backpackConnector == null)
-        {
-            return;
-        }
-
-        byte[] Uid = HashPhrase(pilot.BindingPhrase);
-
-        await backpackConnector.SendLap(Uid, TimeSpan.FromMilliseconds(newLap.TotalMilliseconds));
-
-    }
-
-    //to be moved to pilot creation
-    public static byte[] HashPhrase(string bindPhrase)
-    {
-        // Create the input string
-        string input = $"-DMY_BINDING_PHRASE=\"{bindPhrase}\"";
-
-        // Compute the MD5 hash
-        using MD5 md5 = MD5.Create();
-        byte[] hash = md5.ComputeHash(Encoding.UTF8.GetBytes(input));
-
-        // Take the first 6 bytes of the hash
-        byte[] bindingPhraseHash = hash.Take(6).ToArray();
-
-        // Adjust the first byte if it is odd
-        if ((bindingPhraseHash[0] % 2) == 1)
-        {
-            bindingPhraseHash[0] -= 0x01;
-        }
-
-        return bindingPhraseHash;
-    }
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        foreach (KeyValuePair<Guid, BackpackConnector> backpack in _backpackConnectors)
-        {
-            backpack.Value.Stop();
-        }
+        _connectorProvider.SetBackpackConnector(e.Id, connector);
+        _backpackConnectors[e.Id] = connector;
 
         return Task.CompletedTask;
     }

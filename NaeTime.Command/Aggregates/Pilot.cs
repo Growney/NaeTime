@@ -30,7 +30,6 @@ public class Pilot : AggregateRoot<Guid>
 
         Raise(new PilotBindingPhraseChanged(Id, hashPhrase));
     }
-
     private static byte[] HashBindingPhrase(string bindPhrase)
     {
         // Create the input string
