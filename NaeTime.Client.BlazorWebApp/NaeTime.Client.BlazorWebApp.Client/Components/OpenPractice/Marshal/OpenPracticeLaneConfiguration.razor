@@ -102,9 +102,13 @@
         }
     </MudPaper>
 }
-<div class="w-100 pb-2">
-    <MudIconButton Icon=@Icons.Material.Filled.Timer Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection()"></MudIconButton>                
-</div>
+@foreach (var detectorKvp in _detectors)
+{
+    <div class="w-100 pb-2">
+        <MudIconButton Icon=@Icons.Material.Filled.Timer Variant=Variant.Filled Color=Color.Success Class="w-100" onclick="() => TriggerDetection(detectorKvp.Key)"></MudIconButton>
+    </div>
+}
+
 
 @code {
     [Parameter]
@@ -124,6 +128,8 @@
 
     [Inject]
     private IOpenPracticeCommandHandler OpenPracticeCommandHandler { get; set; } = null!;
+    [Inject]
+    private IDetectionCommandHandler DetectionCommandHandler { get; set; } = null!;
     [Inject]
     private IOpenPracticeQueryHandler OpenPracticeQueryHandler { get; set; } = null!;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
@@ -157,9 +163,9 @@
         StateHasChanged();
     }
 
-    private async Task TriggerDetection()
+    private async Task TriggerDetection(Guid timerId)
     {
-        await OpenPracticeCommandHandler.TriggerDetection(Guid.NewGuid(), Session.Id, LaneId, 0);
+        await DetectionCommandHandler.Trigger(Guid.NewGuid(),timerId, LaneId);
     }
 
     private string GetPilotName(Guid pilotId)

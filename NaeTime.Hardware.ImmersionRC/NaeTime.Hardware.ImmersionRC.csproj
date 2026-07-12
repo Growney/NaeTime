@@ -14,6 +14,7 @@
     <ProjectReference Include="..\EventDbLite\EventDbLite\EventDbLite.csproj" />
     <ProjectReference Include="..\ImmersionRC.LapRF\ImmersionRC.LapRF.csproj" />
     <ProjectReference Include="..\NaeTime.Command.Abstractions\NaeTime.Command.Abstractions.csproj" />
+    <ProjectReference Include="..\NaeTime.Command\NaeTime.Command.csproj" />
     <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
     <ProjectReference Include="..\NaeTime.Query.Abstractions\NaeTime.Query.Abstractions.csproj" />
   </ItemGroup>

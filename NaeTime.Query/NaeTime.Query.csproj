@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EventDbLite\EventDbLite\EventDbLite.csproj" />
-    <ProjectReference Include="..\NaeTime.Events\NaeTime.Events.csproj" />
+    <ProjectReference Include="..\NaeTime.Events.Domain\NaeTime.Events.Domain.csproj" />
     <ProjectReference Include="..\NaeTime.Query.Abstractions\NaeTime.Query.Abstractions.csproj" />
   </ItemGroup>
 

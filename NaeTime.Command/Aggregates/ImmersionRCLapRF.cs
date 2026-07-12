@@ -1,5 +1,5 @@
 ﻿using EventDbLite.Aggregates;
-using NaeTime.Events;
+using NaeTime.Events.Domain;
 using System.Net;
 
 namespace NaeTime.Command.Aggregates;

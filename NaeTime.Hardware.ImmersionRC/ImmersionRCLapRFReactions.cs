@@ -1,7 +1,7 @@
 ﻿using EventDbLite.Abstractions;
 using EventDbLite.Streams;
 using NaeTime.Command.Abstractions;
-using NaeTime.Events;
+using NaeTime.Events.Domain;
 using NaeTime.Hardware.ImmersionRC.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Models;
 

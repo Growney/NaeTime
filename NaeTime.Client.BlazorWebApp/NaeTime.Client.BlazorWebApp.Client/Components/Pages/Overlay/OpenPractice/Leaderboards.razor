@@ -116,7 +116,7 @@ else
     private IPilotQueryHandler PilotQueryHandler { get; set; } = null!;
 
     private string _errorMessage = string.Empty;
-    private Query.Abstractions.Models.OpenPracticeSessionTimingInformation? _timingInfo;
+    private Query.Abstractions.Models.SessionTimingInformation? _timingInfo;
     private IEnumerable<Query.Abstractions.Models.Pilot> _pilots = Array.Empty<Query.Abstractions.Models.Pilot>();
 
     private readonly CancellationTokenSource _cancellationTokenSource = new();

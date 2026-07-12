@@ -1,4 +1,4 @@
-﻿using NaeTime.Events;
+﻿using NaeTime.Events.Domain;
 using NaeTime.Query.Abstractions.Models;
 using NaeTime.Query.Abstractions.Projections;
 using System.Collections.Concurrent;
@@ -21,7 +21,6 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         public string Name { get; set; } = string.Empty;
         public Guid TrackId { get; set; }
         public bool IsActive { get; set; }
-        public List<Guid> TrackDetectorIds { get; set; } = [];
         public Dictionary<Guid, bool> AttendingPilots { get; set; } = new();
         public List<LaneSnapshot> Lanes { get; set; } = [];
         public TimeSpan? MinimumLapTime { get; set; }
@@ -53,7 +52,6 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         public string Name { get; set; } = string.Empty;
         public Guid TrackId { get; set; }
         public bool IsActive { get; set; }
-        public IEnumerable<Guid> TrackDetectorIds { get; set; } = Enumerable.Empty<Guid>();
         public ConcurrentDictionary<Guid, bool> AttendingPilots { get; set; } = new();
         public ConcurrentBag<ListOpenPracticeSessionLane> Lanes { get; set; } = [];
         public TimeSpan? MinimumLapTime { get; set; }
@@ -70,7 +68,7 @@ public class OpenPracticeProjection : IOpenPracticeProjection
     {
         if (_sessions.TryGetValue(sessionId, out var session))
         {
-            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, session.IsActive, session.MinimumLapTime, session.MaximumLapTime, session.AttendingPilots.Keys, session.TrackDetectorIds, [.. session.Lanes.OrderBy(x => x.Lane).Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
+            return new OpenPracticeSession(session.Id, session.Name, session.TrackId, session.IsActive, session.MinimumLapTime, session.MaximumLapTime, session.AttendingPilots.Keys, [.. session.Lanes.OrderBy(x => x.Lane).Select(l => new OpenPracticeLane(l.Lane, l.PilotId, l.IsEnabled, l.BandId, l.FrequencyInMHz))]);
         }
         return null;
     }
@@ -95,7 +93,6 @@ public class OpenPracticeProjection : IOpenPracticeProjection
             Id = scheduled.SessionId,
             Name = scheduled.Name,
             TrackId = scheduled.TrackId,
-            TrackDetectorIds = scheduled.TrackDetectors,
             MinimumLapTime = scheduled.MinimumLapTime,
             MaximumLapTime = scheduled.MaximumLapTime
         });
@@ -156,36 +153,20 @@ public class OpenPracticeProjection : IOpenPracticeProjection
         }
     }
 
-    private void When(OpenPracticeSessionLaneEnabled laneEnabled)
+    private void When(OpenPracticeSessionLaneStatusSet statusSet)
     {
-        if (_sessions.TryGetValue(laneEnabled.SessionId, out var session))
+        if (_sessions.TryGetValue(statusSet.SessionId, out var session))
         {
-            var lane = session.Lanes.FirstOrDefault(l => l.Lane == laneEnabled.Lane);
+            var lane = session.Lanes.FirstOrDefault(l => l.Lane == statusSet.Lane);
             if (lane == null)
             {
                 lane = new ListOpenPracticeSessionLane
                 {
-                    Lane = laneEnabled.Lane,
+                    Lane = statusSet.Lane,
                 };
                 session.Lanes.Add(lane);
             }
-            lane.IsEnabled = true;
-        }
-    }
-    private void When(OpenPracticeSessionLaneDisabled laneDisabled)
-    {
-        if (_sessions.TryGetValue(laneDisabled.SessionId, out var session))
-        {
-            var lane = session.Lanes.FirstOrDefault(l => l.Lane == laneDisabled.Lane);
-            if (lane == null)
-            {
-                lane = new ListOpenPracticeSessionLane
-                {
-                    Lane = laneDisabled.Lane,
-                };
-                session.Lanes.Add(lane);
-            }
-            lane.IsEnabled = false;
+            lane.IsEnabled = statusSet.IsEnabled;
         }
     }
     private void When(OpenPracticeSessionPilotMinimumLapTimeSet set)
@@ -231,7 +212,6 @@ public class OpenPracticeProjection : IOpenPracticeProjection
                 Name = session.Name,
                 TrackId = session.TrackId,
                 IsActive = session.IsActive,
-                TrackDetectorIds = [.. session.TrackDetectorIds],
                 AttendingPilots = new Dictionary<Guid, bool>(session.AttendingPilots),
                 Lanes = [.. session.Lanes.Select(l => new LaneSnapshot
                 {
@@ -273,7 +253,6 @@ public class OpenPracticeProjection : IOpenPracticeProjection
                 Name = sessionSnapshot.Name,
                 TrackId = sessionSnapshot.TrackId,
                 IsActive = sessionSnapshot.IsActive,
-                TrackDetectorIds = sessionSnapshot.TrackDetectorIds,
                 AttendingPilots = new ConcurrentDictionary<Guid, bool>(sessionSnapshot.AttendingPilots),
                 Lanes = [],
                 MinimumLapTime = sessionSnapshot.MinimumLapTime,

@@ -1,4 +1,4 @@
-using NaeTime.Events;
+using NaeTime.Events.Domain;
 using NaeTime.Query.Abstractions.Models;
 using NaeTime.Query.Abstractions.Projections;
 using System.Collections.Concurrent;

@@ -30,38 +30,38 @@ public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
         return await GetFromJsonOrNullAsync<OpenPracticeSession>($"/api/openpractice/session/{id}").ConfigureAwait(false);
     }
 
-    public async Task<OpenPracticeSessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId)
+    public async Task<SessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId)
     {
         var url = $"/api/openpractice/session/{sessionId}/track/{trackId}/timing";
-        var result = await GetFromJsonOrNullAsync<OpenPracticeSessionTimingInformation>(url).ConfigureAwait(false);
+        var result = await GetFromJsonOrNullAsync<SessionTimingInformation>(url).ConfigureAwait(false);
         if (result != null) return result;
 
-        return new OpenPracticeSessionTimingInformation(
-            new Dictionary<Guid, IEnumerable<OpenPracticeTimingMoment>>(),
-            new Dictionary<Guid, IDictionary<Guid, OpenPracticeDetection>>(),
+        return new SessionTimingInformation(
+            new Dictionary<Guid, IEnumerable<TimingMoment>>(),
+            new Dictionary<Guid, IDictionary<Guid, Detection>>(),
             new Dictionary<Guid, IEnumerable<IEnumerable<OpenPracticeLap>>>(),
             new Dictionary<Guid, IDictionary<uint, OpenPracticeLapRecord>>(),
             new Dictionary<uint, IEnumerable<OpenPracticeLapRecord>>()
         );
     }
 
-    public async Task<OpenPracticeSessionPilotTimingInfo> GetTimingInformation(Guid sessionId, Guid trackId, Guid pilotId)
+    public async Task<SessionPilotTimingInfo> GetTimingInformation(Guid sessionId, Guid trackId, Guid pilotId)
     {
         var url = $"/api/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/timing";
-        var result = await GetFromJsonOrNullAsync<OpenPracticeSessionPilotTimingInfo>(url).ConfigureAwait(false);
+        var result = await GetFromJsonOrNullAsync<SessionPilotTimingInfo>(url).ConfigureAwait(false);
         if (result != null) return result;
 
-        return new OpenPracticeSessionPilotTimingInfo(
-            Enumerable.Empty<OpenPracticeTimingMoment>(),
-            new Dictionary<Guid, OpenPracticeDetection>(),
+        return new SessionPilotTimingInfo(
+            Enumerable.Empty<TimingMoment>(),
+            new Dictionary<Guid, Detection>(),
             Enumerable.Empty<IEnumerable<OpenPracticeLap>>(),
             new Dictionary<uint, OpenPracticeLapRecord>()
         );
     }
 
-    public async Task<OpenPracticeDetection?> GetPilotLastDetection(Guid sessionId, Guid trackId, Guid pilotId)
+    public async Task<Detection?> GetPilotLastDetection(Guid sessionId, Guid trackId, Guid pilotId)
     {
-        return await GetFromJsonOrNullAsync<OpenPracticeDetection>($"/api/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/lastdetection").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<Detection>($"/api/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/lastdetection").ConfigureAwait(false);
     }
 
     private record PilotLapTimeOverridesDto(double? MinimumLapTimeMs, double? MaximumLapTimeMs);

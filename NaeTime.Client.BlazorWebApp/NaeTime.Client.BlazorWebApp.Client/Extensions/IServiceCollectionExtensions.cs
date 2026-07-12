@@ -24,6 +24,7 @@ public static class IServiceCollectionExtensions
         services.AddScoped<ISessionsCommandHandler, SessionsCommandClient>();
         services.AddScoped<ITrackCommandHandler, TrackCommandClient>();
         services.AddScoped<IELRSBackpackInterfaceCommandHandler, ELRSBackpackInterfaceCommandClient>();
+        services.AddScoped<IDetectionCommandHandler, DetectionCommandClient>();
 
         return services;
     }

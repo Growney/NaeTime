@@ -8,6 +8,5 @@ public class OpenPracticeSession
     public TimeSpan? MinimumLapTime { get; set; }
     public TimeSpan? MaximumLapTime { get; set; }
     public IEnumerable<Guid> AttendingPilots { get; set; } = Enumerable.Empty<Guid>();
-    public IEnumerable<Guid> TrackDetectorIds { get; set; } = Enumerable.Empty<Guid>();
     public IReadOnlyList<OpenPracticeLane> Lanes { get; set; } = new List<OpenPracticeLane>();
 }

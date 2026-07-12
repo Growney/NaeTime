@@ -2,7 +2,8 @@
 using ImmersionRC.LapRF;
 using ImmersionRC.LapRF.Abstractions;
 using NaeTime.Command.Abstractions;
-using NaeTime.Events;
+using NaeTime.Command.Aggregates;
+using NaeTime.Events.Domain;
 using NaeTime.Hardware;
 using NaeTime.Hardware.Abstractions;
 using NaeTime.Hardware.ImmersionRC.Abstractions;
@@ -15,7 +16,7 @@ internal class LapRFConnection : ILapRFConnection
     private readonly ILapRFCommunication _communication;
     private readonly ILapRFProtocol _protocol;
     private readonly ISoftwareTimer _softwareTimer;
-    private readonly IStreamEventWriter _writer;
+    private readonly IAggregateRepository _aggregateRepository;
     private readonly IImmersionRCLapRFCommandHandler _commandHandler;
     private readonly IRssiChannel _rssiChannel;
     private readonly Guid _timerId;
@@ -27,7 +28,7 @@ internal class LapRFConnection : ILapRFConnection
 
     private readonly string _detectionsStream;
 
-    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol, IStreamEventWriter writer, IImmersionRCLapRFCommandHandler commandHandler, IRssiChannel rssiChannel)
+    public LapRFConnection(Guid timerId, ISoftwareTimer softwareTimer, ILapRFCommunication communication, ILapRFProtocol protocol, IAggregateRepository aggregateRepository, IImmersionRCLapRFCommandHandler commandHandler, IRssiChannel rssiChannel)
     {
         _timerId = timerId;
 
@@ -36,7 +37,7 @@ internal class LapRFConnection : ILapRFConnection
         _softwareTimer = softwareTimer ?? throw new ArgumentNullException(nameof(softwareTimer));
         _communication = communication ?? throw new ArgumentNullException(nameof(communication));
         _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
-        _writer = writer ?? throw new ArgumentNullException(nameof(writer));
+        _aggregateRepository = aggregateRepository ?? throw new ArgumentNullException(nameof(aggregateRepository));
         _commandHandler = commandHandler ?? throw new ArgumentNullException(nameof(commandHandler));
 
         _cancellationTokenSource = new CancellationTokenSource();
@@ -101,7 +102,8 @@ internal class LapRFConnection : ILapRFConnection
 
                 Pass passingRecord = nullablePassingRecord.Value;
 
-                await _writer.AppendToStream(_detectionsStream, new NaeTime.Events.HardwareDetectionOccured(Guid.NewGuid(), _timerId, passingRecord.LaneId, passingRecord.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow)).ConfigureAwait(false);
+                Detection detection = _aggregateRepository.CreateNew<Detection>(() => new Detection(Guid.NewGuid(), _timerId, passingRecord.LaneId, passingRecord.RealTimeClockTime, _softwareTimer.ElapsedMilliseconds, DateTime.UtcNow));
+                await _aggregateRepository.Save(detection);
             }
             catch
             {

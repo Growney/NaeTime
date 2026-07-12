@@ -1,6 +1,6 @@
 ﻿using NaeTime.Announcer.Abstractions;
 using NaeTime.Collections;
-using NaeTime.Events;
+using NaeTime.Events.Domain;
 using NaeTime.Hardware.Frequency;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
@@ -50,7 +50,7 @@ public class AnnouncerReactions : IAnnouncementStream
             return;
         }
 
-        OpenPracticeSessionTimingInformation? timingInfo = await _openPracticeProjection.GetTimingInformation(sessionId, trackId);
+        SessionTimingInformation? timingInfo = await _openPracticeProjection.GetTimingInformation(sessionId, trackId);
 
         if (timingInfo is null)
         {

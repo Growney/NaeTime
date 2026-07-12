@@ -5,7 +5,6 @@ public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddNaeTimeEventReactions(this IServiceCollection services)
     {
-        services.AddConstantReactionClass<DetectionReactions>();
         services.AddConstantReactionClass<OpenPracticeReactions>();
 
         return services;

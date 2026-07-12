@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NaeTime.Collections\NaeTime.Collections.csproj" />
-    <ProjectReference Include="..\NaeTime.Events\NaeTime.Events.csproj" />
     <ProjectReference Include="..\NaeTime.Hardware\NaeTime.Hardware.csproj" />
     <ProjectReference Include="..\NaeTime.Query.Abstractions\NaeTime.Query.Abstractions.csproj" />
   </ItemGroup>

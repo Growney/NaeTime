@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace NaeTime.Query.Abstractions.Models;
 [DebuggerDisplay("{Type}")]
-public record OpenPracticeTimingMoment(Guid SessionId, Guid TrackId, Guid PilotId,Guid? MomentId,OpenPracticeTimingMoment.TimingMomentType Type)
+public record TimingMoment(Guid SessionId, Guid TrackId, Guid PilotId,Guid? MomentId,TimingMoment.TimingMomentType Type)
 {
     public enum TimingMomentType
     {

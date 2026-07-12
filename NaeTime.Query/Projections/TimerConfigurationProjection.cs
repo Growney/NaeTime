@@ -1,9 +1,11 @@
-﻿using NaeTime.Events;
+﻿using NaeTime.Events.Domain;
 using NaeTime.Query.Abstractions.Models;
 using NaeTime.Query.Abstractions.Projections;
 using System.Collections.Concurrent;
+using System.ComponentModel.Design;
 
 namespace NaeTime.Query.Projections;
+
 public class TimerConfigurationProjection : ITimerConfigurationProjection
 {
 
@@ -32,7 +34,6 @@ public class TimerConfigurationProjection : ITimerConfigurationProjection
     private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<byte, SessionLaneConfiguration>> _sessionLaneConfigurations = new();
     private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<byte, ImmersionRCLapRFLane>> _immersionRCTimerLaneConfigurations = new();
     private readonly ConcurrentDictionary<Guid, ConcurrentDictionary<byte, NaeTimeNodeLaneInfo>> _naeTimeNodeLaneConfigurations = new();
-    private readonly ConcurrentDictionary<Guid, IEnumerable<Guid>> _sessionTimers = new();
 
     private Guid? _activeSession;
 
@@ -47,11 +48,6 @@ public class TimerConfigurationProjection : ITimerConfigurationProjection
             _activeSession = null;
         }
     }
-    private void When(OpenPracticeSessionScheduled scheduled)
-    {
-        _sessionTimers[scheduled.SessionId] = scheduled.TrackDetectors;
-    }
-
     private void When(OpenPracticeSessionLaneVideoFrequencyTuned tuned)
     {
         ConcurrentDictionary<byte, SessionLaneConfiguration> sessionLanes = _sessionLaneConfigurations.GetOrAdd(tuned.SessionId, new ConcurrentDictionary<byte, SessionLaneConfiguration>());
@@ -59,17 +55,11 @@ public class TimerConfigurationProjection : ITimerConfigurationProjection
         laneConfig.BandId = tuned.BandId;
         laneConfig.FrequencyInMHz = tuned.FrequencyInMHz;
     }
-    private void When(OpenPracticeSessionLaneEnabled enabled)
+    private void When(OpenPracticeSessionLaneStatusSet status)
     {
-        ConcurrentDictionary<byte, SessionLaneConfiguration> sessionLanes = _sessionLaneConfigurations.GetOrAdd(enabled.SessionId, new ConcurrentDictionary<byte, SessionLaneConfiguration>());
-        SessionLaneConfiguration laneConfig = sessionLanes.GetOrAdd(enabled.Lane, new SessionLaneConfiguration { LaneNumber = enabled.Lane });
-        laneConfig.IsEnabled = true;
-    }
-    private void When(OpenPracticeSessionLaneDisabled disabled)
-    {
-        ConcurrentDictionary<byte, SessionLaneConfiguration> sessionLanes = _sessionLaneConfigurations.GetOrAdd(disabled.SessionId, new ConcurrentDictionary<byte, SessionLaneConfiguration>());
-        SessionLaneConfiguration laneConfig = sessionLanes.GetOrAdd(disabled.Lane, new SessionLaneConfiguration { LaneNumber = disabled.Lane });
-        laneConfig.IsEnabled = false;
+        ConcurrentDictionary<byte, SessionLaneConfiguration> sessionLanes = _sessionLaneConfigurations.GetOrAdd(status.SessionId, new ConcurrentDictionary<byte, SessionLaneConfiguration>());
+        SessionLaneConfiguration laneConfig = sessionLanes.GetOrAdd(status.Lane, new SessionLaneConfiguration { LaneNumber = status.Lane });
+        laneConfig.IsEnabled = status.IsEnabled;
     }
     private void When(ImmersionRCLapRFLaneThresholdConfigured configured)
     {
@@ -130,11 +120,6 @@ public class TimerConfigurationProjection : ITimerConfigurationProjection
         sessionLanes ??= new ConcurrentDictionary<byte, SessionLaneConfiguration>();
         timerLanes ??= new ConcurrentDictionary<byte, ImmersionRCLapRFLane>();
 
-        if (!_sessionTimers.TryGetValue(_activeSession.Value, out var timers) || !timers.Contains(timerId))
-        {
-            return Enumerable.Empty<NaeTime.Query.Abstractions.Models.DesiredImmersionRCLapRFLane>();
-        }
-
         List<NaeTime.Query.Abstractions.Models.DesiredImmersionRCLapRFLane> result = new();
 
         byte maxLanes = Math.Max(sessionLanes.Keys.Max(), timerLanes.Keys.Max());
@@ -173,11 +158,6 @@ public class TimerConfigurationProjection : ITimerConfigurationProjection
 
         sessionLanes ??= new ConcurrentDictionary<byte, SessionLaneConfiguration>();
         timerLanes ??= new ConcurrentDictionary<byte, NaeTimeNodeLaneInfo>();
-
-        if (!_sessionTimers.TryGetValue(_activeSession.Value, out var timers) || !timers.Contains(timerId))
-        {
-            return Enumerable.Empty<DesiredNaeTimeNodeLane>();
-        }
 
         if (!sessionLanes.Any() && !timerLanes.Any())
         {

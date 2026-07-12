@@ -14,7 +14,6 @@ public static class OpenPracticeSessionProjector
             Name = session.Name,
             TrackId = session.TrackId,
             IsActive = session.IsActive,
-            TrackDetectorIds = session.TrackDetectorIds,
             AttendingPilots = session.AttendingPilots,
             MinimumLapTime = session.MinimumLapTime,
             MaximumLapTime = session.MaximumLapTime,

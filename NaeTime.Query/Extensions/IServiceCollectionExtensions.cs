@@ -21,7 +21,7 @@ public static class IServiceCollectionExtensions
         services.AddSingletonLiveProjection<IPilotProjection, PilotProjection>();
         services.AddSingletonLiveProjection<ITrackProjection, TrackProjection>();
         services.AddSingletonLiveProjection<ISessionProjection, SessionProjection>();
-        services.TryAddTransient<IOpenPracticeTimingProjection, OpenPracticeTimingProjection>();
+        services.TryAddTransient<ITimingProjection, TimingProjection>();
         services.AddSingletonLiveProjection<ITimerConfigurationProjection, TimerConfigurationProjection>();
         services.AddSingletonLiveProjection<ITimerDetailsProjection, TimerDetailsProjection>();
         services.AddSingletonLiveProjection<INaeTimeNodeProjection, NaeTimeNodeProjection>();

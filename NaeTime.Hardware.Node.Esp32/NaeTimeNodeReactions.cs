@@ -1,6 +1,6 @@
 ﻿using EventDbLite.Abstractions;
 using NaeTime.Command.Abstractions;
-using NaeTime.Events;
+using NaeTime.Events.Domain;
 using NaeTime.Hardware.Abstractions;
 using NaeTime.Hardware.Node.Esp32.Abstractions;
 using NaeTime.Query.Abstractions.Models;

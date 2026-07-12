@@ -76,7 +76,7 @@
         Console.WriteLine($"PilotId: {PilotId}");
         if (PilotId.HasValue)
         {
-            NaeTime.Query.Abstractions.Models.OpenPracticeDetection? lastDetection = await OpenPracticeQueryHandler.GetPilotLastDetection(SessionId, TrackId, PilotId.Value);
+            NaeTime.Query.Abstractions.Models.Detection? lastDetection = await OpenPracticeQueryHandler.GetPilotLastDetection(SessionId, TrackId, PilotId.Value);
             _start = lastDetection?.UtcTime;
         }
         else

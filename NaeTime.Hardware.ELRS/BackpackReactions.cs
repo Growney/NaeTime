@@ -1,4 +1,4 @@
-using NaeTime.Events;
+using NaeTime.Events.Domain;
 using NaeTime.Hardware.ELRS.Abstractions;
 using NaeTime.Query.Abstractions;
 using NaeTime.Query.Abstractions.Models;
@@ -33,7 +33,7 @@ internal class BackpackReactions
             return;
         }
 
-        OpenPracticeSessionTimingInformation? timingInfo = await _openPracticeQueryHandler.GetTimingInformation(sessionId, trackId);
+        SessionTimingInformation? timingInfo = await _openPracticeQueryHandler.GetTimingInformation(sessionId, trackId);
 
         if (timingInfo is null)
         {

@@ -1,11 +1,11 @@
 ﻿namespace NaeTime.Query.Abstractions.Models;
-public record OpenPracticeSessionPilotTimingInfo(
-    IEnumerable<OpenPracticeTimingMoment> Moments,
-    IDictionary<Guid, OpenPracticeDetection> IndexedDetections,
+public record SessionPilotTimingInfo(
+    IEnumerable<TimingMoment> Moments,
+    IDictionary<Guid, Detection> IndexedDetections,
     IEnumerable<IEnumerable<OpenPracticeLap>> LapGroups,
     IDictionary<uint, OpenPracticeLapRecord> LapRecords)
 {
-    public IEnumerable<OpenPracticeDetection> Detections => IndexedDetections.Values;
+    public IEnumerable<Detection> Detections => IndexedDetections.Values;
 
     public TimeSpan GetAverageLapDuration()
     {

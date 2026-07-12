@@ -1,5 +1,5 @@
 ﻿using EventDbLite.Aggregates;
-using NaeTime.Events;
+using NaeTime.Events.Domain;
 
 namespace NaeTime.Command.Aggregates;
 public class ImmersionRCLapRFLane : AggregateRoot<ImmersionRCLapRFLane.ImmersionRCLapRFLaneId>
