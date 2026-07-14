@@ -11,6 +11,7 @@
     <ProjectReference Include="..\NaeTime.Command.Abstractions\NaeTime.Command.Abstractions.csproj" />
     <ProjectReference Include="..\NaeTime.Command\NaeTime.Command.csproj" />
     <ProjectReference Include="..\NaeTime.Events.Domain\NaeTime.Events.Domain.csproj" />
+    <ProjectReference Include="..\NaeTime.Events.Integration\NaeTime.Events.Integration.csproj" />
     <ProjectReference Include="..\NaeTime.Query.Abstractions\NaeTime.Query.Abstractions.csproj" />
   </ItemGroup>
 
