@@ -11,7 +11,7 @@ public static class IServiceCollectionExtensions
             SingleReader = false,
             SingleWriter = false
         }));
-        services.AddSingleton<INaeTimeEventChannel, EventChannel>();
+        services.AddSingleton<IEventChannel, EventChannel>();
         services.AddSingleton(sp => sp.GetRequiredService<Channel<EventEnvelope>>().Reader);
         services.AddSingleton(sp => sp.GetRequiredService<Channel<EventEnvelope>>().Writer);
 
