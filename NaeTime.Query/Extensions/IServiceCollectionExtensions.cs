@@ -12,7 +12,7 @@ public static class IServiceCollectionExtensions
         services.AddTransient<IHardwareQueryHandler, HardwareQueryHandler>();
         services.AddTransient<IPilotQueryHandler, PilotQueryHandler>();
         services.AddTransient<ITrackQueryHandler, TrackQueryHandler>();
-        services.AddTransient<IOpenPracticeQueryHandler, OpenPracticeQueryHandler>();
+        services.AddTransient<ITimingQueryHandler, TimingQueryHandler>();
         services.AddTransient<ISessionQueryHandler, SessionQueryHandler>();
 
         services.AddSingletonLiveProjection<IOpenPracticeProjection, OpenPracticeProjection>();

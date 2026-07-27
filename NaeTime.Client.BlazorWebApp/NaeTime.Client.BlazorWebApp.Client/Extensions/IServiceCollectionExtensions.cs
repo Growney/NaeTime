@@ -11,7 +11,7 @@ public static class IServiceCollectionExtensions
     {
         // Query handlers
         services.AddScoped<IHardwareQueryHandler, HardwareQueryClient>();
-        services.AddScoped<IOpenPracticeQueryHandler, OpenPracticeQueryClient>();
+        services.AddScoped<ITimingQueryHandler, TimingQueryClient>();
         services.AddScoped<IPilotQueryHandler, PilotQueryClient>();
         services.AddScoped<ISessionQueryHandler, SessionQueryClient>();
         services.AddScoped<ITrackQueryHandler, TrackQueryClient>();

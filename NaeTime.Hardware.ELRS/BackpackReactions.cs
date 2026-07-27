@@ -11,10 +11,10 @@ internal class BackpackReactions
     private readonly IBackpackConnectorProvider _backpackConnectorProvider;
     private readonly IHardwareQueryHandler _hardwareQueryHandler;
     private readonly IPilotQueryHandler _pilotQueryHandler;
-    private readonly IOpenPracticeQueryHandler _openPracticeQueryHandler;
+    private readonly ITimingQueryHandler _openPracticeQueryHandler;
 
 
-    public BackpackReactions(IBackpackConnectorProvider backpackConnectorProvider, IHardwareQueryHandler hardwareQueryHandler, IPilotQueryHandler pilotQueryHandler, IOpenPracticeQueryHandler openPracticeQueryHandler)
+    public BackpackReactions(IBackpackConnectorProvider backpackConnectorProvider, IHardwareQueryHandler hardwareQueryHandler, IPilotQueryHandler pilotQueryHandler, ITimingQueryHandler openPracticeQueryHandler)
     {
         _backpackConnectorProvider = backpackConnectorProvider ?? throw new ArgumentNullException(nameof(backpackConnectorProvider));
         _hardwareQueryHandler = hardwareQueryHandler ?? throw new ArgumentNullException(nameof(hardwareQueryHandler));

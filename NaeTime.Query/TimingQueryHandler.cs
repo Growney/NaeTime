@@ -4,13 +4,13 @@ using NaeTime.Query.Abstractions.Models;
 using NaeTime.Query.Abstractions.Projections;
 
 namespace NaeTime.Query;
-public class OpenPracticeQueryHandler : IOpenPracticeQueryHandler
+public class TimingQueryHandler : ITimingQueryHandler
 {
     private readonly IOpenPracticeProjection _openPracticeProjection;
     private readonly ITimingProjection _openPracticeTimingProjection;
     private readonly IProjectionProvider _projectionProvider;
 
-    public OpenPracticeQueryHandler(IOpenPracticeProjection openPracticeProjection, ITimingProjection openPracticeTimingProjection, IProjectionProvider projectionProvider)
+    public TimingQueryHandler(IOpenPracticeProjection openPracticeProjection, ITimingProjection openPracticeTimingProjection, IProjectionProvider projectionProvider)
     {
         _openPracticeProjection = openPracticeProjection;
         _openPracticeTimingProjection = openPracticeTimingProjection;

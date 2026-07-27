@@ -14,12 +14,12 @@ internal class OpenPracticeReactions
     private readonly IImmersionRCLapRFCommandHandler _immersionRCLapRFCommandHandler;
     private readonly INaeTimeNodeCommandHandler _naeTimeNodeCommandHandler;
     private readonly IHardwareQueryHandler _hardwareQueryHandler;
-    private readonly IOpenPracticeQueryHandler _openPracticeQueryHandler;
+    private readonly ITimingQueryHandler _openPracticeQueryHandler;
     private readonly ITrackQueryHandler _trackQueryHandler;
     private readonly ISessionQueryHandler _sessionQueryHandler;
     private readonly IAggregateRepository _aggregateRepository;
 
-    public OpenPracticeReactions(IAggregateRepository aggregateRepository, IImmersionRCLapRFCommandHandler immersionRCLapRFCommandHandler, INaeTimeNodeCommandHandler naeTimeNodeCommandHandler, IHardwareQueryHandler hardwareQueryHandler, IOpenPracticeQueryHandler openPracticeQueryHandler, ITrackQueryHandler trackQueryHandler, ISessionQueryHandler sessionQueryHandler)
+    public OpenPracticeReactions(IAggregateRepository aggregateRepository, IImmersionRCLapRFCommandHandler immersionRCLapRFCommandHandler, INaeTimeNodeCommandHandler naeTimeNodeCommandHandler, IHardwareQueryHandler hardwareQueryHandler, ITimingQueryHandler openPracticeQueryHandler, ITrackQueryHandler trackQueryHandler, ISessionQueryHandler sessionQueryHandler)
     {
         _immersionRCLapRFCommandHandler = immersionRCLapRFCommandHandler;
         _naeTimeNodeCommandHandler = naeTimeNodeCommandHandler;

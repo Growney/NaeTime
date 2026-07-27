@@ -4,5 +4,6 @@ using System.Text;
 
 namespace NaeTime.Events.Integration;
 
-public record SessionTimingChanged(Guid SessionId, Guid TriggerDetection);
-
+public record LiveDetectionAssignedToSession(Guid SessionId, Guid DetectionId);
+public record LiveDetectionOccurredWithNoActiveSession(Guid DetectionId);
+public record LiveDetectionAssignedToPilot(Guid SessionId, Guid DetectionId, Guid PilotId);

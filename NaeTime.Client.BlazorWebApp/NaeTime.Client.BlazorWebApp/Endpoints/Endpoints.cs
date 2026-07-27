@@ -11,7 +11,7 @@ public static class Endpoints
         application.MapImmersionRCCommandHandlerEndpoints();
         application.MapNaeTimeNodeCommandHandlerEndpoints();
         application.MapOpenPracticeCommandHandlerEndpoints();
-        application.MapOpenPracticeQueryHandlerEndpoints();
+        application.MapTimingQueryHandlerEndpoints();
         application.MapPilotCommandHandlerEndpoints();
         application.MapPilotQueryHandlerEndpoints();
         application.MapSessionsCommandHandlerEndpoints();

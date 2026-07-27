@@ -6,11 +6,11 @@ using System.Linq;
 
 namespace NaeTime.Client.BlazorWebApp.Client.Clients;
 
-public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
+public class TimingQueryClient : ITimingQueryHandler
 {
     private readonly HttpClient _http;
 
-    public OpenPracticeQueryClient(HttpClient http)
+    public TimingQueryClient(HttpClient http)
     {
         _http = http ?? throw new ArgumentNullException(nameof(http));
     }
@@ -27,12 +27,12 @@ public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
 
     public async Task<OpenPracticeSession?> GetByIdAsync(Guid id)
     {
-        return await GetFromJsonOrNullAsync<OpenPracticeSession>($"/api/openpractice/session/{id}").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<OpenPracticeSession>($"/api/timing/session/{id}").ConfigureAwait(false);
     }
 
     public async Task<SessionTimingInformation> GetTimingInformation(Guid sessionId, Guid trackId)
     {
-        var url = $"/api/openpractice/session/{sessionId}/track/{trackId}/timing";
+        var url = $"/api/timing/session/{sessionId}/track/{trackId}/timing";
         var result = await GetFromJsonOrNullAsync<SessionTimingInformation>(url).ConfigureAwait(false);
         if (result != null) return result;
 
@@ -47,7 +47,7 @@ public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
 
     public async Task<SessionPilotTimingInfo> GetTimingInformation(Guid sessionId, Guid trackId, Guid pilotId)
     {
-        var url = $"/api/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/timing";
+        var url = $"/api/timing/session/{sessionId}/track/{trackId}/pilot/{pilotId}/timing";
         var result = await GetFromJsonOrNullAsync<SessionPilotTimingInfo>(url).ConfigureAwait(false);
         if (result != null) return result;
 
@@ -61,14 +61,14 @@ public class OpenPracticeQueryClient : IOpenPracticeQueryHandler
 
     public async Task<Detection?> GetPilotLastDetection(Guid sessionId, Guid trackId, Guid pilotId)
     {
-        return await GetFromJsonOrNullAsync<Detection>($"/api/openpractice/session/{sessionId}/track/{trackId}/pilot/{pilotId}/lastdetection").ConfigureAwait(false);
+        return await GetFromJsonOrNullAsync<Detection>($"/api/timing/session/{sessionId}/track/{trackId}/pilot/{pilotId}/lastdetection").ConfigureAwait(false);
     }
 
     private record PilotLapTimeOverridesDto(double? MinimumLapTimeMs, double? MaximumLapTimeMs);
 
     public async Task<(TimeSpan? MinimumLapTime, TimeSpan? MaximumLapTime)> GetPilotLapTimeOverrides(Guid sessionId, Guid pilotId)
     {
-        var dto = await GetFromJsonOrNullAsync<PilotLapTimeOverridesDto>($"/api/openpractice/session/{sessionId}/pilot/{pilotId}/lap-time-overrides").ConfigureAwait(false);
+        var dto = await GetFromJsonOrNullAsync<PilotLapTimeOverridesDto>($"/api/timing/session/{sessionId}/pilot/{pilotId}/lap-time-overrides").ConfigureAwait(false);
         if (dto == null) return (null, null);
         return (dto.MinimumLapTimeMs.HasValue ? TimeSpan.FromMilliseconds(dto.MinimumLapTimeMs.Value) : null,
                 dto.MaximumLapTimeMs.HasValue ? TimeSpan.FromMilliseconds(dto.MaximumLapTimeMs.Value) : null);

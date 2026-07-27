@@ -14,10 +14,10 @@ public class AnnouncerReactions : IAnnouncementStream
 
     private readonly ITrackQueryHandler _trackProjection;
     private readonly IPilotQueryHandler _pilotProjection;
-    private readonly IOpenPracticeQueryHandler _openPracticeProjection;
+    private readonly ITimingQueryHandler _openPracticeProjection;
     private readonly IHardwareQueryHandler _hardwareQueryHandler;
 
-    public AnnouncerReactions(ITrackQueryHandler trackProjection, IPilotQueryHandler pilotProjection, IOpenPracticeQueryHandler openPracticeProjection, IHardwareQueryHandler hardwareQueryHandler)
+    public AnnouncerReactions(ITrackQueryHandler trackProjection, IPilotQueryHandler pilotProjection, ITimingQueryHandler openPracticeProjection, IHardwareQueryHandler hardwareQueryHandler)
     {
         _trackProjection = trackProjection ?? throw new ArgumentNullException(nameof(trackProjection));
         _pilotProjection = pilotProjection ?? throw new ArgumentNullException(nameof(pilotProjection));
@@ -81,7 +81,6 @@ public class AnnouncerReactions : IAnnouncementStream
             _announcementQueue.Enqueue($"{callout} {GetLapCallout(detectionFinalisedLap.Duration)}");
             return;
         }
-
 
         uint highestLapCount = includedInLapRecords.Max(record => record.LapCount);
         OpenPracticeLapRecord record = includedInLapRecords.First(x => x.LapCount == highestLapCount);
