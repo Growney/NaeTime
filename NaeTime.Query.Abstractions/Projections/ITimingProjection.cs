@@ -6,4 +6,5 @@ public interface ITimingProjection
     SessionPilotTimingInfo GetSessionPilotTimingInfo(Guid sessionId, Guid trackId, Guid pilotId);
     SessionTimingInformation GetSessionTimingInfo(Guid sessionId, Guid trackId);
     Detection? GetLastPilotDetection(Guid sessionId, Guid trackId, Guid pilotId);
+    Detection? GetDetection(Guid detectionId);
 }

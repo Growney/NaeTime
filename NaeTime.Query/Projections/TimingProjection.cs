@@ -156,6 +156,56 @@ public class TimingProjection : ITimingProjection
 
         _detections[triggered.Id] = new Detection(triggered.Id, sessionId, trackId, pilotId, triggered.TimerId, isLaneEnabled ?? true, triggered.Lane, null, triggered.SoftwareTime, triggered.UtcTime);
     }
+    private void When(DetectionSessionOverridden overridden)
+    {
+        if (!_detections.TryGetValue(overridden.Id, out var detection))
+        {
+            return;
+        }
+
+        Guid? trackId = detection.TrackId;
+        if (_sessionTracks.TryGetValue(overridden.SessionId, out var sessionTrackId))
+        {
+            trackId = sessionTrackId;
+        }
+
+        _detections[overridden.Id] = detection with
+        {
+            SessionId = overridden.SessionId,
+            TrackId = trackId,
+        };
+    }
+    private void When(DetectionPilotOverridden overridden)
+    {
+        if (!_detections.TryGetValue(overridden.Id, out var detection))
+        {
+            return;
+        }
+
+        _detections[overridden.Id] = detection with { PilotId = overridden.PilotId };
+    }
+    private void When(DetectionStatusSet statusSet)
+    {
+        if (!_detections.TryGetValue(statusSet.Id, out var detection))
+        {
+            return;
+        }
+
+        _detections[statusSet.Id] = detection with { IsValid = statusSet.IsValid };
+    }
+    private void When(DetectionMoved moved)
+    {
+        if (!_detections.TryGetValue(moved.Id, out var detection))
+        {
+            return;
+        }
+
+        _detections[moved.Id] = detection with
+        {
+            SoftwareTime = moved.SoftwareTime,
+            UtcTime = moved.UtcTime,
+        };
+    }
     private void When(OpenPracticeSessionActivated activated)
     {
         _activeSession = activated.SessionId;
@@ -576,5 +626,14 @@ public class TimingProjection : ITimingProjection
     {
         IEnumerable<Detection> detections = GetPilotDetections(sessionId, trackId, pilotId);
         return GetTimingMoments(sessionId, trackId, pilotId, detections);
+    }
+
+    public Detection? GetDetection(Guid detectionId)
+    {
+        if (_detections.TryGetValue(detectionId, out var detection))
+        {
+            return detection;
+        }
+        return null;
     }
 }
